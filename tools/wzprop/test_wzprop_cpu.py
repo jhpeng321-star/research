@@ -1,6 +1,6 @@
 """WM-C CPU tests (fakes only: StubWM + fake SUMO core; no SUMO, GPU or ssh).
 
-    C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/wzwm/test_wzwm_cpu.py
+    C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/wzprop/test_wzprop_cpu.py
 """
 import json
 import math
@@ -11,16 +11,16 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from tools.wzwm import compare as C
-from tools.wzwm import fakes
-from tools.wzwm import families as F
-from tools.wzwm import geometry as G
-from tools.wzwm import n3
-from tools.wzwm import pipeline
-from tools.wzwm import proposer as PR
-from tools.wzwm import runner as RN
-from tools.wzwm import verify_plugin as V
-from tools.wzwm import wm_backend as W
+from tools.wzprop import compare as C
+from tools.wzprop import fakes
+from tools.wzprop import families as F
+from tools.wzprop import geometry as G
+from tools.wzprop import n3
+from tools.wzprop import pipeline
+from tools.wzprop import proposer as PR
+from tools.wzprop import runner as RN
+from tools.wzprop import verify_plugin as V
+from tools.wzprop import wm_backend as W
 
 
 def moment(seed=989400, pen=0.6, t0=450, sid=None):
@@ -41,7 +41,7 @@ def P():
 
 @pytest.fixture(scope='module')
 def dry(tmp_path_factory):
-    out = tmp_path_factory.mktemp('wzwm_dry')
+    out = tmp_path_factory.mktemp('wzprop_dry')
     return pipeline.dry_run(out / 'run', cfg=SMALL)
 
 
@@ -416,7 +416,7 @@ def test_compare_fixed_budget_prefix_and_arm_suffix(tmp_path, dry):
 # ------------------------------------------------------------------------------------ W3 wall-fit
 def test_wallfit_labels_load_only_under_the_wz_map_scope(tmp_path, dry, monkeypatch):
     from tools.wallfit import dataset, guard
-    from tools.wzwm import wallfit_bridge as WB
+    from tools.wzprop import wallfit_bridge as WB
     ref, wmr = Path(dry['ref']), Path(dry['wm'])
     rec = WB.build_labels([ref / 'results' / 'WMC_SUMMARY.json', wmr / 'results' / 'WMC_SUMMARY.json'],
                           [ref / 'MOMENTS.json', wmr / 'MOMENTS.json'], tmp_path / 'lab')
@@ -461,7 +461,7 @@ def test_wallfit_head_rerank_is_optional_and_wm_ordered_at_init():
 
 
 def test_zero_sumo_rank_check_and_labels_with_wm_scores(tmp_path, dry):
-    from tools.wzwm import wallfit_bridge as WB
+    from tools.wzprop import wallfit_bridge as WB
     ref = Path(dry['ref'])
     sc = tmp_path / 'SCORES.jsonl'
     rec = PR.score_moments(W.StubWM(), ref / 'MOMENTS.json', sc, K=4)
@@ -476,7 +476,7 @@ def test_zero_sumo_rank_check_and_labels_with_wm_scores(tmp_path, dry):
 
 
 def test_cli_propose_and_compare(tmp_path, dry):
-    from tools.wzwm.__main__ import main
+    from tools.wzprop.__main__ import main
     geo = Path(dry['ref']) / 'MOMENTS_GEOMETRY.json'
     out = tmp_path / 'P.jsonl'
     assert main(['propose', '--moments', str(geo), '--out', str(out), '--wm', 'stub', '--k', '2', '--limit', '1',
@@ -504,3 +504,86 @@ def test_compare_excludes_budget_stranded_moments(tmp_path):
     assert res['incomplete_moments'] == ['m2', 'm3'] and res['n_common_moments'] == 1
     assert res['metrics']['structured']['admitted_variants'] == 1
     assert C.compare([p], exclude_incomplete=False)['n_common_moments'] == 3
+
+
+def _write_tape(path, seed=989300, cell='D3200_p60'):
+    # 3 steps at t = 0.5, 1.0, 1.5; vehicles: c1 (CAV, up lane 1), h_near (HDV 50 m ahead same lane),
+    # h_far (HDV 500 m away), h_cl (HDV closing lane next to c1), c1 appears at 0.5, others later
+    rows = [(0, 'c1', 'up', 1, 1000.0), (1, 'c1', 'up', 1, 1010.0), (1, 'h_near', 'up', 1, 1050.0),
+            (2, 'c1', 'up', 1, 1020.0), (2, 'h_near', 'up', 1, 1070.0), (2, 'h_far', 'up', 2, 1520.0),
+            (2, 'h_cl', 'up', 0, 990.0), (1, 'h_cl', 'up', 0, 980.0)]
+    ids = ['c1', 'h_near', 'h_far', 'h_cl']
+    edges = ['up', ':n1_0', 'wz']
+    meta = dict(schema='wzqual_native_tape/1', seed=seed, cell=cell, t_end=1.5, split='WMQUAL')
+    np.savez_compressed(path, time_s=np.array([0.5, 1.0, 1.5]), step=np.array([r[0] for r in rows], np.int32),
+                        vid=np.array([ids.index(r[1]) for r in rows], np.int32),
+                        edge=np.array([edges.index(r[2]) for r in rows], np.int16),
+                        lane=np.array([r[3] for r in rows], np.int16), x=np.array([r[4] for r in rows]),
+                        v=np.full(len(rows), 20.0), a=np.zeros(len(rows)), backlog=np.zeros(3, np.int32),
+                        inserted=np.zeros(3, np.int32), ids=np.array(ids), is_cav=np.array([True, False, False, False]),
+                        depart_s=np.zeros(4), edges=np.array(edges), meta_json=np.array(json.dumps(meta)))
+
+
+def test_tape_enrichment_keeps_only_observable_content(tmp_path):
+    from tools.wzprop import tapes
+    root = tmp_path / 'tapes'
+    p = root / 'runs' / 'D3200_p60' / 's989300' / 'prefix'
+    p.mkdir(parents=True)
+    _write_tape(p / 'TAPE.npz')
+    m = dict(cell='D3200_p60', demand=3200, penetration=0.6, seed=989300, t0=1.5, valid=True, sid='x',
+             all_cavs_t0=[dict(id='c1', edge='up', lane=1, x=1020.0, v=20.0)], variants={})
+    src = tmp_path / 'M.json'
+    src.write_text(json.dumps([m]))
+    rep = tapes.enrich(src, root, tmp_path / 'O.json')
+    assert rep['enriched'] == 1 and not rep['identity_fail']
+    o = json.loads((tmp_path / 'O.json').read_text())[0]['observed']
+    assert {v['id'] for v in o['vehicles']} == {'h_near', 'h_cl'}          # h_far: 500 m away, never reported
+    assert o['coverage']['undetected'] == 1
+    # all entries are inside bin 0 (t0 - 10 s, t0]: through c1 (0.5), h_near (1.0), h_far (1.5); closing h_cl (1.0)
+    assert o['counter'][0][0] == 3 and o['counter'][1][0] == 1 and sum(o['counter'][0]) == 3
+    mi = W.moment_input(json.loads((tmp_path / 'O.json').read_text())[0])
+    assert {v['id'] for v in mi['vehicles']} == {'h_near', 'h_cl'} and mi['counter'] == o['counter']
+    m2 = dict(m, all_cavs_t0=[dict(id='c1', edge='up', lane=1, x=1030.0, v=20.0)])
+    src.write_text(json.dumps([m2]))
+    rep = tapes.enrich(src, root, tmp_path / 'O2.json')
+    assert rep['enriched'] == 0 and rep['identity_fail'][0]['max_dx'] == pytest.approx(10.0)
+    m3 = dict(m, seed=989650)
+    src.write_text(json.dumps([m3]))
+    with pytest.raises(G.ForbiddenSeedError):
+        tapes.enrich(src, root, tmp_path / 'O3.json')
+
+
+def test_rank_metrics_perfect_and_reversed_rankers(tmp_path):
+    from tools.wzprop import rankcheck as RC
+    verdicts, scores = [], []
+    rng = np.random.default_rng(0)
+    for w in range(6):
+        for mo in range(2):
+            sid = f'pg_s{989300 + w}_t{mo}'
+            for i in range(5):
+                T = float(rng.normal(0, 100))
+                S = T - 50.0
+                adm = i == 0 and mo == 0
+                if adm:
+                    T, S = 900.0, 400.0
+                verdicts.append(dict(sid=sid, seed=989300 + w, arm='B', family='abreast_wall', variant=f'v{i}',
+                                     stage='admitted' if adm else 'solos', admitted=adm, members=['a'],
+                                     T_r0=T, T_lb_r0=T - 10, S_r0=S, S_lb_r0=S - 10))
+                st = lambda x: dict(mean=x, lcb=x - 1.0, sd=1.0, p_pos=1.0, draws=[x])  # noqa: E731
+                scores.append(dict(sid=sid, variant=f'v{i}', wm=dict(T=st(T), S=st(S), M=st(min(T, S)))))
+    sp = tmp_path / 'S.json'
+    sp.write_text(json.dumps(dict(verdicts=verdicts)))
+    sc = tmp_path / 'SC.jsonl'
+    sc.write_text(''.join(json.dumps(s) + '\n' for s in scores))
+    res = RC.run([sp], sc, label='oracle')
+    assert res['spearman_T']['value'] == 1.0 and res['spearman_S']['value'] == 1.0
+    assert res['precision_T_pos']['value'] == 1.0 and res['top1_T_pos']['value'] == 1.0
+    assert res['admitted_hit_at_k']['M_lcb']['1']['value'] == 1.0
+    assert res['admitted_hit_random']['1']['value'] == pytest.approx(0.2)
+    assert res['spearman_T']['ci95'] is not None and res['n_moments'] == 12
+    rev = [dict(s, wm={k: dict(v, mean=-v['mean'], lcb=-v['lcb']) for k, v in s['wm'].items()}) for s in scores]
+    sc2 = tmp_path / 'SC2.jsonl'
+    sc2.write_text(''.join(json.dumps(s) + '\n' for s in rev))
+    res2 = RC.run([sp], sc2, label='reversed')
+    assert res2['spearman_T']['value'] == -1.0 and res2['admitted_hit_at_k']['T_mean']['1']['value'] == 0.0
+    assert '| Spearman' in RC.markdown(res2)

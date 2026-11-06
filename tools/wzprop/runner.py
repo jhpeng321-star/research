@@ -1,13 +1,13 @@
 """Job runner with a hard sim-s cap and a precharge ledger (PLANGEN pg_run.py semantics).
 
-    python -m tools.wzwm run JOBS.jsonl --root ROOT --cap SIM_S [--workers 20] [--core nm2|fake|PATH]
+    python -m tools.wzprop run JOBS.jsonl --root ROOT --cap SIM_S [--workers 20] [--core nm2|fake|PATH]
                                                      [--phase wmc] [--host cpuV]
 
 * every job is precharged (planned sim-s) in ROOT/ledger/CHARGES.jsonl BEFORE its process starts; a job
   whose precharge would exceed the cap is refused (REFUSED_BUDGET.json receipt, never launched);
 * a job whose out_dir already holds RESULT.json is skipped (never re-run / overwritten);
 * own child PIDs are appended to ROOT/PIDS.txt; nothing else is ever signalled;
-* core 'nm2' = the vendored, sha-pinned nm2_core.py (SUMO; cpuV only); 'fake' = tools.wzwm.fakes
+* core 'nm2' = the vendored, sha-pinned nm2_core.py (SUMO; cpuV only); 'fake' = tools.wzprop.fakes
   (CPU dry run). inprocess=True (tests / dry runs with the fake core only) runs jobs in this process.
 """
 from __future__ import annotations
@@ -50,7 +50,7 @@ def core_cmd(core, job_file):
         n3.verify()
         cmd = [sys.executable, str(n3.CORE), str(job_file)]
     elif core == 'fake':
-        cmd = [sys.executable, '-m', 'tools.wzwm.fakes', str(job_file)]
+        cmd = [sys.executable, '-m', 'tools.wzprop.fakes', str(job_file)]
     else:
         cmd = [sys.executable, str(G.check_path(core)), str(job_file)]
     if shutil.which('nice'):
@@ -115,7 +115,7 @@ def run(jobs, root, cap, *, workers=20, core='nm2', phase='wmc', host='cpuV', in
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(prog='python -m tools.wzwm run')
+    ap = argparse.ArgumentParser(prog='python -m tools.wzprop run')
     ap.add_argument('jobs')
     ap.add_argument('--root', required=True)
     ap.add_argument('--cap', type=float, required=True)

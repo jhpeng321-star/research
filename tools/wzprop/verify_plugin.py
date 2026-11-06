@@ -1,6 +1,6 @@
 """Plug-in: WM proposals -> the unchanged N3/PLANGEN SUMO verification funnel.
 
-Stages (python -m tools.wzwm verify STAGE --root ROOT ...), each writing a NEW jobs file (never appends):
+Stages (python -m tools.wzprop verify STAGE --root ROOT ...), each writing a NEW jobs file (never appends):
   init              ROOT layout + WMC_ROOT.json (source/natives root, map spec, cap, phase)
   natives           fresh worlds only: ROOT/WORLDS.json -> pg_plan.plan_natives (900 s, saved t0 states)
   geometry-moments  fresh worlds only: pg_plan.moments() (geometry-only t0 + structured B / random R
@@ -14,7 +14,7 @@ Stages (python -m tools.wzwm verify STAGE --root ROOT ...), each writing a NEW j
   analyze           pg_analyze.verdict per variant (admission: every replicate LB95(T)>0, LB95(S)>0,
                     S>=1 veh-s; later harm T>0 over [t0,t0+420); 0 collisions/teleports) + example rows
                     -> WMC_SUMMARY.json, WMC_MOVES_B.jsonl (WM), WMC_MOVES_R.jsonl, WMC_NEGATIVES.jsonl
-Between stages: python -m tools.wzwm run JOBS --root ROOT --cap C (precharge ledger, own PIDs).
+Between stages: python -m tools.wzprop run JOBS --root ROOT --cap C (precharge ledger, own PIDs).
 
 Same moments as the reference arms: natives (saved t0 states, scenario) are read from the source root
 and never written; the dither targets of the source moment are reused unless a WM member is one of
@@ -311,7 +311,7 @@ def analyze(root, out_dir=None, phase_id=PHASE_ID):
 
 # ------------------------------------------------------------------------------------------ CLI
 def main(argv=None):
-    ap = argparse.ArgumentParser(prog='python -m tools.wzwm verify')
+    ap = argparse.ArgumentParser(prog='python -m tools.wzprop verify')
     ap.add_argument('stage', choices=('init', 'natives', 'geometry-moments', 'moments', 'screen', 'solos', 'rep1',
                                       'rep2', 'analyze'))
     ap.add_argument('--root', required=True)

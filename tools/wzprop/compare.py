@@ -1,6 +1,6 @@
 """Matched-effort comparison: WM-proposed vs structured-search vs random proposals on the same moments.
 
-    python -m tools.wzwm compare --summary REF/PG_SUMMARY.json --summary WMROOT/results/WMC_SUMMARY.json \
+    python -m tools.wzprop compare --summary REF/PG_SUMMARY.json --summary WMROOT/results/WMC_SUMMARY.json \
         [--proposals PROPOSALS.jsonl] [--cap SIM_S] [--salt S] --out COMPARE.json
 
 Arms come from the verdicts of N3/PLANGEN/LOWCAV summaries (arm B -> 'structured', R -> 'random') and of
@@ -314,7 +314,7 @@ def rank_check(summaries, scores_path):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(prog='python -m tools.wzwm compare')
+    ap = argparse.ArgumentParser(prog='python -m tools.wzprop compare')
     ap.add_argument('--summary', action='append', required=True)
     ap.add_argument('--proposals')
     ap.add_argument('--cap', type=float)

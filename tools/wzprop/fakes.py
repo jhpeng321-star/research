@@ -10,7 +10,7 @@ The fake core reads a nm2_core JOB.json and writes a RESULT.json with the same k
 writes (J_road/J_src per second, safety counters, tracks, release_el, issued, saved, snapshots for
 natives), so the vendored pg_plan / pg_analyze run unchanged on it:
 
-    python -m tools.wzwm.fakes JOB.json
+    python -m tools.wzprop.fakes JOB.json
 """
 from __future__ import annotations
 

@@ -42,7 +42,7 @@ from . import fakes
 from . import geometry as G
 
 READY_NAME = 'WMA_READY.json'
-READY_ENV = 'WZWM_WMA_READY'
+READY_ENV = 'WZPROP_WMA_READY'
 DEFAULT_READY_LOCATIONS = ('WMA_READY.json', 'E:/agent-work/c4-wz-wm-port/WMA_READY.json')
 
 
@@ -53,9 +53,15 @@ class WMContractError(ValueError):
 def moment_input(m, state_file=None):
     """Observable moment dict passed to observe(): no world labels, no global aggregates."""
     G.check_seed(m['seed'], where=f"(moment {m.get('sid')})")
-    return dict(moment_id=moment_id(m['sid']), t0=int(m['t0']), map=G.MAP, cavs=[dict(c) for c in m['all_cavs_t0']],
-                state_file=None if state_file is None else str(state_file), inserted_t0=m.get('inserted_t0'),
-                crn_seed=F.crn_seed(m['sid']))
+    out = dict(moment_id=moment_id(m['sid']), t0=int(m['t0']), map=G.MAP, cavs=[dict(c) for c in m['all_cavs_t0']],
+               state_file=None if state_file is None else str(state_file), inserted_t0=m.get('inserted_t0'),
+               crn_seed=F.crn_seed(m['sid']))
+    obs = m.get('observed')             # tapes.enrich: CAV-detected neighbours + RSU entrance counters
+    if obs:
+        out['vehicles'] = [dict(v) for v in obs.get('vehicles') or []]
+        if obs.get('counter') is not None:
+            out['counter'] = [list(r) for r in obs['counter']]
+    return out
 
 
 def moment_id(sid):
@@ -165,7 +171,8 @@ class WMABackend:
         self._evaluate = _resolve(spec['evaluate'])
         self._observe = _resolve(spec['observe']) if spec.get('observe') else None
         load = _resolve(spec['load']) if spec.get('load') else None
-        kw = dict(doc.get('load_kwargs') or {})
+        kw = {k: v for k, v in (doc.get('load_kwargs') or {}).items()   # drop '<...>' placeholders
+              if not (isinstance(v, str) and v.startswith('<') and v.endswith('>'))}
         kw.update(load_kwargs or {})
         self.handle = load(**kw) if load else None
         self.meta = dict(backend='wma', ready=str(path), ready_sha256=hashlib.sha256(text).hexdigest(), api=spec,

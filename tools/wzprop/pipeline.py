@@ -1,8 +1,8 @@
 """Stage chaining (pg_wave.sh equivalent) and the CPU dry run of the whole WM-C pipeline on fakes.
 
-    python -m tools.wzwm wave --root ROOT [--workers 20] [--core nm2] [--fit RESERVE] [--stages screen,solos,rep1,rep2]
+    python -m tools.wzprop wave --root ROOT [--workers 20] [--core nm2] [--fit RESERVE] [--stages screen,solos,rep1,rep2]
         plan + run each funnel stage in order (each stage reads the previous stage's RESULTs), then analyze
-    python -m tools.wzwm dryrun --out DIR
+    python -m tools.wzprop dryrun --out DIR
         fake natives -> geometry moments -> reference root (structured + random) -> StubWM proposals ->
         WM root -> both funnels on the fake core -> analyze -> compare.  CPU only, no SUMO.
 """
@@ -77,7 +77,7 @@ def dry_run(out, *, worlds=None, k_matched=True, wm=None, cfg=None, cap=10_000_0
 
 
 def main_wave(argv=None):
-    ap = argparse.ArgumentParser(prog='python -m tools.wzwm wave')
+    ap = argparse.ArgumentParser(prog='python -m tools.wzprop wave')
     ap.add_argument('--root', required=True)
     ap.add_argument('--workers', type=int, default=20)
     ap.add_argument('--core', default='nm2')
@@ -91,7 +91,7 @@ def main_wave(argv=None):
 
 
 def main_dryrun(argv=None):
-    ap = argparse.ArgumentParser(prog='python -m tools.wzwm dryrun')
+    ap = argparse.ArgumentParser(prog='python -m tools.wzprop dryrun')
     ap.add_argument('--out', required=True)
     a = ap.parse_args(argv)
     res = dry_run(a.out)

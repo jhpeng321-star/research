@@ -9,7 +9,7 @@ families -> fam_other; onset = start_s, hold = hold_s, depth = families.strength
 cut) and the WM's own prediction (synergy = mean S, saving = mean T, best-solo saving = mean T - mean S,
 draws = S draws). World labels are never inputs.
 
-Labels (python -m tools.wzwm labels): one wallfit-labels-v1 pair per (moment, verified move) with one
+Labels (python -m tools.wzprop labels): one wallfit-labels-v1 pair per (moment, verified move) with one
 seed row per replicate (crn1 = undithered r0, crn2/crn3 = the dithered replicates): synergy S, its LB95,
 advantage T, best-solo advantage T - S, admission (final funnel verdict; None while undetermined).
 Train later with the map-scoped guard:  WALLFIT_MAP=wz3to2 python -m tools.wallfit run --labels ...

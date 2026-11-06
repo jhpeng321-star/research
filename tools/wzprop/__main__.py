@@ -1,8 +1,11 @@
-"""python -m tools.wzwm {propose|score|rankcheck|verify|run|wave|compare|labels|dryrun} ...
+"""python -m tools.wzprop {propose|score|rankcheck|verify|run|wave|compare|labels|dryrun} ...
 
 propose  (WM host)  MOMENTS.json -> PROPOSALS.jsonl (+ _RECEIPT.json); zero SUMO
 score    (WM host)  WM predictions of the variants already in a MOMENTS.json -> SCORES.jsonl; zero SUMO
 rankcheck (any)     WM ranking vs existing SUMO verdicts (Spearman T/S, AUC admitted, top-1) -> JSON
+enrich   (any)      MOMENTS.json + WM-D tapes -> observable moments (CAV-detected neighbours, RSU counters)
+wmrank   (WM host)  score + bootstrap rank metrics with one WM checkpoint (baseline WM2 / WM-E) -> DIR
+rankmetrics (any)   bootstrap rank metrics from SCORES.jsonl + summaries -> JSON + .md
 verify   (cpuV)     plug-in stages: init | natives | geometry-moments | moments | screen | solos | rep1 | rep2 | analyze
 run      (cpuV)     run one jobs file under the root's precharge ledger and cap
 wave     (cpuV)     screen -> solos -> rep1 -> rep2 (plan + run each) -> analyze
@@ -29,7 +32,7 @@ def _kv(items):
 
 def propose(argv):
     from . import proposer as PR
-    ap = argparse.ArgumentParser(prog='python -m tools.wzwm propose')
+    ap = argparse.ArgumentParser(prog='python -m tools.wzprop propose')
     ap.add_argument('--moments', required=True, help='source MOMENTS.json (N3/PLANGEN root or MOMENTS_GEOMETRY.json)')
     ap.add_argument('--out', required=True, help='new PROPOSALS.jsonl')
     ap.add_argument('--wm', default='auto', help="auto | wma | wma:PATH | stub | pkg.mod:factory")
@@ -67,7 +70,7 @@ def _backend(a):
 
 def score(argv):
     from . import proposer as PR
-    ap = argparse.ArgumentParser(prog='python -m tools.wzwm score')
+    ap = argparse.ArgumentParser(prog='python -m tools.wzprop score')
     ap.add_argument('--moments', required=True)
     ap.add_argument('--out', required=True)
     ap.add_argument('--wm', default='auto')
@@ -82,10 +85,57 @@ def score(argv):
                                       sids=a.sids.split(',') if a.sids else None), indent=1, default=str))
 
 
+def wmrank(argv):
+    """One-shot zero-SUMO WM ranking check: score the verified variants with a WM checkpoint, then the
+    bootstrap rank metrics. Same command for the un-fine-tuned WM2 and WM-E's fine-tuned checkpoint."""
+    import time
+    from . import geometry as G
+    from . import proposer as PR
+    from . import rankcheck as RC
+    from . import wm_backend as W
+    ap = argparse.ArgumentParser(prog='python -m tools.wzprop wmrank')
+    ap.add_argument('--ready', required=True, help='WMA_READY.json (api entries)')
+    ap.add_argument('--checkpoint', required=True)
+    ap.add_argument('--map-spec', required=True)
+    ap.add_argument('--device', default='cuda')
+    ap.add_argument('--max-rows', type=int, default=96)
+    ap.add_argument('--mem-fraction', type=float, default=None, help='torch.cuda per-process memory fraction')
+    ap.add_argument('--threads', type=int, default=None)
+    ap.add_argument('--moments', required=True, help='tapes.enrich output (observable moments)')
+    ap.add_argument('--summary', action='append', required=True)
+    ap.add_argument('--label', required=True)
+    ap.add_argument('--K', type=int, default=8)
+    ap.add_argument('--H', type=int, default=300)
+    ap.add_argument('--sids')
+    ap.add_argument('--out', required=True, help='NEW directory')
+    a = ap.parse_args(argv)
+    out = G.check_path(a.out)
+    out.mkdir(parents=True, exist_ok=False)
+    import torch
+    if a.threads:
+        torch.set_num_threads(int(a.threads))
+    if a.mem_fraction and a.device.startswith('cuda'):
+        torch.cuda.set_per_process_memory_fraction(float(a.mem_fraction))
+    t0 = time.time()
+    wm = W.load_backend(f'wma:{a.ready}', checkpoint=a.checkpoint, map_spec=a.map_spec, device=a.device,
+                        max_rows=a.max_rows)
+    if a.checkpoint and not getattr(wm.handle, 'meta', {}).get('trained', True):
+        raise SystemExit('loaded an untrained model')
+    rec = PR.score_moments(wm, a.moments, out / 'SCORES.jsonl', K=a.K, H=a.H,
+                           sids=a.sids.split(',') if a.sids else None)
+    rec.update(handle_meta=getattr(wm.handle, 'meta', None), label=a.label, wall_s_total=round(time.time() - t0, 1),
+               device=a.device, max_rows=a.max_rows,
+               cuda_peak_gb=(round(torch.cuda.max_memory_allocated() / 2**30, 2) if a.device.startswith('cuda')
+                             else None))
+    (out / 'SCORE_RECEIPT.json').write_text(json.dumps(rec, indent=1, default=str))
+    RC.main(['--scores', str(out / 'SCORES.jsonl'), '--label', a.label, '--checkpoint', a.checkpoint,
+             '--out', str(out / 'RANKCHECK.json')] + [x for s in a.summary for x in ('--summary', s)])
+
+
 def rankcheck(argv):
     from . import compare as C
     from . import geometry as G
-    ap = argparse.ArgumentParser(prog='python -m tools.wzwm rankcheck')
+    ap = argparse.ArgumentParser(prog='python -m tools.wzprop rankcheck')
     ap.add_argument('--summary', action='append', required=True)
     ap.add_argument('--scores', required=True)
     ap.add_argument('--out', required=True)
@@ -98,7 +148,7 @@ def rankcheck(argv):
 
 def labels(argv):
     from . import wallfit_bridge as WB
-    ap = argparse.ArgumentParser(prog='python -m tools.wzwm labels')
+    ap = argparse.ArgumentParser(prog='python -m tools.wzprop labels')
     ap.add_argument('--summary', action='append', required=True, help='NM2/PG/LC/WMC summary JSON (repeatable)')
     ap.add_argument('--moments', action='append', required=True, help='matching MOMENTS.json (repeatable)')
     ap.add_argument('--wm-scores', action='append', help='score output for non-WM variants (optional)')
@@ -121,6 +171,18 @@ def main(argv=None):
         return score(rest)
     if cmd == 'rankcheck':
         return rankcheck(rest)
+    if cmd == 'wmrank':
+        return wmrank(rest)
+    if cmd == 'rankmetrics':
+        from .rankcheck import main as rm
+        rm(rest)
+        return 0
+    if cmd == 'enrich':
+        from .tapes import enrich
+        if len(rest) != 3:
+            raise SystemExit('python -m tools.wzprop enrich MOMENTS.json TAPES_ROOT OUT.json')
+        print(json.dumps(enrich(*rest)))
+        return 0
     if cmd == 'verify':
         from .verify_plugin import main as m
     elif cmd == 'run':
