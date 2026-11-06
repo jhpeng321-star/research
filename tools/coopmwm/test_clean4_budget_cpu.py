@@ -63,7 +63,7 @@ def test_smoke_gate_subphase_cap():
 
 
 def test_seed_ranges():
-    assert b.check_seeds([989200, 989599], [989600, 989699]) == dict(train=2, final=2)
+    assert b.check_seeds([989200, 989599], [989600, 989699]) == dict(train=2, final=2, guidance=0)
     for train, final in (([989600], [989650]), ([989199], [989600]), ([989300], [989700]),
                          ([964100], [989600]), ([989300], [989300])):
         with pytest.raises(ValueError):
