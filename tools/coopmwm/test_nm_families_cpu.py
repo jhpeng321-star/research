@@ -849,3 +849,26 @@ def test_bank_supervision_imitates_family_options_identically_for_b_and_r(cfg, m
     assert result['final_ce'] < result['initial_ce']
     strip = lambda r: canon({k: v for k, v in r.items() if k != 'passes'})  # noqa: E731
     assert strip(results['B']) == strip(results['R'])
+
+
+# ------------------------------------------------------------------ N9 together with W1 + W2
+
+def test_n9_with_w1_and_w2_enabled_together(cfg, fixed):
+    on = fam_cfg(cfg, dict(early_merge=4), wall_pressure_features=True, wall_release=True,
+                 **v2v_wall.config_keys(provenance=PROV, member_cap=3))
+    p = make(on)
+    assert p.trigger.w2_head is not None and isinstance(p.trigger.extension, nf.Composite)
+    assert p.trigger.option_families[-2:] == ('early_merge_initiate', 'early_merge_join')
+    w1w2 = make(dict(on, nm_families=False))
+    assert w1w2.trigger.w2_head[0].in_features+len(nf.DESCRIPTOR) == p.trigger.w2_head[0].in_features
+    p.trigger.trigger_head = Prefer(p.trigger, initiate_then_join('early_merge', 'merge'))
+    c = controller(p)
+    s, _ = step(p, c, early_rows(300, with_m2=False), 300)
+    assert s['track2_trigger']['accepted']['m1'] is True and 'merge_pressure' in s['track2']
+    assert s['g5_lane_requests'] == dict(m1=1) and c.g5_lane_targets == dict(m1=1)
+    s, _ = step(p, c, early_rows(301, m1_lane=1), 301)
+    assert s['track2_trigger']['proposals']['nm_families']['accepted_join'] == 2
+    assert 'v2v_wall' in s['track2'] and 'nm_families' in s['track2']
+    record = json.loads(json.dumps(s['track2_trigger']))
+    logp, _, _ = p.trigger.evaluate(tb._batch(record))
+    assert logp.tolist() == pytest.approx(record['logp'])

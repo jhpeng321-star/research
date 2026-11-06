@@ -30,9 +30,13 @@ import torch
 from torch import nn
 from torch.distributions import Categorical
 
+import numpy as np
+
 from .v2v_integrate import widen_context
 from .v2v_model import FEATURES, ACTOR_LATENT
 from .variety import VARIETY_REGISTERED
+
+W2_HIDDEN = 32   # W2 additive merge-pressure/release head width (registered, B = R)
 
 
 def _moves(api):
@@ -106,7 +110,7 @@ class TriggerPolicy(nn.Module):
     zero-initialised on top of the unchanged default initialisation.
     """
     def __init__(self, base_policy, *, v2v_dim, n_candidates, partner_slots,
-                 freeze_base=True, moves_api=None, extension=None):
+                 freeze_base=True, moves_api=None, extension=None, w2=None):
         super().__init__()
         if (type(v2v_dim) is not int or v2v_dim < 1 or type(n_candidates) is not int
                 or n_candidates < 1 or type(partner_slots) is not int or partner_slots < 1):
@@ -142,6 +146,32 @@ class TriggerPolicy(nn.Module):
             self.descriptor_width = width+extension.descriptor_width
             self.trigger_head[0] = widen_columns(self.trigger_head[0], hidden+width,
                                                  extension.descriptor_width+extension.context_width)
+        # W2 (default OFF -> no module, no parameter, identical bytes): an ADDITIVE logit
+        # head over observable merge-pressure inputs and/or the gradual-release descriptor.
+        # Its output layer is zero-initialised, so turning it on leaves every logit,
+        # sample and log-probability unchanged until the head is trained.
+        # Descriptor layout (merged W1+W2): [base | W1 extension | W2 release]; the
+        # trigger head reads base+extension, the W2 head reads the full descriptor.
+        w2 = dict(w2 or {})
+        if set(w2)-{'pressure', 'release'} or any(type(v) is not bool for v in w2.values()):
+            raise ValueError('trigger w2 options are the booleans pressure/release')
+        self.w2_pressure_dim = 0
+        self.w2_descriptor_dim = 0
+        self.w2_head = None
+        if w2.get('pressure'):
+            from .wall_pressure import PRESSURE_DIM
+            self.w2_pressure_dim = PRESSURE_DIM
+        if w2.get('release'):
+            from .wall_release import DESCRIPTOR_DIM
+            self.w2_descriptor_dim = DESCRIPTOR_DIM
+        if self.w2_pressure_dim or self.w2_descriptor_dim:
+            with torch.random.fork_rng(devices=[]):
+                self.w2_head = nn.Sequential(
+                    nn.Linear(self.w2_pressure_dim+self.descriptor_width+self.w2_descriptor_dim,
+                              W2_HIDDEN),
+                    nn.Tanh(), nn.Linear(W2_HIDDEN, 1))
+                nn.init.zeros_(self.w2_head[-1].weight)
+                nn.init.zeros_(self.w2_head[-1].bias)
 
     def forward(self, context):
         return self.base_policy(context)
@@ -201,10 +231,24 @@ class TriggerPolicy(nn.Module):
             hidden = self.base_policy.actor[:-1](torch.cat((x, latent), -1))
         return hidden.detach() if self.freeze_base else hidden
 
+    def _w2_pressure(self, context, count):
+        """[CAV, PRESSURE_DIM] scaled observable merge-pressure inputs (missing block if absent)."""
+        from .wall_pressure import missing_block, scaled
+        blocks = context.get('merge_pressure') or {}
+        rows = [scaled(blocks[v] if blocks.get(v) is not None else missing_block())
+                for v in context['members']]
+        out = torch.as_tensor(np.asarray(rows, dtype=np.float32).reshape(len(rows), self.w2_pressure_dim))
+        if out.shape[0] != count:
+            raise ValueError('merge-pressure member mismatch')
+        return out
+
     def _descriptor(self, move, visible):
         out = self._base_descriptor(move, visible)
         if self.extension is not None:
             out += self.extension.descriptor(move)
+        if self.w2_descriptor_dim:
+            from .wall_release import descriptor
+            out += descriptor(move)
         return out
 
     def _base_descriptor(self, move, visible):
@@ -225,15 +269,23 @@ class TriggerPolicy(nn.Module):
         hidden = self._hidden(context)
         count = self.n_candidates+1
         width = self.descriptor_width
-        if descriptors.shape != (len(hidden), count, width) or mask.shape != (len(hidden), count):
+        if descriptors.shape != (len(hidden), count, width+self.w2_descriptor_dim) \
+                or mask.shape != (len(hidden), count):
             raise ValueError('trigger table shape mismatch')
         if mask.dtype != torch.bool or (len(hidden) and not bool(mask[:, 0].all())):
             raise ValueError('none must always be available')
-        inputs = torch.cat((hidden[:, None, :].expand(-1, count, -1), descriptors), -1)
+        inputs = torch.cat((hidden[:, None, :].expand(-1, count, -1),
+                            descriptors if self.w2_head is None else descriptors[..., :width]), -1)
         if self.extension is not None and self.extension.context_width:
             extra = self.extension.context_features(context)
             inputs = torch.cat((inputs, extra[:, None, :].expand(-1, count, -1)), -1)
-        logits = self.trigger_head(inputs).squeeze(-1).masked_fill(~mask, -torch.inf)
+        logits = self.trigger_head(inputs).squeeze(-1)
+        if self.w2_head is not None:
+            pressure = (self._w2_pressure(context, len(hidden)) if self.w2_pressure_dim
+                        else descriptors.new_zeros((len(hidden), 0)))
+            extra = torch.cat((pressure[:, None, :].expand(-1, count, -1), descriptors), -1)
+            logits = logits+self.w2_head(extra).squeeze(-1)
+        logits = logits.masked_fill(~mask, -torch.inf)
         return logits, self.trigger_value(hidden).squeeze(-1)
 
     @torch.no_grad()
@@ -267,7 +319,8 @@ class TriggerPolicy(nn.Module):
             descriptors.append([self._descriptor(move, visible) for move in table])
             masks.append(mask)
         shape = (len(tables), self.n_candidates+1)
-        desc = torch.tensor(descriptors, dtype=torch.float32).reshape(*shape, self.descriptor_width)
+        desc = torch.tensor(descriptors, dtype=torch.float32).reshape(
+            *shape, self.descriptor_width+self.w2_descriptor_dim)
         mask = torch.tensor(masks, dtype=torch.bool).reshape(shape)
         logits, values = self.distribution(context, desc, mask)
         if not len(tables):
@@ -291,6 +344,8 @@ class TriggerPolicy(nn.Module):
 
     def learning_parameters(self):
         parameters = list(self.trigger_head.parameters())+list(self.trigger_value.parameters())
+        if self.w2_head is not None:
+            parameters += list(self.w2_head.parameters())
         if not self.freeze_base:
             parameters += list(self.base_policy.actor.parameters())
         return parameters
