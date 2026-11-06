@@ -68,6 +68,10 @@ class RoadGeometry:
     #: entrance -> WM lanes (counter channel 0 = mainline/through, 1 = ramp/closing lane)
     entrances: tuple = ((0, 1), (2,))
     k_slots: int = 192
+    #: SUMO -> frame projection of a lane-drop map: ((edge, sumo lane, WM lane, lane start x), ...)
+    #: and the anchor (s = x - anchor); empty / None on the on-ramp map (traffic_shepherd geometry).
+    frame_lanes: tuple = ()
+    anchor_x_m: Optional[float] = None
     descriptor: Optional[str] = None           # 'n1' | 'stub' | None (original constants)
     descriptor_sha256: Optional[str] = None    # N1 MapDescriptor.digest
 
@@ -96,6 +100,18 @@ class RoadGeometry:
     def closing_change_restricted(self) -> bool:
         """True when a closing-lane car can change only inside the merge zone (on-ramp map)."""
         return tuple(self.closing_change_zone_s_m) == tuple(self.merge_zone_s_m)
+
+    def project(self, edge: str, sumo_lane: int, *, x: Optional[float] = None,
+                pos: Optional[float] = None) -> tuple[int, float]:
+        """``(WM lane, s)`` of a SUMO position on a lane-drop map: global ``x`` (straight
+        west->east road) or lane position ``pos``; raises for an unknown lane."""
+        if self.anchor_x_m is None:
+            raise ValueError("SUMO projection of the on-ramp map: use traffic_shepherd.c4.geometry")
+        for e, i, wm, x0 in self.frame_lanes:
+            if e == str(edge) and i == int(sumo_lane):
+                gx = float(x) if x is not None else x0 + float(pos)
+                return wm, gx - float(self.anchor_x_m)
+        raise ValueError(f"lane {edge}_{sumo_lane} is not in the {self.name} frame")
 
     def record(self) -> dict:
         out = {"schema": SCHEMA}
@@ -158,6 +174,9 @@ def road_from_descriptor(desc) -> RoadGeometry:
         rsu_mainline_s_m=tuple(float(x) for x in rsu.field_mainline_s_m),
         rsu_closing_s_m=tuple(float(x) for x in rsu.field_ramp_s_m), rsu_cell_m=float(rsu.field_cell_m),
         entrances=(main, (closing,)), k_slots=int(desc.k_slots),
+        frame_lanes=tuple(sorted((str(e), int(i), int(wm), float(x0))
+                                 for (e, i), (wm, x0) in desc.lane_table.items())),
+        anchor_x_m=float(desc.here_offsets[closing]),
         descriptor="stub" if getattr(desc, "is_stub", False) else "n1",
         descriptor_sha256=getattr(desc, "digest", None))
 

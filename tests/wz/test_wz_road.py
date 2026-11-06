@@ -176,7 +176,7 @@ def test_converter_writes_a_wz3to2_source_and_guards_maps_and_seeds(tmp_path):
     from wms.data.map_guard import MapDataRefusal
 
     road = wz_road(k_slots=64)
-    collect = _write(tmp_path / "a", synth.WZ3TO2, (989100, 989300), road)
+    collect = _write(tmp_path / "a", synth.WZ3TO2, (989100, 989150), road)
     with R.road_scope(road):
         doc = C4.convert([collect], tmp_path / "src", val_frac=0.5, split_seed=0)
         assert doc["map"] == "wz3to2" and doc["road_digest"] == road.digest
@@ -185,7 +185,7 @@ def test_converter_writes_a_wz3to2_source_and_guards_maps_and_seeds(tmp_path):
         ep = C4.EpisodeArrays(tmp_path / "src" / doc["episodes"][0]["dir"])
         counter = np.asarray(ep.array("counter"))
         assert counter[-1, 1].sum() > 0          # closing-lane insertions = entrance 1
-        for seed in (989600, 989200, 989580, 964000, 989099):   # held-out / reserved / forbidden
+        for seed in (989600, 989200, 989300, 989050, 964000):   # refused ranges
             held = _write(tmp_path / f"h{seed}", synth.WZ3TO2, (seed,), road)
             with pytest.raises(MapDataRefusal):
                 C4.convert([held], tmp_path / f"src_h{seed}")
@@ -207,7 +207,7 @@ def test_wz3to2_windows_train_through_the_round16_model(tmp_path):
     from wms.train.trainer import WmSTrainer
 
     road = wz_road(k_slots=64)
-    collect = _write(tmp_path, synth.WZ3TO2, (989300, 989301), road)
+    collect = _write(tmp_path, synth.WZ3TO2, (989120, 989121), road)
     torch.manual_seed(5)
     with R.road_scope(road):
         C4.convert([collect], tmp_path / "src", val_frac=0.0)
@@ -234,12 +234,10 @@ def test_wz3to2_windows_train_through_the_round16_model(tmp_path):
 
 
 @pytest.mark.parametrize("seed,ok", [
-    (989100, True), (989199, True), (989217, True), (989349, True), (989354, True),
-    (989399, True), (989403, True), (989579, True),
-    (989099, False), (989200, False), (989216, False), (989350, False), (989353, False),
-    (989400, False), (989402, False), (989580, False), (989599, False), (989600, False),
-    (989699, False), (989700, False), (964000, False), (964199, False), (962123, False),
-    (977500, False)])
+    (989100, True), (989150, True), (989199, True),
+    (989000, False), (989099, False), (989200, False), (989216, False), (989300, False),
+    (989599, False), (989600, False), (989699, False), (989700, False), (988999, False),
+    (964000, False), (964199, False), (962123, False), (977500, False)])
 def test_wz3to2_seed_registry(seed, ok):
     from wms.data.map_guard import MapDataRefusal, check_train_seed, train_seed_ok
 
@@ -248,4 +246,4 @@ def test_wz3to2_seed_registry(seed, ok):
         with pytest.raises(MapDataRefusal):
             check_train_seed("wz3to2", seed)
     with pytest.raises(MapDataRefusal):
-        check_train_seed("unregistered_map", 989300)
+        check_train_seed("unregistered_map", 989150)
