@@ -166,11 +166,14 @@ def sha(p) -> str:
 
 
 def git_head() -> Optional[str]:
+    """Deployed CODE_SHA (gpuA code dirs have no .git), else ``git rev-parse HEAD``."""
+    if (REPO / "CODE_SHA").is_file():
+        return (REPO / "CODE_SHA").read_text().strip() or None
     try:
         return subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, capture_output=True, text=True,
                               timeout=30).stdout.strip() or None
     except Exception:
-        return (REPO / "CODE_SHA").read_text().strip() if (REPO / "CODE_SHA").is_file() else None
+        return None
 
 
 # ------------------------------------------------------------------ prepare ---
