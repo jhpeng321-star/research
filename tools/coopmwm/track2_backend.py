@@ -29,7 +29,7 @@ import types
 import numpy as np
 import torch
 
-from . import moves, feasible_proposals
+from . import moves, feasible_proposals, lane_drop, v2v_wall
 from .acceleration import PHI
 from .accel_learner import GAMMA, UNIT
 from .coop_layer import CooperationLayer, LayerConfig
@@ -71,6 +71,15 @@ class MoveAPI:
     def __init__(self, cfg=None):
         from .group_lane import families
         self.FAMILIES = families(cfg)
+        # W1 protocol options are executable commitments, not trigger one-hot families.
+        self.EXECUTABLE_FAMILIES = self.FAMILIES+(
+            v2v_wall.FAMILIES if v2v_wall.settings(cfg) is not None else ())
+        # N2 (opt-in): joint lane-drop moves and protocol options are executable extension
+        # families described by zero-initialised descriptor columns (the trigger one-hot,
+        # and so every pre-existing candidate logit, is unchanged).
+        ld = lane_drop.settings(cfg)
+        if ld is not None:
+            self.EXECUTABLE_FAMILIES = self.EXECUTABLE_FAMILIES+lane_drop.extension_families(ld)
 
     @staticmethod
     def candidates(obs_state, rng, n):
@@ -78,6 +87,15 @@ class MoveAPI:
 
     @staticmethod
     def offsets(move, t):
+        if lane_drop.is_lane_drop(move):
+            # N2 moves run a closed-loop speed law that needs the member's own speed and
+            # commands: EpisodePolicy.sample applies it on the single-writer committed-offset
+            # column. This open-loop raw-request view carries no offset for them.
+            return dict.fromkeys(move.move.members, 0.)
+        if isinstance(move.move, v2v_wall.WallOption):
+            option = move.move
+            return {v: -float(option.depth) if option.onset <= t < option.onset+option.hold else 0.
+                    for v in option.members}
         return moves.offsets(move.move, t)
 
 
@@ -109,12 +127,17 @@ def _check(cfg, arm):
     if arm != 'A':
         from .coordination_opportunities import settings as opportunity_settings
         opportunity_settings(cfg)
+        v2v_wall.settings(cfg)            # W1 options: common B/R registration, default off
+        v2v_wall.awareness_settings(cfg)
         from .sparse_synergy_credit import settings as synergy_settings
         synergy_settings(cfg)
         from .track2_safety_reward import settings as close_call_settings
         close_call_settings(cfg)
         if not cfg.get('merge_features', False):
             raise ValueError('B/R require observable merge features')
+        from .wall_w2 import settings as w2_settings
+        w2_settings(cfg)  # W2 keys: common B = R, default OFF
+        lane_drop.settings(cfg)  # N2 keys: common B = R, default OFF
         if type(cfg['decision_interval_s']) is not int or cfg['decision_interval_s'] < 1:
             raise ValueError('positive registered decision interval required')
         reward = cfg.get('track2_reward', {})
@@ -133,7 +156,7 @@ def _batch_dict(batch):
 
 
 def _batch(record):
-    return TriggerBatch(record['context'], tuple(tuple(None if m is None else moves.Move.from_dict(m)
+    return TriggerBatch(record['context'], tuple(tuple(None if m is None else lane_drop.option_from_dict(m)
         for m in table) for table in record['tables']),
         torch.tensor(record['descriptors'], dtype=torch.float32),
         torch.tensor(record['mask'], dtype=torch.bool),
@@ -142,16 +165,33 @@ def _batch(record):
         torch.tensor(record['values'], dtype=torch.float32))
 
 
-def _features(context):
-    """No RSU/broadcast or globally conditioned base intent enters the layer."""
+def _features(context, aware=None, lane_drop_block=False):
+    """No RSU/broadcast or globally conditioned base intent enters the layer.
+
+    ``aware`` (W1 coop_awareness settings; default None) inserts the awareness
+    block before the committed-offset column (zero-initialised layer columns).
+    ``lane_drop_block`` (N2 features; default False) inserts the scaled lane-drop block
+    after it (zero-initialised columns; explicitly missing when not recorded)."""
     rows = []
+    width = v2v_wall.awareness_width(aware)
+    ld_width = lane_drop.LANE_DROP_DIM if lane_drop_block else 0
     for vid, x in zip(context['members'], context['x']):
         block = context.get('merge_features', {}).get(vid)
         if block is None:
             # Bank records without sensor packets remain explicitly missing.
             block = merge_features(None, vid, now_s=0, cfg=MergeFeaturesConfig(True)).tolist()
-        rows.append(list(x[:29]) + list(block) + [context.get('move_offsets', {}).get(vid, 0.)])
-    result = torch.tensor(rows, dtype=torch.float32).reshape(len(rows), FEATURE_DIM)
+        extra = []
+        if width:
+            extra = (context.get('coop_awareness') or {}).get(vid)
+            if extra is None:
+                extra = v2v_wall.missing_awareness(aware)
+            if len(extra) != width:
+                raise ValueError('coop awareness block width mismatch')
+        if ld_width:
+            ld = (context.get('lane_drop') or {}).get(vid)
+            extra = list(extra) + lane_drop.scaled(lane_drop.missing_block() if ld is None else ld).tolist()
+        rows.append(list(x[:29]) + list(block) + list(extra) + [context.get('move_offsets', {}).get(vid, 0.)])
+    result = torch.tensor(rows, dtype=torch.float32).reshape(len(rows), FEATURE_DIM+width+ld_width)
     if not bool(torch.isfinite(result).all()):
         raise ValueError('nonfinite local cooperation features')
     return result
@@ -167,7 +207,9 @@ class ProductionLayer(CooperationLayer):
     T2A's categorical PPO is updated separately on decision samples only.
     """
     def _features(self, context):
-        return _features(context)
+        if getattr(self, 'lane_drop_width', 0):
+            return _features(context, getattr(self, 'awareness', None), True)
+        return _features(context, getattr(self, 'awareness', None))
 
     def _distribution(self, features, move_offsets=None):
         residual, logits, _, offsets = super()._distribution(features, move_offsets)
@@ -270,15 +312,44 @@ class EpisodePolicy(torch.nn.Module):
         self.cfg, self.arm = deepcopy(cfg), arm
         config = LayerConfig(**dict(cfg['layer_config'], feature_dim=FEATURE_DIM, enabled=True))
         self.layer = ProductionLayer(base, config)
+        # W1 options (default off): zero-initialised awareness columns on top of the
+        # unchanged default initialisation; V2V wall protocol runtime state.
+        self.awareness = v2v_wall.awareness_settings(cfg)
+        if self.awareness is not None:
+            v2v_wall.widen_layer(self.layer, self.awareness)
+            self.layer.awareness = self.awareness
+        wall_settings = v2v_wall.settings(cfg)
+        self.wall = None if wall_settings is None else v2v_wall.Protocol(wall_settings)
+        self.awareness_blocks = {}
+        # N2 options (default off): zero-initialised lane-drop residual columns (after W1
+        # awareness), lane-drop session ledger and the optional RSU suggestion head.
+        self.lane_drop = lane_drop.settings(cfg)
+        self.ld_protocol, self.rsu = None, None
+        if self.lane_drop is not None:
+            if self.lane_drop['features']:
+                lane_drop.widen_layer(self.layer)
+            if self.lane_drop['v2v'] is not None:
+                self.ld_protocol = lane_drop.Protocol(self.lane_drop)
+            if self.lane_drop['rsu'] is not None:
+                from .lane_drop_rsu import RSU
+                self.rsu = RSU(self.lane_drop, self.ld_protocol)
+            self.lane_drop_blocks, self.own_speeds, self.native_commands = {}, {}, {}
         self.layer.actuation_receipts = 'clean2_budget' in cfg or 'clean3_budget' in cfg
         # Retain the legacy slot/optimizer layout for existing sidecars. It is
         # unused by ProductionLayer, gets no gradient and cannot gate actuation.
         self.layer.trigger_gain.requires_grad_(True)
         self.layer.optimizer = torch.optim.Adam(self.layer.layer_parameters(), lr=config.learning_rate)
+        from .wall_w2 import settings as w2_settings
+        self.w2 = w2_settings(cfg)
+        w2 = dict(pressure=self.w2['wall_pressure_features'], release=self.w2['wall_release'])
         self.trigger = TriggerPolicy(self.layer.base, v2v_dim=cfg['v2v_dim'],
             n_candidates=cfg['trigger_candidates'], partner_slots=cfg['trigger_partner_slots'],
-            freeze_base=True, moves_api=MoveAPI(cfg))
+            freeze_base=True, moves_api=MoveAPI(cfg), extension=lane_drop.extension(cfg),
+            w2=w2 if any(w2.values()) else None)
+        self.wall_ends, self.pressure_blocks = {}, {}
         self.trigger_optimizer = self.trigger.optimizer(lr=cfg['trigger_lr'])
+        if self.rsu is not None:
+            self.rsu_optimizer = self.rsu.head.optimizer(lr=cfg['trigger_lr'])   # N2 RSU (ON only)
         self.layer_rng = torch.Generator().manual_seed(int(cfg['training_seed']))
         self.candidate_rng = np.random.default_rng(int(cfg['training_seed']))
         self.executor = MoveExecutor(moves_api=MoveAPI(cfg))
@@ -303,8 +374,11 @@ class EpisodePolicy(torch.nn.Module):
     def score(self, sample):
         return self.layer.score(sample)
 
-    def observe(self, rows, now, *, command_commitments=()):
-        """Whitelist local geometry before passing anything to move/merge APIs."""
+    def observe(self, rows, now, *, command_commitments=(), native_commands=None):
+        """Whitelist local geometry before passing anything to move/merge APIs.
+
+        ``native_commands`` (N2 only): each CAV's own native command this second, used by
+        the lane-drop speed law on the single-writer committed-offset column."""
         from .bank_v2v import _intent_features, DEFAULT_CFG
         table = {r['vid']: {k: r[k] for k in ('vid', 's_m', 'v_mps', 'lane', 'is_cav', 'length_m')}
                  for r in rows}
@@ -319,6 +393,8 @@ class EpisodePolicy(torch.nn.Module):
             # Only selected CAVs enter candidates; sensed HDVs are geometry only.
             local = [r for r in sensed if not r['is_cav'] or r['vid'] in [vid]+partners]
             states[vid], visible[vid] = dict(self=vid, rows=local), [vid]+partners
+            if self.w2['wall_release']:
+                states[vid]['wall_release'] = True  # W2 registered release-shape proposals
             if self.cfg.get('group_lane_moves'):
                 # Coverage comes from this own sensor packet, not an absent row.
                 # Include sensed CAVs as gap obstacles even outside partner slots.
@@ -349,6 +425,18 @@ class EpisodePolicy(torch.nn.Module):
                 # Local-only, t-1 intent board, distinct from base's RSU-conditioned board.
                 local_contexts[vid] = _intent_features(dict(time_s=now, vehicles=local), vid, {},
                     DEFAULT_CFG, dict(horizon=self.layer.base.intent_horizon, board=self.trigger_board))
+        if self.awareness is not None:
+            # Own packet at t plus other CAVs' own t-1 packets within the registered range.
+            self.awareness_blocks = {vid: v2v_wall.awareness_block(reports[vid], vid, self.reports,
+                                                                   now, self.awareness) for vid in cavs}
+        if self.wall is not None:
+            self.wall.receive(now, {vid: table[vid] for vid in cavs})
+            for vid in cavs:
+                states[vid]['v2v_wall'] = self.wall.state(vid, now)
+        if self.w2['wall_pressure_features']:
+            self.pressure_blocks = self._pressure(table, cavs, reports, visible, now, command_commitments)
+        if self.lane_drop is not None:
+            self._observe_lane_drop(table, cavs, states, reports, visible, now, native_commands)
         self.now, self.reports = now, reports
         self.local_states, self.visible, self.blocks = states, visible, blocks
         self.local_intents = local_contexts
@@ -365,18 +453,113 @@ class EpisodePolicy(torch.nn.Module):
         self.command_reservations = {ego: {v: reservations[v] for v in ids if v in reservations}
                                      for ego, ids in visible.items()}
 
+    def _observe_lane_drop(self, table, cavs, states, reports, visible, now, native_commands):
+        """N2: own-packet lane-drop blocks, candidate state, protocol receive, RSU field."""
+        ld = self.lane_drop
+        if ld['features']:
+            self.lane_drop_blocks = {vid: lane_drop.lane_drop_features(reports[vid], vid, self.reports,
+                now_s=float(now), partner_ids=[p for p in visible[vid] if p != vid],
+                view=ld['view']).tolist() for vid in cavs}
+        self.own_speeds = {vid: float(table[vid]['v_mps']) for vid in cavs}
+        self.native_commands = {vid: float(c) for vid, c in (native_commands or {}).items() if vid in table}
+        if self.rsu is not None:
+            # RSU uplink: the CAVs' own t-1 packets (self state + detected neighbours) only.
+            self.rsu.observe(self.reports, now)
+        if self.ld_protocol is not None:
+            self.ld_protocol.receive(now, {vid: table[vid] for vid in cavs})
+        if ld['moves']:
+            for vid in cavs:
+                state = dict(view=ld['view'], moves=True, v2v=self.ld_protocol is not None)
+                if self.ld_protocol is not None:
+                    state.update(self.ld_protocol.state(vid, now))
+                states[vid]['lane_drop'] = state
+
+    def _lane_drop_offsets(self, context, entries):
+        """Law offsets (absolute law - native - MAPPO mean) for active N2 commitments."""
+        out, receipt = {}, dict(commands={}, unresolved=[], lane_requests={})
+        members = context['members']
+        if not entries:
+            return out, receipt
+        with torch.no_grad():
+            mean = self.layer.base(context)[0].reshape(-1)
+        view = self.lane_drop['view']
+        for entry in entries:
+            t = self.now-entry['start']
+            for vid in entry['move'].members:
+                if vid not in members:
+                    continue
+                positions = self.execution_positions[vid]
+                command = lane_drop.member_command(entry['move'], vid, t, view, speed=self.own_speeds[vid],
+                                                   positions=positions, protocol=self.ld_protocol)
+                if command is not None:
+                    native = self.native_commands.get(vid)
+                    if native is None:
+                        receipt['unresolved'].append(vid)   # never guess the native command
+                    else:
+                        out[vid] = command-native-float(mean[members.index(vid)])
+                        receipt['commands'][vid] = command
+                lane = lane_drop.zip_target(entry['move'], vid, t, view, positions.get(vid))
+                if lane is not None:
+                    receipt['lane_requests'][vid] = lane
+        return out, receipt
+
+    def _pressure(self, table, cavs, reports, visible, now, command_commitments):
+        """W2 observable merge-pressure blocks (own packet at t, selected partners' t-1).
+
+        Wall memory = each ego's OWN wall commitments (executor moves it is a member of,
+        and controller wall plans it executes); never another CAV's commands.
+        """
+        from . import wall_pressure
+        entries = [(e['move'].members, e['start'], e['until']) for e in self.executor.active
+                   if e['move'].family == 'wall']
+        entries += [(c['plan']['members'], c['start_s'], c['start_s']+c['plan']['duration_s'])
+                    for c in command_commitments
+                    if c['plan'].get('family') == 'wall' or c['plan'].get('wall_macro')]
+        memory = wall_pressure.update_memory(self.wall_ends, entries, float(now))
+        return {vid: wall_pressure.pressure_features(reports[vid], vid, self.reports,
+                    now_s=float(now), partner_ids=[p for p in visible[vid] if p != vid],
+                    memory=memory.get(vid)).tolist() for vid in cavs}
+
     @torch.no_grad()
     def sample(self, context, generator, deterministic=False, memory=None):
         if self.now is None:
             raise ValueError('production layer requires controller observation before sampling')
         context = dict(context, merge_features={v: self.blocks[v] for v in context['members']})
+        if self.w2['wall_pressure_features']:
+            context['merge_pressure'] = {v: self.pressure_blocks[v] for v in context['members']}
         if getattr(self.layer.base, 'intent_horizon', 0):
             context['trigger_v2v'] = {v: self.local_intents[v] for v in context['members']}
+        if self.awareness is not None:
+            context['coop_awareness'] = {v: self.awareness_blocks[v] for v in context['members']}
+        if self.lane_drop is not None and self.lane_drop['features']:
+            context['lane_drop'] = {v: self.lane_drop_blocks[v] for v in context['members']}
         decision = None
         periodic = (self.last_decision is None
                     or self.now-self.last_decision >= self.cfg['decision_interval_s'])
         opportunity_kwargs = {}
         pairs = ()
+        wall_events = None
+        if self.wall is not None and context['members']:
+            self.executor._advance(self.now)
+            occupied = {v for entry in self.executor.active for v in entry['move'].members}
+            free = {v for v in context['members'] if v not in occupied
+                    and self.now >= self.command_reservations.get(v, {}).get(v, -math.inf)}
+            pending = self.wall.events(context['members'], free)
+            if pending and not periodic:
+                wall_events = frozenset(pending)
+            opportunity_kwargs = dict(wall=self.wall, wall_events=wall_events)
+        rsu_decision = None
+        if self.ld_protocol is not None and context['members']:
+            self.executor._advance(self.now)
+            occupied = {v for entry in self.executor.active for v in entry['move'].members}
+            free = {v for v in context['members'] if v not in occupied
+                    and self.now >= self.command_reservations.get(v, {}).get(v, -math.inf)}
+            pending = self.ld_protocol.events(context['members'], free)
+            opportunity_kwargs.update(lane_drop=self.ld_protocol,
+                                      lane_drop_events=frozenset(pending) if pending and not periodic else None)
+        if self.rsu is not None and periodic:
+            # RSU suggestion (broadcast at t, visible at t+1); same cadence as CAV triggers.
+            rsu_decision = self.rsu.decide(self.now, deterministic=deterministic)
         if self.coordination is not None and context['members']:
             from .coordination_opportunities import graph, disjoint
             self.executor._advance(self.now)
@@ -384,9 +567,10 @@ class EpisodePolicy(torch.nn.Module):
                 occupied={v for entry in self.executor.active for v in entry['move'].members},
                 command_reservations=self.command_reservations)
             pairs = disjoint(edges if periodic else self.approach_events.pending(edges))
-            opportunity_kwargs = dict(coordination=self.coordination, opportunity_pairs=pairs,
+            opportunity_kwargs.update(coordination=self.coordination, opportunity_pairs=pairs,
                                       event=not periodic)
-        if context['members'] and (periodic or pairs):
+        if context['members'] and (periodic or pairs or wall_events
+                                   or opportunity_kwargs.get('lane_drop_events')):
             decision, accepted, proposal_stats = feasible_proposals.decide_and_start(
                 self.trigger, context, obs_states=self.local_states,
                 observable_cavs=self.visible, executor=self.executor, now=self.now,
@@ -398,14 +582,24 @@ class EpisodePolicy(torch.nn.Module):
                 self.approach_events.record(pairs)
         self.executor._advance(self.now)
         offsets = {}
+        ld_receipt = None
+        if self.lane_drop is not None and self.lane_drop['moves']:
+            entries = [e for e in self.executor.active if lane_drop.is_lane_drop(e['move'])]
+            offsets, ld_receipt = self._lane_drop_offsets(context, entries)
         for entry in self.executor.active:
+            if self.lane_drop is not None and lane_drop.is_lane_drop(entry['move']):
+                continue
             for vid in entry['move'].members:
                 if vid in context['members']:
                     # Missing partner evidence does not trigger early release:
                     # keep the registered commitment until locally witnessed
                     # release or its original expiry; never extrapolate.
-                    local = moves.offsets(entry['move'].move, self.now-entry['start'],
-                        state={'s_m': self.execution_positions[vid]})
+                    if self.wall is not None and isinstance(entry['move'].move, v2v_wall.WallOption):
+                        local = self.wall.offsets(entry['move'].move, self.now-entry['start'],
+                                                  self.execution_positions[vid], vid)
+                    else:
+                        local = moves.offsets(entry['move'].move, self.now-entry['start'],
+                            state={'s_m': self.execution_positions[vid]})
                     offsets[vid] = local[vid]
         context['move_offsets'] = {v: offsets.get(v, 0.) for v in context['members']}
         sample, memory = self.layer.sample(context, generator, deterministic, memory)
@@ -416,6 +610,8 @@ class EpisodePolicy(torch.nn.Module):
                 lane_requests.update(targets(entry['move'], self.now-entry['start']))
             if lane_requests:
                 sample['g5_lane_requests'] = lane_requests
+        if ld_receipt is not None and ld_receipt['lane_requests']:
+            sample['lane_drop_lane_requests'] = dict(ld_receipt['lane_requests'])
         if getattr(self.layer.base, 'intent_horizon', 0) and context['members']:
             published = self.trigger.publish_trigger_intent(context)
             self.trigger_board = {v: (int(self.now), values) for v, values in published.items()}
@@ -426,16 +622,41 @@ class EpisodePolicy(torch.nn.Module):
             active_moves=[dict(move=e['move'].to_dict(), start=e['start'], until=e['until'])
                           for e in self.executor.active], merge_features=context['merge_features'],
             reward_neighbourhoods={v: self.neighbourhoods[v] for v in context['members']})
+        if self.wall is not None:
+            # Initiators broadcast AFTER this step's decisions; receivers see it at t+1.
+            self.wall.publish(self.now, {v: r.source for v, r in self.reports.items()})
+            sample['track2']['v2v_wall'] = self.wall.receipt()
+        if 'merge_pressure' in context:
+            sample['track2']['merge_pressure'] = context['merge_pressure']
+        if self.lane_drop is not None:
+            telemetry = dict(rule=lane_drop.RULE)
+            if ld_receipt is not None:
+                telemetry.update(law_commands=ld_receipt['commands'], unresolved=ld_receipt['unresolved'])
+            if self.ld_protocol is not None:
+                rsu_reports = self.rsu.reports_for_publish() if self.rsu is not None else None
+                self.ld_protocol.publish(self.now, {v: r.source for v, r in self.reports.items()},
+                                         rsu_reports=rsu_reports)
+                telemetry['protocol'] = self.ld_protocol.receipt()
+            if self.rsu is not None:
+                telemetry['rsu'] = self.rsu.receipt(rsu_decision)
+            sample['track2']['lane_drop'] = telemetry
         return sample, memory
 
     def worker_state(self):
-        return dict(schema=SCHEMA, layer=self.layer.state_dict(), trigger=self.trigger.state_dict())
+        out = dict(schema=SCHEMA, layer=self.layer.state_dict(), trigger=self.trigger.state_dict())
+        if getattr(self, 'rsu', None) is not None:
+            out['rsu'] = self.rsu.head.state_dict()   # N2 RSU suggestion head (ON only)
+        return out
 
     def restore_worker(self, state):
         if state['schema'] != SCHEMA:
             raise ValueError('unsupported track2 state schema')
         self.layer.load_state_dict(state['layer'], strict=True)
         self.trigger.load_state_dict(state['trigger'], strict=True)
+        if getattr(self, 'rsu', None) is not None:
+            self.rsu.head.load_state_dict(state['rsu'], strict=True)
+        elif 'rsu' in state:
+            raise ValueError('RSU head state for a policy without the RSU option')
 
 
 def episode_components(job, base, controller_type):
@@ -450,6 +671,8 @@ def episode_components(job, base, controller_type):
     policy.restore_worker(job['track2_state'])
     policy.layer_rng.manual_seed(int(job['noise_seed']))
     policy.candidate_rng = np.random.default_rng(int(job['noise_seed']))
+    if policy.rsu is not None:
+        policy.rsu.reseed(int(job['noise_seed']))   # N2 RSU: its own per-job streams
 
     def controller(*args, **kwargs):
         # Practice uses a controller factory rather than a class. Wrap the
@@ -461,7 +684,11 @@ def episode_components(job, base, controller_type):
             # Refresh on every call, not at factory construction: VerifyController
             # restores active_plans at t0 (a cached sample); live sampling begins
             # on the next tick, with all restored reservations now present.
-            policy.observe(rows, now, command_commitments=this.active_plans)
+            if policy.lane_drop is not None:
+                # N2 speed law: each CAV's own native command this second (single writer).
+                policy.observe(rows, now, command_commitments=this.active_plans, native_commands=commands)
+            else:
+                policy.observe(rows, now, command_commitments=this.active_plans)
             return original(rows, commands, now)
 
         real.apply = types.MethodType(apply, real)
@@ -611,6 +838,8 @@ class ArmRuntime:
             self.policy.restore_worker(state['worker'])
             self.policy.layer.optimizer.load_state_dict(state['layer_optimizer'])
             self.policy.trigger_optimizer.load_state_dict(state['trigger_optimizer'])
+            if getattr(self.policy, 'rsu', None) is not None:
+                self.policy.rsu_optimizer.load_state_dict(state['rsu_optimizer'])
         if arm != 'A':
             self.base = self.policy.layer.base  # runner serializes the immutable low-level model
 
@@ -827,6 +1056,13 @@ class ArmRuntime:
                 self.policy.trigger.load_state_dict(before)
                 self.policy.trigger_optimizer.load_state_dict(optimizer)
             trigger_metrics.append(dict(metrics, exact_kl=kl, accepted=accepted))
+        rsu_metrics = None
+        if getattr(self.policy, 'rsu', None) is not None:
+            # N2 RSU suggestion head: PPO on its recorded decisions (B = R), exact KL guard.
+            from .lane_drop_rsu import rollout_records, train_rsu
+            rsu_metrics = train_rsu(self.policy.rsu.head, self.policy.rsu_optimizer,
+                rollout_records(by_key, {k: returns[k] for k in sorted(eligible)}),
+                ppo=cfg['trigger_ppo'], kl_budget=self.policy.layer.config.kl_budget)
         pairs, bank_summary = self.bank_pairs()
         from . import bank_imitation as bi
         if cfg.get('v2v_intent'):
@@ -843,6 +1079,7 @@ class ArmRuntime:
         from .track2_safety_reward import settings as close_call_settings
         close_call = close_call_settings(cfg)
         return dict(**(dict(g4_synergy_credit=synergy_receipt) if synergy_receipt is not None else {}),
+            **(dict(rsu=rsu_metrics) if rsu_metrics is not None else {}),
             layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
             wm_credit=dict(enabled=False), reward=dict(schema=REWARD_SCHEMA,
                 registration=deepcopy(cfg['track2_reward']),
@@ -987,6 +1224,8 @@ class ArmRuntime:
             state = dict(arm=self.arm, update=self.update, worker=self.policy.worker_state(),
                          layer_optimizer=self.policy.layer.optimizer.state_dict(),
                          trigger_optimizer=self.policy.trigger_optimizer.state_dict())
+            if getattr(self.policy, 'rsu', None) is not None:
+                state['rsu_optimizer'] = self.policy.rsu_optimizer.state_dict()
             with sidecar.open('xb') as stream:
                 torch.save(state, stream)
         return str(target)
