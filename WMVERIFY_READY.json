@@ -1,0 +1,126 @@
+{
+ "task": "WMVERIFY",
+ "status": "READY",
+ "branch": "c4/wmverify",
+ "worktree": "E:/agent-work/c4-wmverify",
+ "code_head": "256c9595c7c2ce39d6b650b113440b7a33ebb150",
+ "head": "this file is committed on top of code_head (git log -1 c4/wmverify)",
+ "base": {
+  "imitreplay": "c4/imitreplay c08ff784 (S-REGIMEU0 harness: regimeu0.py, imitreplay.py, map registry)",
+  "wmc": "merged c4/wz-wm-propose 4bf9d3b7 (strategy_search spec + gate + wm_fair, strategy_hook.StrategyCore, wmsearch_u0)",
+  "lcexec": "vendored byte-identical from c4/lcexec 0fe9574e (same git blobs): {\"lc_families.py\": \"410e14342f575af1bae787b979ac9f76910b1eb4\", \"lc_program.py\": \"d081fd1ca0b29fded293858b860fd92c2b7af11a\", \"lc_roles.py\": \"3ca766d54f230130f6a623736c2a623310826f54\", \"lc_runtime.py\": \"75513269846af9d63d5eb93ade2f20147bac73a4\", \"lc_writer_harness.py\": \"412382dc7849e90381748c72423c6ded40487d4d\"}",
+  "fullpol_n2": "FULLPOL N2 hold executor c4/fullpol-5a e36ece92 tools/coopmwm/lane_drop.py vendored as fixture tools/wzprop/fixtures/wmverify/n2_lane_drop_fullpol_e36ece92.pysrc (sha256 40515bc0...), loaded as an isolated module; the runtime lane_drop.py is untouched"
+ },
+ "files": {
+  "tools/wzprop/wmverify.py": "S-WMVERIFY: spec check, seeds, plan/run/worker (regimeu0 harness), analysis (S-REGIMEU0 schema), VERIFY contrasts/integrity/families, RESULTS.jsonl, S-WMSEARCH root conversion, registration text, dry run, CLI",
+  "tools/wzprop/wmverify_hook.py": "executors plant / n2 / lcexec (pluggable: register_executor), CAV-only guard, hold lane tracking, FULLPOL family template + offer condition",
+  "tools/wzprop/wmverify_n2.py": "n2_parity: FULLPOL N2 hold executor (+ hold_lane_pin 5cbd616e) vs the plant path through the real env writer (lc_writer_harness) on fixture states",
+  "tools/wzprop/wmverify_fake.py": "zero-physics fake plant (hook protocol incl. env.lc_tick) for tests / dry run",
+  "tools/wzprop/holdpin.py": "S-HOLDPIN package (phase hold_pin_check): unpinned solo2 on the S-REGIMEU0 worlds; NOT launched",
+  "tools/wzprop/test_wmverify_cpu.py": "CPU tests (20)",
+  "tools/wzprop/fixtures/wmverify/regimeu0_ANALYSIS_c0b578f8.json.gz": "S-REGIMEU0 ANALYSIS c0b578f8 (round trip fixture)",
+  "tools/coopmwm/map_scenarios.py": "EXTRA_TRAIN_RANGES += (989950, 989999) (c4/wmverify only)"
+ },
+ "cli": {
+  "env": "cpuV/gpuA as S-REGIMEU0: deploy with ops/imitreplay_deploy_source.py <worktree> <commit> [--host gpuA --base <clean3 copy> --target-dir ...]; COOPMWM_MAP_SPEC=<src>/assets/research/newmap_candidates/wz3to2/MAP_SPEC.json COOPMWM_G5_RUNTIME=1 CUDA_VISIBLE_DEVICES= nice -n 19 (COOPMWM_LC_RUNTIME is set per lcexec job by the worker itself; u0 / incumbent / hold jobs run with it unset)",
+  "validate": "python -m tools.wzprop.wmverify validate --arms ARMS.json",
+  "registration": "python -m tools.wzprop.wmverify registration --arms ARMS.json --cells D3200_p60:989950-989965 D2800_p60:989966-989981 D2400_p60:989982-989997 --cap N --regimeu0-root <S-REGIMEU0 root>",
+  "dryrun": "python -m tools.wzprop.wmverify dryrun --arms ARMS.json --cells D3200_p60:989950-989951 --out NEW_DIR",
+  "plan_stage_A": "python -m tools.wzprop.wmverify plan --root A --regimeu0-root <S-REGIMEU0 root> --arms ARMS.json --cells D3200_p60:989950-989950 ... --cap N --registration runs/active/C4-V7FT-20261017/REGISTRATION.md",
+  "plan_stage_B": "python -m tools.wzprop.wmverify plan --root B ... --cells D3200_p60:989951-989965 ... --prior-root A --no-identity",
+  "run": "python -m tools.wzprop.wmverify run --root R --workers 12",
+  "check": "python -m tools.wzprop.wmverify check --root A [B]   (exit 1 on an integrity failure)",
+  "analyze": "python -m tools.wzprop.wmverify analyze --root A B --out NEW_DIR -> ANALYSIS.json VERIFY.json RESULTS.jsonl CHECK.json",
+  "fullpol": "fullpol_learn.build_guidance(mappo=NEW_DIR/ANALYSIS.json) (or RESULTS.jsonl), reader unchanged",
+  "options": "--groups wm,wm_fair,structured,random[,best_beating_solo2,best_fair] --k 4 --parity-seeds 2 --lane-executor lcexec --hold-executor plant|n2 --spec extra.json"
+ },
+ "schema": {
+  "ANALYSIS": "EXACTLY regimeu0.analyze (coopmwm.regimeu0.v1.analysis): keys schema, roots, spent, plan_sha256, cells{cell:{u0, <family>: n, mean_J, failed, n_paired, mean_diff, ci95, benefit_rate, harm_rate, crn_ok, mean_activations, rel_diff, rel_ci95, safety sums/means; group_minus_best_solo when wall_h runs}}, seeds[], identity. Statistics = the verbatim regimeu0 code (round trip on c0b578f8 exact). Families = spec names; incumbent = wall_h_solo2 (regimeu0.RuleHook verbatim); the parity arm solo2_core is excluded",
+  "VERIFY": "wmverify.v1.verify: families{name: spec, strategy_key, executor, cells, template (lcexec-free-program-v1, template_of-valid), template_sha256, offer_condition, lcexec_parity (S-LCEXEC-SMOKE id for lcexec), n2_parity (hold families), verification_note}, vs_incumbent{cell:{family: n, mean_diff, ci95, rel_diff, better/worse share, beats_ref_ci, per_seed, beats_u0_and_ref_share, vs_u0 shares, safety deltas vs u0 and vs solo2}}, integrity (= CHECK), parity, summary; diff = arm - reference, negative = better",
+  "RESULTS": "REGIMEU0_RESULTS.jsonl episode rows (J_300_1200_vs, arm, cell, seed, safety, crn fields)",
+  "CHECK": "ok + checks: identity_u0_989599, crn_no_divergence_before_first_activation, crn_zero_activation_equals_u0, executor_parity_solo2_core_equals_incumbent, ledger_within_cap_no_uncharged_jobs, inputs_u0_identical_and_equal_regimeu0; warnings (failed jobs, LCEXEC refusals, lane programs without executed lane requests, never-activated strategies); lane_receipts; safety; safety_clean"
+ },
+ "executors": {
+  "plant": "hold-only default: WM-C StrategyCore, hold law through the plant single writer (MAPPO safety downstream), G5 own-lane target (lcMode 513) = the S-REGIMEU0 solo2 path",
+  "n2": "plant path without the own-lane pin = TraCI-identical to the policy N2 hold executor (--hold-executor n2)",
+  "lcexec": "lane-change default (MAIN ~00:0x): LCEXEC POLICY executor = the S-LCEXEC-SMOKE production path (member_specs -> lc_roles -> template_from_program -> Protocol.start/receive/commands with the own-sensing lane gate -> env.lc_tick via lc_runtime.install in the worker). Verified = executable by the policy executor. Program members bypass the MAPPO pre-safety filter as in S-LCEXEC-SMOKE"
+ },
+ "seeds": {
+  "range": "989950-989999 (MAIN allocation; LSSEARCH has 989900-989949)",
+  "check": "git grep over all 921 local branches (only hex-hash substrings matched), REGISTRATION.md (only the WMVERIFY proposal line), runs/active job names and agent worktrees: unused"
+ },
+ "tests": {
+  "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe -m pytest -q tools/wzprop/test_wmverify_cpu.py tools/wzprop/test_wzprop_cpu.py tools/coopmwm/test_regimeu0_cpu.py tools/coopmwm/test_map_scenarios_cpu.py",
+  "result": "code_head: test_wmverify_cpu.py (20) + test_wzprop_cpu.py (40): 60 passed in 1444.04s (0:24:04) | EXIT 0; earlier on 2f977c6c incl. test_regimeu0_cpu + test_map_scenarios_cpu: 78 passed",
+  "covered": [
+   "strict spec validation and seed range",
+   "ARMS groups / dedupe / incumbent drop",
+   "solo2_core (StrategyCore) == regimeu0.RuleHook tick by tick on the fake plant (commands, lane targets, activations, releases, totals)",
+   "plant executor == WM-C make_hook (wall_h, l2hold_stagger, l2hold_l1gap)",
+   "LCEXEC policy executor runs lane programs and holds through Protocol + env.lc_tick; refuses without the LCEXEC env",
+   "CAV-only guard",
+   "family template (template_of) + offer condition for every WM-C seed strategy",
+   "round trip: cells_from_rows(c0b578f8 seeds) == c0b578f8 cells exactly; FULLPOL reader copy",
+   "analysis == regimeu0.analyze on a regimeu0-format root",
+   "end to end: registration check -> plan -> charge -> wmverify.worker (regimeu0.worker, fake episode) -> analyze -> FULLPOL reader",
+   "S-WMSEARCH root conversion agrees with wmsearch_u0.analyze_rows",
+   "dry run solo2 parity",
+   "n2_parity (FULLPOL N2 vs plant through the real env writer)",
+   "S-HOLDPIN plan + analysis"
+  ]
+ },
+ "dry_run_sample": {
+  "arms": "WM-C _out/strat_dry/ARMS.json (D2400_p60; 4 wm + 4 structured + 4 random)",
+  "plan_sha256": "e54585b28a6b3035509d28286197c743b355f4c641ea2609880a366bc843f4f7",
+  "jobs": 31,
+  "solo2_parity": {
+   "differing_ticks": [],
+   "identical": true,
+   "incumbent_command_ticks": 404
+  },
+  "executors": {
+   "l2hold_l1gap": "plant",
+   "l2hold_stagger": "plant",
+   "mut_250e5fe92608f780": "lcexec",
+   "rand_3b7a5f34211f3938": "lcexec",
+   "rand_3be32588bcf4e5c9": "plant",
+   "rand_6ba06bbd46cb7f9a": "plant",
+   "rand_a855279ba84a474e": "lcexec",
+   "rand_f57332a754c1a890": "plant",
+   "rand_f6df89c02caf8c26": "lcexec",
+   "solo0": "plant",
+   "solo2_core": "plant",
+   "solo2_v15_h120": "plant",
+   "solo2_v18_h90": "plant",
+   "u0": "u0",
+   "wall_h_solo2": "regimeu0"
+  },
+  "note": "fake plant: plumbing only, numbers are not evidence"
+ },
+ "registration_template_sample": "### S-WMVERIFY (phase wm_verify) - registration (append BEFORE any physics)\n- Question: do the WORLD-MODEL-PROPOSED strategies (WM-C S-WMSEARCH ARMS.json) beat the solo2 incumbent (and MAPPO u0) per demand cell on fresh TRAIN-type seeds, when executed by the POLICY executor? Output = verified EV rows for the FULLPOL clean5 EV-BC builder (S-REGIMEU0 ANALYSIS schema) + per-family LCEXEC templates and offer conditions (VERIFY.json).\n- Closest prior: S-REGIMEU0 (ANALYSIS c0b578f8): solo2 (wall_h_solo2) -24% at D3200, -14% at D2800_p60, +31-39% at D2400; walls dominated by solo2. S-WMSEARCH amendment 1 (WM/structured/random vs solo2 on REGIME seeds 989770-989785). Exact difference: fresh seeds 989950-989999, WM-proposed specs incl. lane programs executed by the LCEXEC policy executor, incumbent in every seed group, executor-parity control.\n- Base: MAPPO u0 d9042cc5 = the S-REGIMEU0 inputs u0.pt (sha256 5ea2296470c2af2855f9e292b03eeaa62bafdfec08146712d7347d7ce117d734), coopmwm clean4 plant, wz3to2, native warmup 0-300 s, episodes 1,200 s, J = team delay over [300, 1200) s.\n- Seeds: 989950-989999 only (TRAIN-type, never evaluation; MAIN allocation 2026-11-06; LSSEARCH has 989900-989949; 989900-989999 found unused in all 921 local branches, worktrees and run registries on 2026-11-06). Registered in map_scenarios.EXTRA_TRAIN_RANGES on c4/wmverify only.\n- Cells / seeds: D2400_p60 989950-989965 (16).\n- Arms per seed group (paired CRN): u0; wall_h_solo2 (incumbent, regimeu0.RuleHook verbatim); solo2_core (SOLO2 via strategy_hook.StrategyCore on the plant path, executor parity, first 2 seeds per cell, VERIFY only); candidates [source, strategy key, executor]:\n  - D2400_p60: rand_3b7a5f34211f3938 [wm, 3b7a5f34211f3938, lcexec], mut_250e5fe92608f780 [wm, 250e5fe92608f780, lcexec], solo0 [wm, 0f1d2248ba0c09c5, plant], rand_f57332a754c1a890 [wm, f57332a754c1a890, plant], solo2_v18_h90 [structured, 3c6d6937cee996f7, plant], solo2_v15_h120 [structured, 14ff01bc83ba113e, plant], l2hold_l1gap [structured, 025fc513f18c2008, plant], l2hold_stagger [structured, 2bb806d1b37aaa45, plant], rand_f6df89c02caf8c26 [random, f6df89c02caf8c26, lcexec], rand_3be32588bcf4e5c9 [random, 3be32588bcf4e5c9, plant], rand_a855279ba84a474e [random, a855279ba84a474e, lcexec], rand_6ba06bbd46cb7f9a [random, 6ba06bbd46cb7f9a, plant]\n- ARMS.json sha256: 3f21118de3b7e693f820ffaf9a6c066a9056a526a0a1a38a0a4a7d6b5fe7f904.\n- Executors: trigger, member selection and timing = WM-C strategy_hook.StrategyCore (same select_members, roles, gate, cooldown as the WM search). Hold-only strategies (executor plant): hold law clip(v_w - v, -dmax, 1.0) as the absolute pre-safety request through the plant single writer (MAPPO safety downstream), own-lane G5 target = the S-REGIMEU0 solo2 path. Strategies with lane changes (executor lcexec): the LCEXEC POLICY executor (c4/lcexec 0fe9574e, COOPMWM_LC_RUNTIME=1): member_specs -> lc_roles.member_program -> template_from_program -> Protocol.start / receive / commands (own 100 m sensing, own-sensing lane gate) -> env.lc_tick, exactly the S-LCEXEC-SMOKE production path; program members bypass the MAPPO pre-safety filter as in S-LCEXEC-SMOKE (speedMode 27, direct_target bounds, env edge-end guard stay). Verified = executable by the policy executor. Hold families carry n2_parity (FULLPOL N2 hold executor e36ece92 + hold_lane_pin 5cbd616e vs the plant path, through the real env writer on fixture states: identical TraCI writes with hold_lane_pin ON; without it only the plant-path laneChangeMode 513 pin differs; --hold-executor n2 runs holds without the pin). CAV rows only; HDVs never commanded. Parameter ranges: strategy_search.validate (NEWMAP2 R grid, WMDATA offsets, zones, gates) + spread {200, 300} m + one slot + cooldown <= 240 s; anything else is rejected.\n- Code: c4/wmverify; module sha256 {\"imitreplay\": \"7fb633fdc321b7cd6c2b9654332fa1080fb01446b9bfaa56aaca71f6770d4195\", \"lc_families\": \"6133200723853312ac21e88d745f945c5d22fea2b66bf270f62c9e884dd40f0b\", \"lc_program\": \"d71a2a4c3ed1cffb7c84eda5380df0a1de285f0ff2312f7dabc600b2720f3be4\", \"lc_roles\": \"a072d6fa699438bbbc79ded9c3126295d32ac90fa77da3fa985adc1b0aebba70\", \"lc_runtime\": \"401ea5c7451fac766e7468123c4826f052db84c46c98ed69d94aabb513107f6e\", \"map_scenarios\": \"2ade142f0a26ba6f6feadd502c8f0efcd2f412414c246f683fef3f40456a17fd\", \"regimeu0\": \"903854295bbe7e6953b4748f5cdc2e8391903f57faf4e478669d43b6f6a39e7d\", \"strategy_hook\": \"9eb397c22d03ddd56a5595740ebec48fbce48ca1e300c0b9f8912fe7b17e15f0\", \"strategy_search\": \"fbbb73cb63499eccfaebf6993d2e5800d0bc6ff1be1525b56c6e0672d0446bb7\", \"wmverify\": \"e0912608012118a7c87307aea503f984879cdd29b68ad056dde01661fd249203\", \"wmverify_hook\": \"ba4d05767dd975f2bacb329ef881bdd900e554ab17a7d949e6dc6d4527d504b4\"}.\n- Budget (phase wm_verify): cap 300,000 sim-s; planned 272,400 sim-s (identity 1,200 + seeds x arms x 1,200 + parity).\n- Stage A (smoke): identity + the first 1 seed(s) of every cell, all arms -> `python -m tools.wzprop.wmverify check` must pass (identity 53,269.32889342696 veh-s, CRN, executor parity, ledger, inputs; warnings reviewed: LCEXEC refusals, lane programs without executed lane requests, never-activated strategies) before stage B (remaining seeds, --prior-root A --no-identity).\n- Analysis (fixed before results): regimeu0.analyze per cell (paired diff vs u0, bootstrap 10,000 RNG 20261106, 2.5/97.5%), strategy - solo2 paired contrasts (same bootstrap), per-seed better/worse shares, beats-u0-and-solo2 share, safety (collisions, teleports, hard braking, TTC<3 s; deltas vs u0 and vs solo2). diff = arm - reference; negative = better. No thresholds tuned on these seeds.\n- Stop rules: STOP file; cap; failed integrity check -> stop and report; charged jobs are never re-run.\n- Outputs: ANALYSIS.json (S-REGIMEU0 schema; FULLPOL build_guidance(mappo=...)), VERIFY.json (families: spec, executor, LCEXEC template, offer condition, parity verdict id; contrasts; integrity), RESULTS.jsonl, CHECK.json in a new analysis directory.\n",
+ "holdpin": {
+  "status": "PACKAGE COMMITTED, NOT LAUNCHED (ssh to gpuA denied in this session; on hold per coordinator)",
+  "registration_block": "### S-HOLDPIN (phase hold_pin_check) - registration (append BEFORE any physics)\n- Question (MAIN 2026-11-07 ~00:5x): does the UNPINNED solo2 hold - the policy N2 executor (FULLPOL clean5a group_hold/SoloHold; wmverify_n2: identical speed writes, no laneChangeMode 513 pin) - keep the gain S-REGIMEU0 measured with the pinned solo2 (regimeu0.RuleHook, G5 own-lane target = lcMode 513)?\n- Closest prior: S-REGIMEU0 (ANALYSIS c0b578f8, REGIMEU0_RESULTS.jsonl f473caad): pinned solo2 -24% at D3200 vs u0, harmful at D2400. Exact difference: the lcMode pin only (same trigger, selection, timing, hold law, plant writer, worlds).\n- Treatment: solo2_unpinned = SOLO2 through wmverify_hook executor n2 (StrategyCore + hold law through the plant single writer, no lane target) on MAPPO u0 d9042cc5 (S-REGIMEU0 inputs u0.pt sha256 5ea2296470c2af2855f9e292b03eeaa62bafdfec08146712d7347d7ce117d734), coopmwm clean4 plant, wz3to2, 1,200 s, native warmup 0-300 s, J = team delay over [300, 1200) s.\n- Worlds (exact S-REGIMEU0 CRN worlds, TRAIN-type): D3200_p60 989850-989873 (24); D3200_p40 989850-989873 (24); D2400_p60 989724-989747 (24); + identity u0 989599 D3200_p60.\n- Comparators REUSED (not re-run): S-REGIMEU0 u0 and wall_h_solo2 (pinned) episodes of the same worlds (local regimeu0 roots regimeu0, regimeu0_z2, regimeu0_v2, regimeu0_v3, regimeu0_z5).\n- Budget (phase hold_pin_check): cap 100,000 sim-s; planned 87,600 sim-s (73 episodes).\n- Host: gpuA CPU, <= 12 workers, nice 19, CUDA_VISIBLE_DEVICES= (WM-E GPU training has priority).\n- Analysis (fixed before results): per cell paired diffs unpinned - u0 and unpinned - pinned (negative = unpinned better), regimeu0 bootstrap 10,000 RNG 20261106 2.5/97.5%, per-seed shares, relative to the u0 mean; CRN: unpinned series == S-REGIMEU0 u0 and pinned series before the first activation; identity J exact; lane leaving share of holds (holder WM lane != lane at activation during the hold), off/held seconds; safety: collisions, teleports, hard braking, TTC<3 s sums and paired deltas.\n- Stop rules: STOP file; cap; identity or CRN failure -> stop and report; charged jobs never re-run.\n- Code: c4/wmverify (tools/wzprop/holdpin.py, wmverify.py, wmverify_hook.py executor n2).\n",
+  "commands": [
+   "python -m tools.wzprop.holdpin plan --root R --regimeu0-root <S-REGIMEU0 root with inputs> --registration REGISTRATION.md",
+   "python -m tools.wzprop.holdpin run --root R --workers 12 (nice 19, CUDA_VISIBLE_DEVICES=)",
+   "python -m tools.wzprop.holdpin analyze --root R --regimeu0 <local regimeu0 roots> --out HOLDPIN_ANALYSIS.json"
+  ]
+ },
+ "findings": [
+  "n2_parity: with FULLPOL hold_lane_pin ON (c4/fullpol-5a 5cbd616e fullpol_ev.hold_pins) the policy N2 hold execution (lane_drop e36ece92 member_command / SoloHold) issues IDENTICAL TraCI writes (speed + lane) to the plant path for solo0/1/2, wall_h, l2hold_l1gap, solo2 v15/v18/v22, solo2_lanes and the gated solo2 twins. With the pin OFF, speed writes are identical but the plant path additionally pins laneChangeMode 513. The S-REGIMEU0 solo2 EV was measured WITH the pin. Onsets > 30 s (l2hold_stagger) and mixed-parameter groups of > 3 roles cannot be represented in N2.",
+  "S-WMSEARCH (wmsearch_u0) results convert to the FULLPOL schema, but their lane programs ran on the frozen G5 path (closing-lane entries refused): this is NOT verification by the policy executor."
+ ],
+ "open_items": [
+  "No SUMO run here (CPU only): the stage A smoke (identity J exact, CRN, executor parity, LCEXEC receipts) must pass on the host before stage B.",
+  "lcexec jobs install lc_runtime by wrapping accel_plant.bind_runtime inside the worker process (the LCEXEC accel_plant hunk is not merged); S-LCEXEC-SMOKE used its own episode loop, so the lcexec path inside the regimeu0 plant is first exercised by stage A.",
+  "Budget per cell = seeds x (2 + candidates) x 1,200 + parity seeds x 1,200 (+ identity 1,200 once); 16 seeds x 14 arms is about 270,000 sim-s per cell, so MAIN sets cells/k within the cap.",
+  "Hold families are verified on the plant path (pinned). The policy matches it only with FULLPOL hold_lane_pin ON (default OFF in 5cbd616e). Unpinned option: --hold-executor n2; S-HOLDPIN measures the pin effect on solo2.",
+  "summary.issued is [] for lcexec jobs (their commands are in the WMVERIFY.json protocol receipts).",
+  "WM-C geometry.check_seed does not accept 989950-989999; wmverify uses its own seed check + the map_scenarios registry."
+ ],
+ "messages": {
+  "wmc": "interface agreed (spec, StrategyCore reuse, ARMS groups, seeds)",
+  "fullpol": "ANALYSIS schema + family names confirmed; template / offer_condition / lcexec_parity / n2_parity delivered"
+ }
+}
