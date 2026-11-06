@@ -1087,7 +1087,7 @@ def bind_map_for_dryrun():
 
 
 def dryrun(out_dir, *, arms_path, cells, groups=GROUPS, k=4, parity_seeds=2, lane_executor=DEFAULT_LANE_EXECUTOR,
-           hold_executor=DEFAULT_HOLD_EXECUTOR, fake_seconds=900, spec_paths=()):
+           hold_executor=DEFAULT_HOLD_EXECUTOR, fake_seconds=900, spec_paths=(), banned_seeds=0):
     """Dry plan (no inputs, no physics) + every arm's hook on the zero-physics fake plant for the first seed of each
     cell; the incumbent (regimeu0.RuleHook) and solo2_core must issue identical commands every tick."""
     from . import wmverify_fake as F
@@ -1095,7 +1095,7 @@ def dryrun(out_dir, *, arms_path, cells, groups=GROUPS, k=4, parity_seeds=2, lan
     bind_map_for_dryrun()
     body = plan(out_dir, regimeu0_root=None, arms_path=arms_path, cells=cells, cap=10 ** 9, groups=groups, k=k,
                 parity_seeds=parity_seeds, lane_executor=lane_executor, hold_executor=hold_executor,
-                spec_paths=spec_paths, dry_run=True)
+                spec_paths=spec_paths, dry_run=True, banned_seeds=banned_seeds)
     report = dict(schema=SCHEMA + '.dryrun', plan_sha256=body['plan_sha256'], planned_sim_s=body['planned_sim_s'],
                   jobs=sum(len(g['jobs']) for g in body['groups']), cells={},
                   note='fake plant: plumbing only, numbers are not evidence')
@@ -1228,7 +1228,7 @@ def main(argv=None):
     elif x.cmd == 'dryrun':
         rep = dryrun(x.out, arms_path=x.arms, cells=cells, groups=groups, k=x.k, parity_seeds=x.parity_seeds,
                      lane_executor=x.lane_executor, hold_executor=x.hold_executor, fake_seconds=x.fake_seconds,
-                     spec_paths=x.spec)
+                     spec_paths=x.spec, banned_seeds=x.banned_seeds)
         print(json.dumps({c: dict(parity=v['incumbent_parity'], arms={a: dict(acts=r['activations'], executor=r['executor'])
                                                                     for a, r in v['arms'].items()})
                           for c, v in rep['cells'].items()}, indent=1))
