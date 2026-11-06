@@ -84,7 +84,11 @@ def score(argv):
     ap.add_argument('--sids')
     ap.add_argument('--solos-labelled-by', action='append', help='summary JSON: solos only for its S-labelled variants')
     ap.add_argument('--no-solos', action='store_true', help='T only (group vs base), e.g. the regime strategy check')
+    ap.add_argument('--mem-fraction', type=float, help='torch.cuda per-process memory cap (shared GPU)')
     a = ap.parse_args(argv)
+    if a.mem_fraction:
+        import torch
+        torch.cuda.set_per_process_memory_fraction(float(a.mem_fraction))
     sv = PR.labelled_solo_variants(a.solos_labelled_by) if a.solos_labelled_by else None
     if a.no_solos:
         sv = set()
