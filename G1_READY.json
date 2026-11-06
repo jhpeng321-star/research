@@ -44,6 +44,10 @@
     {
       "sha": "a9207931",
       "subject": "C4 G1: record independent fix acceptance and resume receipts"
+    },
+    {
+      "sha": "d260eedd2f4a6d97e005fec7ceabee007eb072a0",
+      "subject": "C4 G1: refresh accepted fix readiness on resume"
     }
   ],
   "files": [
@@ -152,7 +156,7 @@
   },
   "latest_resume_reconciliation": {
     "date": "2026-11-06",
-    "initial_head": "a9207931",
+    "initial_head": "d260eedd2f4a6d97e005fec7ceabee007eb072a0",
     "initial_worktree_status": "clean on c4/grp-certify",
     "specification_read": "E:/agent-work/_sol/tracks_spec.md",
     "receipts_read": ["G1_READY.json", "REVIEW_G1_r0.md", "G1_ACCEPTED.json", "REVIEW_G1_r1.md", "_out/g1_fix_results.xml"],
@@ -160,9 +164,12 @@
     "unresolved_blockers": 0,
     "implementation_changes_required": false,
     "reviewed_source_unchanged": true,
-    "source_comparison": "git diff --exit-code 4718f00041d71b9f81310c3c87d772975105d941 HEAD -- tools/coopmwm/executable_labels.py tools/coopmwm/test_executable_labels_cpu.py tools/coopmwm/bank_breadth.py tools/coopmwm/launch_production.py G1_CERTIFICATION.md G1_BUDGET.json",
+    "source_comparison": "git diff --name-status 4718f00041d71b9f81310c3c87d772975105d941 HEAD",
+    "changes_since_accepted_revision": ["G1_ACCEPTED.json", "G1_READY.blocked0_1793894069.json", "G1_READY.json", "REVIEW_G1_r0.md", "REVIEW_G1_r1.md"],
+    "regression_source_verified": "Real-observer moving/stationary replay, causal teacher features, stale/mismatched evidence, actor eligibility, certified availability and enabled B/R optimizer coverage remain committed in tools/coopmwm/test_executable_labels_cpu.py:325-466",
     "verified_junit_counts": {"tests": 250, "passed": 249, "skipped": 1, "failures": 0, "errors": 0},
     "independent_review_verdict": "PASS",
+    "git_diff_check": "git diff --check c4/track-base passed",
     "completed_tests_repeated": false,
     "new_jobs_or_dispatches": false,
     "result": "Previously completed fix, regression coverage, CPU test results, and independent acceptance remain applicable; readiness refreshed without duplicating completed work."
