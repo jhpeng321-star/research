@@ -806,7 +806,8 @@ def test_n2_builder_plans_bind_to_lane_drop_moves(tmp_path):
         assert plan['origin'] == cv.ORIGIN_N2 and plan['source']['origin'] == cv.ORIGIN_N2
     legacy = cv.provisional_builder(ctx, ['a1', 'b1'], dict(name='pair_g', family='closing_pair', members=['a1', 'b1'],
                                                             params=dict(PG)))
-    assert not isinstance(mvs.from_plan(legacy), ld.LaneDropMove)     # why frozen moves never use it
+    with pytest.raises(ValueError, match="without lane_drop_macro"):   # nm-train 684fe30c fail-closed
+        mvs.from_plan(legacy)                             # why frozen moves never use the provisional builder
     macro = ld.move_from_mined_row(src[0], desc).to_dict()
     var = dict(name='pair_g', family='closing_pair', members=macro['members'], params=PG, lane_drop_macro=macro,
                descriptor=desc)
