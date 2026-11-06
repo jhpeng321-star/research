@@ -176,6 +176,18 @@ def controller_targets(controller, policy, rows, now):
         from .nm_families import controller_lane_targets as nm_lane_targets
         extra = nm_lane_targets(controller, policy, rows, now)
         safe = dict(safe, **{v: t for v, t in extra.items() if v not in safe})
+    pins = controller.events[-1]['sample'].get('hold_lane_pins') if controller.events else None
+    if pins:
+        # clean5 hold_lane_pin (opt-in): N2 hold members keep their OWN current lane under the single
+        # lane writer (laneChangeMode 513 like the verified plant path); only CAVs whose observed lane
+        # equals the pin, never a lane change; a branch release drops released members.
+        branch = controller.branch
+        release = set()
+        if branch and now >= branch['time_s']:
+            release = set(branch.get('group', ()) if now >= branch.get('until', math.inf) else branch['revert'])
+        lanes = {r['vid']: int(r['lane']) for r in rows if r.get('is_cav')}
+        extra = {v: t for v, t in pins.items() if lanes.get(v) == t and v not in release}
+        safe = dict(safe, **{v: t for v, t in extra.items() if v not in safe})
     return safe
 
 

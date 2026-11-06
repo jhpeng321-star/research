@@ -139,7 +139,7 @@ class Controller:
                      sample['action'][context['members'].index(vid)] = [raw-commands[vid]]
         elif self.replay is None:
             self.plan=self.plan_start=None
-        if (sample.get('g5_lane_requests') or sample.get('nm_lane_requests') or any(
+        if (sample.get('g5_lane_requests') or sample.get('nm_lane_requests') or sample.get('hold_lane_pins') or any(
                 c['plan'].get('g5_move') or (c['plan'].get('nm_move') and c['plan'].get('uses_lane_actions'))
                 for c in self.active_plans)) \
                 and not getattr(self, 'g5_lane_runtime', False):
