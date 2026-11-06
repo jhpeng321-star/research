@@ -40,7 +40,10 @@ TRAIN_RANGE = (989200, 989599)
 #: MAIN 2026-11-06 ~16:45 (N4 registration): the PLANGEN2 range 989000-989099 (assigned before mining,
 #: never evaluation) is ALSO registered wz3to2 TRAIN, for guidance rows, Plan A re-verification and B/R
 #: lesson episodes. NOT 989100-989199 (WM data). Default TRAIN sampling (worlds('train')) is unchanged.
-EXTRA_TRAIN_RANGES = ((989000, 989099),)
+EXTRA_TRAIN_RANGES = ((989000, 989099),
+                      # c4/imitreplay only - S-REGIMEU0 (MAIN 2026-11-06 19:2x): 16 seeds of the S-REGIME range
+                      # 989700-989899 (registered TRAIN-type, never evaluation); REGIME confirmed it never uses them.
+                      (989850, 989865))
 HELDOUT_RANGE = (989600, 989699)
 FORBIDDEN_RANGES = ((964000, 964199), (962000, 962999), (977000, 977999))
 EPISODE_S = 1200
