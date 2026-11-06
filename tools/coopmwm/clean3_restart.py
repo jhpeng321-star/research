@@ -16,22 +16,24 @@ import time
 from .exact_grade import _seal, verify_sealed
 from .protocol import digest
 
-ROOT = '/home/ubuntu/coopmwm20261106_clean3_r3'
+ROOT = '/home/ubuntu/coopmwm20261106_clean3_r4'
 # Root r1 (chain r7, source 6cf4868f) stopped at smoke on 'no decision link' (fixed by
 # c4/clean3-minedlink); kept intact as evidence and its ledger counted as prior spend.
-FAILED_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3', '/home/ubuntu/coopmwm20261106_clean3_r2')  # r2: prepare fault, 0 rows
+FAILED_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3', '/home/ubuntu/coopmwm20261106_clean3_r2',  # r2: prepare fault, 0 rows
+                '/home/ubuntu/coopmwm20261106_clean3_r3')  # r3: smoke check (a) before MAIN amendment
 CLEAN2 = '/home/ubuntu/coopmwm20261105_clean2'
 CLEAN1 = '/home/ubuntu/coopmwm20261105_clean1'
 # r1 (b7b74545), r2 (a0f9401d) and r3 (bf3f1d68) chains were stopped by the operator before any clean3
 # physics; each ran the same G1 selection: 0 candidates, 0 sim-s, NO-GO. Ledgers stay counted.
-G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r9'
+G1_ROOT = '/home/ubuntu/coopmwm20261106_clean3_g1cert_r10'
 G1_PRIOR_ROOTS = ('/home/ubuntu/coopmwm20261106_clean3_g1cert', '/home/ubuntu/coopmwm20261106_clean3_g1cert_r2',
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r3',
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r4',  # r3/r4 stopped mid-G1: 0 rows
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r5',  # r5 NO-GO, 0 rows
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r6',  # r6 NO-GO, 0 rows
                   '/home/ubuntu/coopmwm20261106_clean3_g1cert_r7',  # r7 NO-GO, 0 rows
-                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r8')  # r8 NO-GO, 0 rows
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r8',  # r8 NO-GO, 0 rows
+                  '/home/ubuntu/coopmwm20261106_clean3_g1cert_r9')  # r9 NO-GO, 0 rows
 MINING_ROOT = '/home/ubuntu/coopmwm20261106_s_mining'
 SCHEMA = 'coopmwm.clean3.restart_budget.v1'
 
@@ -322,6 +324,11 @@ MINED_EXPOSURE_RULE = ('owner 2026-11-06 ~05:05 "make sure the policy is actuall
     'Per update: imitation counts, practice starts, executed joint moves per family/seed, mined imitation fit '
     '(CE), trigger rates per family, G4-format rows (UPDATE receipts clean3_mined_usage; CLEAN3 Mined status line).')
 MIN_JOINT_EXAMPLES = 3
+OBSERVABILITY_AMENDMENT = ('MAIN decision ~10:2x 2026-11-06 (owner asleep; delegated): "go with OPTION 1" - smoke check (a): '
+    'every admitted mined example must load as an executable bank example and be practice-demonstrated; imitation '
+    'targets cover only the examples observable from a member slots; observable/non-observable counts per example '
+    'and per seed reported in the smoke receipt and per-update monitor; (b),(c),(d) unchanged; R identical; the '
+    'observation limit (observables only, 4 V2V slots) is NOT relaxed.')
 
 
 def _ci_evidence(path):
@@ -644,6 +651,7 @@ def prepare(source, *, root=ROOT, clean1=CLEAN1, clean2=CLEAN2, g1_root=G1_ROOT,
                    'G4 sparse measured synergy credit, G5 lane moves, verified mined moves); only guidance source differs',
             g1=dict(decision=go['decision'], rule=G1_GO_RULE, receipt_sha256=go['receipt_sha256']),
             mined_moves=mined, mined_launch_rule=MINED_RULE, mined_exposure_rule=MINED_EXPOSURE_RULE,
+            observability_amendment=OBSERVABILITY_AMENDMENT,
             extra_final_baselines=cfg['extra_final_baselines'],
             criterion=rc.criterion_document(), reporting=cfg['clean2_reporting_definition'],
             seeds='original registered TRAIN worlds only; full windows; u2/u4 probes; N5 u6/u12/u24; paired u8/u24',

@@ -17,7 +17,7 @@ import subprocess
 import time
 import traceback
 
-ROOT = Path('/home/ubuntu/coopmwm20261106_clean3_r3')
+ROOT = Path('/home/ubuntu/coopmwm20261106_clean3_r4')
 PYTHON = '/home/ubuntu/miniconda3/bin/python'
 MINED_DEFAULT = '/home/ubuntu/mined/MINED_MOVES.jsonl'
 UPDATES = 24
@@ -71,7 +71,8 @@ def mined_summary(u, root=None):
         out[arm] = dict(imitation=sum(usage['imitation'].values()), practice=sum(usage['practice_starts'].values()),
             executed=sum(usage['executed_joint_moves'].values()), fit_ce=usage['imitation_fit_ce'],
             by_family={k: v for k, v in usage['executed_joint_moves'].items()},
-            trigger=usage['trigger_rate_by_family'], g4_rows=len(usage['g4_credit']))
+            trigger=usage['trigger_rate_by_family'], g4_rows=len(usage['g4_credit']),
+            observable={k: usage.get('observability', {}).get(k) for k in ('observable', 'non_observable', 'by_seed')})
     return out
 
 

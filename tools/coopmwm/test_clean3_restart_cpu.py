@@ -394,3 +394,23 @@ def test_supervision_candidates_respect_observable_slots_with_g5_rows():
     state = dict(self='c0', rows=rows, acquirable_cav_ids=['c0', 'c1', 'c2', 'c3'])
     for move in feasible_proposals.candidates(state, np.random.default_rng(0), 8):
         assert set(move.members) <= {'c0', 'c1', 'c2', 'c3'}
+
+
+def test_amended_check_a_reports_non_observable_examples_without_failing(monkeypatch):
+    from tools.coopmwm import clean3_mined as cm, bank_breadth, launch_production as production
+    monkeypatch.setattr(production, 'backend_config', lambda cfg, **k: dict(cfg))
+    found = [dict(verification_id='v', plan_sha256='s', example_id=f'v#s{i}', seed_index=i, executable=True,
+                  family='wall') for i in (1, 5)]
+    monkeypatch.setattr(cm, 'examples', lambda native, arm: (found, {('v', 's')}) if arm == 'B' else ([], set()))
+    monkeypatch.setattr(bank_breadth, 'practice_pool', lambda native, arm: [dict(context_id='c'+arm,
+        verification_id='v', example_id=e['example_id'], mined=arm == 'B', demonstrate=True, family='wall') for e in found])
+    def update(a, ctx):
+        return dict(arm=a, learning=dict(bank_trigger=dict(contexts=ctx)),
+            practice=dict(practice=1, episodes=[dict(breadth=dict(context_id='c'+a, family='wall'))]),
+            clean3_mined_usage=dict(demonstrations=[dict(id='e', family='wall',
+                executed=dict(passed=True, kind='profile'))], g4_credit=[{}]))
+    out = cm.smoke_check(dict(demonstrate_families=['wall']),
+                         [update('B', [dict(verification_id='v', example_id='v#s1')]), update('R', [])], 'x')
+    obs = out['B']['observability']
+    assert obs['observable'] == 1 and obs['non_observable'] == 1
+    assert obs['by_seed'] == {'1': dict(observable=1, non_observable=0), '5': dict(observable=0, non_observable=1)}

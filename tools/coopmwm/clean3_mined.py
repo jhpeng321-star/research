@@ -46,6 +46,23 @@ def examples(native, arm):
     return out, wanted
 
 
+def observability(found, contexts):
+    """Per (example, seed): observable from some member's slots == has an imitation context."""
+    rows = []
+    for e in found:
+        rows.append(dict(verification_id=e['verification_id'], example_id=e['example_id'],
+                         seed_index=e.get('seed_index'), family=e.get('family'),
+                         observable=(e['verification_id'], e['example_id']) in contexts))
+    by_seed = {}
+    for r in rows:
+        key = str(r['seed_index'])
+        by_seed.setdefault(key, dict(observable=0, non_observable=0))
+        by_seed[key]['observable' if r['observable'] else 'non_observable'] += 1
+    return dict(examples=rows, observable=sum(r['observable'] for r in rows),
+                non_observable=sum(not r['observable'] for r in rows), by_seed=by_seed,
+                rule='imitation targets only where a member own observable slots contain every macro member')
+
+
 def tape_check(plan, tape, t0):
     """The demonstrated plan really executed: G5 lane effect + bound profile, else profile."""
     from .group_lane import verify_tape, from_plan
@@ -159,7 +176,13 @@ def usage(native, arm, episodes, learning, artifacts):
                     fam += ':joint'
                 selected[fam] += 1
     key = lambda c: {f'{f}|{x}': n for (f, x), n in sorted(c.items())}
-    return dict(arm=arm, mined_examples=len(mined), imitation=key(imitation), practice_starts=key(practice),
+    try:
+        found, _ = examples(native, arm)
+        seen = {(c['verification_id'], c['example_id']) for c in contexts}
+        obs = observability(found, seen)
+    except (ValueError, KeyError, TypeError, OSError) as error:
+        obs = dict(error=str(error)[:300])
+    return dict(arm=arm, mined_examples=len(mined), observability=obs, imitation=key(imitation), practice_starts=key(practice),
         executed_joint_moves=key(executed), demonstrations=demos,
         imitation_fit_ce=(sum(fit)/len(fit) if fit else None), imitation_fit_contexts=len(fit),
         trigger_rate_by_family={f: n/decisions for f, n in sorted(selected.items())} if decisions else {},
@@ -188,12 +211,14 @@ def smoke_check(cfg, updates, artifacts):
             contexts = {(c['verification_id'], c['example_id']) for c in
                         arms[arm]['learning']['bank_trigger'].get('contexts', [])}
             targets = {(e['verification_id'], e['example_id']) for e in found}
-            if not targets <= contexts:
-                raise ValueError('(a) mined (move, seed) examples missing as imitation targets: '+arm)
+            # MAIN 10:2x amendment (option 1): imitation targets cover only the examples
+            # observable from a member's own slots; every example must still load as an
+            # executable bank example (above) and be practice-demonstrable (pool, below).
+            info['observability'] = observability(found, contexts)
             pool_examples = {(r['verification_id'], r['example_id']) for r in pool if r.get('mined')}
             if not targets <= pool_examples:
                 raise ValueError('(b) mined seed situations missing from the practice pool: '+arm)
-            info['imitation_targets'] = len(targets)
+            info['imitation_targets'] = len(targets & contexts)
         started = [e for e in arms[arm]['practice']['episodes']
                    if (e.get('breadth') or {}).get('context_id') in demo_ctx
                    and (arm != 'B' or demo_ctx[e['breadth']['context_id']].get('mined'))]
