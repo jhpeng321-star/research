@@ -490,3 +490,17 @@ def test_cli_propose_and_compare(tmp_path, dry):
     main(['compare', '--summary', str(Path(dry['ref']) / 'results' / 'WMC_SUMMARY.json'), '--summary',
           str(Path(dry['wm']) / 'results' / 'WMC_SUMMARY.json'), '--out', str(cmp_out)])
     assert set(json.loads(cmp_out.read_text())['metrics']) == {'wm', 'structured', 'random'}
+
+
+def test_compare_excludes_budget_stranded_moments(tmp_path):
+    def vd(sid, arm, stage, adm=False):
+        return dict(sid=sid, seed=989300, arm=arm, family='abreast_wall' if arm == 'B' else 'R_random',
+                    variant='v', stage=stage, admitted=adm, members=['a', 'b'], S_r0=None, T_r0=1.0)
+    verdicts = [vd('m1', 'B', 'admitted', True), vd('m1', 'R', 'screen'), vd('m2', 'B', 'screen_missing'),
+                vd('m2', 'R', 'screen_missing'), vd('m3', 'B', 'r1'), vd('m3', 'R', 'r2_missing')]
+    p = tmp_path / 'S.json'
+    p.write_text(json.dumps(dict(verdicts=verdicts)))
+    res = C.compare([p])
+    assert res['incomplete_moments'] == ['m2', 'm3'] and res['n_common_moments'] == 1
+    assert res['metrics']['structured']['admitted_variants'] == 1
+    assert C.compare([p], exclude_incomplete=False)['n_common_moments'] == 3

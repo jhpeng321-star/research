@@ -220,13 +220,18 @@ def abstention(vmap, sids, props, thresholds):
 
 
 def compare(summaries, proposals=None, cap=None, salt='wmc-compare-v1', thresholds=(0.0, 100.0, 250.0, 500.0),
-            arms=None):
+            arms=None, exclude_incomplete=True):
+    """exclude_incomplete: drop moments where any compared arm has an undetermined (budget-stranded,
+    '*_missing') funnel stage, so every arm is judged on fully verified moments only (listed in the output)."""
     by, sources = load_verdicts(summaries)
     arms = list(arms or sorted(by))
     missing = [a for a in arms if a not in by]
     if missing:
         raise ValueError(f'arms {missing} not found in the summaries')
     common = sorted(set.intersection(*(set(by[a]) for a in arms)))
+    incomplete = sorted(s for s in common if any(v['stage'].endswith('_missing') for a in arms for v in by[a][s]))
+    if exclude_incomplete:
+        common = [s for s in common if s not in set(incomplete)]
     order_sids = sorted(common, key=lambda s: hashlib.sha256(f'{salt}:{s}'.encode()).hexdigest())
     rng = np.random.default_rng(RNG)
     metrics, arrays = {}, {}
@@ -247,6 +252,7 @@ def compare(summaries, proposals=None, cap=None, salt='wmc-compare-v1', threshol
                 r = json.loads(line)
                 props[r['sid']] = r
     out = dict(schema='wmc-compare-v1', summaries=sources, arms=arms, n_common_moments=len(common),
+               incomplete_moments=incomplete, incomplete_excluded=bool(exclude_incomplete),
                moments_per_arm={a: len(by[a]) for a in by}, order_salt=salt, metrics=metrics, paired=pairs,
                fixed_budget=fixed_budget(range(len(order_sids)), arrays, cap),
                wm_diagnostics=wm_diagnostics(by['wm'], order_sids) if 'wm' in by else None,
@@ -314,9 +320,11 @@ def main(argv=None):
     ap.add_argument('--cap', type=float)
     ap.add_argument('--salt', default='wmc-compare-v1')
     ap.add_argument('--arms', help='comma list (default: every arm found)')
+    ap.add_argument('--keep-incomplete', action='store_true', help='keep moments with budget-stranded funnels')
     ap.add_argument('--out', required=True)
     a = ap.parse_args(argv)
-    res = compare(a.summary, a.proposals, a.cap, a.salt, arms=a.arms.split(',') if a.arms else None)
+    res = compare(a.summary, a.proposals, a.cap, a.salt, arms=a.arms.split(',') if a.arms else None,
+                  exclude_incomplete=not a.keep_incomplete)
     out = G.check_path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     with Path(out).open('x') as fh:
