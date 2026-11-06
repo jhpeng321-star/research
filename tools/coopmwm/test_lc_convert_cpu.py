@@ -249,6 +249,50 @@ def test_parity_detects_a_wrong_program(desc, frame):
     assert {m['kind'] for m in res['mismatches']} == {'slowDown'}
 
 
+def _family_row(name, fam, pred=None):
+    for _, r in par.fixture_rows(name):
+        if (r.get('r_kind') if r['family'] == 'R_random' else r['family']) == fam and (pred is None or pred(r)):
+            return r
+    raise LookupError(fam)
+
+
+def _rep(obj, **kw):
+    import dataclasses
+    return dataclasses.replace(obj, **kw)
+
+
+MUTATIONS = [   # (label, file, family, member index, mutation of that member's program, row predicate)
+    ('tau', 'COOPKINDS_MOVES_B', 'discharge', 0, lambda p: _rep(p, tau=0.5), None),
+    ('lc_mode', 'COOPKINDS_MOVES_B', 'zipper', 0, lambda p: _rep(p, lc_mode=513), None),
+    ('lane_target', 'PLANGEN2_MOVES_B', 'lane_balance', 0, lambda p: _rep(p, lane=_rep(p.lane, target=1)), None),
+    ('release_s', 'PLANGEN2_MOVES_B', 'lane_balance', 1, lambda p: _rep(p, release_s=p.release_s-30), None),
+    ('trigger', 'PLANGEN2_MOVES_B', 'early_merge', 0, lambda p: _rep(p, lane=_rep(p.lane, from_s=p.lane.from_s+20)), None),
+    ('zone', 'PLANGEN2_MOVES_B', 'early_merge', 3, lambda p: _rep(p, zone=(p.zone[0]+10, p.zone[1])), None),
+    ('track_kp', 'PLANGEN2_MOVES_B', 'zipper_order', 1, lambda p: _rep(p, lon=_rep(p.lon, kp=0.2)), None),
+    ('lane_rule', 'LCMOVES_MOVES_B', 'lane_redistribute', 0, lambda p: _rep(p, lane=_rep(p.lane, rule='until_reached')),
+     None),
+    ('giveup', 'LCMOVES_MOVES_B', 'lane_redistribute', 0, lambda p: _rep(p, lane=_rep(p.lane, giveup_s=p.lane.giveup_s-50)),
+     None),
+    ('match_dmax', 'LCMOVES_MOVES_B', 'lane_redistribute', 1, lambda p: _rep(p, lon=_rep(p.lon, dmax=1.0)), None),
+    ('anchor_release', 'NEWMAP_MOVES_B', 'closing_pair', 1, lambda p: _rep(p, anchor_release_s=p.anchor_release_s-20),
+     lambda r: r['variant'] == 'pair_t'),
+    ('hold_s', 'NEWMAP_MOVES_B', 'abreast_wall', 0, lambda p: _rep(p, hold_s=p.hold_s-5),
+     lambda r: r['arm_events'][0][3] == 'hold_end' and r['arm_events'][0][1] == r['members'][0]),
+]
+
+
+@pytest.mark.parametrize('label,name,fam,i,mutate,pred', MUTATIONS, ids=[m[0] for m in MUTATIONS])
+def test_log_parity_catches_a_perturbed_member_program(desc, frame, label, name, fam, i, mutate, pred):
+    """Non-vacuity across every primitive: one changed program field -> plain mismatches on the log stream."""
+    row = _family_row(name, fam, pred)
+    program = cv.from_mined_row(row, desc)
+    progs = list(program.programs)
+    progs[i] = mutate(progs[i])
+    res = par.run(row, _rep(program, programs=tuple(progs)), frame=frame, stream='log', desc=desc)
+    assert res['classes'].get('mismatch', 0) > 0, (label, res['classes'])
+    assert {m['vid'] for m in res['mismatches'] if m['cls'] == 'mismatch'} <= set(row['members'])
+
+
 # ------------------------------------------------------------------ labels
 LABEL_KEYS = {'schema', 'vid', 't', 'el', 'session_id', 'role', 'lon', 'accel_mps2', 'lane_target', 'lane_duration_s',
               'lc_mode', 'tau', 'event', 'release_reason', 'source'}
