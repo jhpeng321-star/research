@@ -142,6 +142,7 @@ def extension(cfg, base=None):
     if base is None:
         from . import lane_drop
         base = lane_drop.extension(cfg)
+    base = program_extension(cfg, base)      # clean5b (lc_families on): template descriptor block
     settings = fp.settings(cfg)
     if settings is None:
         return base
@@ -232,3 +233,45 @@ def template_descriptor(option, view):
                             len(t['programs'])/float(TEMPLATE_CAP), float(t['duration_s'])/HOLD_MAX_S,
                             float(get('member_count', 1) or 1)/cap, max(-1., min(1., float(get('gap_m', 0.) or 0.)/rng_m))]
     return out
+
+
+PROGRAM_FAMILIES = ('free_program_initiate', 'free_program_join')   # LCEXEC lc_families option families
+
+
+class ProgramExtension:
+    """Base (W1/N2/N9) extension + the LCEXEC free_program option families with FULLPOL's
+    zero-initialised template descriptor block (no context columns)."""
+
+    def __init__(self, base, view):
+        self.base, self.view = base, view
+        self.families = (tuple(base.families) if base is not None else ())+PROGRAM_FAMILIES
+        self.descriptor_width = (base.descriptor_width if base is not None else 0)+template_width()
+        self.context_width = base.context_width if base is not None else 0
+        self.wall = getattr(base, 'wall', None)
+        self.aware = getattr(base, 'aware', None)
+        self.lane_drop = getattr(base, 'lane_drop', None)
+
+    def __getattr__(self, name):
+        if 'base' not in self.__dict__ or self.__dict__['base'] is None:
+            raise AttributeError(name)
+        return getattr(self.__dict__['base'], name)
+
+    def descriptor(self, move):
+        out = list(self.base.descriptor(move)) if self.base is not None else []
+        return out+template_descriptor(move, self.view)
+
+    def context_features(self, context):
+        if self.base is not None and self.base.context_width:
+            return self.base.context_features(context)
+        return torch.zeros((len(context['members']), 0))
+
+
+def program_extension(cfg, base):
+    """``base`` unchanged unless ``lc_families`` is on (clean5b): then the program families + block."""
+    if not cfg.get('lc_families'):
+        return base
+    from . import lane_drop
+    ld = lane_drop.settings(cfg)
+    if ld is None:
+        raise ValueError('clean5b free_program options need the N2 lane-drop map view (lane_drop key)')
+    return ProgramExtension(base, ld['view'])

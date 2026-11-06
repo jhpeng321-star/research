@@ -12,6 +12,7 @@ import pytest
 
 from . import fullpol_head as fh, fullpol_programs as fp, fullpol_templates as ft, lc_program as lc
 from .lane_drop import MapView
+from .test_track2_backend_cpu import cfg, cpu_threads  # noqa: F401 (fixture + autouse)
 
 VIEW = MapView('wz3to2-stub', 0., (0, 1, 2), 2)
 
@@ -142,3 +143,26 @@ def test_random_template_slot_lanes_make_lane_targets_adjacent(cls):
         for lane, p in zip(lanes, t.programs):
             if p.lane is not None:
                 assert abs(p.lane.target-lane) == 1
+
+
+def test_program_extension_zero_init_families_and_off_identity(cfg):
+    import torch
+    from .test_lane_drop_cpu import ld_cfg, make
+    base_cfg = ld_cfg(cfg, v2v=False)
+    off, on = make(base_cfg), make(dict(base_cfg, lc_families=dict(enabled=True)))
+    assert off.trigger.option_families[-2:] != fh.PROGRAM_FAMILIES
+    assert on.trigger.option_families[-2:] == fh.PROGRAM_FAMILIES
+    assert on.trigger.descriptor_width == off.trigger.descriptor_width+fh.template_width()
+    w_on, w_off = on.trigger.trigger_head[0].weight, off.trigger.trigger_head[0].weight
+    hidden = on.trigger.base_policy.actor[-1].in_features
+    start = hidden+off.trigger.descriptor_width
+    block = w_on[:, start:start+fh.template_width()]
+    assert torch.equal(block, torch.zeros_like(block))
+    assert torch.equal(torch.cat((w_on[:, :start], w_on[:, start+fh.template_width():]), 1), w_off)
+    own = row('ego', -900., 0)
+    t = ft.structured('solo_hold', VIEW, own, [], np.random.default_rng(0), 100.)
+    option = dict(family='free_program_initiate', members=['ego'], template=t.to_dict(), cap=1, member_count=1,
+                  gap_m=0., range_m=100.)
+    desc = on.trigger.extension.descriptor(option)
+    assert len(desc) == on.trigger.extension.descriptor_width and any(desc[-fh.template_width():])
+    assert ft.labels(t) == ('wall_g_solo2', 'solo_hold') or ft.labels(t) == ('wall_h_solo2', 'solo_hold')
