@@ -28,13 +28,15 @@ from pathlib import Path
 import numpy as np
 
 from . import families as F
+from . import families_lc as FL
 from . import geometry as G
 from . import wm_backend as W
 
 SCHEMA = 'wmc-proposals-v1'
 DEFAULTS = dict(k=5, H=300, K_screen=4, K_final=8, n_screen=48, n_synergy=16, refine_rounds=2, n_parents=6,
                 n_children=6, finalists=12, max_per_set=2, z=1.645, score='lcb', abstain_below=None,
-                families=list(F.BUILTIN_FAMILIES) + ['harmonize_rows'], max_sets=F.MAX_SETS, grid=None)
+                families=list(F.BUILTIN_FAMILIES) + ['harmonize_rows'] + list(FL.LC_FAMILIES), max_sets=F.MAX_SETS,
+                grid=None, lc_max_per_family=4, lc_variations=True, lc_free=4)
 EXCLUDED_INPUTS = ('cell', 'demand', 'penetration', 'world seed', 'approach_speed', 'closing_lane_slow',
                    'lane_counts', 'source variants / outcomes')
 
@@ -170,17 +172,27 @@ def propose_moment(wm, m, cfg, state_file=None, head=None):
     mi = W.moment_input(m, state_file)
     state = wm.observe(mi)
     cavs = mi['cavs']
+    roles = frozenset(getattr(wm, 'supported_roles', {'hold'}))
     fams = list(cfg['families'])
+    lc_fams = [f for f in fams if f in FL.LC_FAMILIES]
+    unsupported = lc_fams if 'prog' not in roles else []
+    lc_fams = [] if unsupported else lc_fams
+    fams = [f for f in fams if f not in FL.LC_FAMILIES]
     nf = F.n9_module() if 'harmonize_rows' in fams else None
     if nf is None:
         fams = [f for f in fams if f != 'harmonize_rows']
     pool = F.generate(cavs, cfg['grid'], fams, cfg['max_sets'], nf)
+    if lc_fams:
+        pool += FL.lc_moves(m, families=lc_fams, max_per_family=int(cfg['lc_max_per_family']),
+                            variations=bool(cfg['lc_variations']), n_free=int(cfg['lc_free']))
+    fams = fams + lc_fams
     seed = mi['crn_seed']
     ledger = dict(calls=0, rollouts=0)
     row = dict(schema=SCHEMA, sid=m['sid'], t0=int(m['t0']), map=G.MAP,
                bookkeeping=dict(world_seed=m['seed'], cell=m.get('cell'), demand=m.get('demand'),
                                 penetration=m.get('penetration'), window=m.get('window'), note='labels, not inputs'),
-               backend=wm.meta, config=cfg, families_searched=fams, n9=F.n9_status(nf),
+               backend=wm.meta, config=cfg, families_searched=fams, families_unsupported_by_wm=unsupported,
+               n9=F.n9_status(nf),
                observable_inputs=dict(cav_self_states=len(cavs), wm_rows=len(state.get('wm_rows') or [])),
                excluded_inputs=list(EXCLUDED_INPUTS), n_pool=len(pool), n_member_sets=len({p['set_key'] for p in pool}))
     k = int(cfg['k'])
@@ -202,7 +214,7 @@ def propose_moment(wm, m, cfg, state_file=None, head=None):
         parents = sorted(evaluated.values(), key=lambda r: score_of(r, basis), reverse=True)[:int(cfg['n_parents'])]
         children = []
         for p in parents:
-            nb = [c for c in F.neighbors(p['move'], cavs, cfg['grid'], nf) if c['key'] not in tried]
+            nb = [] if p['move'].get('role') == 'prog' else                 [c for c in F.neighbors(p['move'], cavs, cfg['grid'], nf) if c['key'] not in tried]
             rng.shuffle(nb)
             for c in nb[:int(cfg['n_children'])]:
                 tried.add(c['key'])

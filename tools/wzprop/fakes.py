@@ -46,22 +46,35 @@ class PlantedWorld:
         early = float(p.get('release_x', G.X_B)) < G.X_B or 'anchor_release_x' in p
         return c * (0.9 if early else 1.0)
 
+    @staticmethod
+    def normalize(m):
+        """(lane after any lane change, hold-equivalent params) of a 'hold' or LCMOVES 'prog' member."""
+        p = m['params']
+        if m.get('role', 'hold') != 'prog':
+            return int(m['lane']), p
+        kind = p.get('speed') or 'hold'
+        v_w = {'accel': G.SPEED_LIMIT, 'match': 25.0}.get(kind, p.get('v_w', 25.0))
+        start = int(p.get('sp_from', 0))
+        q = dict(v_w=float(v_w), hold_s=max(1, int(p.get('hold_s', 120)) - start), dmax=float(p.get('dmax', 1.0)),
+                 start_s=start + int(p.get('lc_from', 0) if p.get('lc_target') is not None else 0))
+        tl = p.get('lc_target')
+        return (int(m['lane']) if tl is None else int(tl)), q
+
     def effect(self, members):
-        """Truth J reduction (veh-s / 300 s) of executing these hold members together."""
+        """Truth J reduction (veh-s / 300 s) of executing these members (hold or prog roles) together."""
         if not members:
             return 0.0
-        p = members[0]['params']
-        close = self.closeness(p)
+        norm = [self.normalize(m) for m in members]
+        close = sum(self.closeness(q) for _, q in norm) / len(norm)
         xs = [float(m['x']) for m in members]
         pos = math.exp(-((sum(xs) / len(xs) - SWEET_X) / 350.0) ** 2)
-        cut = max(0.0, G.SPEED_LIMIT - float(p['v_w'])) / 10.0 * float(p['hold_s']) / 120.0
         solo = 0.0
-        for m in members:
-            if int(m['lane']) == 0:
+        for lane, q in norm:
+            if lane == 0:
                 solo += self.closing_solo * close * pos
             else:
-                solo -= self.through_cost * cut
-        lanes = {int(m['lane']) for m in members}
+                solo -= self.through_cost * max(0.0, G.SPEED_LIMIT - float(q['v_w'])) / 10.0 * float(q['hold_s']) / 120.0
+        lanes = {lane for lane, _ in norm}
         bonus = 0.0
         if len(members) >= 2 and 0 in lanes and max(xs) - min(xs) <= 220.0:
             bonus = self.group_gain * close * pos * (len(lanes) / 3.0) ** 1.5
@@ -140,11 +153,13 @@ def run_branch(job, world=None):
             x += v
         tracks[vid] = rows
     for m in members:
-        p = m['params']
-        rel = int(p.get('start_s', 0)) + int(p['hold_s'])
+        _lane, q = world.normalize(m)
+        amax = float(m['params'].get('amax', 1.0))
+        st = int(q.get('start_s', 0))
+        rel = st + int(q['hold_s'])
         release[m['id']] = min(rel, H)
-        issued[m['id']] = [(el, round(max(-p['dmax'], min(p['amax'], p['v_w'] - m['v'])), 4))
-                           for el in range(int(p.get('start_s', 0)), min(rel, H))]
+        issued[m['id']] = [(el, round(max(-float(q['dmax']), min(amax, float(q['v_w']) - m['v'])), 4))
+                           for el in range(st, min(rel, H))]
     saved = {}
     for e in job.get('save_at', []):
         saved[f'e{int(e)}'] = dict(t=float(job['t_load']) + H, inserted=int(job['inserted_load']) + 7)

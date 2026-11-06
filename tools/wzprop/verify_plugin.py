@@ -30,6 +30,7 @@ import time
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from . import families_lc as FL
 from . import geometry as G
 from . import n3
 
@@ -137,6 +138,11 @@ def validate_variant(P, m, vid, v):
     ids = [mm['id'] for mm in v['members']]
     if len(set(ids)) != len(ids):
         raise ValueError(f"{m['sid']}/{vid}: duplicate members")
+    roles = {mm['role'] for mm in v['members']}
+    if roles == {'prog'}:
+        return FL.validate_prog(m, vid, v)              # LCMOVES programs: verify with --core lcm
+    if roles != {'hold'}:
+        raise ValueError(f"{m['sid']}/{vid}: roles {sorted(roles)} have no single executor")
     for mm in v['members']:
         c = by.get(mm['id'])
         if c is None or c['edge'] != 'up':

@@ -4,6 +4,7 @@ propose  (WM host)  MOMENTS.json -> PROPOSALS.jsonl (+ _RECEIPT.json); zero SUMO
 score    (WM host)  WM predictions of the variants already in a MOMENTS.json -> SCORES.jsonl; zero SUMO
 rankcheck (any)     WM ranking vs existing SUMO verdicts (Spearman T/S, AUC admitted, top-1) -> JSON
 enrich   (any)      MOMENTS.json + WM-D tapes -> observable moments (CAV-detected neighbours, RSU counters)
+regime   (any)      claim-4: S-REGIME strategy states from tapes / WM-vs-measured benefit agreement
 wmrank   (WM host)  score + bootstrap rank metrics with one WM checkpoint (baseline WM2 / WM-E) -> DIR
 rankmetrics (any)   bootstrap rank metrics from SCORES.jsonl + summaries -> JSON + .md
 verify   (cpuV)     plug-in stages: init | natives | geometry-moments | moments | screen | solos | rep1 | rep2 | analyze
@@ -179,6 +180,10 @@ def main(argv=None):
         return rankcheck(rest)
     if cmd == 'wmrank':
         return wmrank(rest)
+    if cmd == 'regime':
+        from .regime_wm import main as rg
+        rg(rest)
+        return 0
     if cmd == 'rankmetrics':
         from .rankcheck import main as rm
         rm(rest)

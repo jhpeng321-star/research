@@ -49,6 +49,10 @@ def core_cmd(core, job_file):
     if core == 'nm2':
         n3.verify()
         cmd = [sys.executable, str(n3.CORE), str(job_file)]
+    elif core == 'lcm':                     # vendored S-LCMOVES core: hold/pulse + 'prog' (lane-change programs)
+        from . import families_lc as FL
+        FL.verify()
+        cmd = [sys.executable, str(FL.VENDOR / 'lcm_core.py'), str(job_file)]
     elif core == 'fake':
         cmd = [sys.executable, '-m', 'tools.wzprop.fakes', str(job_file)]
     else:

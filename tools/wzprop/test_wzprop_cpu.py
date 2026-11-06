@@ -210,7 +210,7 @@ def test_wma_binding_from_ready_file(tmp_path, monkeypatch):
 def test_proposer_finds_the_planted_optimum_and_beats_structured(P):
     m = moment()
     wm = W.StubWM()
-    cfg = PR.config(dict(k=5))
+    cfg = PR.config(dict(k=5, families=['abreast_wall', 'closing_pair']))
     row = PR.propose_moment(wm, m, cfg)
     assert not row['abstain'] and len(row['variants']) == 5
     top = row['variants']['wm0']
@@ -587,3 +587,94 @@ def test_rank_metrics_perfect_and_reversed_rankers(tmp_path):
     res2 = RC.run([sp], sc2, label='reversed')
     assert res2['spearman_T']['value'] == -1.0 and res2['admitted_hit_at_k']['T_mean']['1']['value'] == 0.0
     assert '| Spearman' in RC.markdown(res2)
+
+
+# ------------------------------------------------------------------------------------ LCMOVES families
+def _lc_moment():
+    m = moment()
+    up = [c for c in m['all_cavs_t0'] if c['edge'] == 'up']
+    m['observed'] = dict(vehicles=[dict(id=f'h{i}', edge='up', lane=c['lane'], x=c['x'] + 15.0, v=c['v'], is_cav=False)
+                                   for i, c in enumerate(up)], counter=[[1] * 30, [1] * 30])
+    return m
+
+
+def test_lc_families_are_the_lcmoves_builders():
+    from tools.wzprop import families_lc as FL
+    FL.verify()
+    m = _lc_moment()
+    moves = FL.lc_moves(m)
+    assert moves and {mv['family'] for mv in moves} <= set(FL.LC_FAMILIES)
+    ids = {c['id'] for c in m['all_cavs_t0'] if c['edge'] == 'up'}
+    for mv in moves:
+        assert all(mm['role'] == 'prog' and mm['id'] in ids for mm in mv['members'])
+        FL.validate_prog(m, mv['key'], F.to_variant(mv))
+    import lcm_families
+    snap = FL.snapshot(m)
+    for vid, _fam, _fn in FL.BUILDERS:
+        ref = lcm_families.propose(snap, vid)
+        mine = next((mv for mv in moves if mv['origin'] == f'{vid}#0'
+                     and set(mv['knob']) == {'builder', 'rank', 'origin'}), None)
+        assert (ref is None) == (mine is None), vid
+        if ref is not None:
+            assert mine['members'] == ref, vid
+    mv = next(mv for mv in moves if any(mm['params'].get('lc_target') is not None for mm in mv['members']))
+    bad = F.to_variant(mv)
+    j = next(i for i, mm in enumerate(bad['members']) if mm['params'].get('lc_target') is not None)
+    bad['members'][j]['params']['lc_target'] = 7
+    with pytest.raises(ValueError, match='registered ranges'):
+        FL.validate_prog(m, 'bad', bad)
+
+
+def test_lc_families_only_with_a_backend_that_executes_programs():
+    m = _lc_moment()
+    fams = ['wall_fill', 'rolling_wall', 'gap_open_merge', 'lane_redistribute', 'free_program']
+    row = PR.propose_moment(W.StubWM(), m, PR.config(dict(SMALL, k=4, families=fams)))
+    assert row['variants'] and all(mm['role'] == 'prog' for v in row['variants'].values() for mm in v['members'])
+    assert not row['families_unsupported_by_wm']
+
+    class HoldOnly:
+        name = 'hold_only'
+        meta = dict(backend='hold_only')
+
+        def __init__(self):
+            self.inner = W.StubWM()
+
+        def observe(self, mo):
+            return self.inner.observe(mo)
+
+        def evaluate(self, st, acts, K, H, seed):
+            assert all(mm.get('role', 'hold') == 'hold' for a in acts for mm in a['members'])
+            return self.inner.evaluate(st, acts, K, H, seed)
+    wm = W._Factory(HoldOnly())
+    row = PR.propose_moment(wm, m, PR.config(dict(SMALL, k=3, families=['abreast_wall'] + fams)))
+    assert set(row['families_unsupported_by_wm']) == set(fams)
+    assert all(v['family'] == 'abreast_wall' for v in row['variants'].values())
+
+
+def test_regime_benefit_agreement_on_synthetic_inputs(tmp_path):
+    from tools.wzprop import regime_wm as RG
+    strategies = ['wall_g', 'wall_h', 'wall_h_solo2', 'pair_t']
+    truth = {'wall_g': 300.0, 'wall_h': 900.0, 'wall_h_solo2': 1500.0, 'pair_t': -400.0}
+    states, scores, results = [], [], []
+    for cell in ('D3200_p60', 'D3200_p40'):
+        for seed in range(989300, 989306):
+            for t0 in (450, 650):
+                sid = f'rgwm_{cell}_s{seed}_t{t0}'
+                states.append(dict(cell=cell, seed=seed, t0=t0, sid=sid, valid=True,
+                                   variants={s: {} for s in strategies}, feasible={s: True for s in strategies}))
+                for s in strategies:
+                    mean = truth[s] / 4 + (seed - 989303) * 10
+                    scores.append(dict(sid=sid, variant=s, wm=dict(T=dict(mean=mean, lcb=mean - 1))))
+            base = 100000.0
+            results.append(dict(status='ok', cell=cell, seed=seed + 600, arm='base', J_total=base))
+            for s in strategies + ['lane_balance']:
+                results.append(dict(status='ok', cell=cell, seed=seed + 600, arm=s,
+                                    J_total=base - truth.get(s, 50.0) + (seed % 3) * 30))
+    sp, sc, rp = tmp_path / 'st.json', tmp_path / 'sc.jsonl', tmp_path / 'res.jsonl'
+    sp.write_text(json.dumps(states))
+    sc.write_text(''.join(json.dumps(x) + '\n' for x in scores))
+    rp.write_text(''.join(json.dumps(x) + '\n' for x in results))
+    res = RG.run(sp, sc, [rp], label='synthetic')
+    assert res['point']['spearman_pooled'] > 0.9 and res['point']['sign_accuracy'] == 1.0
+    assert res['point']['n_pairs'] == 8 and 'lane_balance' in res['not_evaluable']
+    assert res['ci95']['sign_accuracy'][0] <= 1.0 and '| regime |' in RG.markdown(res)

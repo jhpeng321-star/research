@@ -85,9 +85,11 @@ def default_observe(moment):
 
 
 def action(aid, kind, family, key, members, H, cavs=None):
-    prof = F.open_loop_profile(members, H, cavs) if members else {}
-    return dict(id=aid, kind=kind, family=family, key=key, members=[dict(m) for m in members], law='hold_speed',
-                profile=prof, duration_s=max([len(v) for v in prof.values()] or [0]))
+    prog = any(m.get('role') == 'prog' for m in members)
+    prof = F.open_loop_profile(members, H, cavs) if members and not prog else {}
+    return dict(id=aid, kind=kind, family=family, key=key, members=[dict(m) for m in members],
+                law='lcm_prog' if prog else 'hold_speed', profile=prof,
+                duration_s=max([len(v) for v in prof.values()] or [0]))
 
 
 def normalize(raw, actions, K, H):
@@ -120,6 +122,7 @@ class StubWM:
     unless --allow-stub."""
 
     name = 'stub'
+    supported_roles = frozenset({'hold', 'prog'})
 
     def __init__(self, world=None, noise_sd=60.0, common_sd=200.0, bias=0.0, base_level=7500.0, sys_sd=0.0):
         self.world = world or fakes.PlantedWorld()
@@ -185,6 +188,7 @@ class WMABackend:
               if not (isinstance(v, str) and v.startswith('<') and v.endswith('>'))}
         kw.update(load_kwargs or {})
         self.handle = load(**kw) if load else None
+        self.supported_roles = frozenset(doc.get('supported_roles') or ['hold'])
         self.meta = dict(backend='wma', ready=str(path), ready_sha256=hashlib.sha256(text).hexdigest(), api=spec,
                          wma_commits=doc.get('commits'), load_kwargs=kw)
 
@@ -200,6 +204,7 @@ class _Factory:
         self.obj = obj
         self.name = getattr(obj, 'name', type(obj).__name__)
         self.meta = getattr(obj, 'meta', dict(backend=self.name))
+        self.supported_roles = frozenset(getattr(obj, 'supported_roles', {'hold'}))
 
     def observe(self, moment):
         return self.obj.observe(moment)
