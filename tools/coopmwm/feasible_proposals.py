@@ -34,7 +34,9 @@ def candidates(obs_state, rng, n):
     """
     if type(n) is not int or n < 0 or not isinstance(rng, np.random.Generator):
         raise ValueError('nonnegative integer budget and numpy Generator required')
-    if 'coordination_partner' in obs_state:
+    if 'coordination_partner' in obs_state and obs_state.get('clean5_ev') is None:
+        # G2 role-pair slate (legacy families). clean5a (N2-only slate) keeps the G2 ordering /
+        # acquirability / receipts but offers the pair through its own N2 slots (N11 F10).
         from .coordination_opportunities import candidates as pair_candidates
         return pair_candidates(obs_state, rng, n)
     rows = [moves._row_checked(r) for r in obs_state.get('rows', ())]
