@@ -202,8 +202,8 @@ def test_clean5b_f8_worlds_and_memory_overrides(wz):
         seeds |= {w['seed'] for w in rows}
     assert set(cells) == set(c5.CELL_KEYS) and len(seeds) == 48
     o = c5b.VARIANT_F8['cfg_overrides']
-    assert {k: v for k, v in o.items() if k != 'arm_update_process'} == dict(load_max=120, wave_workers=8, mem_available_min_gb=95)
-    assert 1+38+38+o['wave_workers']*10.6 < 184 and 184-77-5 >= o['mem_available_min_gb']   # MAIN 07:5x arithmetic
+    assert {k: v for k, v in o.items() if k != 'arm_update_process'} == dict(load_max=120, wave_workers=8, mem_available_min_gb=40)
+    assert 41+46+o['wave_workers']*10.6 < 184 and 184-86-46 >= o['mem_available_min_gb']   # MAIN 10:4x arithmetic
     assert c5b.VARIANT_F8['quote_file'] == 'CLEAN5BF8_QUOTE.json' and set(c5b.VARIANT_F8) == set(c5.VARIANT)
 
 
@@ -221,19 +221,21 @@ def test_fresh_update_process_rule_and_fail_closed(tmp_path, monkeypatch):
     cfg = dict(run_root=str(tmp_path), arm_update_process=lt.FRESH_UPDATE_RULE)
     calls = []
 
-    def fake_run(command, **kw):
+    def fake_popen(command, **kw):
         calls.append(command)
         u = int(command[command.index('--update')+1])
         (tmp_path/f'B_UPDATE_{u:03}.json').write_text(json.dumps(_seal(dict(config_sha256=digest(cfg)), 'update_sha256')))
-        return SimpleNamespace(returncode=0)
+        return SimpleNamespace(pid=4242+u, wait=lambda: 0)
     import json
-    monkeypatch.setattr(subprocess, 'run', fake_run)
+    monkeypatch.setattr(subprocess, 'Popen', fake_popen)
     for u in (1, 2):
         assert lt.run_update_process(cfg, 'B', u)['config_sha256'] == digest(cfg)
     assert [c[c.index('--update')+1] for c in calls] == ['1', '2'] and 'update' in calls[0]
+    assert calls[0][calls[0].index('--config')+1] == str(tmp_path/'CONFIG.json')        # run_root/CONFIG.json
+    assert json.loads((tmp_path/'owners'/'children'/'B_u002.json').read_text())['pid'] == 4244
     import inspect
     src = inspect.getsource(lt.run_arm)
     assert 'if fresh_update_process(cfg):' in src and 'run_update_process(cfg, arm, u)' in src
-    monkeypatch.setattr(subprocess, 'run', lambda command, **kw: SimpleNamespace(returncode=3))
+    monkeypatch.setattr(subprocess, 'Popen', lambda command, **kw: SimpleNamespace(pid=9, wait=lambda: 3))
     with pytest.raises(RuntimeError, match='no automatic retry'):
         lt.run_update_process(cfg, 'R', 1)

@@ -114,10 +114,11 @@ F8_ROOT = '/home/ubuntu/coopmwm20261107_clean5bf8'
 F8_QUOTE_FILE = 'CLEAN5BF8_QUOTE.json'
 F8_EPISODES = 8                 # per arm per update (A, B, R on the same worlds); was 16
 F8_WAVE_WORKERS = 8             # MAIN 07:5x: one wave per arm per update (~60 min/update instead of ~110 with 6)
-F8_MEM_MIN_GB = 95              # waits, never deadlocks: both parents resident -> ~184-77-5 = 102 >= 95 GB available;
-                                # worst 1+38+38+8 x 10.6 = 162 < 184 GB, typical ~125 GB (workers ~5-6 GB)
+F8_MEM_MIN_GB = 40              # MAIN 10:4x: 95 deadlocked u1's paired G4 (B parent 86 GB + R 46 GB -> 54 GB available;
+                                # G4 workers wait in runner.admission). With fresh per-update children: collection peak
+                                # 41+46+8 x 5..10.6 = 127..172 GB, G4 ~86+46+small workers ~140..160 GB < 184.
 F8_NOTE = ('MAIN 06:37 (registered, memory restart option a): 8 episodes per arm per update (B = R, A on the same '
-           'worlds), wave_workers 8 + MemAvailable >= 95 GB before every wave (MAIN 07:5x; waits). u12 (primary) and u24 now hold '
+           'worlds), wave_workers 8 + MemAvailable >= 40 GB before every wave (MAIN 10:4x; waits; fresh per-update arm children). u12 (primary) and u24 now hold '
            'HALF the episodes of the original 16-per-update design - disclosed.')
 
 

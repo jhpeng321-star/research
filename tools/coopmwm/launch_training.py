@@ -233,7 +233,12 @@ def run_update_process(cfg, arm, u):
     root = Path(cfg['run_root'])
     command = [sys.executable, '-B', '-u', '-m', 'tools.coopmwm.launch_training', 'update',
                '--config', str(root/'CONFIG.json'), '--arm', arm, '--update', str(u)]
-    code = subprocess.run(command, cwd=os.getcwd(), env=os.environ.copy(), stdin=subprocess.DEVNULL).returncode
+    child = subprocess.Popen(command, cwd=os.getcwd(), env=os.environ.copy(), stdin=subprocess.DEVNULL)
+    # kill-by-PID coverage (review REV-5BF-PROC): the child's pid/start ticks next to the owner record
+    stat = Path(f'/proc/{child.pid}/stat')
+    write(root/'owners'/'children'/f'{arm}_u{u:03}.json', dict(pid=child.pid, owner_pid=os.getpid(), arm=arm, update=u,
+          unix=time.time(), start_ticks=stat.read_text().split()[21] if stat.exists() else None))
+    code = child.wait()
     done = root/f'{arm}_UPDATE_{u:03}.json'
     if code != 0 or not done.exists():
         raise RuntimeError(f'fresh update process for {arm} u{u} failed (exit {code}); no automatic retry')
