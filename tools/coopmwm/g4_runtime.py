@@ -264,7 +264,79 @@ def file_sha(path):
     return h.hexdigest()
 
 
+EARLY_ENV = 'COOPMWM_EARLY_R'
+EARLY_RULE = ('Option A early R start (COOPMWM_EARLY_R=1, operator 2026-11-07): R takes B\'s practice count from B\'s '
+              'sealed PRACTICE_PLAN_B_<u> (rows) instead of B_INPUT_<u>; B\'s coordinator fails closed BEFORE any G4 '
+              'ledger write if B\'s realised practice/ordinary counts differ from this plan')
+
+
+def early_r(cfg, update):
+    """Option A: R may start once B's practice plan is sealed (env-gated; requires the practice plan path)."""
+    if os.environ.get(EARLY_ENV) != '1':
+        return False
+    from . import practice_starts as ps
+    return enabled(cfg, update) and ps.enabled(cfg, 'R')
+
+
+def b_plan_path(cfg, update):
+    from . import practice_starts as ps
+    return tb._path(ps.plan_path(cfg['run_root'], 'B', update))
+
+
+def early_receipt_path(cfg, update):
+    return tb._path(Path(cfg['run_root'])/'g4'/f'R_EARLY_COUNT_{update:03}.json')
+
+
+def _early_practice_count(cfg, update):
+    """R's count from B's sealed plan; the plan used is recorded (idempotent) for the coordinator's guard."""
+    from . import exact_grade as xg
+    path = b_plan_path(cfg, update)
+    plan = read(path)
+    xg.verify_sealed(plan, 'practice_plan_sha256')
+    if plan.get('arm') != 'B' or plan.get('update') != update or not isinstance(plan.get('rows'), list):
+        raise ValueError('early R practice count lacks a sealed B plan of this update')
+    count = len(plan['rows'])
+    worlds = len(cfg['worlds_by_update'][str(update)])
+    value = dict(binding=credit.settings(cfg), update=update, arm='R', count=count,
+                 ordinary=max(0, worlds-count), b_plan=str(path.name), b_plan_file_sha256=file_sha(path),
+                 b_plan_sha256=plan['practice_plan_sha256'], rule=EARLY_RULE)
+    target = early_receipt_path(cfg, update)
+    if target.exists():
+        if read(target) != value:
+            raise ValueError('early R count receipt differs from the sealed B plan (fail closed)')
+    else:
+        try:
+            publish(target, value)
+        except FileExistsError:
+            if read(target) != value:
+                raise ValueError('early R count receipt differs from the sealed B plan (fail closed)')
+    return count
+
+
+def early_guard(cfg, update, episodes_by_arm):
+    """Called by B's coordinator BEFORE any ledger write. Present only when R used the early count (receipt);
+    otherwise a no-op (serial order: the same mismatch already failed R's plan, bank_breadth)."""
+    target = early_receipt_path(cfg, update)
+    if not target.exists():
+        return None
+    value = read(target)
+    if value.get('binding') != credit.settings(cfg) or value.get('update') != update or value.get('arm') != 'R':
+        raise ValueError('early R count receipt binding mismatch (fail closed before the G4 ledger)')
+    path = b_plan_path(cfg, update)
+    if not path.exists() or file_sha(path) != value['b_plan_file_sha256']:
+        raise ValueError('B practice plan changed after early R used it (fail closed before the G4 ledger)')
+    b = episodes_by_arm.get('B', [])
+    practice = sum(bool(e.get('practice')) for e in b)
+    ordinary = len(b)-practice
+    if practice != value['count'] or ordinary != value['ordinary']:
+        raise ValueError(f'early R equivalence guard: B realised practice/ordinary {practice}/{ordinary} differ from '
+                         f'the plan R used {value["count"]}/{value["ordinary"]} (fail closed before the G4 ledger)')
+    return value
+
+
 def paired_practice_count(cfg, update):
+    if os.environ.get(EARLY_ENV) == '1':
+        return _early_practice_count(cfg, update)
     value = read(input_path(cfg, 'B', update))
     if (value['binding'] != credit.settings(cfg) or value['update'] != update
             or value['arm'] != 'B'):
@@ -304,6 +376,7 @@ class Coordinator:
     def measure(self, update, episodes_by_arm):
         """One complete paired transaction. Failed/incomplete attempts stay spent."""
         tb._approved(self.cfg)
+        early_guard(self.cfg, update, episodes_by_arm)   # Option A: no-op unless R used the early count
         ordinary = _resume_exclusions(self.cfg, update, {a: _ordinary(es) for a, es in episodes_by_arm.items()})
         captures = {a: {key: capture for e in es for key, capture in e['g4_captures'].items()}
                     for a, es in ordinary.items()}

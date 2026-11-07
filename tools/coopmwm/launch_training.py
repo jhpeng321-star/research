@@ -136,11 +136,20 @@ def update(cfg, arm, u, *, smoke=False):
     health(root)
     if not smoke and u > 1:
         wait_for(root/f'LEARNING_MONITOR_u{u-1:03}.json', root)
+        if arm == 'R' and os.environ.get('COOPMWM_REMOTE_R'):
+            # Option A: R's previous-update job copies on the remote host are deleted only now (monitor sealed) and
+            # only after the landed copies on this host re-verify by sha256.
+            from .remote_wave import cleanup_after_monitor
+            cleanup_after_monitor(native, u-1)
     if arm != 'A':
         wait_for(artifacts/f'A_UPDATE_{u:03}.json', root)
     if arm == 'R' and not paired_credit:
         wait_for(artifacts/f'B_UPDATE_{u:03}.json', root)
-    if arm == 'R' and paired_credit:
+    if arm == 'R' and paired_credit and g4.early_r(native, u):
+        # Option A (COOPMWM_EARLY_R=1): R's only B dependency is B's practice count; B seals its practice plan at
+        # its update start. B's coordinator checks B's realised counts against this plan before any G4 ledger write.
+        wait_for(g4.b_plan_path(native, u), root)
+    elif arm == 'R' and paired_credit:
         # B has frozen its practice plan/count before R starts; neither arm
         # optimizes until both complete ordinary-training inputs are published.
         wait_for(g4.input_path(native, 'B', u), root)

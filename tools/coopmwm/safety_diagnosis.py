@@ -2,6 +2,7 @@
 import gzip
 import hashlib
 import json
+import os
 from pathlib import Path
 import time
 import numpy as np
@@ -31,6 +32,27 @@ def comparison(rows):
     return out
 
 
+def cache_write(path,value):
+    """Option A (COOPMWM_EARLY_R=1): B's and R's safety steps can compute the same A episode's TTC entry at the same
+    time. Publish atomically (complete temp file, then a hard link that refuses an existing target); an entry that
+    already exists must be byte-equal to ours (idempotent), otherwise fail closed."""
+    import threading
+    from tools.coopnative.protocol import checked,canonical
+    path=checked(path);path.parent.mkdir(parents=True,exist_ok=True)
+    temporary=path.with_name('.'+path.name+f'.{os.getpid()}.{threading.get_ident()}.tmp')
+    try:
+        with temporary.open('x',encoding='utf-8') as stream:    # same text-mode bytes as storage.write
+            stream.write(canonical(value)+'\n');stream.flush();os.fsync(stream.fileno())
+        try:
+            os.link(temporary,path)
+        except FileExistsError:
+            if path.read_bytes()!=temporary.read_bytes():
+                raise ValueError('TTC cache entry exists with different bytes (fail closed): '+path.name)
+    finally:
+        try:temporary.unlink()
+        except FileNotFoundError:pass
+
+
 def episode(root,ident,with_ttc=False,cache=None):
     p=Path(root)/'jobs'/ident
     if not (p/'RESULT.json').exists():return None
@@ -44,8 +66,10 @@ def episode(root,ident,with_ttc=False,cache=None):
         if saved.exists():ttc=read(saved)['ttc_below_1p5_events']
         else:
             ttc=ttc_events(p/'observable.jsonl.gz',300,1200)
-            write(saved,dict(ttc_below_1p5_events=ttc,source_result_sha256=marker,
-                code='replay_bank.ttc_events/closing_ttc/threshold1.5/inherited1s trace cadence'))
+            entry=dict(ttc_below_1p5_events=ttc,source_result_sha256=marker,
+                code='replay_bank.ttc_events/closing_ttc/threshold1.5/inherited1s trace cadence')
+            if os.environ.get('COOPMWM_EARLY_R')=='1':cache_write(saved,entry)  # Option A: B and R may overlap
+            else:write(saved,entry)
         out.update(ttc_below_1p5_events=ttc,critical_total=out['hard_brake']+ttc)
     return out
 

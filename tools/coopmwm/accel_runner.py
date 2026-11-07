@@ -238,13 +238,20 @@ def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None,used
     # in-run replacements are created inside run_train_jobs). Empty without COOPMWM_RESUME_FAILED_EPISODES=1.
     resumed={j['id']:j for j in jobs if 'replaces' in j}
     if jobs:
+        # Option A (COOPMWM_REMOTE_R set; unset = never imported): arm R's TRAIN wave runs on the replica host. The
+        # replica identity check happens HERE, before any reservation; reserve/admission/replacements stay below.
+        remote=None
+        if os.environ.get('COOPMWM_REMOTE_R'):
+            from .remote_wave import pool_for
+            remote=pool_for(root,b,jobs,role)
         precharged={x['id'] for x in ledger(root)}
         fresh=[j for j in jobs if j['id'] not in precharged]
         if fresh:reserve(root,fresh,phase)
         from .runner import admission
         admission(b)
         from .accel_plant import episode
-        with ProcessPoolExecutor(max_workers=b['workers'],mp_context=multiprocessing.get_context('spawn')) as pool:
+        with (remote if remote is not None else
+              ProcessPoolExecutor(max_workers=b['workers'],mp_context=multiprocessing.get_context('spawn'))) as pool:
             if role!='train':results.extend(pool.map(episode,jobs))
             else:
                 used={j['world']['seed'] for j in jobs}|{r['world']['seed'] for r in results}
@@ -275,6 +282,9 @@ def episode_local(error):
     if isinstance(error,(HealthPause,KeyboardInterrupt,SystemExit,EpisodeFailureEscalation)):return False
     from concurrent.futures.process import BrokenProcessPool
     if isinstance(error,BrokenProcessPool):return False   # the whole pool is gone, not one episode
+    if type(error).__name__=='RemoteWaveLost':           # Option A: transport/landing loss = FAULT, never replaced
+        from .remote_wave import RemoteWaveLost
+        if isinstance(error,RemoteWaveLost):return False
     text=str(error).lower()
     return 'stop' not in text and 'deadline' not in text and 'pause' not in text
 
