@@ -211,6 +211,59 @@ def _ordinary(episodes):
     return [e for e in episodes if not e.get('practice')]
 
 
+def _resume_exclusions(cfg, update, ordinary):
+    """resume3 (c), B's coordinator, same rule for B and R: receipted operator-resume replacements (accel_runner's
+    ONE marker, re-verified against the recorded receipt; seed AND cell aliasing fails closed) leave the G4 inputs
+    instead of failing plan_update; any other unregistered episode is passed through, so plan_update still raises.
+    Unchanged when no episode carries the marker."""
+    from . import accel_runner as ar
+    if not any(e.get(ar.RESUMED_KEY) is not None for es in ordinary.values() for e in es):
+        return ordinary
+    registered = cfg['worlds_by_update'][str(update)]
+    return {a: ar.resumed_split(cfg['run_root'], es, registered, strict=False)[0] for a, es in ordinary.items()}
+
+
+def _value_chunks(value, depth):
+    """json.dumps(value, sort_keys=True, allow_nan=False) in pieces, byte-identical: containers are split down to
+    ``depth`` levels (never one multi-GB string), leaves use the C encoder; non-str-keyed dicts stay whole."""
+    if depth > 0 and isinstance(value, dict) and value and all(type(k) is str for k in value):
+        yield '{'
+        for i, key in enumerate(sorted(value)):
+            yield (', ' if i else '')+json.dumps(key)+': '
+            yield from _value_chunks(value[key], depth-1)
+        yield '}'
+    elif depth > 0 and isinstance(value, (list, tuple)) and value:
+        yield '['
+        for i, item in enumerate(value):
+            if i:
+                yield ', '
+            yield from _value_chunks(item, depth-1)
+        yield ']'
+    else:
+        yield json.dumps(value, sort_keys=True, allow_nan=False)
+
+
+def published_sha(value):
+    """sha256 of the exact bytes publish(path, value) writes, streamed (bounded memory, nothing written)."""
+    h, buffer, size = hashlib.sha256(), [], 0
+    for chunk in _value_chunks(value, 4):
+        buffer.append(chunk)
+        size += len(chunk)
+        if size > 1 << 24:
+            h.update(''.join(buffer).encode())
+            buffer, size = [], 0
+    h.update((''.join(buffer)+'\n').encode())
+    return h.hexdigest()
+
+
+def file_sha(path):
+    h = hashlib.sha256()
+    with tb._path(path).open('rb') as stream:
+        for block in iter(lambda: stream.read(1 << 24), b''):
+            h.update(block)
+    return h.hexdigest()
+
+
 def paired_practice_count(cfg, update):
     value = read(input_path(cfg, 'B', update))
     if (value['binding'] != credit.settings(cfg) or value['update'] != update
@@ -251,7 +304,7 @@ class Coordinator:
     def measure(self, update, episodes_by_arm):
         """One complete paired transaction. Failed/incomplete attempts stay spent."""
         tb._approved(self.cfg)
-        ordinary = {a: _ordinary(es) for a, es in episodes_by_arm.items()}
+        ordinary = _resume_exclusions(self.cfg, update, {a: _ordinary(es) for a, es in episodes_by_arm.items()})
         captures = {a: {key: capture for e in es for key, capture in e['g4_captures'].items()}
                     for a, es in ordinary.items()}
         target = _envelope_path(self.cfg, update)
@@ -328,7 +381,10 @@ def paired_envelope(cfg, arm, update, episodes, *, wait):
     path = input_path(cfg, arm, update)
     value = dict(binding=credit.settings(cfg), update=update, arm=arm, episodes=episodes)
     if path.exists():
-        if read(path) != value:
+        from .accel_runner import RESUME_ENV
+        if os.environ.get(RESUME_ENV) == '1' and file_sha(path) == published_sha(value):
+            pass   # resume3: byte-identical to what publish would write now (streamed sha256; not loaded/copied)
+        elif read(path) != value:        # the original rule (also the resume fallback when the bytes differ)
             raise ValueError('G4 published collection changed')
     else:
         publish(path, value)

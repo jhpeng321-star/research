@@ -93,7 +93,11 @@ def wave_jobs(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None
                 # Operator resume (COOPMWM_RESUME_FAILED_EPISODES=1): the failed attempt is never replayed; it is
                 # closed with a resume receipt and replaced exactly as run_train_jobs would (same cell rule, charged).
                 failed=jobs.pop()
-                jobs.append(resumed_replacement(failed,{v['seed'] for v in ws},precharged,ident))
+                registered=update_seeds(b,x)
+                new=resumed_replacement(failed,{v['seed'] for v in ws},precharged,ident,exclude=registered)
+                adopted=recorded_replacement(new,precharged,registered)
+                if adopted is None:jobs.append(new)
+                else:results.append(adopted)      # resume3 (a): never re-submitted, never charged again
     return jobs,results
 
 
@@ -108,7 +112,10 @@ def resume_failed_episode(path):
             and not (path/'RESULT.json').exists())
 
 
-def resumed_replacement(failed,used,precharged,ident):
+def resumed_replacement(failed,used,precharged,ident,exclude=frozenset()):
+    """``exclude`` (resume3): the update's registered world seeds - a NEW replacement never takes one (with practice
+    rows the normal wave is only a prefix, so ``used`` alone could alias a registered seed). It narrows the world
+    choice only; the escalation share still counts ``used``. A recorded receipt is reused unchanged."""
     path=Path(failed['path']);receipt=path/'EPISODE_FAILED_RESUMED.json'
     if receipt.exists():                      # idempotent: a second resume reuses the recorded replacement
         world=read(receipt)['replacement_world']
@@ -118,7 +125,8 @@ def resumed_replacement(failed,used,precharged,ident):
         failures=sum(1 for d in parent.glob(prefix+'*') if (d/'EPISODE_FAILED.json').exists())
         if failures>=MAX_CONSECUTIVE_EPISODE_FAILURES or failures>MAX_EPISODE_FAILURE_SHARE*max(1,len(used)):
             raise EpisodeFailureEscalation(f'{failures} failed episodes in {prefix[:-1]} (resume escalation limits)')
-        world=replacement_world(failed['world'],set(used),set(precharged)|{failed['id']},failed['arm'],ident)
+        world=replacement_world(failed['world'],set(used)|set(exclude),set(precharged)|{failed['id']},failed['arm'],
+                                ident)
         if world is None:raise ValueError('no replacement TRAIN world for resumed failure '+failed['id'])
         write(receipt,dict(timestamp_utc=timestamp(),id=failed['id'],world=failed['world'],claims_replayed=False,
             excluded_from_update=True,replacement_world=world,rule=RESUME_ENV+'=1 operator resume (MAIN 2026-11-07)',
@@ -127,12 +135,108 @@ def resumed_replacement(failed,used,precharged,ident):
     return replacement_job(failed,world,ident)
 
 
+# resume3 (operator, after REV-5BF 04108d37). Only reachable with COOPMWM_RESUME_FAILED_EPISODES=1 (the marker below is
+# stamped only on a replacement produced through resumed_replacement); without it every path is unchanged.
+RESUMED_KEY='resumed_replacement'
+RESUMED_RULE=('operator resume replacement (COOPMWM_RESUME_FAILED_EPISODES=1, MAIN 2026-11-07): recorded and charged '
+    'on a same-cell TRAIN world outside the update registered worlds, so it has no same-world A episode; it is '
+    'trained, and receipted + counted out of the A-reference safety pairing, the fairness term and G4 (B = R)')
+
+
+def update_seeds(b,extras):
+    """The registered world seeds of the wave's update (track2 waves carry cfg.worlds_by_update + extras.update);
+    empty for waves without that registry."""
+    update=(extras or {}).get('update')
+    if update is None:return set()
+    return {int(w['seed']) for w in (b.get('worlds_by_update') or {}).get(str(update),())}
+
+
+def _world_key(world):
+    return int(world['seed']),world.get('cell')
+
+
+def recorded_replacement(new,precharged,registered):
+    """resume3 (a): a recorded resume replacement runs at most once. Its RESULT is adopted (no re-submit, no new
+    charge; stamped with the marker); a CLAIM without a RESULT fails closed (never retried); a replacement on a
+    registered world seed of the update fails closed before any physics (aliasing). None = not attempted yet."""
+    path=Path(new['path'])
+    if int(new['world']['seed']) in registered:
+        raise ValueError(f"resume replacement {new['id']} aliases a registered world seed of its update (fail closed)")
+    if (path/'RESULT.json').exists():
+        result=read(path/'RESULT.json')
+        if (new['id'] not in precharged or result.get('id')!=new['id'] or result.get('arm')!=new['arm']
+                or _world_key(result['world'])!=_world_key(new['world'])):
+            raise ValueError('recorded resume replacement RESULT/charge does not match its receipt: '+new['id'])
+        return dict(result,**{RESUMED_KEY:resumed_marker(path.parent/new['replaces'],new['id'])})
+    if (path/'CLAIM.json').exists():
+        raise ValueError(f"recorded resume replacement {new['id']} was attempted without a RESULT; never retried "
+                         '(fail closed)')
+    return None
+
+
+def resumed_marker(failed_path,replacement_id):
+    """The ONE replacement marker: derived only from the recorded resume receipt (+ the replacement job id), never
+    from outcomes; stamped on the replacement episode and re-verified against the receipt by every consumer."""
+    failed_path=Path(failed_path);receipt=read(failed_path/'EPISODE_FAILED_RESUMED.json')
+    return dict(id=replacement_id,replaces=receipt['id'],world=receipt['replacement_world'],
+                failed_world=receipt['world'],receipt=f'jobs/{failed_path.name}/EPISODE_FAILED_RESUMED.json',
+                rule=RESUMED_RULE)
+
+
+def _stamped(result,resumed):
+    job=resumed.get(result['id'])
+    if job is None:return result
+    return dict(result,**{RESUMED_KEY:resumed_marker(Path(job['path']).parent/job['replaces'],job['id'])})
+
+
+def _verified_marker(root,e,registered_seeds):
+    m=e[RESUMED_KEY];replaces=m.get('replaces') if isinstance(m,dict) else None
+    if (not isinstance(replaces,str) or not replaces or replaces in ('.','..') or '/' in replaces or '\\' in replaces
+            or e.get('practice') or not (Path(root)/'jobs'/replaces/'EPISODE_FAILED_RESUMED.json').is_file()):
+        raise ValueError(f"resume replacement marker of {e.get('id')} has no recorded receipt (fail closed)")
+    world,failed=m.get('world') or {},m.get('failed_world') or {}
+    if (m!=resumed_marker(Path(root)/'jobs'/replaces,e['id']) or _world_key(e['world'])!=_world_key(world)
+            or world.get('cell')!=failed.get('cell') or not e['id'].endswith(f"_{e['arm']}_{world['seed']}")
+            or not replaces.endswith(f"_{e['arm']}_{failed.get('seed')}")):
+        raise ValueError(f"resume replacement marker of {e['id']} does not match its recorded receipt (fail closed)")
+    if int(world['seed']) in registered_seeds:
+        raise ValueError(f"resume replacement {e['id']} aliases registered world seed {world['seed']} (fail closed)")
+    return dict(episode_id=e['id'],world_seed=int(world['seed']),cell=world.get('cell'),replaces=replaces,
+                receipt=m['receipt'],reason=m['rule'])
+
+
+def resumed_split(root,episodes,registered,*,strict=True):
+    """(kept, replacements, receipts): split off the receipted resume replacements (RESUMED_KEY, each re-verified
+    against jobs/<replaces>/EPISODE_FAILED_RESUMED.json). ``registered`` = the update's registered world dicts,
+    matched by seed AND cell. Fail closed: a marker that does not match its receipt, a replacement on a registered
+    seed, or an episode on a registered seed with another cell (aliasing: the fairness term and G4 pair by seed).
+    strict: an ordinary episode outside the registered worlds without a marker also fails closed (G4 passes it
+    through to its own registered-episode rule, which raises). Practice starts are kept untouched."""
+    keys={_world_key(w) for w in registered};seeds={k[0] for k in keys}
+    kept,replacements,receipts=[],[],[]
+    for e in episodes:
+        if e.get(RESUMED_KEY) is not None:
+            receipts.append(_verified_marker(root,e,seeds));replacements.append(e);continue
+        if not e.get('practice'):
+            key=_world_key(e['world'])
+            if key not in keys and key[0] in seeds:
+                raise ValueError(f"episode {e['id']} aliases registered seed {key[0]} with another cell (fail closed)")
+            if strict and key[0] not in seeds:
+                raise ValueError(f"episode {e['id']} is outside the update registered worlds and has no resume "
+                                 'receipt (fail closed)')
+        kept.append(e)
+    return kept,replacements,receipts
+
+
 def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None,used_seeds=None):
     """``used_seeds`` (practice_starts, fix round 2): train-wave failure replacements must also
     avoid these world seeds - the second wave of one update (the practice batch) passes the
     seeds its update's normal wave already closed, so a replacement never duplicates one of
     the update's normal worlds."""
     jobs,results=wave_jobs(root,b,policies,ws,role,ident,phase,deterministic,extras)
+    # resume3: the recorded resume replacements still to run (only wave_jobs' resume branch adds 'replaces' here;
+    # in-run replacements are created inside run_train_jobs). Empty without COOPMWM_RESUME_FAILED_EPISODES=1.
+    resumed={j['id']:j for j in jobs if 'replaces' in j}
     if jobs:
         precharged={x['id'] for x in ledger(root)}
         fresh=[j for j in jobs if j['id'] not in precharged]
@@ -145,7 +249,9 @@ def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None,used
             else:
                 used={j['world']['seed'] for j in jobs}|{r['world']['seed'] for r in results}
                 if used_seeds:used |= set(used_seeds)
-                results.extend(run_train_jobs(root,jobs,phase,ident,used,precharged,pool.submit,episode))
+                results.extend(run_train_jobs(root,jobs,phase,ident,used,precharged,pool.submit,episode,
+                                              **(dict(resumed=set(resumed)) if resumed else {})))
+    if resumed:results=[_stamped(r,resumed) for r in results]
     return sorted(results,key=lambda e:(e['world']['seed'],e['arm']))
 
 
@@ -196,7 +302,7 @@ def replacement_job(job,world,ident):
     return out
 
 
-def run_train_jobs(root,jobs,phase,ident,used,precharged,submit,episode):
+def run_train_jobs(root,jobs,phase,ident,used,precharged,submit,episode,resumed=frozenset()):
     from concurrent.futures import wait,FIRST_COMPLETED
     pending={submit(episode,j):j for j in jobs};results=[];failures=[];streak=0
     taken=set(precharged)|{j['id'] for j in jobs}
@@ -209,6 +315,14 @@ def run_train_jobs(root,jobs,phase,ident,used,precharged,submit,episode):
             except BaseException as error:
                 if not episode_local(error):raise
                 failure=repr(error)
+            if job['id'] in resumed:
+                # resume3: a recorded resume replacement is never re-replaced in-run (its world and receipt are fixed;
+                # an unmarked successor could never enter the update) - receipted, then fail closed.
+                write(root/'jobs'/job['id']/'EPISODE_FAILED.json',dict(timestamp_utc=timestamp(),id=job['id'],
+                    world=job['world'],error=failure,claims_replayed=False,excluded_from_update=True,replacement=None,
+                    resumed_replacement_of=job['replaces']))
+                raise EpisodeFailureEscalation('recorded resume replacement failed; never re-replaced (fail closed): '
+                                               +failure)
             streak+=1
             world=replacement_world(job['world'],used,taken,job['arm'],ident)
             new=replacement_job(job,world,ident) if world else None

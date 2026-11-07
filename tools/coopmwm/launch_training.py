@@ -149,16 +149,27 @@ def update(cfg, arm, u, *, smoke=False):
     write(_resume_name(artifacts/f'updates/{arm}_{u:03}_STARTED.json'), started)
     hooks = p1.build_arm_runtime(native, arm)
     episodes = hooks['collect_update']()
+    resume = _resume_view(native, u, episodes)   # resume3: None (unchanged path) unless the operator resume is on
     # clean5b-F (fair reward ON only): A writes fair/A_GROUPS_uNNN.json + labels BEFORE B/R train (B waits for
     # A_UPDATE); B/R attach vehicle_groups from A's labels (same world, by vehicle id); fail closed when missing.
     from .fair_vehicle_log import update_step as fair_update_step
     fair_log = fair_update_step(native, arm, u, episodes)
+    if resume is not None:
+        _resume_fair_check(resume, arm, fair_log, episodes)
     # Actual TTC events use the same public observable tape reader as prior runs.
     from .replay_bank import ttc_events
     for episode in episodes:
         trace = artifacts/'jobs'/episode['id']/'observable.jsonl.gz'
         episode['ttc_events'] = int(ttc_events(trace, 300, 1200))
-    safety = hooks['safety'](episodes)  # unchanged paired A composite BEFORE optimization
+    if resume is None:
+        safety = hooks['safety'](episodes)  # unchanged paired A composite BEFORE optimization
+    else:
+        # resume3 (b): receipted replacements have no same-world A episode -> excluded from the A-reference pairing
+        # (receipted + counted); every registered episode still needs its A reference (fail closed when missing).
+        safety = hooks['safety'](resume['kept'])
+        if resume['replacements']:
+            safety = dict(safety, replacement_references_skipped=len(resume['replacements']),
+                          replacement_receipts=resume['receipts'])
     health(root)
     envelope = p2.reward_update(native, arm, u, episodes) if arm != 'A' else None
     if paired_credit:
@@ -188,6 +199,12 @@ def update(cfg, arm, u, *, smoke=False):
         extra['clean3_mined_usage'] = usage(native, arm, episodes, learning, artifacts)
     if fair_log is not None:
         extra['fair_vehicle_log'] = fair_log     # clean5b-F receipt (A: groups file; B/R: paired/unpaired counts)
+    if resume is not None and resume['replacements']:
+        from .accel_runner import RESUMED_RULE
+        extra['resume_replacements'] = dict(rule=RESUMED_RULE, count=len(resume['replacements']),
+            episodes=resume['receipts'], trained=True, safety='excluded from the A-reference pairing',
+            fairness=None if fair_log is None else 'skipped (fair_unpaired_replacement)',
+            g4=('excluded before plan_update by the coordinator (B = R)' if paired_credit else None))
     value = _seal(dict(**started, finished_unix=time.time(), checkpoint=checkpoint,
         checkpoint_sha256=rc.sha(checkpoint), practice=update_report(episodes),
         safety=safety, learning=learning, metrics=metrics,
@@ -224,6 +241,28 @@ def _resume_name(path):
     if os.environ.get(RESUME_ENV) == '1' and path.exists():
         return path.with_name(f'{path.stem}.resume_{int(time.time())}{path.suffix}')
     return path
+
+
+def _resume_view(cfg, u, episodes):
+    """resume3: with the operator resume flag (or a stamped replacement present) split off the receipted resume
+    replacements - the ONE marker accel_runner stamps from the recorded receipt, re-verified here - and check every
+    other ordinary episode against the update's registered worlds by seed AND cell (fail closed). None otherwise:
+    the update flow is then byte-identical to 04108d37."""
+    from . import accel_runner as ar
+    if os.environ.get(ar.RESUME_ENV) != '1' and not any(e.get(ar.RESUMED_KEY) is not None for e in episodes):
+        return None
+    kept, replacements, receipts = ar.resumed_split(cfg['run_root'], episodes, cfg['worlds_by_update'][str(u)])
+    return dict(kept=kept, replacements=replacements, receipts=receipts)
+
+
+def _resume_fair_check(resume, arm, fair_log, episodes):
+    """The fairness skip (fair_vehicle_log.attach: registered seeds) must name exactly the receipted replacements."""
+    if fair_log is None or arm == 'A':
+        return
+    marked = {e['id'] for e in episodes if e.get('fair_unpaired_replacement')}
+    if (marked != {e['id'] for e in resume['replacements']}
+            or fair_log.get('replacement_skipped') != len(resume['replacements'])):
+        raise ValueError('fairness replacement skip disagrees with the recorded resume receipts (fail closed)')
 
 
 def fresh_update_process(cfg):
@@ -375,7 +414,8 @@ def monitor_update(cfg, u, *, smoke=False):
 def run_monitor(cfg):
     release(cfg)
     root = Path(cfg['run_root'])
-    write(root/'owners/monitor.json', dict(pid=os.getpid(), unix=time.time()))
+    # resume3: like the arm owner records, a restarted monitor keeps the dead record (flag set; else unchanged)
+    write(_resume_name(root/'owners/monitor.json'), dict(pid=os.getpid(), unix=time.time()))
     last = registered_last_update(cfg)
     for u in range(1, last+1):
         if not (root/f'LEARNING_MONITOR_u{u:03}.json').exists():
