@@ -135,7 +135,8 @@ def braking(root,arm,u,episodes,a_records,pause,pairs=None):
     if reporting:
         out.update(owner_authority=B_AUTHORITY if arm=='B' else R_AUTHORITY,composite_action='report_only',
             collision_teleport_action='pause_on_any',optimization_admitted=not hard_failure)
-    path=root/f'{arm}_SAFETY_COMPOSITE_{u:03}.json'
+    from .migration_resume import suffix   # '' unless this update is a receipted migration re-attempt
+    path=root/f'{arm}_SAFETY_COMPOSITE_{u:03}{suffix(root,arm,u)}.json'
     if path.exists():
         if read(path)!=out:raise ValueError('completed safety comparison changed')
     else:write(path,out)

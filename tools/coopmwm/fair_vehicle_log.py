@@ -271,11 +271,13 @@ def groups(table, a_labels):
 
 
 def a_groups_path(run_root, update):
-    return Path(run_root)/'fair'/f'A_GROUPS_u{int(update):03}.json'
+    from .migration_resume import suffix   # '' unless A's update is a receipted migration re-attempt
+    return Path(run_root)/'fair'/f'A_GROUPS_u{int(update):03}{suffix(run_root, "A", update)}.json'
 
 
 def a_labels_path(run_root, update):
-    return Path(run_root)/'fair'/f'A_LABELS_u{int(update):03}.json'
+    from .migration_resume import suffix
+    return Path(run_root)/'fair'/f'A_LABELS_u{int(update):03}{suffix(run_root, "A", update)}.json'
 
 
 def _table(episode):

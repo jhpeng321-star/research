@@ -15,6 +15,8 @@ from .acceleration import Policy
 from .accel_learner import save,load,update,evidence,viability,advantages,UNIT
 from .exploration import trust
 from .plans import SEARCH
+# migration resume: a re-attempt's tagged ident keeps the ORIGINAL noise seeds (identity when the variable is absent)
+from .migration_resume import seed_ident
 
 
 def timestamp():return datetime.now(timezone.utc).isoformat()
@@ -82,7 +84,7 @@ def wave_jobs(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None
                 runtime=sumo['runtime'] if sumo else b['runtime'],
                 checkpoint=sumo['checkpoint'] if sumo else b['checkpoint'],
                 noise_seed=(sumo.get('noise_seed') or 0) if sumo
-                    else int(digest(dict(seed=SEED,world=w['seed'],wave=ident))[:15],16),
+                    else int(digest(dict(seed=SEED,world=w['seed'],wave=seed_ident(ident)))[:15],16),
                 deterministic=deterministic,sim_s=1200,queue_root=str(root),
                 accel_bounds=sumo['accel_bounds'] if sumo else b['accel_bounds'],
                 gpu_deadline=b['gpu_deadline'],guided=not deterministic and arm in ('B','R'),
@@ -293,7 +295,7 @@ def replacement_world(failed,used,taken_ids,arm,ident):
 def replacement_job(job,world,ident):
     key=f'{ident}_{job["arm"]}_{world["seed"]}'
     out=dict(job,id=key,path=str(Path(job['path']).parent/key),world=world,
-        noise_seed=int(digest(dict(seed=SEED,world=world['seed'],wave=ident))[:15],16),
+        noise_seed=int(digest(dict(seed=SEED,world=world['seed'],wave=seed_ident(ident)))[:15],16),
         replaces=job['id'])
     if job.get('practice') is not None:
         # practice_starts: a failed snapshot-restart episode is replaced by a NORMAL fresh start

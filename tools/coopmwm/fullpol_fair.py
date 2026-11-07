@@ -128,7 +128,8 @@ def settings(cfg):
 
 
 def reference_path(cfg, update):
-    return Path(cfg['run_root'])/'fair'/f'A_GROUPS_u{int(update):03}.json'
+    from .migration_resume import suffix   # '' unless A's update is a receipted migration re-attempt
+    return Path(cfg['run_root'])/'fair'/f'A_GROUPS_u{int(update):03}{suffix(cfg["run_root"], "A", update)}.json'
 
 
 def reference(cfg, update):

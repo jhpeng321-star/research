@@ -199,6 +199,10 @@ def update(cfg, arm, u, *, smoke=False):
         extra['clean3_mined_usage'] = usage(native, arm, episodes, learning, artifacts)
     if fair_log is not None:
         extra['fair_vehicle_log'] = fair_log     # clean5b-F receipt (A: groups file; B/R: paired/unpaired counts)
+    from .migration_resume import update_marker
+    migration = update_marker(native, arm, u)   # None (no key, byte-identical) unless a receipted migration re-attempt
+    if migration is not None:
+        extra['migration_resume'] = migration
     if resume is not None and resume['replacements']:
         from .accel_runner import RESUMED_RULE
         extra['resume_replacements'] = dict(rule=RESUMED_RULE, count=len(resume['replacements']),
@@ -237,8 +241,10 @@ def _resume_name(path):
     """Operator resume (COOPMWM_RESUME_FAILED_EPISODES=1, MAIN 2026-11-07): an owner/start record left by a dead
     process is kept and the new one is written beside it (<name>.resume_<unix>.json); otherwise the original path."""
     from .accel_runner import RESUME_ENV
+    from .migration_resume import ENV as MIGRATION_ENV
     path = Path(path)
-    if os.environ.get(RESUME_ENV) == '1' and path.exists():
+    # the migration resume (COOPMWM_MIGRATION_RESUME=<tag>) keeps the dead records the same way
+    if (os.environ.get(RESUME_ENV) == '1' or os.environ.get(MIGRATION_ENV) is not None) and path.exists():
         return path.with_name(f'{path.stem}.resume_{int(time.time())}{path.suffix}')
     return path
 
@@ -304,6 +310,7 @@ def run_arm(cfg, arm):
         start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21], config_sha256=digest(cfg)))
     torch.set_num_threads(1)
     last = registered_last_update(cfg)
+    first = True
     for u in range(1, last+1):
         # Only completed updates can be adopted. Never redo an attempted update.
         done = root/f'{arm}_UPDATE_{u:03}.json'
@@ -312,6 +319,12 @@ def run_arm(cfg, arm):
             if receipt['config_sha256'] != digest(cfg):
                 raise ValueError('cannot adopt a different final runtime')
             continue
+        if first:
+            # migration resume: receipt the abandoned attempt of the FIRST not-completed update, which is then
+            # re-attempted under its tagged namespace (variable absent and no receipt: no write, unchanged)
+            from .migration_resume import prepare
+            prepare(cfg, arm, u, last)
+            first = False
         if fresh_update_process(cfg):
             run_update_process(cfg, arm, u)
         else:
@@ -438,6 +451,8 @@ def main():
     parser.add_argument('--update', type=int)
     args = parser.parse_args()
     cfg = checked_config(args.config)
+    from .migration_resume import env_tag
+    env_tag()          # a malformed COOPMWM_MIGRATION_RESUME tag fails closed before any record is written
     try:
         if args.action == 'update':
             # fresh per-update child of a registered arm owner (FRESH_UPDATE_RULE); never adopts or redoes

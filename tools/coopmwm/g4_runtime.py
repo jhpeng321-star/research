@@ -200,11 +200,14 @@ class BoundaryCapture:
 
 
 def input_path(cfg, arm, update):
-    return tb._path(Path(cfg['run_root'])/'g4'/f'{arm}_INPUT_{update:03}.json')
+    # migration resume: '' (original path) unless B/R re-attempt this update under a receipted tag
+    from .migration_resume import g4_suffix
+    return tb._path(Path(cfg['run_root'])/'g4'/f'{arm}_INPUT_{update:03}{g4_suffix(cfg, update)}.json')
 
 
 def _envelope_path(cfg, update):
-    return tb._path(Path(cfg['run_root'])/'g4'/f'ENVELOPE_{update:03}.json')
+    from .migration_resume import g4_suffix
+    return tb._path(Path(cfg['run_root'])/'g4'/f'ENVELOPE_{update:03}{g4_suffix(cfg, update)}.json')
 
 
 def _ordinary(episodes):
@@ -359,6 +362,9 @@ class Coordinator:
         captures = {a: {key: capture for e in es for key, capture in e['g4_captures'].items()}
                     for a, es in ordinary.items()}
         target = _envelope_path(self.cfg, update)
+        # migration resume: a receipted re-attempt's tag (None = the original rule throughout)
+        from . import migration_resume as migration
+        tag = migration.g4_suffix(self.cfg, update)[1:] or None
         with accounting_lock(self.root):
             ledger_path = self.root/'CHARGES.jsonl'
             prior_bytes = ledger_path.read_bytes() if ledger_path.exists() else b''
@@ -367,21 +373,25 @@ class Coordinator:
             old = [json.loads(line) for line in prior_bytes.splitlines()]
             plans = [r['g4_plan'] for r in old if 'g4_plan' in r]
             state = credit.initial_state(self.cfg)
-            previous = None
+            previous = last = None
             for plan in plans:
                 credit._validate_plan(plan)
                 if plan['binding'] != state['binding']:
                     # Each successor must use its own ledger/approval, not reset
                     # the sparse-start allowance by renaming a phase in place.
                     raise ValueError('G4 ledger already bound to another phase')
-                if plan['reservation_before'] != state:
+                # unmarked plans: == state (the original rule); a marked migration re-attempt follows its abandoned plan
+                if plan['reservation_before'] != migration.chained_before(plan, state, last):
                     raise ValueError('G4 reservation history discontinuity')
                 state = plan['reservation_after']
-                if plan['update'] == update:
+                if migration.is_attempt(plan, update, tag):   # tag None: plan['update'] == update (original)
                     previous = plan
+                last = plan
             if previous is not None:
                 expected, _ = credit.plan_update(self.cfg, update, ordinary, captures,
                                                   previous['reservation_before'])
+                if tag is not None:
+                    expected = migration.mark_plan(expected, migration.plan_marker(previous))
                 if expected != previous:
                     raise ValueError('G4 restart inputs changed')
                 if not target.exists():
@@ -390,7 +400,13 @@ class Coordinator:
                 if envelope['plan'] != previous or envelope != credit.measured_envelope(previous, envelope['results']):
                     raise ValueError('G4 persisted envelope changed')
                 return envelope
-            plan, _ = credit.plan_update(self.cfg, update, ordinary, captures, state)
+            before, marker = state, None
+            if tag is not None:
+                # never treat the abandoned plan of this update as "previous": chain the new one after it
+                before, marker = migration.reattempt(self.cfg, update, tag, state, last)
+            plan, _ = credit.plan_update(self.cfg, update, ordinary, captures, before)
+            if marker is not None:
+                plan = migration.mark_plan(plan, marker)
             phase = 'g4_synergy_credit'
             amount = plan['quote_sim_s']
             if (phase not in self.phases or sum(r['sim_s'] for r in old)+amount > self.cap
@@ -443,8 +459,14 @@ def paired_envelope(cfg, arm, update, episodes, *, wait):
         other = wait(input_path(cfg, 'R', update))
         if any(other[k] != value[k] for k in ('binding', 'update')) or other['arm'] != 'R':
             raise ValueError('G4 paired collection binding mismatch')
+        from .migration_resume import check_pair
+        check_pair(cfg, update)          # migration resume: B and R re-attempt under the same tag ('' = no-op)
         return Coordinator(cfg).measure(update, dict(B=episodes, R=other['episodes']))
     envelope = wait(_envelope_path(cfg, update))
+    from .migration_resume import check_pair, plan_marker
+    tagged = check_pair(cfg, update)     # migration resume: '' = no-op; else the envelope must be this re-attempt's
+    if tagged and (plan_marker(envelope['plan']) or {}).get('tag') != tagged[1:]:
+        raise ValueError('G4 envelope is not the migration re-attempt of this update (fail closed)')
     # Validate local on-policy binding before handing it to the learner too.
     credit.trigger_terms(cfg, arm, update, episodes, envelope)
     return envelope

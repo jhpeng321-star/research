@@ -1095,14 +1095,17 @@ class ArmRuntime:
             extras['clean2_safety_guard'] = True
         if arm != 'A':
             extras.update(track2_backend=True, track2_config=cfg, track2_state=self.policy.worker_state())
-        ident = cfg.get('job_namespace', 'clean1')+f'_warm_u{u:03}'
+        from . import migration_resume
+        # migration resume: <ns>_warm_u<u>m<tag> for a receipted re-attempt; otherwise the original ident
+        ident = cfg.get('job_namespace', 'clean1')+f'_warm_u{u:03}'+migration_resume.suffix(cfg['run_root'], arm, u)
         if arm != 'A':
             from .warm_health import safety_reference
             from .accel_storage import read
             references = cfg.get('safety_reference')
             if references is None:
+                a_ident = migration_resume.ident(cfg, 'A', u)   # A's namespace of this update
                 references = safety_reference([read(_path(Path(cfg['run_root'])/'jobs'/
-                    f'{ident}_A_{w["seed"]}'/'RESULT.json')) for w in worlds])
+                    f'{a_ident}_A_{w["seed"]}'/'RESULT.json')) for w in worlds])
             extras['safety_reference'] = references
         from .fair_vehicle_log import enabled as fair_log_enabled
         if fair_log_enabled(cfg):
@@ -1164,8 +1167,11 @@ class ArmRuntime:
         from .practice_weighting import effective_fraction
         cfg, arm, u = self.cfg, self.arm, self.update
         root = _path(cfg['run_root'])
-        ident = cfg.get('job_namespace', 'clean1')+f'_warm_u{u:03}'
-        normal = [read(_path(root/'jobs'/f'{ident}_A_{e["world"]["seed"]}'/'RESULT.json'))
+        from . import migration_resume
+        # migration resume: own (practice reference) and A's namespaces of this update; unchanged when unreceipted
+        ident = cfg.get('job_namespace', 'clean1')+f'_warm_u{u:03}'+migration_resume.suffix(root, arm, u)
+        a_ident = migration_resume.ident(cfg, 'A', u)
+        normal = [read(_path(root/'jobs'/f'{a_ident}_A_{e["world"]["seed"]}'/'RESULT.json'))
                   for e in episodes if not e.get('practice')]
         practice = [e for e in episodes if e.get('practice')]
         pairs = {}
