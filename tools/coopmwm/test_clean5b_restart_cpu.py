@@ -398,3 +398,23 @@ def test_validate_levers_routes_clean5c_to_validate_clean5a(monkeypatch):
     for run in ('clean5a', 'clean5b', 'clean5c'):
         assert rc4.validate_levers(dict(newmap=dict(run=run)), []) == 'ok'
     assert seen == ['clean5a', 'clean5b', 'clean5c']
+
+
+def test_host_receipt_cpuw_constant_never_reads(monkeypatch):
+    """cpuW binds N6 HOST_IDENTITY_cpuW_r2 by its receipt sha constant; no file (sealed root) is opened."""
+    import builtins
+    from pathlib import Path
+    from . import launch_training
+    opened = []
+    real_open = builtins.open
+    monkeypatch.setattr(builtins, 'open', lambda *a, **k: opened.append(a[0]) or real_open(*a, **k))
+    for name in ('read_bytes', 'read_text', 'exists', 'is_file', 'open'):
+        monkeypatch.setattr(Path, name, lambda self, *a, **k: opened.append(str(self)) or pytest.fail('read '+str(self)))
+    monkeypatch.setattr(launch_training, 'read', lambda p: pytest.fail('read '+str(p)))
+    out = c5.host_receipt('cpuW')
+    assert out == dict(host='cpuW', receipt='/home/ubuntu/nm_finaleval_clean5a/HOST_IDENTITY_cpuW_r2.json',
+                       sha256='862be772f10af898af1e95ba5ae34a782ba25f78175443ad69dfa7943a74091a', verdict='IDENTICAL',
+                       bytes='4699/4699 HASHES_OK', rule='N6 HOST_IDENTITY_cpuW_r2 receipt_sha256 constant; file not read')
+    assert not [p for p in opened if 'nm_finaleval' in str(p)]
+    with pytest.raises(KeyError):
+        c5.host_receipt('cpuX')

@@ -38,7 +38,12 @@ IMITATION_EPOCHS = 60                   # MAIN ~21:0x: EV-BC steps 20 -> 60 (lr,
 QUOTE_FILE = 'CLEAN5A_QUOTE.json'
 HOST_RECEIPTS = dict(
     cpuZ=dict(ready='/home/ubuntu/CPUZ_READY.json'),
-    cpuV=dict(s0='/home/ubuntu/cpuv_setup_20261105/S0_READY.json', parity='/home/ubuntu/cpuv_parity_20261105/PARITY_PASS.json'))
+    cpuV=dict(s0='/home/ubuntu/cpuv_setup_20261105/S0_READY.json', parity='/home/ubuntu/cpuv_parity_20261105/PARITY_PASS.json'),
+    # cpuW (MAIN 2026-11-08, CLEAN5C): N6 host-identity rerun (amendments 21/21a; REGISTRATION 'cpuW host identity PASS',
+    # N6_READY b605722e) - bound by its receipt sha ONLY; the receipt sits in the sealed N6 root and is never read here.
+    cpuW=dict(identity='/home/ubuntu/nm_finaleval_clean5a/HOST_IDENTITY_cpuW_r2.json',
+              receipt_sha256='862be772f10af898af1e95ba5ae34a782ba25f78175443ad69dfa7943a74091a', verdict='IDENTICAL',
+              bytes='4699/4699 HASHES_OK'))
 DESIGN = ('A = frozen u0 base evaluated as an arm (no PPO); B/R identical code (FULLPOL clean5_ev N2-only slate, '
           'lane_drop features/moves/V2V 100 m, G2, G4 + G4LD extension, G5 vocabulary, practice offer); only the '
           'guidance differs: B = regime EV-BC (S-REGIMEU0 u0 rows, native fallback), R = none.')
@@ -62,6 +67,10 @@ def worlds_by_update():
 def host_receipt(host):
     from . import launch_training as training
     spec = HOST_RECEIPTS[host]
+    if host == 'cpuW':
+        # constant binding only (sealed root: never opened); identical to cpuV per N6 host identity
+        return dict(host='cpuW', receipt=spec['identity'], sha256=spec['receipt_sha256'], verdict=spec['verdict'],
+                    bytes=spec['bytes'], rule='N6 HOST_IDENTITY_cpuW_r2 receipt_sha256 constant; file not read')
     if host == 'cpuZ':
         ready = training.read(spec['ready'])
         if not (ready.get('pass_') is True and ready.get('status') == 'READY' and ready.get('host') == 'cpuZ'
