@@ -81,14 +81,17 @@ class Chain:
         self.source, self.control = Path(source), Path(control)
         self.manifest = read(self.source/'SOURCE_MANIFEST.json')
         self.inputs = read(self.control/'PREPARE_INPUTS.json')
-        from tools.coopmwm.clean5b_restart import ROOT
-        self.root = Path(self.inputs.get('root', ROOT))
+        from tools.coopmwm.clean5b_restart import ROOT, C_ROOT
         self.serial = 0
         # clean5b-F (owner 04:0x): PREPARE_INPUTS variant 'F' -> clean5b_restart.prepare_f + CLEAN5BF_QUOTE.json
+        # clean5c (MAIN 2026-11-08): variant 'C' -> prepare_c + CLEAN5C_QUOTE.json + BUDGET_CLEAN5C.json
         self.variant = self.inputs.get('variant')
-        if self.variant not in (None, 'F', 'F8'):
+        if self.variant not in (None, 'F', 'F8', 'C'):
             raise ValueError('unknown clean5b variant')
-        self.quote_file = dict(F='CLEAN5BF_QUOTE.json', F8='CLEAN5BF8_QUOTE.json').get(self.variant, 'CLEAN5B_QUOTE.json')
+        self.root = Path(self.inputs.get('root', C_ROOT if self.variant == 'C' else ROOT))
+        self.quote_file = dict(F='CLEAN5BF_QUOTE.json', F8='CLEAN5BF8_QUOTE.json',
+                               C='CLEAN5C_QUOTE.json').get(self.variant, 'CLEAN5B_QUOTE.json')
+        self.approval_file = dict(C='BUDGET_CLEAN5C.json').get(self.variant, 'BUDGET_CLEAN5B.json')
 
     def status(self, step, state, detail=None):
         self.serial += 1
@@ -127,14 +130,14 @@ class Chain:
 
     def budget(self):
         from tools.coopmwm import clean4_budget as b
-        quote, approval = read(self.control/self.quote_file), read(self.control/'BUDGET_CLEAN5B.json')
+        quote, approval = read(self.control/self.quote_file), read(self.control/self.approval_file)
         return b.approved(approval, quote)
 
     def prepare(self):
         from tools.coopmwm import clean5b_restart as c5
         i = self.inputs
-        dict(F=c5.prepare_f, F8=c5.prepare_f8).get(self.variant, c5.prepare)(self.source, contexts=read(i['contexts_path']), guidance_doc=read(i['guidance_path']),
-                   quote_doc=read(self.control/self.quote_file), approval=read(self.control/'BUDGET_CLEAN5B.json'),
+        dict(F=c5.prepare_f, F8=c5.prepare_f8, C=c5.prepare_c).get(self.variant, c5.prepare)(self.source, contexts=read(i['contexts_path']), guidance_doc=read(i['guidance_path']),
+                   quote_doc=read(self.control/self.quote_file), approval=read(self.control/self.approval_file),
                    prior_runtime_sim_s=i['prior_runtime_sim_s'], host=i['host'], provenance=i['provenance'],
                    root=self.root)
         (self.root/'chain').symlink_to(self.control, target_is_directory=True)

@@ -311,3 +311,79 @@ def test_clean5c_unique_templates_dedup():
     assert [(x['family'], x['cells']) for x in out] == [('m', ['D3200_p20', 'D3200_p60']), ('m', ['D2800_p40'])]
     assert all('cell' not in x['template']['source'] for x in out)
     assert doc['clean5c']['templates'][0]['template']['source']['cell'] == 'D3200_p20'     # input untouched
+
+
+def _chain_module():
+    import importlib.util
+    from pathlib import Path
+    path = Path(__file__).resolve().parents[2]/'ops'/'clean5b_chain.py'
+    spec = importlib.util.spec_from_file_location('clean5b_chain_under_test', path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _chain_control(tmp_path, variant, **extra):
+    import json
+    control, source = tmp_path/'control', tmp_path/'source'
+    control.mkdir(parents=True)
+    source.mkdir(parents=True)
+    (source/'SOURCE_MANIFEST.json').write_text(json.dumps(dict(commit='0'*40, files={})))
+    inputs = dict(contexts_path=str(tmp_path/'ctx.json'), guidance_path=str(tmp_path/'g.json'), prior_runtime_sim_s=0,
+                  host='cpuZ', provenance='test', **extra)
+    if variant is not None:
+        inputs['variant'] = variant
+    (control/'PREPARE_INPUTS.json').write_text(json.dumps(inputs))
+    for name in ('ctx.json', 'g.json'):
+        (tmp_path/name).write_text(json.dumps(dict(name=name)))
+    for name in ('CLEAN5B_QUOTE.json', 'CLEAN5BF_QUOTE.json', 'CLEAN5BF8_QUOTE.json', 'CLEAN5C_QUOTE.json',
+                 'BUDGET_CLEAN5B.json', 'BUDGET_CLEAN5C.json'):
+        (control/name).write_text(json.dumps(dict(name=name, receipt_sha256='f'*64)))
+    return source, control
+
+
+def test_chain_variant_files_existing_variants_unchanged(tmp_path):
+    mod = _chain_module()
+    want = {None: ('CLEAN5B_QUOTE.json', 'BUDGET_CLEAN5B.json', c5b.ROOT),
+            'F': ('CLEAN5BF_QUOTE.json', 'BUDGET_CLEAN5B.json', c5b.ROOT),
+            'F8': ('CLEAN5BF8_QUOTE.json', 'BUDGET_CLEAN5B.json', c5b.ROOT),
+            'C': ('CLEAN5C_QUOTE.json', 'BUDGET_CLEAN5C.json', c5b.C_ROOT)}
+    for k, (variant, (quote, approval, root)) in enumerate(want.items()):
+        source, control = _chain_control(tmp_path/str(k), variant)
+        chain = mod.Chain(source, control)
+        assert (chain.quote_file, chain.approval_file, chain.root.as_posix()) == (quote, approval, root)
+    source, control = _chain_control(tmp_path/'bad', 'X')
+    with pytest.raises(ValueError, match='unknown clean5b variant'):
+        mod.Chain(source, control)
+
+
+def test_chain_variant_c_zero_sumo_dry_run(tmp_path, monkeypatch):
+    """Variant C dry run (zero SUMO): BUDGET binds CLEAN5C_QUOTE + BUDGET_CLEAN5C; PREPARE dispatches prepare_c with
+    the PREPARE_INPUTS guidance/contexts and the CLEAN5C files; nothing else is called."""
+    import json
+    from pathlib import Path
+    import importlib
+    clean4_budget = importlib.import_module('tools.coopmwm.clean4_budget')     # the modules the chain imports
+    restart = importlib.import_module('tools.coopmwm.clean5b_restart')
+    mod = _chain_module()
+    root = tmp_path/'root'
+    source, control = _chain_control(tmp_path, 'C', root=str(root))
+    seen = {}
+    monkeypatch.setattr(clean4_budget, 'approved', lambda approval, quote: seen.update(budget=(approval['name'],
+                        quote['name'])) or dict(ok=True))
+
+    def fake_prepare(src, **kw):
+        seen['prepare'] = dict(source=str(src), **{k: kw[k] for k in ('contexts', 'guidance_doc', 'root')},
+                               quote=kw['quote_doc']['name'], approval=kw['approval']['name'])
+        Path(kw['root']).mkdir()
+        (Path(kw['root'])/'PREPARED.json').write_text(json.dumps(dict(status='STAGED_NOT_LAUNCHED')))
+    for name in ('prepare', 'prepare_f', 'prepare_f8'):
+        monkeypatch.setattr(restart, name, lambda *a, **k: pytest.fail('wrong prepare variant'))
+    monkeypatch.setattr(restart, 'prepare_c', fake_prepare)
+    monkeypatch.setattr(Path, 'symlink_to', lambda self, target, target_is_directory=False: seen.update(link=str(target)))
+    chain = mod.Chain(source, control)
+    assert chain.budget() == dict(ok=True) and seen['budget'] == ('BUDGET_CLEAN5C.json', 'CLEAN5C_QUOTE.json')
+    assert chain.prepare() == dict(status='STAGED_NOT_LAUNCHED')
+    assert seen['prepare'] == dict(source=str(source), contexts=dict(name='ctx.json'), guidance_doc=dict(name='g.json'),
+                                   root=root, quote='CLEAN5C_QUOTE.json', approval='BUDGET_CLEAN5C.json')
+    assert seen['link'] == str(control) and 'f'*64 in (root/'AUTHORITY.md').read_text(encoding='utf-8')
