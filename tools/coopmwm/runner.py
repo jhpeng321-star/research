@@ -53,9 +53,22 @@ def _mem_available_bytes():
     return int(mem['MemAvailable'].split()[0])*1024
 
 
+def _disk_free_bytes(path):
+    import shutil
+    return shutil.disk_usage(path).free
+
+
 def admission(b):
     from tools.coopnative.runner import admission as prior
     prior(dict(load_max=b['load_max']))
+    floor = os.environ.get('COOPMWM_DISK_MIN_GB')
+    if floor is not None:
+        # clean5b-F8P (MAIN 2026-11-07): the disk filled and killed every writer; waves now wait for free space
+        floor = int(floor)
+        if not 8 <= floor <= 1000:
+            raise ValueError('COOPMWM_DISK_MIN_GB must be an int in 8..1000')
+        while _disk_free_bytes(b.get('run_root', '.')) < floor*1024**3:
+            time.sleep(30)
     need = b.get('mem_available_min_gb')
     if need is not None:
         # clean5b (MAIN 2026-11-07): the r2 B wave (16 workers x ~5-6 GB RSS) died of OOM on a 92 GB host;

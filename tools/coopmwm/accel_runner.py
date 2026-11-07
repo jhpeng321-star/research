@@ -72,9 +72,11 @@ def wave_jobs(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None
                  else f'{ident}_{arm}_{w["seed"]}')
             key=b.get('job_id_overrides',{}).get(key,key);path=root/'jobs'/key
             if (path/'RESULT.json').exists():results.append(read(path/'RESULT.json'));continue
+            resumed_failure=False
             if key in precharged:
                 if key not in b.get('precharged_unattempted',[]) or (path/'CLAIM.json').exists():
-                    raise ValueError('attempted job cannot be retried '+key)
+                    resumed_failure=resume_failed_episode(path)
+                    if not resumed_failure:raise ValueError('attempted job cannot be retried '+key)
             jobs.append(dict(id=key,path=str(path),world=w,role=role,arm=arm,
                 weights=policy.state_dict(),
                 runtime=sumo['runtime'] if sumo else b['runtime'],
@@ -87,7 +89,36 @@ def wave_jobs(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None
                 beta=b.get('beta',1.),N_exec=b.get('N_exec'),policy_state=actor_state(policy),
                 warm_history=bool(sumo['warm_history']) if sumo else b.get('warm_history',False),
                 **x))
+            if resumed_failure:
+                # Operator resume (COOPMWM_RESUME_FAILED_EPISODES=1): the failed attempt is never replayed; it is
+                # closed with a resume receipt and replaced exactly as run_train_jobs would (same cell rule, charged).
+                failed=jobs.pop()
+                jobs.append(resumed_replacement(failed,{v['seed'] for v in ws},precharged,ident))
     return jobs,results
+
+
+RESUME_ENV='COOPMWM_RESUME_FAILED_EPISODES'
+
+
+def resume_failed_episode(path):
+    """True iff the operator resume flag is set and this attempted job failed (EPISODE_FAILED.json present, even
+    a truncated one from a full disk) without a RESULT; it is then replaced, never retried."""
+    import os
+    return (os.environ.get(RESUME_ENV)=='1' and (path/'EPISODE_FAILED.json').exists()
+            and not (path/'RESULT.json').exists())
+
+
+def resumed_replacement(failed,used,precharged,ident):
+    path=Path(failed['path']);receipt=path/'EPISODE_FAILED_RESUMED.json'
+    if receipt.exists():                      # idempotent: a second resume reuses the recorded replacement
+        world=read(receipt)['replacement_world']
+    else:
+        world=replacement_world(failed['world'],set(used),set(precharged)|{failed['id']},failed['arm'],ident)
+        if world is None:raise ValueError('no replacement TRAIN world for resumed failure '+failed['id'])
+        write(receipt,dict(timestamp_utc=timestamp(),id=failed['id'],world=failed['world'],claims_replayed=False,
+            excluded_from_update=True,replacement_world=world,rule=RESUME_ENV+'=1 operator resume (MAIN 2026-11-07)',
+            original_receipt_bytes=(path/'EPISODE_FAILED.json').stat().st_size))
+    return replacement_job(failed,world,ident)
 
 
 def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None,used_seeds=None):

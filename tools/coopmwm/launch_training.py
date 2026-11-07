@@ -146,7 +146,7 @@ def update(cfg, arm, u, *, smoke=False):
         wait_for(g4.input_path(native, 'B', u), root)
     started = dict(arm=arm, update=u, pid=os.getpid(), unix=time.time(),
                    config_sha256=digest(cfg), smoke=smoke)
-    write(artifacts/f'updates/{arm}_{u:03}_STARTED.json', started)
+    write(_resume_name(artifacts/f'updates/{arm}_{u:03}_STARTED.json'), started)
     hooks = p1.build_arm_runtime(native, arm)
     episodes = hooks['collect_update']()
     # clean5b-F (fair reward ON only): A writes fair/A_GROUPS_uNNN.json + labels BEFORE B/R train (B waits for
@@ -216,6 +216,16 @@ FRESH_UPDATE_RULE = ('clean5b-F8 memory fix (MAIN 2026-11-07 ~10:2x): every arm 
                      'resume); the child exits after writing <arm>_UPDATE_<u>.json, so its episode memory is returned')
 
 
+def _resume_name(path):
+    """Operator resume (COOPMWM_RESUME_FAILED_EPISODES=1, MAIN 2026-11-07): an owner/start record left by a dead
+    process is kept and the new one is written beside it (<name>.resume_<unix>.json); otherwise the original path."""
+    from .accel_runner import RESUME_ENV
+    path = Path(path)
+    if os.environ.get(RESUME_ENV) == '1' and path.exists():
+        return path.with_name(f'{path.stem}.resume_{int(time.time())}{path.suffix}')
+    return path
+
+
 def fresh_update_process(cfg):
     """Opt-in (absent = the original in-process loop, byte-identical)."""
     value = cfg.get('arm_update_process')
@@ -236,7 +246,7 @@ def run_update_process(cfg, arm, u):
     child = subprocess.Popen(command, cwd=os.getcwd(), env=os.environ.copy(), stdin=subprocess.DEVNULL)
     # kill-by-PID coverage (review REV-5BF-PROC): the child's pid/start ticks next to the owner record
     stat = Path(f'/proc/{child.pid}/stat')
-    write(root/'owners'/'children'/f'{arm}_u{u:03}.json', dict(pid=child.pid, owner_pid=os.getpid(), arm=arm, update=u,
+    write(_resume_name(root/'owners'/'children'/f'{arm}_u{u:03}.json'), dict(pid=child.pid, owner_pid=os.getpid(), arm=arm, update=u,
           unix=time.time(), start_ticks=stat.read_text().split()[21] if stat.exists() else None))
     code = child.wait()
     done = root/f'{arm}_UPDATE_{u:03}.json'
@@ -251,7 +261,7 @@ def run_update_process(cfg, arm, u):
 def run_arm(cfg, arm):
     root = Path(cfg['run_root'])
     release(cfg)
-    write(root/f'owners/{arm}.json', dict(pid=os.getpid(), unix=time.time(),
+    write(_resume_name(root/f'owners/{arm}.json'), dict(pid=os.getpid(), unix=time.time(),
         start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21], config_sha256=digest(cfg)))
     torch.set_num_threads(1)
     last = registered_last_update(cfg)
