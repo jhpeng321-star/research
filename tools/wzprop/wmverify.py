@@ -223,7 +223,8 @@ def candidates(arms_doc, cell, groups=GROUPS, k=4, extra=(), lane_executor=DEFAU
         elif grp in SINGLE_GROUPS:
             items += [(grp, got)] if got else []
         else:
-            items += [(grp, s) for s in (got or [])[:k]]
+            kk = int(k.get(grp, 0)) if isinstance(k, dict) else int(k)     # per-group k (matched budgets)
+            items += [(grp, s) for s in (got or [])[:kk]]
     items += [('extra', s) for s in extra]
     for source, raw in items:
         try:
@@ -1241,6 +1242,7 @@ def main(argv=None):
         _cells_arg(a)
         a.add_argument('--groups', default=','.join(GROUPS))
         a.add_argument('--k', type=int, default=4)
+        a.add_argument('--k-groups', help='per-group k, e.g. wm=4,wm_fairer=4,structured=8,random=8 (overrides --k)')
         a.add_argument('--parity-seeds', type=int, default=2)
         a.add_argument('--banned-seeds', type=int, default=0,
                        help='seeds per cell with the BANNED solo2 comparator arm (labelled; never a family)')
@@ -1300,6 +1302,8 @@ def main(argv=None):
     if x.cmd in ('registration', 'dryrun', 'plan'):
         cells = parse_cells(x.cells)
         groups = tuple(g for g in x.groups.split(',') if g)
+        if x.k_groups:
+            x.k = {g: int(n) for g, n in (kv.split('=') for kv in x.k_groups.split(','))}
         extra = []
         for p in x.spec:
             d = json.loads(guard_path(p).read_text())
