@@ -436,7 +436,7 @@ def _propose(state, own, rng):
     args = state.get('generator_args') or {}
     view = dict(now=state['now'], map=state['map'], frame=state['frame'], cap=state['cap'],
                 range_m=state['range_m'], sensed=sensed, rows=sensed, registry=lp.REGISTRY,
-                generator_args=args, fullpol=args, ledger=state.get('ledger'))
+                generator_args=args, fullpol=args, ledger=state.get('ledger'), arm=state.get('arm'))
     if 'length_m' in own:
         own_row = _row(own)
     else:
@@ -682,7 +682,8 @@ class Protocol:
         return dict(now=_second(now), families=PROGRAM_FAMILIES, offers=self.offers.get(vid, ()),
                     cap=self.cap, range_m=self.range_m, map=self.frame.name, frame=self.frame,
                     n_lanes=self.n_lanes, sensed=tuple(self.sensed.get(vid, ())), propose=self.propose,
-                    generator_args=self.settings.get('generator_args') or {}, ledger=self.ledger())
+                    generator_args=self.settings.get('generator_args') or {}, ledger=self.ledger(),
+                    arm=self.settings.get('arm'))
 
     def ledger(self):
         """{template source variant: (active sessions, last start s)} for the generator's slots/cooldown gate."""

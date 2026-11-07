@@ -244,3 +244,50 @@ def test_fresh_update_process_rule_and_fail_closed(tmp_path, monkeypatch):
     monkeypatch.setattr(subprocess, 'Popen', lambda command, **kw: SimpleNamespace(pid=9, wait=lambda: 3))
     with pytest.raises(RuntimeError, match='no automatic retry'):
         lt.run_update_process(cfg, 'R', 1)
+
+
+def test_clean5c_keys_bank_guidance_reaches_ev_table(cfg, wz):
+    """L5C acceptance (zero SUMO): F8S CONFIG keys + GUIDANCE_CLEAN5C -> B has EV-BC targets in all 5 guided training
+    cells (D3200_p60 / D2800_p40 from the WM bank, the other 3 from the labelled F8S fallback); R none; B gets the
+    bank templates, R none; parity verdicts recorded."""
+    import json
+    from pathlib import Path
+    from . import fullpol_learn as fl, fullpol_templates as ft
+    path = Path(__file__).resolve().parents[2]/'clean5c'/'GUIDANCE_CLEAN5C.json'
+    g = json.loads(path.read_text(encoding='utf-8'))
+    k = c4.levers(dict(cfg, trigger_candidates=8, trigger_partner_slots=4), lane_drop_keys={}, v2v_keys={},
+                  w2_keys={})
+    k.update(c5b.keys_c(desc=wz, guidance_doc=g, provenance='test'))
+    table, receipt = fl.ev_table(k, 'B')
+    assert {c: sorted(fl.qualifying(table[c])) for c in ('D3200_p60', 'D2800_p40')} == dict(
+        D3200_p60=['mut_0584e488a8bf93c5'], D2800_p40=['mut_006c290e03ad3d3c'])
+    for c in ('D2400_p60', 'D2800_p60', 'D3200_p40'):
+        assert table[c] and all(r['source'] == 'f8s_rule' and r['fallback'] for r in table[c].values())
+    assert set(c5.CELL_KEYS)-set(table) == {'D2400_p40'} and not receipt['dropped_without_parity']
+    r_table, _ = fl.ev_table(k, 'R')
+    assert not r_table
+    t = k['lc_families']['generator_args']['templates']
+    assert t['R'] == [] and [x['family'] for x in t['B']] == [x['family'] for x in g['clean5c']['templates']]
+    assert k['clean5c']['bank_targets'] == {'D2800_p40/mut_006c290e03ad3d3c': 'identical',
+                                            'D3200_p20/mut_0584e488a8bf93c5': 'identical',
+                                            'D3200_p60/mut_0584e488a8bf93c5': 'identical'}
+    assert c5.check_guidance(k, c5b.C_NO_GUIDANCE_CELLS)['no_guidance_cells'] == ['D2400_p40']
+    assert set(c5b.VARIANT_C) == set(c5.VARIANT) and c5b.VARIANT_C['approved'] == 3_600_000
+    # the generator offers bank templates to B only (per-arm generator_args)
+    calls = []
+    slot = dict(classes=['verified'], templates=dict(B=[dict(template={'source': dict(variant='m')},
+                                                            offer_condition={'x': 1})], R=[]))
+    import numpy as np
+    from . import fullpol_bank as fb
+    orig = (fb.offer_ok, fb.session_ok, ft._lc, ft._view)
+    try:
+        fb.offer_ok = fb.session_ok = lambda *a: calls.append(1) or True
+        ft._lc = lambda: type('LC', (), {'FreeProgram': type('FP', (), {'from_dict': staticmethod(lambda d: d)})})
+        ft._view = lambda f: None
+        st = lambda arm: dict(frame=None, rows=[], fullpol=slot, now=400, ledger={}, arm=arm)  # noqa: E731
+        own = dict(vid='e', s_m=-1000., lane=0, is_cav=True)
+        assert len(ft.propose(st('B'), own, np.random.default_rng(0))) == 1
+        assert ft.propose(st('R'), own, np.random.default_rng(0)) == []
+        assert ft.propose(st(None), own, np.random.default_rng(0)) == []
+    finally:
+        fb.offer_ok, fb.session_ok, ft._lc, ft._view = orig

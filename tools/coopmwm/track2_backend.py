@@ -379,7 +379,7 @@ class EpisodePolicy(torch.nn.Module):
         self.nm_families = None if family_settings is None else nm_families.Protocol(family_settings)
         # LCEXEC free_program (default off): V2V program protocol + per-member executors.
         program_settings = lc_families.settings(cfg)
-        self.lc_families = None if program_settings is None else lc_families.Protocol(program_settings)
+        self.lc_families = None if program_settings is None else lc_families.Protocol(dict(program_settings, arm=arm))
         self.layer.actuation_receipts = 'clean2_budget' in cfg or 'clean3_budget' in cfg or 'clean4_budget' in cfg
         # Retain the legacy slot/optimizer layout for existing sidecars. It is
         # unused by ProductionLayer, gets no gradient and cannot gate actuation.

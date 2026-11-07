@@ -360,7 +360,9 @@ def recommended_5b(*, provenance, regime_guidance, cap, range_m=None, templates=
     out = recommended(provenance=provenance, regime_guidance=regime_guidance, learn=learn)
     out[KEY]['families'] = ['abreast_wall', 'group_hold', 'free_program']
     args = dict(classes=list(classes or fullpol_templates.CLASSES),
-                structured=list(structured or fullpol_templates.STRUCTURED), templates=list(templates))
+                structured=list(structured or fullpol_templates.STRUCTURED),
+                templates=({k: list(v) for k, v in templates.items()} if isinstance(templates, dict)
+                           else list(templates)))
     out.update(lc_families.config_keys(provenance=provenance, cap=cap, range_m=range_m, generator=GENERATOR,
                                        generator_args=args, descriptor=DESCRIPTOR_HOOK,
                                        descriptor_width=fullpol_head.PROGRAM_DESCRIPTOR_WIDTH))

@@ -206,9 +206,28 @@ def validate_clean5a(cfg, updates, fixes=None):
     root = Path(cfg['run_root'])
     arms = {u['arm']: u for u in updates}
     run = cfg['newmap']['run']
-    allowed = CLEAN5A_ALLOWED+(CLEAN5B_PROGRAMS if run == 'clean5b' else ())
+    lc_run = run in ('clean5b', 'clean5c')
+    allowed = CLEAN5A_ALLOWED+(CLEAN5B_PROGRAMS if lc_run else ())
     out = dict(run=run)
     c4.check_map(cfg)
+    if run == 'clean5c':
+        # clean5c (MAIN 2026-11-08): B = the bank's verified templates, R = none; targets = the bank's eligible families
+        from . import lc_families, lc_runtime, clean5b_restart as c5b
+        lc = cfg.get('lc_families') or {}
+        t = (lc.get('generator_args') or {}).get('templates')
+        receipt = cfg.get('clean5c') or {}
+        if (not lc_runtime.enabled() or lc_families.settings(cfg) is None or lc.get('cap') != c5b.LC_CAP
+                or not isinstance(t, dict) or set(t) != {'B', 'R'} or t['R'] != []
+                or any(not x.get('offer_condition') or x['family'] not in receipt.get('targets', ()) for x in t['B'])
+                or [dict(cell=x['cell'], family=x['family']) for x in t['B']] != receipt.get('templates')):
+            raise ValueError('clean5c requires the LC runtime, cap 6, B = the bank templates (with offer conditions), R = none')
+        if (cfg.get('clean5_ev') or {}).get('hold_lane_pin') is not True:
+            raise ValueError('clean5c launches with clean5_ev.hold_lane_pin ON')
+        if any(v != 'identical' for v in (receipt.get('bank_targets') or {}).values()):
+            raise ValueError('clean5c bank targets must all be N2 parity identical')
+        out['lc_families'] = dict(cap=lc['cap'], generator=lc.get('generator'), templates=dict(B=len(t['B']), R=0),
+                                  hold_lane_pin=True)
+        out['clean5c'] = receipt
     if run == 'clean5b':
         # clean5b (MAIN 23:40/23:48): LCEXEC programs offered to B and R identically, never BC/EV targets,
         # G4 off for programs (checked below via the clean5a G4LD families), LC runtime bound in this process.
@@ -224,10 +243,10 @@ def validate_clean5a(cfg, updates, fixes=None):
     fair = fullpol_fair.settings(cfg)
     if fair is not None:
         # clean5b-F (owner 04:0x): wall_h banned; EV targets fairness-eligible only; reward term from the logger
-        if (run != 'clean5b' or not fair.get('reward') or not fair.get('ev_filter')
+        if (not lc_run or not fair.get('reward') or not fair.get('ev_filter')
                 or fair.get('solo_variants') != ['wall_g']):
             raise ValueError('clean5b-F needs the registered fair slot (reward + ev_filter, wall_g solos only)')
-        out['fair'] = dict(rule=fair['rule'], threshold_s=fair['threshold_s'], parity=sorted(_fe.FAIR_PARITY))
+        out['fair'] = dict(rule=fair['rule'], threshold_s=fair['threshold_s'], parity=sorted((cfg.get('clean5_ev') or {}).get('parity_families') or ()) if run == 'clean5c' else sorted(_fe.FAIR_PARITY))
     base = cfg['newmap']['base']
     if (frozen_trunk.file_sha256(base['trunk']) != base['trunk_sha256'] or cfg['checkpoint'] != base['trunk']
             or frozen_trunk.check_process(cfg) is not None):
@@ -260,7 +279,7 @@ def validate_clean5a(cfg, updates, fixes=None):
         illegal = sorted(f for f in base_family if f not in allowed)
         if illegal:
             raise ValueError(run+' slate offered an unregistered option: '+arm+' '+repr(illegal))
-        if run == 'clean5b' and not base_family.get('free_program_initiate'):
+        if lc_run and not base_family.get('free_program_initiate'):
             raise ValueError('clean5b slate must offer LCEXEC free_program moves: '+arm+' '+repr(proposed))
         if not base_family.get('group_hold') or not (base_family.get('abreast_wall') or base_family.get('lane_drop_initiate')):
             raise ValueError('clean5a slate must offer group_hold and abreast_wall moves: '+arm+' '+repr(proposed))
@@ -274,6 +293,11 @@ def validate_clean5a(cfg, updates, fixes=None):
         if arm == 'R' and fit.get('records', 0) != 0:
             raise ValueError('R is the no-guidance arm: zero EV-BC records')
         out['ev_bc'][arm] = {k: fit.get(k) for k in ('records', 'ev_bc', 'report_bc_kl', 'report_kl_unlabelled')}
+        if run == 'clean5c':
+            ev_rec = fit.get('ev_bc') or {}
+            if (fit.get('bank') not in (None, {}) or fit.get('records', 0) != ev_rec.get('records', 0)
+                    or any(f not in (cfg.get('clean5c') or {}).get('targets', ()) for f in ev_rec.get('families') or ())):
+                raise ValueError('clean5c EV-BC targets must be the bank guidance eligible families: '+arm)
         if run == 'clean5b':
             # programs are never BC/EV targets: every fitted record is an EV-BC solo-hold record
             ev_rec = fit.get('ev_bc') or {}

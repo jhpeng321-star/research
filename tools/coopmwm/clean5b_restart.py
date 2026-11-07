@@ -157,3 +157,58 @@ VARIANT_F8 = dict(VARIANT_F, quote_file=F8_QUOTE_FILE, worlds=worlds_by_update_8
 
 def prepare_f8(source, *, root=F8_ROOT, **kwargs):
     return c5.prepare(source, root=root, variant=VARIANT_F8, **kwargs)
+
+
+# ---------------------------------------------------------------- clean5c (MAIN 2026-11-08, L5C launch HELD 05:00)
+
+C_RUN = 'clean5c'
+C_ROOT = '/home/ubuntu/coopmwm20261108_clean5c'
+C_QUOTE_FILE = 'CLEAN5C_QUOTE.json'
+C_APPROVAL_FILE = 'BUDGET_CLEAN5C.json'
+C_BUDGET_FILE = 'CLEAN5C_BUDGET.json'
+C_NOTE = ('clean5c: B EV-BC targets = fullpol_bank.eligible_families(GUIDANCE_CLEAN5C) - WMVERIFY wmv_mc WM-sourced '
+          'multi-CAV plans (N2 parity identical, offer_condition + slots/cooldown enforced at the offer) where verified, '
+          'the labelled F8S rule rows elsewhere; B gets the bank templates (per-arm generator_args), R none; '
+          'otherwise identical to clean5b-F8S.')
+
+
+def keys_c(*, desc, guidance_doc, provenance):
+    """clean5b-F8S keys with the clean5c bank guidance: B targets = eligible families, B templates = the bank's."""
+    from . import fullpol_ev, fullpol_bank
+    clean5c = guidance_doc.get('clean5c') or {}
+    if clean5c.get('rule') != fullpol_bank.RULE:
+        raise ValueError('clean5c needs a fullpol_bank guidance doc (GUIDANCE_CLEAN5C)')
+    out = c5.keys(desc=desc, guidance_doc=guidance_doc, provenance=provenance)
+    templates = dict(B=list(clean5c['templates']), R=[])
+    out.update(fullpol_ev.with_fairness(
+        fullpol_ev.recommended_5b(provenance=provenance, regime_guidance=guidance_doc, cap=LC_CAP, templates=templates),
+        regime_guidance=guidance_doc))
+    out['clean5_ev']['parity_families'] = fullpol_bank.eligible_families(guidance_doc)
+    out['clean5c'] = parity_receipt(guidance_doc)
+    return out
+
+
+def parity_receipt(doc):
+    """Bank-build parity verdicts + targets per cell, recorded in CONFIG / receipts."""
+    from . import fullpol_bank
+    c = doc['clean5c']
+    rows = [r for r in doc['rows'] if r.get('source') == 'wm_bank']
+    return dict(rule=c['rule'], guidance_sha256=doc['source']['sha256'], verified_cells=list(c['verified_cells']),
+                targets=fullpol_bank.eligible_families(doc),
+                bank_targets={f"{r['regime']}/{r['family']}": r.get('n2_parity') for r in rows},
+                rejected={k: v['reason'] for k, v in sorted(c['rejected'].items())},
+                templates=[dict(cell=t['cell'], family=t['family']) for t in c['templates']],
+                fallback_cells=sorted({r['regime'] for r in doc['rows'] if r.get('source') == 'f8s_rule'}))
+
+
+C_NO_GUIDANCE_CELLS = ('D2400_p40',)
+VARIANT_C = dict(VARIANT_F8, run=C_RUN, quote_file=C_QUOTE_FILE, approval_file=C_APPROVAL_FILE, budget_file=C_BUDGET_FILE,
+                 approved=c4.APPROVED_BY_RUN[C_RUN], keys=keys_c, guidance_missing_ok=C_NO_GUIDANCE_CELLS,
+                 design=VARIANT_F8['design']+' '+C_NOTE, authority=VARIANT_F8['authority']+'; MAIN 2026-11-08 clean5c '
+                 '(L5C) 3,600,000 sim-s; '+C_NOTE,
+                 newmap_extra=dict(VARIANT_F8['newmap_extra'], variant='clean5c', clean5c_note=C_NOTE,
+                                   program_targets='B: WM-verified bank templates (EV-BC on their strategy labels); R: none'))
+
+
+def prepare_c(source, *, root=C_ROOT, **kwargs):
+    return c5.prepare(source, root=root, variant=VARIANT_C, **kwargs)
