@@ -203,7 +203,9 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     assert not cp['groups']['groups']['origin:undefined'].get('registered', False)
     assert set(cp['groups']['sensitivity_own_arm_labels']['groups']) == set(nm.REPORTED_GROUPS)
     assert cp['total_B_minus_A']['diff'] == pytest.approx(t['registered_B_A_R']['rows']['B-A']['diff'])
-    assert cp['meets'] == (cp['total_lower'] and cp['groups']['all_pass'])
+    assert cp['meets'] == (cp['total_lower'] and cp['groups']['all_pass'] and cp['tail_cvar90']['passes'])
+    assert cp['tail_cvar90']['reference'] == 'A' and cp['tail_cvar90']['n_worlds'] == 96        # amendment 19
+    assert set(t['secondary']['tail_vs_u0']['cvar90_delay_s']) == set(t['arms'])-{'U0'}
     assert 'RULE_FAIR' in t['arms'] and t['arms']['RULE_FAIR']['label'].startswith('RULE_FAIR')
     sec = t['secondary']                                              # SECONDARY report-only (amendment 5)
     assert sec['status'].startswith('report-only') and sec['bootstrap']['reps'] == 200      # dry run: fewer reps
@@ -869,6 +871,9 @@ def test_main_run_reuses_the_prerun_only_on_the_same_plant_and_u0(panel, tmp_pat
                        panel_3c=f['panel_3c'], poll=0, dry_run=True)
     assert value['claim3a']['present'] == ['B', 'A', 'R', 'RULE', 'RULE_FAIR', 'U0', 'NATIVE']
     assert value['claim3c']['present'] == ['B', 'R', 'RULE', 'RULE_FAIR', 'U0', 'NATIVE']
+    c3 = json.loads((f['final_root']/'CLAIM3C_TABLES_u012.json').read_text())['tables']        # amendment 19 on 3c
+    assert c3['co_criterion_tail_3c']['tail_cvar90']['reference'] == 'U0'
+    assert c3['co_criterion_tail_3c']['meets'] == c3['co_criterion_tail_3c']['tail_cvar90']['passes']
     assert not [r for r in nm.fe.ledger_rows(f['root']) if r['id'].startswith(nm.PREFIXES)]     # clean root never written
     clean = [r['id'] for r in nm.fe.ledger_rows(f['final_root']) if r['phase'] == 'v2v_final']
     assert not [i for i in clean if i.split('_')[1] in ('native', 'u0', 'rule')]          # reused, not re-run
@@ -878,7 +883,7 @@ def test_main_run_reuses_the_prerun_only_on_the_same_plant_and_u0(panel, tmp_pat
     assert total+432_000 <= nm.quote('mappo_frozen')['total_ceiling_sim_s'] <= nm.ALLOCATION_SIM_S
     again = nm._analyse_published(f['root'], f['final_root'], runtime, panel, f['panel_3c'])
     for k in ('claim3a', 'claim3c'):                  # zero-physics re-tabulation from the chunked receipts
-        strip = lambda x: {n: v for n, v in x.items() if n not in ('secondary', 'co_primary')}  # noqa: E731  (dry: 200 reps)
+        strip = lambda x: {n: v for n, v in x.items() if n not in ('secondary', 'co_primary', 'co_criterion_tail_3c')}  # noqa: E731  (dry: 200 reps)
         assert strip(again[k]['tables']) == strip(value[k]['tables']) and again[k]['present'] == value[k]['present']
 
 
@@ -1160,3 +1165,39 @@ def test_receipt_diff_lists_every_differing_key():
     a = dict(cmd=['<binary:sumo>', '--step-length', '0.5'], files={'x.rou.xml': '1'}, env=dict(k='512', ttc='True'))
     b = dict(cmd=['<binary:sumo>', '--step-length', '0.5'], files={'x.rou.xml': '2'}, env=dict(k='512', ttc='False'))
     assert [d['key'] for d in nm._receipt_diff(a, b)] == ['env.ttc', 'files.x.rou.xml']
+
+
+
+# ---------------------------------------------------------------- amendment 19 (owner/professor tail fairness)
+
+def test_cvar90_and_p90_definitions():
+    d = list(range(1, 21))                                      # 20 vehicles: top 10% = the 2 largest (19, 20)
+    assert nm.cvar90(d) == 19.5 and nm.cvar90([7.]) == 7. and nm.cvar90(list(range(1, 11))) == 10.
+    assert nm.cvar90(list(range(1, 12))) == 10.5                # ceil(1.1) = 2
+    assert nm.p90(d) == pytest.approx(18.1)
+
+
+def _tail_reports(b_extra):
+    def rep(delays):
+        return dict(per_vehicle={f'v{i}': (float(x), 'L0', False) for i, x in enumerate(delays)})
+    worlds = [f'w{i}' for i in range(8)]
+    base = {w: [float(j+i) for j in range(30)] for i, w in enumerate(worlds)}
+    a = {w: rep(base[w]) for w in worlds}
+    b = {w: rep(base[w][:-3]+[x+b_extra for x in base[w][-3:]]) for w in worlds}     # shift only the worst 10%
+    return dict(A=a, U0=a, B=b), worlds
+
+
+def test_tail_criterion_lower_bound_rule():
+    boot = dict(reps=500, seed=1, level=.95, method='paired_percentile')
+    reports, worlds = _tail_reports(5.)
+    worse = nm.tail_criterion(reports, worlds, boot, 'A')
+    assert worse['diff_mean_s'] == pytest.approx(5.) and worse['ci95'][0] > 0 and worse['passes'] is False
+    reports, worlds = _tail_reports(-5.)
+    better = nm.tail_criterion(reports, worlds, boot, 'A')
+    assert better['ci95'][0] <= 0 and better['passes'] is True
+    # paired vehicles only: a B-only vehicle with a huge delay does not enter
+    reports['B'][worlds[0]]['per_vehicle']['extra'] = (1e6, 'L0', False)
+    assert nm.tail_criterion(reports, worlds, boot, 'A')['diff_mean_s'] == pytest.approx(better['diff_mean_s'])
+    sec = nm.tail_vs_u0(reports, worlds, boot, ['A', 'B', 'U0'])
+    assert set(sec['cvar90_delay_s']) == {'A', 'B'} and sec['p90_delay_s']['B']['mean_ci']['diff'] <= 0
+    assert nm.tail_criterion(dict(B=reports['B']), worlds, boot, 'A')['status'] == 'unavailable'

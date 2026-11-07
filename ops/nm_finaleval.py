@@ -1839,11 +1839,18 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
         # owner decision 04:0x (pre-results): co-primary = total delay B < A (paired CI95 upper < 0) AND groups
         total = fe.paired_stats(J['B'], J['A'], bootstrap)
         groups = (tables.get('secondary') or {}).get('co_primary_groups') or dict(status='unavailable')
+        tail = (tables.get('secondary') or {}).get('co_primary_tail') or dict(status='unavailable')
         tables['co_primary'] = dict(
             rule=('B total held-out delay lower than A (paired whole-world CI95 upper bound < 0) AND every group '
-                  f'(origin lane 0/1/2, HDV, CAV) mean per-vehicle delay increase <= {GROUP_DELAY_MAX_S} s vs A'),
-            total_B_minus_A=total, total_lower=bool(total['ci95'][1] < 0), groups=groups,
-            meets=bool(total['ci95'][1] < 0 and groups.get('all_pass') is True))
+                  f'(origin lane 0/1/2, HDV, CAV) mean per-vehicle delay increase <= {GROUP_DELAY_MAX_S} s vs A '
+                  'AND (amendment 19) paired CVaR90(B) - CVaR90(A) 95% CI lower bound <= 0'),
+            total_B_minus_A=total, total_lower=bool(total['ci95'][1] < 0), groups=groups, tail_cvar90=tail,
+            meets=bool(total['ci95'][1] < 0 and groups.get('all_pass') is True and tail.get('passes') is True))
+    if scope == 'claim3c':
+        # amendment 19: the tail co-criterion applies to the 3c panel too (B vs A = U0 there)
+        tail = (tables.get('secondary') or {}).get('co_primary_tail') or dict(status='unavailable')
+        tables['co_criterion_tail_3c'] = dict(rule='amendment 19: paired CVaR90(B) - CVaR90(A=U0) 95% CI lower bound <= 0',
+                                              tail_cvar90=tail, meets=tail.get('passes') is True)
     value = dict(schema=SCHEMA+'.tables', scope=scope, map=MAP, update=update, a_alias_of_u0=bool(a_alias),
                  evaluation='PRIMARY (u12)' if update == PRIMARY_UPDATE else 'SECONDARY (u24)',
                  panel_sha256=panel['panel_sha256'], base=base,
@@ -2191,6 +2198,71 @@ def co_primary_groups(reports, worlds, bootstrap, reference='U0'):
                 sensitivity_own_arm_labels=dict(groups=own['groups'], all_pass=own['all_pass']))
 
 
+#: amendment 19 (owner/professor, REGISTRATION 2026-11-08 00:14, pre-outcome): the worst-off 10% of vehicles by delay
+TAIL_LEVEL = 0.90
+
+
+def cvar90(delays):
+    """Mean per-vehicle delay of the most-delayed 10% of vehicles: the ceil(0.10 n) largest delays (n >= 1)."""
+    d = np.sort(np.asarray(delays, float))[::-1]
+    return float(d[:max(1, math.ceil((1-TAIL_LEVEL)*len(d)-1e-9))].mean())
+
+
+def p90(delays):
+    return float(np.quantile(np.asarray(delays, float), TAIL_LEVEL))
+
+
+def _paired_tail(reports, worlds, arm, ref, stat):
+    """Per world: ``stat`` over the vehicles present in BOTH ``arm`` and ``ref`` (paired by vehicle id), each arm's
+    own per-vehicle delay (the delay of the group criterion: vehicle_log_report per_vehicle[vid][0])."""
+    x, y, n = [], [], []
+    for w in worlds:
+        a, r = reports[arm][w]['per_vehicle'], reports[ref][w]['per_vehicle']
+        ids = sorted(set(a) & set(r))
+        if not ids:
+            return None
+        x.append(stat([a[v][0] for v in ids]))
+        y.append(stat([r[v][0] for v in ids]))
+        n.append(len(ids))
+    return np.array(x), np.array(y), n
+
+
+def tail_criterion(reports, worlds, bootstrap, reference):
+    """Claim 3a/3c co-criterion #3 (amendment 19): paired CVaR90(B) - CVaR90(A) per world (vehicles in both B and A);
+    whole-world seed bootstrap (the registered BOOTSTRAP); PASSES iff the 95% CI LOWER bound <= 0 (B not
+    significantly worse than A in the worst-off 10%)."""
+    if not {'B', reference} <= set(reports):
+        return dict(status='unavailable', reason=f'needs B and {reference} vehicle logs')
+    got = _paired_tail(reports, worlds, 'B', reference, cvar90)
+    if got is None or len(worlds) < 2:
+        return dict(status='unavailable', reason='a world without paired vehicles, or fewer than 2 worlds')
+    b, a, n = got
+    stats = fe.paired_stats(b, a, bootstrap, pct=False)
+    return dict(rule=('paired CVaR90 (mean delay of the most-delayed 10% of the vehicles present in both B and '
+                      f'{reference} on the same world) B - {reference}: 95% CI lower bound <= 0'),
+                reference=reference, n_worlds=len(worlds), paired_vehicles_per_world=dict(min=min(n), max=max(n)),
+                diff_mean_s=stats['diff'], ci95=stats['ci95'], p_two_sided=stats['p_two_sided'],
+                per_world=dict(B=b.tolist(), reference=a.tolist()), passes=bool(stats['ci95'][0] <= 0))
+
+
+def tail_vs_u0(reports, worlds, bootstrap, names, reference='U0'):
+    """SECONDARY (amendment 19): CVaR90 and p90 of per-vehicle delay, every arm vs U0 (paired vehicles), CI + %."""
+    if reference not in reports:
+        return dict(status='unavailable', reason=f'no {reference} vehicle logs')
+    out = dict(convention='diff = arm - U0 per world over vehicles present in both; lower is better', reference=reference)
+    for name, stat in (('cvar90_delay_s', cvar90), ('p90_delay_s', p90)):
+        rows = {}
+        for n in names:
+            if n == reference:
+                continue
+            got = _paired_tail(reports, worlds, n, reference, stat)
+            rows[n] = (dict(status='unavailable') if got is None or len(worlds) < 2 else
+                       dict(mean_ci=fe.paired_stats(got[0], got[1], bootstrap, pct=True), per_world=got[0].tolist(),
+                            per_world_reference=got[1].tolist()))
+        out[name] = rows
+    return out
+
+
 def secondary_tables(*, final_root, panel, have, names, alias, dry_run=False):
     """SECONDARY, report-only (amendment 5): every arm vs every comparator present, per metric: paired whole-world
     bootstrap CI + per-seed fractions/quartiles; per-world values per arm (the per-seed table)."""
@@ -2229,6 +2301,10 @@ def secondary_tables(*, final_root, panel, have, names, alias, dry_run=False):
         entry['vs'] = cmp_
         out['metrics'][metric] = entry
     out['co_primary_groups'] = co_primary_groups(reports, worlds, bootstrap)
+    # amendment 19: A = U0 where A is not on the panel (claim 3c; A is the frozen U0 alias)
+    reference = 'A' if 'A' in reports else 'U0'
+    out['co_primary_tail'] = tail_criterion(reports, worlds, bootstrap, reference)
+    out['tail_vs_u0'] = tail_vs_u0(reports, worlds, bootstrap, names)
     origins = sorted({o for n in names for w in worlds for o in reports[n][w]['delay_by_origin_s']})
     out['delay_by_origin_s'] = {o: {n: [reports[n][w]['delay_by_origin_s'].get(o) for w in worlds] for n in names}
                                 for o in origins}

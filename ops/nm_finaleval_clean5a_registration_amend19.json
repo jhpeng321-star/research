@@ -1,0 +1,36 @@
+{
+ "amendment": 19,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend18.json",
+  "registration_sha256": "18099cc974f8fbc544d0161a0ed546f26d2c61e49c2f5d5f1674afd8eaf007d6"
+ },
+ "authority": [
+  "owner/professor tail-fairness criterion, REGISTRATION.md 2026-11-08 00:14 (MAIN); MAIN -> N6 amendment 19"
+ ],
+ "co_criterion_3": {
+  "ci": "registered BOOTSTRAP (whole-world seed bootstrap, 10,000 reps, seed 20261104, paired percentile)",
+  "claim3a_meets": "total lower (CI95 upper < 0) AND groups all pass AND tail passes",
+  "claim3c": "tables.co_criterion_tail_3c",
+  "claims": [
+   "3a (B vs A)",
+   "3c (B vs A = U0, the frozen alias; A is not on the 3c panel)"
+  ],
+  "rule": "paired CVaR90(B) - CVaR90(A): 95% CI lower bound <= 0 (B not significantly worse)",
+  "statistic": "CVaR90 of per-vehicle delay per world = mean of the ceil(0.10 n) largest per-vehicle delays over the n vehicles present in BOTH B and A on that world (paired by vehicle id); per-vehicle delay = vehicle_log_report per_vehicle[vid][0], the same delay as the group criterion"
+ },
+ "code": {
+  "file": "ops/nm_finaleval.py",
+  "functions": [
+   "cvar90",
+   "p90",
+   "tail_criterion",
+   "tail_vs_u0"
+  ]
+ },
+ "registered_utc": "2026-11-07T16:22:25.055309+00:00",
+ "registration_sha256": "f20ed796a08de76f873da3e267e24ba43938c75f2dcb61d25c73f3d2ae76aa8d",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "secondary": "tail_vs_u0: CVaR90 and p90 (numpy linear quantile 0.90) of per-vehicle delay, every arm vs U0 over vehicles present in both, paired CI + %; report-only",
+ "status": "pre-results: zero SUMO; no sealed u12/comparator outcome has been opened",
+ "tests": "test_cvar90_and_p90_definitions, test_tail_criterion_lower_bound_rule, dry-run 3a/3c assertions; 75 passed, 6 skipped"
+}
