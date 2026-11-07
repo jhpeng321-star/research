@@ -265,9 +265,13 @@ def test_clean5c_keys_bank_guidance_reaches_ev_table(cfg, wz):
         assert table[c] and all(r['source'] == 'f8s_rule' and r['fallback'] for r in table[c].values())
     assert set(c5.CELL_KEYS)-set(table) == {'D2400_p40'} and not receipt['dropped_without_parity']
     r_table, _ = fl.ev_table(k, 'R')
-    assert not r_table
+    assert not r_table                                                                   # R: target-free
     t = k['lc_families']['generator_args']['templates']
-    assert t['R'] == [] and [x['family'] for x in t['B']] == [x['family'] for x in g['clean5c']['templates']]
+    assert t['R'] == t['B']                                                              # same action set
+    assert [(x['family'], x['cells']) for x in t['B']] == [('mut_006c290e03ad3d3c', ['D2800_p40']),
+                                                           ('mut_0584e488a8bf93c5', ['D3200_p20', 'D3200_p60'])]
+    assert k['clean5c']['templates'] == [dict(family=x['family'], cells=x['cells']) for x in t['B']]
+    assert all('cell' not in x['template']['source'] for x in t['B'])
     assert k['clean5c']['bank_targets'] == {'D2800_p40/mut_006c290e03ad3d3c': 'identical',
                                             'D3200_p20/mut_0584e488a8bf93c5': 'identical',
                                             'D3200_p60/mut_0584e488a8bf93c5': 'identical'}
@@ -287,7 +291,23 @@ def test_clean5c_keys_bank_guidance_reaches_ev_table(cfg, wz):
         st = lambda arm: dict(frame=None, rows=[], fullpol=slot, now=400, ledger={}, arm=arm)  # noqa: E731
         own = dict(vid='e', s_m=-1000., lane=0, is_cav=True)
         assert len(ft.propose(st('B'), own, np.random.default_rng(0))) == 1
-        assert ft.propose(st('R'), own, np.random.default_rng(0)) == []
+        assert ft.propose(dict(st('R'), fullpol=dict(slot, templates=dict(B=[], R=[]))), own,
+                          np.random.default_rng(0)) == []
         assert ft.propose(st(None), own, np.random.default_rng(0)) == []
     finally:
         fb.offer_ok, fb.session_ok, ft._lc, ft._view = orig
+
+
+def test_clean5c_unique_templates_dedup():
+    """Same family + template + offer condition verified in several cells -> offered once (cells listed);
+    a differing offer condition stays a separate entry."""
+    cond = dict(trigger='wall', zone_s=[-1700., -300.])
+    tpl = lambda cell: dict(members=['@0', '@1'], source=dict(variant='m', family='m', cell=cell))  # noqa: E731
+    doc = dict(clean5c=dict(templates=[
+        dict(cell='D3200_p20', family='m', template=tpl('D3200_p20'), offer_condition=cond),
+        dict(cell='D3200_p60', family='m', template=tpl('D3200_p60'), offer_condition=cond),
+        dict(cell='D2800_p40', family='m', template=tpl('D2800_p40'), offer_condition=dict(cond, zone_s=[-1, 0]))]))
+    out = c5b.unique_templates(doc)
+    assert [(x['family'], x['cells']) for x in out] == [('m', ['D3200_p20', 'D3200_p60']), ('m', ['D2800_p40'])]
+    assert all('cell' not in x['template']['source'] for x in out)
+    assert doc['clean5c']['templates'][0]['template']['source']['cell'] == 'D3200_p20'     # input untouched

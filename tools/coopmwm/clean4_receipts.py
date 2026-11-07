@@ -15,6 +15,7 @@ produce its own measured receipt in the one-update smoke:
   map     - the process map is the registered wz3to2 descriptor / staged net.
 Nothing here changes training; it reads receipts only.
 """
+import json
 from pathlib import Path
 
 from .exact_grade import _seal, verify_sealed
@@ -217,15 +218,17 @@ def validate_clean5a(cfg, updates, fixes=None):
         t = (lc.get('generator_args') or {}).get('templates')
         receipt = cfg.get('clean5c') or {}
         if (not lc_runtime.enabled() or lc_families.settings(cfg) is None or lc.get('cap') != c5b.LC_CAP
-                or not isinstance(t, dict) or set(t) != {'B', 'R'} or t['R'] != []
+                or not isinstance(t, dict) or set(t) != {'B', 'R'} or t['R'] != t['B']
                 or any(not x.get('offer_condition') or x['family'] not in receipt.get('targets', ()) for x in t['B'])
-                or [dict(cell=x['cell'], family=x['family']) for x in t['B']] != receipt.get('templates')):
-            raise ValueError('clean5c requires the LC runtime, cap 6, B = the bank templates (with offer conditions), R = none')
+                or [dict(family=x['family'], cells=x['cells']) for x in t['B']] != receipt.get('templates')
+                or len({json.dumps([x['family'], x['template'], x['offer_condition']], sort_keys=True)
+                        for x in t['B']}) != len(t['B'])):
+            raise ValueError('clean5c requires the LC runtime, cap 6, B = R = the deduplicated bank templates')
         if (cfg.get('clean5_ev') or {}).get('hold_lane_pin') is not True:
             raise ValueError('clean5c launches with clean5_ev.hold_lane_pin ON')
         if any(v != 'identical' for v in (receipt.get('bank_targets') or {}).values()):
             raise ValueError('clean5c bank targets must all be N2 parity identical')
-        out['lc_families'] = dict(cap=lc['cap'], generator=lc.get('generator'), templates=dict(B=len(t['B']), R=0),
+        out['lc_families'] = dict(cap=lc['cap'], generator=lc.get('generator'), templates=dict(B=len(t['B']), R=len(t['R'])),
                                   hold_lane_pin=True)
         out['clean5c'] = receipt
     if run == 'clean5b':

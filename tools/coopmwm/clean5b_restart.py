@@ -16,6 +16,8 @@ MAIN 2026-11-06 23:40 / 23:48 (REGISTRATION; owner: run clean5b alongside clean5
   at normal priority (WM-D nice-19 shards yield), registered 24 episode + 16 diagnostic workers (the pinned
   clean-run CPU registration), admission load cap raised for the shared host.
 """
+import json
+
 from . import clean4_restart as c4, clean5a_restart as c5
 
 RUN = 'clean5b'
@@ -168,7 +170,8 @@ C_APPROVAL_FILE = 'BUDGET_CLEAN5C.json'
 C_BUDGET_FILE = 'CLEAN5C_BUDGET.json'
 C_NOTE = ('clean5c: B EV-BC targets = fullpol_bank.eligible_families(GUIDANCE_CLEAN5C) - WMVERIFY wmv_mc WM-sourced '
           'multi-CAV plans (N2 parity identical, offer_condition + slots/cooldown enforced at the offer) where verified, '
-          'the labelled F8S rule rows elsewhere; B gets the bank templates (per-arm generator_args), R none; '
+          'the labelled F8S rule rows elsewhere; B AND R get the same deduplicated bank templates (identical action set), '
+          'R has no targets; '
           'otherwise identical to clean5b-F8S.')
 
 
@@ -179,12 +182,29 @@ def keys_c(*, desc, guidance_doc, provenance):
     if clean5c.get('rule') != fullpol_bank.RULE:
         raise ValueError('clean5c needs a fullpol_bank guidance doc (GUIDANCE_CLEAN5C)')
     out = c5.keys(desc=desc, guidance_doc=guidance_doc, provenance=provenance)
-    templates = dict(B=list(clean5c['templates']), R=[])
+    unique = unique_templates(guidance_doc)
+    templates = dict(B=unique, R=json.loads(json.dumps(unique)))   # same action set; arms differ only in targets
     out.update(fullpol_ev.with_fairness(
         fullpol_ev.recommended_5b(provenance=provenance, regime_guidance=guidance_doc, cap=LC_CAP, templates=templates),
         regime_guidance=guidance_doc))
     out['clean5_ev']['parity_families'] = fullpol_bank.eligible_families(guidance_doc)
     out['clean5c'] = parity_receipt(guidance_doc)
+    return out
+
+
+def unique_templates(doc):
+    """Bank templates deduplicated across cells (same family + template + offer condition -> ONE entry, with
+    the cells it was verified in), so no strategy is offered more often because it was verified in several cells."""
+    out, seen = [], {}
+    for t in doc['clean5c']['templates']:
+        tpl = json.loads(json.dumps(t['template']))
+        tpl['source'].pop('cell', None)
+        key = json.dumps([t['family'], tpl, t['offer_condition']], sort_keys=True)
+        if key in seen:
+            seen[key]['cells'].append(t['cell'])
+            continue
+        seen[key] = dict(family=t['family'], cells=[t['cell']], template=tpl, offer_condition=t['offer_condition'])
+        out.append(seen[key])
     return out
 
 
@@ -197,7 +217,7 @@ def parity_receipt(doc):
                 targets=fullpol_bank.eligible_families(doc),
                 bank_targets={f"{r['regime']}/{r['family']}": r.get('n2_parity') for r in rows},
                 rejected={k: v['reason'] for k, v in sorted(c['rejected'].items())},
-                templates=[dict(cell=t['cell'], family=t['family']) for t in c['templates']],
+                templates=[dict(family=t['family'], cells=t['cells']) for t in unique_templates(doc)],
                 fallback_cells=sorted({r['regime'] for r in doc['rows'] if r.get('source') == 'f8s_rule'}))
 
 
