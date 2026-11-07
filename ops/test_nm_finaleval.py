@@ -1201,3 +1201,33 @@ def test_tail_criterion_lower_bound_rule():
     sec = nm.tail_vs_u0(reports, worlds, boot, ['A', 'B', 'U0'])
     assert set(sec['cvar90_delay_s']) == {'A', 'B'} and sec['p90_delay_s']['B']['mean_ci']['diff'] <= 0
     assert nm.tail_criterion(dict(B=reports['B']), worlds, boot, 'A')['status'] == 'unavailable'
+
+
+# ---------------------------------------------------------------- amendment 21 (host move identity)
+
+def test_host_identity_zero_sumo_receipt_then_one_train_world_replay(panel, tmp_path, monkeypatch):
+    import subprocess
+    f = prerun_fixture(tmp_path, panel)
+    assert nm.prerun_envparity(final_root=f['final_root'], runtime=f['runtime'], panel=panel)['verdict'] == 'IDENTICAL'
+    ref = dict(cmd=['<binary:sumo>', '-c', '<file:a.sumocfg>'], files={'a.sumocfg': 'x'}, env={'dt': '1'}, env_class='E',
+               env_classes={'E': 'e'}, sumo_binary='sumo', modules={'tools.coopmwm.nm_eval_runner': 'old', 'wms.x': 'w'})
+    (f['final_root']/'envequiv').mkdir()
+    (f['final_root']/'envequiv'/'start_plant.json').write_text(json.dumps(ref))
+    here = {'v': dict(ref, modules={'tools.coopmwm.nm_eval_runner': 'new', 'wms.x': 'w'})}
+
+    def fake_run(argv, **kw):
+        if 'start-receipt' in argv:
+            Path(argv[argv.index('--out')+1]).write_text(json.dumps(here['v']))
+        return subprocess.CompletedProcess(argv, 0, stdout='SUMO 1.27.1\n')
+    monkeypatch.setattr(subprocess, 'run', fake_run)
+    v = nm.host_identity(final_root=f['final_root'], runtime=f['runtime'], panel=panel, host='cpuW')
+    assert v['verdict'] == 'IDENTICAL' and v['zero_sumo']['overlay_modules_changed'] == ['tools.coopmwm.nm_eval_runner']
+    assert v['replay']['identical'] and v['replay']['compare']['ticks']['train'] == 120
+    rows = [r for r in nm.fe.ledger_rows(f['final_root']) if r['phase'] == nm.HOSTID_PHASE]
+    assert [r['sim_s'] for r in rows] == [420]
+    assert nm.host_identity(final_root=f['final_root'], runtime=f['runtime'], panel=panel, host='cpuW') == v   # sealed
+    here['v'] = dict(ref, modules={'tools.coopmwm.nm_eval_runner': 'old', 'wms.x': 'changed'}, files={'a.sumocfg': 'y'})
+    w = nm.host_identity(final_root=f['final_root'], runtime=f['runtime'], panel=panel, host='cpuX')
+    assert w['verdict'] == 'DIFFERS' and w['zero_sumo']['other_modules_changed'] == ['wms.x']
+    assert w['zero_sumo']['receipt_differences'][0]['key'] == 'files.a.sumocfg' and w['replay']['status'].startswith('skipped')
+    assert len([r for r in nm.fe.ledger_rows(f['final_root']) if r['phase'] == nm.HOSTID_PHASE]) == 1   # no SUMO spent

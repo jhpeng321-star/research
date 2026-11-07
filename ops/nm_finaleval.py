@@ -3301,6 +3301,99 @@ def prerun_envparity(*, final_root, runtime, panel, workers=4):
     return value
 
 
+HOSTID_PHASE = 'v2v_final_hostcheck'
+HOSTID_SEED = ENVPAR_SEEDS[0]
+#: amendment 21: per host move, one U0 plant replay of the TRAIN world envparity job (300 s warm-up + 120 s)
+HOSTID_CAP_S = 4*ENVPAR_STOP_S
+#: the N6 overlay (tmp/n6_deploy_<sha>/SHA256SUMS)
+DEPLOY_FILES = ('ops/clean3_finaleval.py', 'ops/nm_eval_panel_SUPERSEDED.json', 'ops/nm_eval_panel_wz3to2_claim3c_D2400.json',
+                'ops/nm_eval_panel_wz3to2_v2.json', 'ops/nm_finaleval.py', 'tools/coopmwm/imitreplay.py',
+                'tools/coopmwm/nm_eval_runner.py', 'tools/coopmwm/regimeu0.py', 'tools/coopmwm/regimeu0_multicrit.py')
+RECEIPT_KEYS = ('cmd', 'files', 'env', 'env_class', 'env_classes', 'sumo_binary')
+
+
+def host_identity(*, final_root, runtime, panel, host, python=None, runner=RUNNER, sumo=True, reference=None):
+    """Plant identity after a host move (amendment 21). Never reads a held-out outcome.
+    (1) zero SUMO: the plant start receipt on this host (fresh interpreter, G5 runtime, traci.start intercepted) vs
+        the reference plant receipt from the previous host (default <final_root>/envequiv/start_plant.json): command
+        line, scenario files, env kwargs/config, env classes, SUMO binary path must be equal; module sha differences
+        are listed and split into N6 overlay files (expected after an overlay update) and others (must be none);
+        the SUMO binary sha256 and `sumo --version` on this host are recorded.
+    (2) ``sumo``: the U0 plant envparity job on TRAIN world 989598 (420 sim-s, own ledger phase v2v_final_hostcheck,
+        cap 1,680) vs the previous host's plant log of the same job (evaluation/nmenvpar_u0_plant_989598): every
+        vehicle's s/v/lane identical every tick and J within 1e-9 of ENVPARITY_U0. Sealed HOST_IDENTITY_<host>.json."""
+    import re
+    import shutil
+    import subprocess
+    final_root = Path(final_root)
+    if not re.fullmatch(r'[A-Za-z0-9_-]{1,32}', host or ''):
+        raise Blocked('host label: 1..32 of [A-Za-z0-9_-]')
+    target = final_root/f'HOST_IDENTITY_{host}.json'
+    if target.is_file():
+        return verify(read(target), 'receipt_sha256', target.name)
+    ref_path = Path(reference) if reference else final_root/'envequiv'/'start_plant.json'
+    ref = read(ref_path)
+    plant = final_root/PRERUN_PLANT
+    pre = runtime if isinstance(runtime, PrerunRuntime) else PrerunRuntime(runtime, final_root)
+    cfg = pre.config(plant)
+    specs = [sp for sp in _envpar_specs(final_root, cfg, plant, panel)
+             if sp['path'] == 'plant' and sp['world']['seed'] == HOSTID_SEED]
+    work = final_root/f'hostid_{host}'
+    work.mkdir(parents=True, exist_ok=False)
+    (work/'spec.json').write_text(json.dumps(specs[0], sort_keys=True), encoding='utf-8')
+    env = dict(os.environ, COOPMWM_G5_RUNTIME='1')
+    dest = work/'start_plant.json'
+    with (work/'start_plant.log').open('w') as log:
+        subprocess.run([python or sys.executable, '-B', '-m', runner, 'start-receipt', '--path', 'plant', '--spec',
+                        str(work/'spec.json'), '--cfg', str(plant/'CONFIG.json'), '--work', str(work/'work_plant'),
+                        '--out', str(dest)], env=env, check=True, stdout=log, stderr=subprocess.STDOUT, timeout=1800)
+    here = read(dest)
+    relabel = lambda ds: [dict(key=d['key'], previous_host=d['plant'], this_host=d['train']) for d in ds]  # noqa: E731
+    diffs = relabel(_receipt_diff({k: ref.get(k) for k in RECEIPT_KEYS}, {k: here.get(k) for k in RECEIPT_KEYS}))
+    overlay = {Path(f).with_suffix('').as_posix().replace('/', '.') for f in DEPLOY_FILES if f.endswith('.py')}
+    mods = relabel(_receipt_diff(ref['modules'], here['modules']))
+    changed = sorted(d['key'] for d in mods)
+    binary = shutil.which(Path(here['sumo_binary']).name) if not Path(here['sumo_binary']).is_file() else here['sumo_binary']
+    try:
+        version = subprocess.run([binary, '--version'], capture_output=True, text=True, timeout=60).stdout.splitlines()[:1]
+    except (OSError, TypeError, subprocess.SubprocessError):
+        version = None
+    zero = dict(reference=str(ref_path), reference_sha256=file_sha(ref_path), receipt_differences=diffs,
+                module_differences=mods,
+                overlay_modules_changed=[m for m in changed if m in overlay],
+                other_modules_changed=[m for m in changed if m not in overlay],
+                sumo_binary=dict(path=here['sumo_binary'], sha256=file_sha(binary) if binary and Path(binary).is_file()
+                                 else None, version=version),
+                module_paths=here.get('module_paths'))
+    zero['identical'] = not diffs and not zero['other_modules_changed']
+    replay = dict(status='not requested')
+    if sumo and zero['identical']:
+        spec = dict(specs[0], job_id=f'nmhostid_{host}_u0_plant_{HOSTID_SEED}')
+        own_reserve(final_root, [dict(id=spec['job_id'], sim_s=spec['sim_s'])], HOSTID_PHASE, cap=HOSTID_CAP_S,
+                    calls=pre.calls)
+        rec = pre.run([('envparity', spec, str(work/spec['job_id']))], cfg, 1)[0]
+        mine = work/spec['job_id']/VEHICLE_LOG
+        if rec.get('status') != 'traced' or file_sha(mine) != rec['vehicle_log']['sha256']:
+            raise Blocked('host identity replay did not trace or its log differs from its record')
+        old = final_root/'evaluation'/specs[0]['job_id']/VEHICLE_LOG
+        base = verify(read(final_root/'ENVPARITY_U0.json'), 'receipt_sha256', 'ENVPARITY_U0')
+        J_old = base['worlds'][str(HOSTID_SEED)]['J']['plant']
+        cmp_ = envparity_compare(old, mine)
+        replay = dict(job_id=spec['job_id'], sim_s=spec['sim_s'], phase=HOSTID_PHASE, compare=cmp_,
+                      J=dict(previous_host=J_old, this_host=rec['J_veh_s']),
+                      J_within=j_within(J_old, rec['J_veh_s']),
+                      identical=bool(cmp_['identical'] and j_within(J_old, rec['J_veh_s'])))
+    elif sumo:
+        replay = dict(status='skipped: the zero-SUMO receipt differs (no SUMO spent)')
+    verdict = 'IDENTICAL' if zero['identical'] and (not sumo or replay.get('identical')) else 'DIFFERS'
+    value = seal(dict(schema=SCHEMA+'.host_identity', host=host, verdict=verdict, zero_sumo=zero, replay=replay,
+                      rule=('amendment 21: zero-SUMO plant start receipt equal to the previous host (module changes only '
+                            'in N6 overlay files) AND the 420 s TRAIN-world U0 plant replay identical every tick with J '
+                            'within 1e-9; no held-out outcome is read')), 'receipt_sha256')
+    publish(target, value)
+    return value
+
+
 def prerun_compat(final_root, cfg, runtime):
     """The clean run may reuse the pre-run waves only if its plant view and common u0 equal the
     PRERUN_PLAN (zero physics; checked at register and again before the episodes)."""
@@ -3566,7 +3659,7 @@ def main(argv=None):
     p.add_argument('command', choices=('register-panel', 'register-panel-3c', 'verify-panel', 'quote', 'check', 'register',
                                        'bind-arms', 'prerun-register', 'prerun-logcheck', 'prerun-seqcheck',
                                        'prerun-amend-cap', 'authorize-replay', 'prerun-run', 'parity', 'env-equivalence',
-                                       'prerun-envparity', 'envparity-assess',
+                                       'prerun-envparity', 'envparity-assess', 'host-identity',
                                        'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run'))
     p.add_argument('--root', default=ROOT)
     p.add_argument('--final-root', default=FINAL_ROOT)
@@ -3602,6 +3695,9 @@ def main(argv=None):
     p.add_argument('--train-src', help='bind-mappo --arm MAPPO_LANE: the S-MAPPOWZL training source tree (amendment 17)')
     p.add_argument('--train-config', help="bind-mappo (MAPPO_SPEED/MAPPO_LANE): the comparator's own training run "
                                           'config (N7 toml) used by the F11 training-env path')
+    p.add_argument('--host', help='host-identity: label of this host (e.g. cpuW)')
+    p.add_argument('--reference', help='host-identity: previous host plant start receipt (default envequiv/start_plant.json)')
+    p.add_argument('--zero-sumo-only', action='store_true', help='host-identity: skip the 420 s replay')
     p.add_argument('--cap', type=int, help='prerun-amend-cap: the new pre-run sub-cap (MAIN decision)')
     p.add_argument('--chunk', type=int, help='prerun-run: episodes per dispatch (default 2 x workers); STOP_PRERUN '
                                              'in the final root stops after the chunk in flight')
@@ -3676,6 +3772,14 @@ def main(argv=None):
         elif a.command == 'env-equivalence':
             value = env_equivalence(final_root=a.final_root, panel=panel, runner=a.runner)
             result = {k: value[k] for k in ('verdict', 'differences', 'module_differences', 'env_class', 'receipt_sha256')}
+        elif a.command == 'host-identity':
+            value = host_identity(final_root=a.final_root, runtime=Runtime(a.runner), panel=panel, host=a.host,
+                                  runner=a.runner, sumo=not a.zero_sumo_only, reference=a.reference)
+            result = dict(verdict=value['verdict'], receipt_sha256=value['receipt_sha256'],
+                          zero_sumo_identical=value['zero_sumo']['identical'],
+                          other_modules_changed=value['zero_sumo']['other_modules_changed'],
+                          receipt_differences=value['zero_sumo']['receipt_differences'][:20],
+                          replay_identical=value['replay'].get('identical'))
         elif a.command == 'envparity-assess':
             value = envparity_assess_17c(a.final_root)
             result = {k: value[k] for k in ('accepted', 'worlds', 'receipt_sha256')}
