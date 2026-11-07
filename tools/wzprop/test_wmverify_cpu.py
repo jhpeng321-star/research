@@ -626,3 +626,15 @@ def test_n2_parity_hold_strategies():
     b = F.run_episode(VH.make_hook(solo2(), executor='n2'), seed=989950, seconds=SECONDS, record=True)
     assert [x['desired'] for x in a['trace']] == [x['desired'] for x in b['trace']]   # fake plant ignores lcMode
     assert any(x['g5'] for x in a['trace']) and not any(x['g5'] for x in b['trace'])
+
+
+def test_dense_option1_hold_speeds_18_to_22_only():
+    """MAIN 2026-11-08: the calibrated option-1 picks use v_w 19 / 21 (WM-C DENSE 18-22 m/s); anything else stays
+    rejected (15 banned, 16/17/23/24 unregistered)."""
+    base = dict(inc(), name='g_dense')
+    for v in (18.0, 19.0, 20.0, 21.0, 22.0):
+        V.check_spec(dict(base, roles=[dict(SS.INCUMBENT['roles'][0], v_w=v)]))
+    for v in (14.0, 15.0, 16.0, 17.0, 17.5, 22.5, 23.0, 24.0):
+        with pytest.raises(ValueError):
+            V.check_spec(dict(base, roles=[dict(SS.INCUMBENT['roles'][0], v_w=v)]))
+    assert 19.0 not in SS.grids(search=True)['v_w'] and 15.0 not in SS.grids(search=True)['v_w']

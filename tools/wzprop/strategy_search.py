@@ -94,10 +94,18 @@ DEFAULTS = dict(H=300, K_screen=4, K_final=8, n_init=40, generations=3, n_elite=
 ARCHIVES = ('delay', 'bounded', 'fairer', 'fair')
 
 
+# Owner-approved calibrated re-search (REGISTRATION 2026-11-07 21:32, option 1): the dense hold speeds 18-22 m/s of
+# WM-C code_v8 (c4/wz-wm-propose 4d0e048a strategy_search.DENSE['v_w']); only v_w is ported (MAIN 2026-11-08 03:5x).
+DENSE_V_W = (18.0, 19.0, 20.0, 21.0, 22.0)
+
+
 def grids(search=False):
-    """Registered value grids; search=True drops the banned hold speed."""
+    """Registered value grids (+ the dense option-1 hold speeds 18-22 m/s for validation); search=True drops the
+    banned hold speed and samples the registered grid only."""
     P = FL.lcm()
     v = [x for x in P.R_GRID['v_w'] if not (search and float(x) in BANNED_V_W)]
+    if not search:
+        v = sorted(set(float(x) for x in v) | set(DENSE_V_W))
     return dict(v_w=list(v), dmax=list(P.R_GRID['dmax']), hold_s=list(P.R_GRID['hold_s']), onset_s=list(P.OFFSETS))
 
 
