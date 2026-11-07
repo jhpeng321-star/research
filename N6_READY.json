@@ -82,7 +82,6 @@
   "bind-mappo --arm MAPPO_LANE ... --train-config (when delivered)"
  ],
  "open_items": [
-  "IMITREPLAY on cpuW: manifest check + host-identity (amendment 21) before any N6 dispatch",
   "N5 review of 17c-21",
   "IMITREPLAY: restage u12 SRC = d27a8cb2 + overlay c527c774",
   "env-equivalence rerun + envparity-assess, then MAPPO_LANE pre-run",
@@ -172,5 +171,6 @@
   "ops/nm_finaleval_clean5a_registration_amend17b.json": "5aae5e1d4357929e1f1b35a053c34ce62885cb24",
   "ops/nm_finaleval_clean5a_registration_amend17c.json": "210d49c4a2455684a2b17aa45090e1dd6de60a8f"
  },
- "receipt_note": "files_lf_sha256 = sha256 of the LF file content at head; files_git_blob = git blob ids at head"
+ "receipt_note": "files_lf_sha256 = sha256 of the LF file content at head; files_git_blob = git blob ids at head",
+ "host": "cpuW (HOST_IDENTITY_cpuW_r2 862be772 IDENTICAL; bytes 4699/4699 OK; amendments 21/21a)"
 }
