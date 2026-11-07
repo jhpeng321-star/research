@@ -28,7 +28,7 @@ def _proposed(update):
 def validate_levers(cfg, updates, fixes=None):
     from . import composite_health, coordination_opportunities as co, g4_runtime as g4, group_lane
     from . import launch_production as production, launch_training as training, wall_w2, clean4_restart as c4
-    if (cfg.get('newmap') or {}).get('run') in ('clean5a', 'clean5b'):
+    if (cfg.get('newmap') or {}).get('run') in ('clean5a', 'clean5b', 'clean5c'):
         return validate_clean5a(cfg, updates, fixes)
     root = Path(cfg['run_root'])
     arms = {u['arm']: u for u in updates}

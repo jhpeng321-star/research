@@ -387,3 +387,14 @@ def test_chain_variant_c_zero_sumo_dry_run(tmp_path, monkeypatch):
     assert seen['prepare'] == dict(source=str(source), contexts=dict(name='ctx.json'), guidance_doc=dict(name='g.json'),
                                    root=root, quote='CLEAN5C_QUOTE.json', approval='BUDGET_CLEAN5C.json')
     assert seen['link'] == str(control) and 'f'*64 in (root/'AUTHORITY.md').read_text(encoding='utf-8')
+
+
+def test_validate_levers_routes_clean5c_to_validate_clean5a(monkeypatch):
+    """REV-5BF: a clean5c smoke must run the clean5a/5b/5c receipt checks (incl. the clean5c branch)."""
+    import importlib
+    rc4 = importlib.import_module('tools.coopmwm.clean4_receipts')
+    seen = []
+    monkeypatch.setattr(rc4, 'validate_clean5a', lambda cfg, updates, fixes=None: seen.append(cfg['newmap']['run']) or 'ok')
+    for run in ('clean5a', 'clean5b', 'clean5c'):
+        assert rc4.validate_levers(dict(newmap=dict(run=run)), []) == 'ok'
+    assert seen == ['clean5a', 'clean5b', 'clean5c']
