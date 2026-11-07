@@ -627,7 +627,6 @@ def lane_tick(b, executor, trace, *, plant, cf, canonical, recorder=None):
 def _mappo_lane_episode(spec, cfg, work):
     """Amendment 17: the bound S-MAPPOWZL training execution path in a FRESH interpreter rooted at the bound training
     source tree (its own map/env binding, no G5 plant overlay); a binding without it is refused."""
-    import os
     import subprocess
     import sys
     _check_spec(spec)
@@ -638,8 +637,7 @@ def _mappo_lane_episode(spec, cfg, work):
     work.mkdir(parents=True, exist_ok=True)
     (work/'lane_spec.json').write_text(json.dumps(spec, sort_keys=True), encoding='utf-8')
     src = Path(ck['train_src'])
-    env = {k: v for k, v in os.environ.items() if k != 'COOPMWM_G5_RUNTIME'}
-    env['PYTHONPATH'] = os.pathsep.join([str(src), str(src/'src')]+([env['PYTHONPATH']] if env.get('PYTHONPATH') else []))
+    env = train_subprocess_env(src)
     with (work/'lane_episode.log').open('w') as log:
         subprocess.run([sys.executable, '-B', '-m', 'tools.coopmwm.nm_eval_runner', 'lane-episode', '--spec',
                         str(work/'lane_spec.json'), '--work', str(work), '--out', str(work/'lane_record.json')],
@@ -831,7 +829,6 @@ def envparity_train(spec, work):
 def envparity(spec, cfg, work):
     """One addendum parity episode: path 'plant' (the U0 plant episode, role check, stop 420) or 'train' (the
     S-MAPPOWZL training env in a fresh interpreter rooted at the bound training tree)."""
-    import os
     import subprocess
     import sys
     _envpar_world(spec)
@@ -843,13 +840,26 @@ def envparity(spec, cfg, work):
                     safety={k: rec['safety'][k] for k in ('collisions', 'teleports', 'hard_brakes')})
     src = Path(spec['checkpoint']['train_src'])
     (work/'envpar_spec.json').write_text(json.dumps(spec, sort_keys=True), encoding='utf-8')
-    env = {k: v for k, v in os.environ.items() if k != 'COOPMWM_G5_RUNTIME'}
-    env['PYTHONPATH'] = os.pathsep.join([str(src), str(src/'src')]+([env['PYTHONPATH']] if env.get('PYTHONPATH') else []))
+    env = train_subprocess_env(src)
     with (work/'envparity.log').open('w') as log:
         subprocess.run([sys.executable, '-B', '-m', 'tools.coopmwm.nm_eval_runner', 'envparity-train', '--spec',
                         str(work/'envpar_spec.json'), '--work', str(work), '--out', str(work/'envpar_record.json')],
                        cwd=str(src), env=env, check=True, stdout=log, stderr=subprocess.STDOUT, timeout=3600)
     return json.loads((work/'envpar_record.json').read_text(encoding='utf-8'))
+
+
+def train_subprocess_env(src):
+    """Environment of a training-tree subprocess (amendment 17b, MAIN): PYTHONPATH is built from the bound training
+    tree ONLY (<train_src>, <train_src>/src) plus SUMO's own tools dir ($SUMO_HOME/tools, traci) - never the eval
+    tree or any inherited entry, so no mixed import; no G5 plant overlay."""
+    import os
+    src = Path(src)
+    entries = [str(src), str(src/'src')]
+    if os.environ.get('SUMO_HOME'):
+        entries.append(str(Path(os.environ['SUMO_HOME'])/'tools'))
+    env = {k: v for k, v in os.environ.items() if k != 'COOPMWM_G5_RUNTIME'}
+    env['PYTHONPATH'] = os.pathsep.join(entries)
+    return env
 
 
 def lane_train_manifest(root):

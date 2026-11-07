@@ -811,3 +811,17 @@ def test_capture_start_never_starts_sumo_and_normalises_host_paths(tmp_path, mon
     again = runner.start_receipt(dict(captured, cmd=['/usr/bin/sumo', '-c', str(other/'scenario.sumocfg'), '--step-length',
                                                     '0.5']))
     assert again['files'] == receipt['files']                           # host paths normalised
+
+
+def test_training_subprocess_path_is_built_from_the_bound_training_tree_only(tmp_path, monkeypatch):
+    import os
+    shadow, plain, src = tmp_path/'pytools', tmp_path/'sumo_tools', tmp_path/'code'
+    (shadow/'tools').mkdir(parents=True)
+    plain.mkdir()
+    monkeypatch.setenv('PYTHONPATH', os.pathsep.join([str(shadow), str(plain)]))
+    monkeypatch.setenv('COOPMWM_G5_RUNTIME', '1')
+    monkeypatch.setenv('SUMO_HOME', str(tmp_path/'sumo'))
+    env = runner.train_subprocess_env(src)
+    assert env['PYTHONPATH'].split(os.pathsep) == [str(src), str(src/'src'), str(tmp_path/'sumo'/'tools')]
+    assert str(shadow) not in env['PYTHONPATH'] and str(plain) not in env['PYTHONPATH']       # never the eval tree
+    assert 'COOPMWM_G5_RUNTIME' not in env

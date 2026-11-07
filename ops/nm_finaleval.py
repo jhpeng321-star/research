@@ -3096,10 +3096,9 @@ def env_equivalence(*, final_root, panel, python=None, runner=RUNNER):
         if path == 'plant':
             env['COOPMWM_G5_RUNTIME'] = '1'
         else:
-            env.pop('COOPMWM_G5_RUNTIME', None)
+            from tools.coopmwm.nm_eval_runner import train_subprocess_env
             src = Path(spec['checkpoint']['train_src'])
-            cwd = str(src)
-            env['PYTHONPATH'] = os.pathsep.join([str(src), str(src/'src')]+([env['PYTHONPATH']] if env.get('PYTHONPATH') else []))
+            cwd, env = str(src), train_subprocess_env(src)
         dest = work/f'start_{path}.json'
         with (work/f'start_{path}.log').open('w') as log:
             subprocess.run([python, '-B', '-m', runner, 'start-receipt', '--path', path, '--spec', str(work/'spec.json'),
