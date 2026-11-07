@@ -588,19 +588,38 @@ def search_cell(wm, states, cfg=None, log=None):
                 archives={a: listing(a) for a in ARCHIVES})
 
 
-def select_for_sumo(result, k=4, archive='delay', fair=False):
-    """Top strategies of one archive from distinct descriptor cells; comparators and banned strategies excluded."""
+def select_for_sumo(result, k=4, archive='delay', fair=False, exclude=()):
+    """Top strategies of one archive, distinct descriptor cells first (then the next best to fill k); comparators,
+    banned strategies and strategies that never activated on the final states are excluded; 'delay' / 'bounded'
+    picks also need a positive predicted total gain vs u0."""
     archive = 'fair' if fair else archive
-    out, cells = [], set()
+    ok = []
     for r in sorted(result['final'], key=rank_key(archive)):
         if r.get('comparator') or r.get('banned') or banned(r['strategy']) or not admits(archive, r):
             continue
-        if tuple(r['descriptor']) in cells:
+        if r['key'] in set(exclude) or not r.get('feasible') or (archive in ('delay', 'bounded')
+                                                                   and r['gain_vs_base'] <= 0):
             continue
-        out.append(r['strategy'])
-        cells.add(tuple(r['descriptor']))
-        if len(out) == k:
+        ok.append(r)
+    out, cells = [], set()
+    for r in ok:
+        if tuple(r['descriptor']) not in cells and len(out) < k:
+            out.append(r)
+            cells.add(tuple(r['descriptor']))
+    for r in ok:
+        if len(out) >= k:
             break
+        if r not in out:
+            out.append(r)
+    return [r['strategy'] for r in out]
+
+
+def wm_arms(result, k=4):
+    """ARMS.json WM groups: archive (a), then (b) and (c) excluding strategies already picked by earlier groups."""
+    out, seen = {}, set()
+    for group, arch in (('wm', 'delay'), ('wm_bounded', 'bounded'), ('wm_fairer', 'fairer'), ('wm_fair', 'fair')):
+        out[group] = select_for_sumo(result, k, arch, exclude=seen)
+        seen |= {strategy_key(s) for s in out[group]}
     return out
 
 

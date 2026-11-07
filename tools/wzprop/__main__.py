@@ -233,9 +233,8 @@ def strategy(argv):
         log.close()
         res.update(cell=cell, backend=wm.meta, wall_s=round(time.time() - t0, 1), new_sumo_sim_s=0)
         (out / f'STRATEGY_SEARCH_{cell}.json').write_text(json.dumps(res, indent=1, default=str))
-        arms[cell] = dict(wm=SS.select_for_sumo(res, a.k, 'delay'), wm_bounded=SS.select_for_sumo(res, a.k, 'bounded'),
-                          wm_fairer=SS.select_for_sumo(res, a.k, 'fairer'), wm_fair=SS.select_for_sumo(res, a.k, 'fair'),
-                          structured=SS.structured_arm(a.k), random=SS.random_arm(a.k), reference=SS.reference_arm(),
+        arms[cell] = dict(SS.wm_arms(res, a.k), structured=SS.structured_arm(a.k), random=SS.random_arm(a.k),
+                          reference=SS.reference_arm(),
                           incumbent=SS.INCUMBENT, banned_comparator=SS.SOLO2, banned_v_w=list(SS.BANNED_V_W),
                           bound_s=SS.GROUP_BOUND_S,
                           best={k2: (v or {}).get('strategy') for k2, v in res['best'].items()},
