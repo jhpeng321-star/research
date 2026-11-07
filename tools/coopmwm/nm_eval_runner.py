@@ -648,6 +648,9 @@ def _mappo_lane_episode(spec, cfg, work):
 # ---------------------------------------------------------------- amendment 17 addendum: plant vs training env
 
 ENVPAR_STOP = WARMUP_S+120
+#: amendment 17c (MAIN): the training env is reset with the plant's horizon (901 s after the warm-up, as the leverprobe
+#: Backend does); episodes still step only the registered seconds
+TRAIN_ENV_HORIZON_S = 901
 ENV_ATTRS = ('k', 'ttc', 'population', 'controller', 'physics_log', 'cav_vtype', 'extra_sumo_cli', 'v2v',
              'entry_queue_in_state', 'direct_accel_max_mps2', 'check_parity', 'mode', 'seed', 'demand', 'penetration',
              'warmup_s', 'horizon_s')
@@ -777,7 +780,7 @@ def start_receipt_train(spec):
     env = build_env(env_spec)
     captured = capture_start(lambda: env.reset(seed=int(world['seed']), demand_vph=int(world['demand']),
                                                penetration=float(world['penetration']), warmup_s=float(WARMUP_S),
-                                               horizon_s=float(ENVPAR_STOP-WARMUP_S)))
+                                               horizon_s=float(TRAIN_ENV_HORIZON_S)))
     return start_receipt(captured)
 
 
@@ -802,7 +805,7 @@ def envparity_train(spec, work):
     totals = dict(team_delay_vs=0., collisions=0., teleports=0., hard_brake=0.)
     try:
         state = env.reset(seed=int(world['seed']), demand_vph=int(world['demand']), penetration=float(world['penetration']),
-                          warmup_s=float(WARMUP_S), horizon_s=float(ENVPAR_STOP-WARMUP_S))
+                          warmup_s=float(WARMUP_S), horizon_s=float(TRAIN_ENV_HORIZON_S))
         exe.reset()
         for _ in range(ENVPAR_STOP-WARMUP_S):
             vlog.tick(env)
@@ -848,6 +851,16 @@ def envparity(spec, cfg, work):
                         str(work/'envpar_spec.json'), '--work', str(work), '--out', str(work/'envpar_record.json')],
                        cwd=str(src), env=env, check=True, stdout=log, stderr=subprocess.STDOUT, timeout=3600)
     return json.loads((work/'envpar_record.json').read_text(encoding='utf-8'))
+
+
+def shared_safety(result, trace, ttc_events=None):
+    """The plant arms' reducer tools.coopmwm.rerun_tracks_backend.safety; ``ttc_events`` only for CPU fakes."""
+    if ttc_events is None:
+        from .rerun_tracks_backend import safety
+        return safety(result, trace)
+    totals = result['totals']
+    return dict(collisions=int(totals['collisions']), teleports=int(totals['teleports']),
+                hard_brakes=int(totals['hard_brake']), ttc_events=int(ttc_events(trace, WARMUP_S, HORIZON_S)))
 
 
 def train_subprocess_env(src):
@@ -908,7 +921,7 @@ def lane_train_episode(spec, work, *, modules=None):
     lane_ticks = 0
     try:
         state = env.reset(seed=int(world['seed']), demand_vph=int(world['demand']), penetration=float(world['penetration']),
-                          warmup_s=float(WARMUP_S), horizon_s=float(HORIZON_S-WARMUP_S))
+                          warmup_s=float(WARMUP_S), horizon_s=float(TRAIN_ENV_HORIZON_S))
         exe.reset()
         desc = md.current()
         with gzip.open(work/'observable.jsonl.gz', 'xt', encoding='utf-8') as trace:
@@ -936,11 +949,12 @@ def lane_train_episode(spec, work, *, modules=None):
         vehicle_log = vlog.close()
         if hasattr(env, 'close'):
             env.close()
-    safety = dict(collisions=int(totals['collisions']), teleports=int(totals['teleports']),
-                  hard_brakes=int(totals['hard_brake']),
-                  ttc_events=int(ttc_events(work/'observable.jsonl.gz', WARMUP_S, HORIZON_S)))
+    # amendment 17c: the SAME shared reducer as every plant arm (rerun_tracks_backend.safety: collisions/teleports/
+    # braking from the env intervals, TTC events from the observable trace) - never the env ttc flag
+    safety = shared_safety(dict(totals=totals), work/'observable.jsonl.gz', ttc_events if modules is not None else None)
     return _record(spec, totals['team_delay_vs'], safety, executor_sha256_loaded=ck['executor_sha256'],
-                   vehicle_log=vehicle_log, lane_request_ticks=lane_ticks, lane_path='training (lcexec ActorStep)')
+                   vehicle_log=vehicle_log, lane_request_ticks=lane_ticks, lane_path='training (lcexec ActorStep)',
+                   env_horizon_s=TRAIN_ENV_HORIZON_S)
 
 
 def _mappo_lane_run(spec, cfg, work, *, world, stop, role, recorder=None, vehicle_log=True):

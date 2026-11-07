@@ -750,7 +750,7 @@ def test_mappo_lane_runs_the_training_execution_path_and_matches_it(env, tmp_pat
     envs = []
     record = runner.lane_train_episode(spec, tmp_path/'w1', modules=_lane_modules(envs))
     e = envs[0]
-    assert e.reset_kw == dict(seed=989600, demand_vph=3200, penetration=0.6, warmup_s=300., horizon_s=900.) and e.closed
+    assert e.reset_kw == dict(seed=989600, demand_vph=3200, penetration=0.6, warmup_s=300., horizon_s=901.) and e.closed
     assert len(e.steps) == 900 and record['J_veh_s'] == pytest.approx(900*2.5)
     assert record['safety'] == dict(collisions=0, teleports=0, hard_brakes=int(900*.25), ttc_events=3)
     assert record['vehicle_log']['ticks'] == 900 and record['executor_sha256_loaded'] == binding['sha256']
@@ -825,3 +825,20 @@ def test_training_subprocess_path_is_built_from_the_bound_training_tree_only(tmp
     assert env['PYTHONPATH'].split(os.pathsep) == [str(src), str(src/'src'), str(tmp_path/'sumo'/'tools')]
     assert str(shadow) not in env['PYTHONPATH'] and str(plain) not in env['PYTHONPATH']       # never the eval tree
     assert 'COOPMWM_G5_RUNTIME' not in env
+
+
+
+def test_mappo_lane_safety_is_the_plant_arms_shared_reducer(env, tmp_path, monkeypatch):
+    """Amendment 17c: horizon 901 as the plant; TTC/braking/safety from rerun_tracks_backend.safety (not the env flag)."""
+    from tools.coopmwm import rerun_tracks_backend, replay_bank
+    spec, _ = _lane_spec(env, tmp_path)
+    seen = []
+    real = rerun_tracks_backend.safety
+    monkeypatch.setattr(rerun_tracks_backend, 'safety', lambda result, trace: seen.append((result, trace)) or real(result, trace))
+    monkeypatch.setattr(replay_bank, 'ttc_events', lambda trace, a, b: 3.)
+    envs = []
+    runner_modules = list(_lane_modules(envs))
+    record = runner.lane_train_episode(spec, tmp_path/'w', modules=tuple(runner_modules))
+    assert not seen    # CPU fake path; production (modules=None) calls rerun_tracks_backend.safety, checked below
+    record2 = runner.shared_safety(dict(totals=dict(collisions=0, teleports=0, hard_brake=225.)), tmp_path/'w'/'observable.jsonl.gz')
+    assert seen and record2 == record['safety'] and record['env_horizon_s'] == 901 and envs[0].reset_kw['horizon_s'] == 901.

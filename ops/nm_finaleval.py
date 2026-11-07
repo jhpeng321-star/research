@@ -3152,6 +3152,32 @@ def envparity_compare(plant_log, train_log):
                 max_abs=worst, first_divergence=first)
 
 
+#: amendment 17c (MAIN): with exactly identical trajectories, J agrees if |dJ|/J <= 1e-9 (floating-point summation order)
+J_REL_TOL = 1e-9
+
+
+def j_within(a, b):
+    return abs(a-b) <= J_REL_TOL*max(abs(a), abs(b), 1e-12)
+
+
+def envparity_assess_17c(final_root):
+    """Zero physics: the amendment-17c criterion on the sealed ENVPARITY_U0.json (trajectories identical every tick
+    AND |dJ|/J <= 1e-9 on every world). Sealed ENVPARITY_U0_17C.json."""
+    final_root = Path(final_root)
+    target = final_root/'ENVPARITY_U0_17C.json'
+    if target.is_file():
+        return verify(read(target), 'receipt_sha256', target.name)
+    base = verify(read(final_root/'ENVPARITY_U0.json'), 'receipt_sha256', 'ENVPARITY_U0')
+    worlds = {k: dict(trajectories_identical=w['compare']['identical'], pairs=w['compare']['pairs'], J=w['J'],
+                      rel_dJ=abs(w['J']['plant']-w['J']['train'])/max(abs(w['J']['plant']), 1e-12),
+                      J_within=j_within(w['J']['plant'], w['J']['train'])) for k, w in base['worlds'].items()}
+    value = seal(dict(schema=SCHEMA+'.envparity_17c', source_receipt=base['receipt_sha256'], tolerance=J_REL_TOL,
+                      worlds=worlds, accepted=all(w['trajectories_identical'] and w['J_within'] for w in worlds.values()),
+                      rule='amendment 17c: trajectories identical every tick AND |dJ|/J <= 1e-9'), 'receipt_sha256')
+    publish(target, value)
+    return value
+
+
 def prerun_envparity(*, final_root, runtime, panel, workers=4):
     """(b) U0 plant vs S-MAPPOWZL training env: 2 TRAIN worlds x (300+120 s) x 2 paths = 1,680 sim-s in the
     evaluation root ledger (phase v2v_final_envparity), canary first; pass = every vehicle's s/v/lane per second
@@ -3185,9 +3211,12 @@ def prerun_envparity(*, final_root, runtime, panel, workers=4):
         cmp_ = envparity_compare(logs['plant'], logs['train'])
         J = {p: rec[p][0]['J_veh_s'] for p in logs}
         worlds[str(seed)] = dict(compare=cmp_, J=J, J_identical=J['plant'] == J['train'],
+                                 J_within_17c=j_within(J['plant'], J['train']),
                                  safety={p: rec[p][0]['safety'] for p in logs})
     verdict = 'IDENTICAL' if all(w['compare']['identical'] and w['J_identical'] for w in worlds.values()) else 'DIFFERS'
-    value = seal(dict(schema=SCHEMA+'.envparity', verdict=verdict, worlds=worlds, sim_s=len(specs)*ENVPAR_STOP_S,
+    accepted = all(w['compare']['identical'] and w['J_within_17c'] for w in worlds.values())
+    value = seal(dict(schema=SCHEMA+'.envparity', verdict=verdict, accepted_17c=accepted, worlds=worlds,
+                      sim_s=len(specs)*ENVPAR_STOP_S,
                       phase=ENVPAR_PHASE, rule=('N5 REVIEW_N6_5 fix (b): U0 plant vs S-MAPPOWZL training env; pass = every '
                                                 'vehicle s/v/lane per second and J identical; on DIFFERS the MAPPO_LANE '
                                                 'contrasts are labelled "different simulator path" or rerun in the plant')),
@@ -3461,7 +3490,7 @@ def main(argv=None):
     p.add_argument('command', choices=('register-panel', 'register-panel-3c', 'verify-panel', 'quote', 'check', 'register',
                                        'bind-arms', 'prerun-register', 'prerun-logcheck', 'prerun-seqcheck',
                                        'prerun-amend-cap', 'authorize-replay', 'prerun-run', 'parity', 'env-equivalence',
-                                       'prerun-envparity',
+                                       'prerun-envparity', 'envparity-assess',
                                        'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run'))
     p.add_argument('--root', default=ROOT)
     p.add_argument('--final-root', default=FINAL_ROOT)
@@ -3571,6 +3600,9 @@ def main(argv=None):
         elif a.command == 'env-equivalence':
             value = env_equivalence(final_root=a.final_root, panel=panel, runner=a.runner)
             result = {k: value[k] for k in ('verdict', 'differences', 'module_differences', 'env_class', 'receipt_sha256')}
+        elif a.command == 'envparity-assess':
+            value = envparity_assess_17c(a.final_root)
+            result = {k: value[k] for k in ('accepted', 'worlds', 'receipt_sha256')}
         elif a.command == 'prerun-envparity':
             value = prerun_envparity(final_root=a.final_root, runtime=Runtime(a.runner), panel=panel)
             result = {k: value[k] for k in ('verdict', 'worlds', 'receipt_sha256')}
