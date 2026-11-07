@@ -72,8 +72,9 @@ def main(cal_in, cal_wm, out, q=0.8):
                             spearman_lane2_raw=spearman([c['wm_lane2'] for c in check], [c['sumo_lane2'] for c in check]),
                             spearman_lane2_loo_cal=spearman([c['loo_cal_lane2'] for c in check],
                                                             [c['sumo_lane2'] for c in check]),
-                            spearman_delay_vs_inc=spearman([-r['wm_gain_vs_inc'] for r in fitset],
-                                                           [r['sumo_diff_vs_inc'] for r in fitset])),
+                            spearman_delay_vs_inc=spearman(
+                                [-r['wm_gain_vs_inc'] for r in fitset if r['sumo_diff_vs_inc'] is not None],
+                                [r['sumo_diff_vs_inc'] for r in fitset if r['sumo_diff_vs_inc'] is not None])),
                families=check, excluded_lane_change=[r['family'] for r in rows if not r['hold_only']])
     Path(out).write_text(json.dumps(doc, indent=1))
     print(json.dumps(dict(cal={g: {k: round(v, 2) for k, v in c.items()} for g, c in cal.items()},
