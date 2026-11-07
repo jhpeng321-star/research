@@ -97,19 +97,19 @@ def _quote(total=3_850_000):
 
 def test_clean5b_budget_envelope_is_3_9m_and_clean5a_default_unchanged():
     q = _quote()
-    approval = dict(owner_approval='run clean5b alongside clean5a', approved_sim_s=4_060_000,
+    approval = dict(owner_approval='run clean5b alongside clean5a', approved_sim_s=4_360_000,
                     total_cap_sim_s=34_318_000, quote_sha256=q['receipt_sha256'])
     rec = c4.budget(quote_doc=q, approval=approval, prior_runtime_sim_s=0, approved=c5b.APPROVED, rule='x')
-    assert rec['approved_sim_s'] == 4_060_000 and rec['remaining_sim_s'] == 4_060_000 and rec['rule'] == 'x'
+    assert rec["approved_sim_s"] == 4_360_000 and rec["remaining_sim_s"] == 4_360_000 and rec['rule'] == 'x'
     sealed = _seal(dict({k: v for k, v in rec.items() if k != 'receipt_sha256'}, run='clean5b'), 'receipt_sha256')
-    assert c4.checked(dict(clean4_budget=sealed))['approved_sim_s'] == 4_060_000
+    assert c4.checked(dict(clean4_budget=sealed))["approved_sim_s"] == 4_360_000
     stale = _seal(dict({k: v for k, v in rec.items() if k != 'receipt_sha256'}, run='clean5b', approved_sim_s=3_900_000),
                   'receipt_sha256')
     with pytest.raises(ValueError):
         c4.checked(dict(clean4_budget=stale))                 # a superseded clean5b envelope is refused
     with pytest.raises(ValueError):                           # quote above the clean5b envelope
-        c4.budget(quote_doc=_quote(4_100_000), approval=dict(approval, approved_sim_s=4_100_000,
-                  quote_sha256=_quote(4_100_000)['receipt_sha256']), prior_runtime_sim_s=0, approved=c5b.APPROVED)
+        c4.budget(quote_doc=_quote(4_400_000), approval=dict(approval, approved_sim_s=4_400_000,
+                  quote_sha256=_quote(4_400_000)['receipt_sha256']), prior_runtime_sim_s=0, approved=c5b.APPROVED)
     d = c4.budget(quote_doc=q, approval=dict(approval, approved_sim_s=4_000_000), prior_runtime_sim_s=0)
     assert d['approved_sim_s'] == c4.APPROVED and d['rule'].startswith('owner 14:58')    # clean5a default
     assert c5.VARIANT['approval_file'] == 'BUDGET_CLEAN4.json' and c5.VARIANT['keys'] is None
@@ -203,8 +203,12 @@ def test_clean5b_f8_worlds_and_memory_overrides(wz):
         seeds |= {w['seed'] for w in rows}
     assert set(cells) == set(c5.CELL_KEYS) and len(seeds) == 48
     o = c5b.VARIANT_F8['cfg_overrides']
-    assert {k: v for k, v in o.items() if k != 'arm_update_process'} == dict(load_max=120, wave_workers=8, mem_available_min_gb=40)
+    assert {k: v for k, v in o.items() if k != 'arm_update_process'} == dict(
+        load_max=120, wave_workers=8, mem_available_min_gb=40, g4_workers=4, g4_mem_available_min_gb=20)
     assert 41+46+o['wave_workers']*10.6 < 184 and 184-86-46 >= o['mem_available_min_gb']   # MAIN 10:4x arithmetic
+    # F8S (owner 11-08): G4 with both parents resident (B 86 + R 46 + ~9 A/system): idle floor reachable, 4 one-job
+    # workers at the measured G4 peak 2.6 GB stay <= 165 GB, and the G4 floor is below what is reachable.
+    assert 86+46+9+o['g4_workers']*2.6 <= 165 and 184-(86+46+9) >= o['g4_mem_available_min_gb']
     assert c5b.VARIANT_F8['quote_file'] == 'CLEAN5BF8_QUOTE.json' and set(c5b.VARIANT_F8) == set(c5.VARIANT)
 
 

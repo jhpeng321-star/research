@@ -117,6 +117,10 @@ F8_WAVE_WORKERS = 8             # MAIN 07:5x: one wave per arm per update (~60 m
 F8_MEM_MIN_GB = 40              # MAIN 10:4x: 95 deadlocked u1's paired G4 (B parent 86 GB + R 46 GB -> 54 GB available;
                                 # G4 workers wait in runner.admission). With fresh per-update children: collection peak
                                 # 41+46+8 x 5..10.6 = 127..172 GB, G4 ~86+46+small workers ~140..160 GB < 184.
+F8_G4_WORKERS = 4               # owner 2026-11-08 "fix + fresh relaunch" (F8R deadlock 01:04: 8 idle G4 workers kept
+F8_G4_MEM_MIN_GB = 20           # 2.6 GB each, MemAvailable stuck at 36.5 < 40): G4 runs 4 one-job workers (memory
+                                # returned after every job) and admits at 20 GB; collection waves keep 40. Worst cases in
+                                # runs/active/C4-V7FT-20261017/clean5bf8s/MEMORY_PROOF.md.
 F8_NOTE = ('MAIN 06:37 (registered, memory restart option a): 8 episodes per arm per update (B = R, A on the same '
            'worlds), wave_workers 8 + MemAvailable >= 40 GB before every wave (MAIN 10:4x; waits; fresh per-update arm children). u12 (primary) and u24 now hold '
            'HALF the episodes of the original 16-per-update design - disclosed.')
@@ -144,6 +148,7 @@ def _fresh_rule():
 
 VARIANT_F8 = dict(VARIANT_F, quote_file=F8_QUOTE_FILE, worlds=worlds_by_update_8,
                   cfg_overrides=dict(load_max=LOAD_MAX, wave_workers=F8_WAVE_WORKERS, mem_available_min_gb=F8_MEM_MIN_GB,
+                                     g4_workers=F8_G4_WORKERS, g4_mem_available_min_gb=F8_G4_MEM_MIN_GB,
                                      arm_update_process=_fresh_rule()),
                   design=F_DESIGN+' '+F8_NOTE, authority=F_AUTHORITY+'; '+F8_NOTE,
                   newmap_extra=dict(VARIANT_F['newmap_extra'], variant='clean5b-F8', episodes_per_update=F8_EPISODES,

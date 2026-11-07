@@ -54,8 +54,10 @@ def _mem_available_bytes():
     return int(mem['MemAvailable'].split()[0])*1024
 
 
-DISK_WAIT_ALERT_S = 1800      # alert file after 30 min below the floor (liveness checker reports it)
+DISK_WAIT_ALERT_S = 600       # owner 2026-11-08 "never stall again": alert file after 10 min below a floor
 DISK_WAIT_TIMEOUT_S = 6*3600  # then fail loudly instead of waiting forever
+MEM_WAIT_ALERT_S = 600        # same 10-min alert for the memory floor (MEM_FLOOR_WAIT_<pid>.json)
+DEADLOCK_CHECK_S = 1800       # after 30 min of memory wait: fail loudly if the floor is unreachable
 
 
 def _disk_free_bytes(path):
@@ -63,37 +65,117 @@ def _disk_free_bytes(path):
     return shutil.disk_usage(path).free
 
 
+def _mem_total_bytes():
+    mem = dict(line.split(':', 1) for line in Path('/proc/meminfo').read_text().splitlines())
+    return int(mem['MemTotal'].split()[0])*1024
+
+
+def _rss_bytes(pid):
+    try:
+        for line in Path(f'/proc/{pid}/status').read_text().splitlines():
+            if line.startswith('VmRSS:'):
+                return int(line.split()[1])*1024
+    except (OSError, ValueError):
+        pass
+    return 0
+
+
+def _root_processes(root):
+    """PIDs whose command line names the run root (the arm owners, their update children and the monitor)."""
+    out = []
+    needle = str(root).encode()
+    for d in Path('/proc').iterdir():
+        if d.name.isdigit():
+            try:
+                if needle in (d/'cmdline').read_bytes():
+                    out.append(int(d.name))
+            except OSError:
+                pass
+    return out
+
+
+def _resident_bytes(root):
+    """Memory that cannot be released while admission waits: the root's processes (parents) plus every process that
+    is itself waiting on a memory floor (MEM_FLOOR_WAIT_<pid>.json; it keeps what it holds while it sleeps).
+    Running pool workers are excluded: they finish and return their memory."""
+    pids = set(_root_processes(root))
+    for f in Path(root).glob('MEM_FLOOR_WAIT_*.json'):
+        try:
+            pids.add(int(f.stem.rsplit('_', 1)[1]))
+        except ValueError:
+            pass
+    return sum(_rss_bytes(p) for p in pids)
+
+
+def _wait_file(root, kind, value):
+    if root is None:
+        return None
+    path = Path(root)/f'{kind}_FLOOR_WAIT_{os.getpid()}.json'
+    try:
+        path.write_text(json.dumps(dict(value, pid=os.getpid(), unix=time.time())))
+    except OSError:
+        return None
+    return path
+
+
+def _clear(path):
+    if path is not None:
+        try:
+            path.unlink()
+        except OSError:
+            pass
+
+
+def _deadlock_fault(root, value):
+    fault = dict(value, error='admission deadlock', pid=os.getpid(), unix=time.time())
+    if root is not None and not (Path(root)/'FAULT.json').exists():
+        tmp = Path(root)/f'.FAULT.json.admission{os.getpid()}.tmp'
+        tmp.write_text(json.dumps(fault))
+        os.replace(tmp, Path(root)/'FAULT.json')
+    raise RuntimeError('admission deadlock: '+json.dumps(value, sort_keys=True))
+
+
 def admission(b):
     from tools.coopnative.runner import admission as prior
     prior(dict(load_max=b['load_max']))
+    root = b.get('run_root')
     floor = os.environ.get('COOPMWM_DISK_MIN_GB')
     if floor is not None:
         # clean5b-F8P (MAIN 2026-11-07): the disk filled and killed every writer; waves now wait for free space
         floor = int(floor)
         if not 8 <= floor <= 1000:
             raise ValueError('COOPMWM_DISK_MIN_GB must be an int in 8..1000')
-        started, alerted = time.time(), False
-        while _disk_free_bytes(b.get('run_root', '.')) < floor*1024**3:
+        started, alert = time.time(), None
+        while (free := _disk_free_bytes(root or '.')) < floor*1024**3:
             waited = time.time()-started
-            if waited > DISK_WAIT_ALERT_S and not alerted:
-                alert = Path(b.get('run_root', '.'))/f'DISK_FLOOR_WAIT_{os.getpid()}.json'
-                try:
-                    alert.write_text(json.dumps(dict(pid=os.getpid(), floor_gb=floor, waited_s=waited, unix=time.time())))
-                except OSError:
-                    pass
-                alerted = True
+            if waited > DISK_WAIT_ALERT_S and alert is None:
+                alert = _wait_file(root or '.', 'DISK', dict(floor_gb=floor, free_gb=round(free/1024**3, 2),
+                                                             waited_s=round(waited)))
             if waited > DISK_WAIT_TIMEOUT_S:
                 raise RuntimeError(f'disk floor {floor} GB not met for {waited:.0f} s (timeout; free disk space)')
             time.sleep(30)
+        _clear(alert)                        # the wait cleared: the alert goes away (a timeout keeps it)
     need = b.get('mem_available_min_gb')
     if need is not None:
         # clean5b (MAIN 2026-11-07): the r2 B wave (16 workers x ~5-6 GB RSS) died of OOM on a 92 GB host;
         # every wave now waits for MemAvailable >= the registered floor (absent = unchanged 8 GB guard).
         if type(need) is not int or not 8 <= need <= 160:
             raise ValueError('mem_available_min_gb must be an int in 8..160')
-        while _mem_available_bytes() < need*1024**3:
+        started, alert = time.time(), None
+        while (avail := _mem_available_bytes()) < need*1024**3:
+            waited = time.time()-started
+            value = dict(floor_gb=need, mem_available_gb=round(avail/1024**3, 2), waited_s=round(waited))
+            if waited > MEM_WAIT_ALERT_S and alert is None:
+                alert = _wait_file(root, 'MEM', value)
+            if waited > DEADLOCK_CHECK_S and root is not None:
+                total, resident = _mem_total_bytes(), _resident_bytes(root)
+                if need*1024**3 > total-resident:
+                    _clear(alert)
+                    _deadlock_fault(root, dict(value, mem_total_gb=round(total/1024**3, 2),
+                                               resident_gb=round(resident/1024**3, 2)))
             time.sleep(30)
             prior(dict(load_max=b['load_max']))
+        _clear(alert)
 
 
 def wave(root,b,policy,ws,arm,role,ident,phase,deterministic=False,extra=None):

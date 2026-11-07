@@ -10,7 +10,7 @@ waves' pool (accel_runner.wave), never inside the arm owner: the owner already
 imported traffic_shepherd from its PYTHONPATH, so only a fresh worker can bind the
 hash-verified frozen runtime (accel_plant.bind_runtime; clean3 u1 fault 2026-11-06).
 """
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait as wait_futures
 from contextlib import contextmanager
 from copy import deepcopy
 import hashlib
@@ -272,9 +272,21 @@ def paired_practice_count(cfg, update):
     return sum(bool(e.get('practice')) for e in value['episodes'])
 
 
-def worker_pool(cfg):
+def worker_pool(cfg, workers=None):
     """The training waves' worker path (accel_runner.wave): spawn-context processes."""
-    return ProcessPoolExecutor(max_workers=cfg['workers'], mp_context=multiprocessing.get_context('spawn'))
+    return ProcessPoolExecutor(max_workers=workers or cfg['workers'], mp_context=multiprocessing.get_context('spawn'))
+
+
+def g4_settings(cfg):
+    """clean5b-F8S (owner 2026-11-08 "fix + fresh relaunch"; F8R G4 floor deadlock): an optional G4-only pool size and
+    memory floor. With g4_workers set, every G4 job runs in its OWN fresh spawned worker that exits after that one job
+    (maxtasksperchild=1), so no idle worker keeps a finished job's memory. Absent keys = the inherited pool/floor."""
+    n, floor = cfg.get('g4_workers'), cfg.get('g4_mem_available_min_gb')
+    if n is not None and (type(n) is not int or not 1 <= n <= 32):
+        raise ValueError('g4_workers must be an int in 1..32')
+    if floor is not None and (type(floor) is not int or not 8 <= floor <= 160):
+        raise ValueError('g4_mem_available_min_gb must be an int in 8..160')
+    return n, floor
 
 
 def dispatch(cfg, jobs):
@@ -284,6 +296,9 @@ def dispatch(cfg, jobs):
     """
     if not jobs:
         return []
+    n, _ = g4_settings(cfg)
+    if n is not None:
+        return _dispatch_fresh(cfg, jobs, n)
     pool = worker_pool(cfg)
     try:
         return list(pool.map(run_branch, jobs, [cfg]*len(jobs)))
@@ -292,6 +307,42 @@ def dispatch(cfg, jobs):
         raise
     finally:
         pool.shutdown(wait=True)
+
+
+def _dispatch_fresh(cfg, jobs, n):
+    """At most n concurrent jobs, each in a one-job spawned worker (maxtasksperchild=1): the worker exits after its job
+    and returns its memory. Same failure rule as the pool: after a failure no further job starts, the running ones
+    finish, then the first error is raised."""
+    results, running, error = [None]*len(jobs), {}, None
+    pending = iter(enumerate(jobs))
+
+    def start():
+        for i, job in pending:
+            pool = worker_pool(cfg, workers=1)
+            running[pool.submit(run_branch, job, cfg)] = (i, pool)
+            return True
+        return False
+
+    try:
+        while len(running) < n and start():
+            pass
+        while running:
+            done, _ = wait_futures(list(running), return_when=FIRST_COMPLETED)
+            for future in done:
+                i, pool = running.pop(future)
+                pool.shutdown(wait=True)
+                try:
+                    results[i] = future.result()
+                except BaseException as exc:          # noqa: BLE001 - re-raised below after the running jobs end
+                    error = error or exc
+            while error is None and len(running) < n and start():
+                pass
+    finally:
+        for future, (_, pool) in list(running.items()):
+            pool.shutdown(wait=True, cancel_futures=True)
+    if error is not None:
+        raise error
+    return results
 
 
 class Coordinator:
@@ -596,7 +647,9 @@ def run_branch(job, cfg):
     from .replay_bank import ttc_events
     from .runner import admission
     tb._approved(cfg)
-    admission(cfg)
+    _, floor = g4_settings(cfg)
+    # G4-phase floor (F8S): both parents stay resident during G4, so it is lower than the collection-wave floor.
+    admission(cfg if floor is None else dict(cfg, mem_available_min_gb=floor))
     payload = load_capture(job, cfg)
     source = payload['job']
     path = tb._path(Path(cfg['run_root'])/'jobs'/('g4_'+job['job_sha256']))
