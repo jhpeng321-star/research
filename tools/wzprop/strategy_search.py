@@ -90,15 +90,24 @@ SOLO2 = _spec('solo2', 'wall', [_role(2, WALL_H)])            # wall_h_solo2: BA
 COMPARATORS = (INCUMBENT, SOLO2)
 DEFAULTS = dict(H=300, K_screen=4, K_final=8, n_init=40, generations=3, n_elite=6, n_children=24, p_mutate=0.35,
                 n_screen_states=12, finalists=12, lam=0.5, max_roles=6, seed=20261107, fairness=True, fair_tol=0.0,
-                n_final_states=0, bound_s=GROUP_BOUND_S, bound_stat='mean', fairer_total='mean')
-ARCHIVES = ('delay', 'bounded', 'fairer', 'fair')
+                n_final_states=0, bound_s=GROUP_BOUND_S, bound_stat='mean', fairer_total='mean', dense=False,
+                hold_only=False, harm_cal=None)
+ARCHIVES = ('delay', 'bounded', 'fairer', 'fair', 'F', 'D')
+# Owner-approved calibrated re-search (REGISTRATION 2026-11-07 21:32): hold-only, densified around the gentle holds.
+DENSE = dict(v_w=[18.0, 19.0, 20.0, 21.0, 22.0], dmax=[1.0, 1.5], hold_s=[60, 90, 120, 150, 180],
+             onset_s=[0, 10, 20, 30, 40, 60])
 
 
-def grids(search=False):
-    """Registered value grids; search=True drops the banned hold speed."""
+def grids(search=False, dense=False):
+    """Value grids: validation accepts the registered grids plus DENSE; search=True drops the banned speed and
+    samples the registered grid (dense=False) or DENSE (dense=True)."""
     P = FL.lcm()
-    v = [x for x in P.R_GRID['v_w'] if not (search and float(x) in BANNED_V_W)]
-    return dict(v_w=list(v), dmax=list(P.R_GRID['dmax']), hold_s=list(P.R_GRID['hold_s']), onset_s=list(P.OFFSETS))
+    reg = dict(v_w=list(P.R_GRID['v_w']), dmax=list(P.R_GRID['dmax']), hold_s=list(P.R_GRID['hold_s']),
+               onset_s=list(P.OFFSETS))
+    if search:
+        g = DENSE if dense else reg
+        return dict(g, v_w=[x for x in g['v_w'] if float(x) not in BANNED_V_W])
+    return {k: sorted(set(reg[k]) | set(DENSE[k])) for k in reg}
 
 
 def strategy_key(s):
@@ -265,15 +274,15 @@ def descriptor(s):
 
 
 # ------------------------------------------------------------------------------------------ sampling
-def random_strategy(rng, max_roles=6):
-    g = grids(search=True)
+def random_strategy(rng, max_roles=6, dense=False, hold_only=False):
+    g = grids(search=True, dense=dense)
     n = rng.choice([x for x in (1, 1, 2, 2, 3, 3, 4, 5, 6) if x <= max_roles])
     trigger = 'wall' if n <= 3 and rng.random() < 0.4 else 'lanes'
     slots = [(ln, 0) for ln in (0, 1, 2)] if trigger == 'wall' else [(ln, rk) for ln in (0, 1, 2) for rk in (0, 1)]
     picks = rng.sample(slots, min(n, len(slots)))
     roles = []
     for ln, rk in picks:
-        tl = rng.choice([None, None, None] + [x for x in (ln - 1, ln + 1) if 0 <= x <= 2])
+        tl = None if hold_only else rng.choice([None, None, None] + [x for x in (ln - 1, ln + 1) if 0 <= x <= 2])
         roles.append(dict(lane=ln, rank=rk, v_w=rng.choice(g['v_w']), dmax=rng.choice(g['dmax']),
                           hold_s=rng.choice(g['hold_s']), onset_s=rng.choice(g['onset_s']), lc_target=tl))
     s = dict(name='', trigger=trigger, zone=rng.choice(list(ZONES)), spread_m=float(rng.choice([200.0, 300.0])),
@@ -316,15 +325,32 @@ def seeds():
     return [validate(s) for s in out]
 
 
-def mutate(rng, s, p):
-    g = grids(search=True)
+def dense_seeds():
+    """Hold-only neighbourhood of the verified gentle holds: lane-2 solo at 18-22 m/s x 90/120/150 s (with and
+    without gate0), duo12 and lane-2 two-CAV staggers."""
+    out = []
+    for v in (18.0, 19.0, 20.0, 21.0):
+        for h in (90, 120, 150):
+            prog = dict(v_w=v, dmax=1.0, hold_s=h)
+            out.append(_spec(f'solo2_v{v:g}_h{h}', 'wall', [_role(2, prog)]))
+            out.append(_spec(f'solo2_v{v:g}_h{h}_gate0', 'wall', [_role(2, prog)], start_gate='empty100'))
+        out.append(_spec(f'duo12_v{v:g}', 'wall', [_role(1, dict(v_w=v, dmax=1.0, hold_s=120)),
+                                                   _role(2, dict(v_w=v, dmax=1.0, hold_s=120))]))
+        for on in (20, 40):
+            prog = dict(v_w=v, dmax=1.0, hold_s=90)
+            out.append(_spec(f'g2_stagger{on}_v{v:g}', 'lanes', [_role(2, prog), _role(2, prog, rank=1, onset=on)]))
+    return [validate(s) for s in out]
+
+
+def mutate(rng, s, p, dense=False, hold_only=False):
+    g = grids(search=True, dense=dense)
     roles = []
     for r in s['roles']:
         r = dict(r)
         for k in ('v_w', 'dmax', 'hold_s', 'onset_s'):
             if rng.random() < p or (k == 'v_w' and float(r[k]) in BANNED_V_W):
                 r[k] = rng.choice(g[k])
-        if rng.random() < p / 2:
+        if not hold_only and rng.random() < p / 2:
             r['lc_target'] = rng.choice([None] + [x for x in (r['lane'] - 1, r['lane'] + 1) if 0 <= x <= 2])
         roles.append(r)
     t = dict(s, roles=roles)
@@ -438,8 +464,18 @@ class _Boot:
         return float(np.quantile(s[self.pick].sum(1) / self.den, q))
 
 
+def calibrate(group_inc, harm_cal):
+    """Calibrated per-group increase (s/veh): a + b * WM increase + margin per group (harm_cal from
+    ops/wmc_harm_cal.py, fitted on the SUMO-verified S-WMVERIFY families); groups without a map are unchanged."""
+    out = {}
+    for g, v in group_inc.items():
+        c = (harm_cal or {}).get(g)
+        out[g] = round(float(v) if c is None else c['a'] + c['b'] * float(v) + c.get('margin', 0.0), 3)
+    return out
+
+
 def summarize(rows, lam, b=1000, seed=20261107, fair_tol=0.0, bound_s=GROUP_BOUND_S, bound_stat='mean',
-              fairer_total='mean'):
+              fairer_total='mean', harm_cal=None):
     """Per-cell expected gains (vs base, vs incumbent) with one-sided 95% world-cluster bounds; per-group gains and
     the strict no-harm 'fair' flag; per-vehicle group increases (s/veh, positive = worse), CVaR90 / p90 changes, the
     'bounded' flag (every group increase <= bound_s; bound_stat 'mean' = registered point estimate, 'ucb' = 95%
@@ -477,14 +513,23 @@ def summarize(rows, lam, b=1000, seed=20261107, fair_tol=0.0, bound_s=GROUP_BOUN
                    bounded=bool(all(v <= bound_s for v in stat.values())), bound_s=bound_s, bound_stat=bound_stat,
                    fairer_ok=bool(total >= 0.0),
                    fairer_key=[math.floor(im[wg] / FAIRER_BIN_S) * FAIRER_BIN_S, round(cv, 3)])
+        if harm_cal:
+            ci = calibrate(im, harm_cal)
+            cw = max(ci, key=ci.get)
+            out.update(cal_group_inc=ci, cal_worst_group_inc=ci[cw], cal_worst_group=cw,
+                       fair_cal=bool(all(v <= bound_s for v in ci.values())))
     else:
         out.update(bounded=None, fairer_ok=None)
     return out
 
 
 def admits(archive, res):
-    if archive == 'delay':
+    """'F' (owner primary): calibrated every-group increase <= bound AND predicted delay better than the incumbent;
+    'D' (owner fallback, delay priority, NOT fair-allowed): any strategy."""
+    if archive in ('delay', 'D'):
         return True
+    if archive == 'F':
+        return bool(res.get('fair_cal')) and res['gain_vs_inc'] > 0
     return bool(res.get({'bounded': 'bounded', 'fairer': 'fairer_ok', 'fair': 'fair'}[archive]))
 
 
@@ -492,6 +537,8 @@ def rank_key(archive):
     """Sort key (ascending = better first)."""
     if archive == 'fairer':
         return lambda r: (tuple(r['fairer_key']), -r['score'])
+    if archive in ('F', 'D'):
+        return lambda r: -r['score_vs_inc']
     return lambda r: -r['score']
 
 
@@ -503,9 +550,13 @@ def search_cell(wm, states, cfg=None, log=None):
     rng = random.Random(cfg['seed'])
     lam, groups = float(cfg['lam']), bool(cfg['fairness'])
     sk = dict(fair_tol=float(cfg['fair_tol']), bound_s=float(cfg['bound_s']), bound_stat=cfg['bound_stat'],
-              fairer_total=cfg['fairer_total'])
+              fairer_total=cfg['fairer_total'], harm_cal=cfg['harm_cal'])
+    dense, hold_only = bool(cfg['dense']), bool(cfg['hold_only'])
     screen = rng.sample(states, min(len(states), int(cfg['n_screen_states'])))
-    pop = seeds() + [random_strategy(rng, cfg['max_roles']) for _ in range(int(cfg['n_init']))]
+    pop = [s for s in seeds() if not (hold_only and any(r['lc_target'] is not None for r in s['roles']))]
+    if dense:
+        pop += dense_seeds()
+    pop += [random_strategy(rng, cfg['max_roles'], dense, hold_only) for _ in range(int(cfg['n_init']))]
     evaluated, total = {}, 0
     archives = {a: {} for a in ARCHIVES}
     comp_keys = {strategy_key(c) for c in COMPARATORS}
@@ -538,15 +589,16 @@ def search_cell(wm, states, cfg=None, log=None):
         for a in ARCHIVES:
             parents += [r['strategy'] for r in top(archives[a], a, int(cfg['n_elite']) if a != 'fair'
                                                    else int(cfg['n_elite']) // 2)]
-        kids = [mutate(rng, rng.choice(parents), cfg['p_mutate']) for _j in range(int(cfg['n_children']))]
+        kids = [mutate(rng, rng.choice(parents), cfg['p_mutate'], dense, hold_only)
+                for _j in range(int(cfg['n_children']))]
         run(kids, screen, cfg['K_screen'])
     nf = int(cfg['finalists'])
     fin = {}
     for r in sorted(evaluated.values(), key=lambda r: r['score'], reverse=True)[:nf]:
         fin[r['key']] = r
-    for a in ('bounded', 'fairer', 'fair', 'delay'):
+    for a in ('F', 'D', 'bounded', 'fairer', 'fair', 'delay'):
         for r in top(archives[a], a, nf):
-            if len(fin) < 3 * nf:
+            if len(fin) < 4 * nf:
                 fin.setdefault(r['key'], r)
     finals = [dict(f['strategy']) for f in fin.values()]
     for c in COMPARATORS:
@@ -600,7 +652,7 @@ def select_for_sumo(result, k=4, archive='delay', fair=False, exclude=()):
         if r['key'] in set(exclude) or not r.get('feasible') or (archive in ('delay', 'bounded')
                                                                    and r['gain_vs_base'] <= 0):
             continue
-        if archive == 'delay' and r['gain_vs_base_lcb'] <= 0:
+        if (archive == 'delay' and r['gain_vs_base_lcb'] <= 0) or (archive == 'D' and r['gain_vs_inc'] <= 0):
             continue
         ok.append(r)
     out, cells = [], set()
@@ -619,7 +671,8 @@ def select_for_sumo(result, k=4, archive='delay', fair=False, exclude=()):
 def wm_arms(result, k=4):
     """ARMS.json WM groups: archive (a), then (c) and (b) excluding strategies already picked by earlier groups."""
     out, seen = {}, set()
-    for group, arch in (('wm', 'delay'), ('wm_fairer', 'fairer'), ('wm_bounded', 'bounded'), ('wm_fair', 'fair')):
+    for group, arch in (('wm', 'delay'), ('wm_fairer', 'fairer'), ('wm_bounded', 'bounded'), ('wm_fair', 'fair'),
+                        ('wm_F', 'F'), ('wm_D', 'D')):
         out[group] = select_for_sumo(result, k, arch, exclude=seen)
         seen |= {strategy_key(s) for s in out[group]}
     return out

@@ -1097,3 +1097,22 @@ def test_trace_reused_padding_slot_counts_each_vehicle_with_its_entry_lane():
     out = W.groups_from_trace(tr, [dict(id='a')], 1)
     assert out['a']['n_all'][0] == 3 and out['a']['n_lane0'][0] == 1 and out['a']['n_lane2'][0] == 1
     assert out['a']['all'][0] == pytest.approx(2.5) and out['a']['n_cav'][0] == 2
+
+
+def test_calibrated_hold_only_dense_search_archives_F_and_D():
+    from tools.wzprop import strategy_search as SS
+    cal = {'lane2': dict(a=1.0, b=2.0, margin=1.0)}
+    assert SS.calibrate({'lane2': 4.0, 'lane0': -1.0}, cal) == {'lane2': 10.0, 'lane0': -1.0}
+    for s in SS.dense_seeds():
+        assert all(r['lc_target'] is None for r in s['roles']) and not SS.banned(s)
+    res = SS.search_cell(W.StubWM(), _strategy_states(4), dict(
+        n_init=6, generations=1, n_children=6, n_screen_states=3, finalists=4, K_final=2, K_screen=2,
+        dense=True, hold_only=True, harm_cal=cal))
+    assert all(r['lc_target'] is None for f in res['final'] for r in f['strategy']['roles'])
+    for f in res['final']:
+        assert f['fair_cal'] == all(v <= 10.0 for v in f['cal_group_inc'].values())
+    for p in SS.select_for_sumo(res, 4, 'F'):
+        r = next(f for f in res['final'] if f['key'] == SS.strategy_key(p))
+        assert r['fair_cal'] and r['gain_vs_inc'] > 0
+    assert all(next(f for f in res['final'] if f['key'] == SS.strategy_key(p))['gain_vs_inc'] > 0
+               for p in SS.select_for_sumo(res, 4, 'D'))

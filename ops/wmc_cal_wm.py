@@ -15,7 +15,7 @@ def main(cal, states_path, out, ckpt, workers=8, n_states=30, K=6):
     states = [m for m in json.loads(Path(states_path).read_text()) if m.get('valid') and m['cell'] == d['cell']]
     if len(states) > n_states:
         states = random.Random(SS.DEFAULTS['seed'] + 1).sample(states, n_states)
-    kw = dict(checkpoint=ckpt, map_spec='maps/wz3to2/MAP_SPEC.json', device='cuda', max_rows=32)
+    kw = dict(checkpoint=ckpt, map_spec='maps/wz3to2/MAP_SPEC.json', device='cuda', max_rows=16)
     wm = W.ParallelWM('wma:WMA_READY.json', workers, local_kw=dict(kw, device='cpu'), mem_fraction=0.12, **kw)
     try:
         specs = [r['spec'] for r in d['rows']]
