@@ -3,11 +3,11 @@
  "status": "READY (pre-results). Pre-run NATIVE/U0/RULE/RULE_FAIR sealed and unopened (654,600 sim-s charged in the own root). MAPPO_LANE bound (binding 6270abcc); its pre-run waits for the N5 review of amendment 17c and the IMITREPLAY zero-SUMO env-equivalence rerun. PRIMARY = clean5b-F8P u12, SECONDARY = u24; MAPPO_SPEED unavailable; F7 not built.",
  "branch": "c4/nm-finaleval",
  "worktree": "E:/agent-work/c4-nm-finaleval",
- "head": "fe5ab464",
+ "head": "174acb5c",
  "new_sim_s_by_n6": 0,
  "deploy": {
   "dir": "E:/agent-work/c4-nm-finaleval/tmp/n6_deploy_fe5ab464",
-  "src": "u12 SRC = c4/clean5b-relaunch beb3b6a2 + overlay fe5ab464 (amendments 18+19; only ops/nm_finaleval.py differs from 20ba2968)",
+  "src": "u12 SRC = c4/clean5b-g4pool d27a8cb2 + overlay fe5ab464 (amendment 20); run clean5b-F8S root /home/ubuntu/coopmwm20261108_clean5bf8s",
   "operator": "IMITREPLAY (af2a7943)"
  },
  "registrations": {
@@ -34,7 +34,8 @@
   "amend17b": "d48b8c8d6662c6112252df62f80a438ec63e9de1d2682ed5da4bb525414a849f",
   "amend17c": "24d041a8c613580650368383affb0b03590855fd115e3b93c7ddb525fc6958ce",
   "amend18": "18099cc974f8fbc544d0161a0ed546f26d2c61e49c2f5d5f1674afd8eaf007d6",
-  "amend19": "f20ed796a08de76f873da3e267e24ba43938c75f2dcb61d25c73f3d2ae76aa8d"
+  "amend19": "f20ed796a08de76f873da3e267e24ba43938c75f2dcb61d25c73f3d2ae76aa8d",
+  "amend20": "f20ed796a08de76f873da3e267e24ba43938c75f2dcb61d25c73f3d2ae76aa8d"
  },
  "panels": {
   "claim3a_3b": "3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130",
@@ -80,10 +81,10 @@
   "bind-mappo --arm MAPPO_LANE ... --train-config (when delivered)"
  ],
  "open_items": [
-  "N5 review of 17c/18/19",
-  "IMITREPLAY: restage u12 SRC with overlay fe5ab464",
+  "N5 review of 17c/18/19/20",
+  "IMITREPLAY: restage u12 SRC = d27a8cb2 + overlay fe5ab464",
   "IMITREPLAY: env-equivalence rerun + envparity-assess, then MAPPO_LANE pre-run",
-  "u12 PRIMARY run when clean5b-F8R u12 exports (~20:00 Nov 8)",
+  "u12 PRIMARY run when clean5b-F8S u12 exports (~Nov 9 02:00)",
   "training-side test_resume3 Windows path failure: N4 to confirm on Linux"
  ],
  "tests": {
