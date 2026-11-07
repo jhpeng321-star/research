@@ -75,6 +75,14 @@ WARMUP_S = 300
 IDENTITY = ('arm', 'world_id', 'world', 'checkpoint', 'window', 'panel_sha256')
 LOG_LIMIT = 200
 MAPPO_LANE = True
+#: amendment 17 (N7 constraint): MAPPO_LANE runs ONLY on the S-MAPPOWZL training execution path, never a native-lane
+#: or G5-tensor executor: tools.nm_mappo.sanity_eval resolve(config) -> wms build_env (n1_adapter.make_env with
+#: lane_writer='lcexec') -> load_actor(lane_actions=LCEXEC_LANE_ACTIONS) = LaneActor (ActorStep, deterministic)
+LANE_TRAIN_PATH = True
+LCEXEC_LANE_ACTIONS = 'tools.nm_mappo.lane_actions:lcexec'
+LANE_TRAIN_FILES = ('tools/nm_mappo/sanity_eval.py', 'tools/nm_mappo/lane_actions.py', 'tools/nm_mappo/n1_adapter.py',
+                    'src/wms/control/mappo/agent.py', 'src/wms/control/mappo/rollout.py', 'tools/coopmwm/lc_runtime.py',
+                    'tools/coopmwm/map_observations.py', 'tools/coopmwm/replay_bank.py')
 RULE = True
 RULE_STRATEGIES = ('wall_h_solo2', 'wall_g_solo2')
 #: strategy -> the module holding its EXACT rule code (RULE: S-REGIMEU0; RULE_FAIR: S-MULTICRIT byte copy)
@@ -617,7 +625,105 @@ def lane_tick(b, executor, trace, *, plant, cf, canonical, recorder=None):
 
 
 def _mappo_lane_episode(spec, cfg, work):
-    return _mappo_lane_run(spec, cfg, work, world=_check_spec(spec), stop=HORIZON_S, role=ROLE)
+    """Amendment 17: the bound S-MAPPOWZL training execution path in a FRESH interpreter rooted at the bound training
+    source tree (its own map/env binding, no G5 plant overlay); a binding without it is refused."""
+    import os
+    import subprocess
+    import sys
+    _check_spec(spec)
+    ck = spec['checkpoint']
+    if not ck.get('train_config') or not ck.get('train_src'):
+        raise ValueError('MAPPO_LANE runs only on the bound S-MAPPOWZL training path (bind --train-config/--train-src)')
+    work = Path(work)
+    work.mkdir(parents=True, exist_ok=True)
+    (work/'lane_spec.json').write_text(json.dumps(spec, sort_keys=True), encoding='utf-8')
+    src = Path(ck['train_src'])
+    env = {k: v for k, v in os.environ.items() if k != 'COOPMWM_G5_RUNTIME'}
+    env['PYTHONPATH'] = os.pathsep.join([str(src), str(src/'src')]+([env['PYTHONPATH']] if env.get('PYTHONPATH') else []))
+    with (work/'lane_episode.log').open('w') as log:
+        subprocess.run([sys.executable, '-B', '-m', 'tools.coopmwm.nm_eval_runner', 'lane-episode', '--spec',
+                        str(work/'lane_spec.json'), '--work', str(work), '--out', str(work/'lane_record.json')],
+                       cwd=str(src), env=env, check=True, stdout=log, stderr=subprocess.STDOUT, timeout=7200)
+    return json.loads((work/'lane_record.json').read_text(encoding='utf-8'))
+
+
+def lane_train_manifest(root):
+    """sha256 of the training-path files of a source tree (bound at bind-mappo, re-verified per episode)."""
+    return {f: _sha(Path(root)/f) for f in LANE_TRAIN_FILES}
+
+
+def lane_train_episode(spec, work, *, modules=None):
+    """In the fresh interpreter: one held-out MAPPO_LANE episode on the training execution path. Same reducers as
+    every arm: J = sum of the env interval speed deficit + source wait over [300, 1200); hard brakes = braking
+    vehicle-seconds; collisions/teleports abort (as the plant); observable trace = the map CAV-report rows (TTC
+    events); EVALUATION-ONLY ground-truth vehicle log."""
+    import gzip
+    import hashlib as h
+    import numpy as np
+    world, ck = _check_spec(spec), spec['checkpoint']
+    if _sha(ck['executor_path']) != ck['executor_sha256'] or _sha(ck['train_config']) != ck['train_config_sha256']:
+        raise ValueError('MAPPO_LANE executor or training config differs from its binding')
+    manifest = lane_train_manifest(ck['train_src'])
+    if h.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest() != ck['train_src_sha256']:
+        raise ValueError('MAPPO_LANE training source tree differs from its binding')
+    if modules is None:
+        from tools.nm_mappo.sanity_eval import load_actor, load_cfg, resolve
+        from wms.control.mappo.rollout import build_env
+        from tools.coopmwm import map_descriptor as md
+        from tools.coopmwm.map_observations import cav_report_rows_with_length as rows_of
+        from tools.coopmwm.replay_bank import ttc_events
+    else:
+        load_actor, load_cfg, resolve, build_env, md, rows_of, ttc_events = modules
+    raw = load_cfg(ck['train_config'])
+    env_spec, _, _ = resolve(raw, fake=False)
+    if (env_spec.get('env_kwargs') or {}).get('lane_writer') != 'lcexec':
+        raise ValueError('MAPPO_LANE training config does not bind the lcexec lane writer (never a native-lane writer)')
+    lane_actions = (raw.get('policy') or {}).get('lane_actions')
+    if lane_actions != LCEXEC_LANE_ACTIONS:
+        raise ValueError(f'MAPPO_LANE lane_actions must be {LCEXEC_LANE_ACTIONS}')
+    exe, lane_control = load_actor(ck['executor_path'], raw.get('lanes'), lane_actions)
+    if lane_control != 'learned' or type(exe).__name__ != 'LaneActor':
+        raise ValueError('MAPPO_LANE must load as the lane-capable ActorStep (LaneActor), never a native-lane executor')
+    work = Path(work)
+    env = build_env(env_spec)
+    vlog = VehicleLog(work)
+    totals = dict(team_delay_vs=0., road_delay_vs=0., source_wait_vs=0., collisions=0., teleports=0., hard_brake=0.)
+    lane_ticks = 0
+    try:
+        state = env.reset(seed=int(world['seed']), demand_vph=int(world['demand']), penetration=float(world['penetration']),
+                          warmup_s=float(WARMUP_S), horizon_s=float(HORIZON_S-WARMUP_S))
+        exe.reset()
+        desc = md.current()
+        with gzip.open(work/'observable.jsonl.gz', 'xt', encoding='utf-8') as trace:
+            for _ in range(HORIZON_S-WARMUP_S):
+                vlog.tick(env)
+                trace.write(json.dumps(dict(time_s=float(env.now), vehicles=rows_of(env, desc), actions=[]),
+                                       sort_keys=True)+'\n')
+                accel, lanes = exe(state, with_lanes=True)
+                if lanes is not None and bool(np.any(np.asarray(lanes) >= 0)):
+                    lane_ticks += 1
+                state, info = env.step(accel, lanes=lanes)
+                interval = info.get('interval') or {}
+                road, source = interval.get('speed_deficit_vehicle_seconds', 0.), interval.get('source_wait_vehicle_seconds', 0.)
+                totals['road_delay_vs'] += road
+                totals['source_wait_vs'] += source
+                totals['team_delay_vs'] += road+source
+                totals['hard_brake'] += interval.get('braking_vehicle_seconds', 0.)
+                totals['collisions'] += interval.get('collision_involvements', 0)
+                totals['teleports'] += interval.get('starting_teleports', 0)
+                if totals['collisions'] or totals['teleports'] or interval.get('dropped_vehicle_steps', 0):
+                    raise ValueError('early termination/safety/slot anomaly (MAPPO_LANE)')
+                if info.get('done') or info.get('terminated'):
+                    break
+    finally:
+        vehicle_log = vlog.close()
+        if hasattr(env, 'close'):
+            env.close()
+    safety = dict(collisions=int(totals['collisions']), teleports=int(totals['teleports']),
+                  hard_brakes=int(totals['hard_brake']),
+                  ttc_events=int(ttc_events(work/'observable.jsonl.gz', WARMUP_S, HORIZON_S)))
+    return _record(spec, totals['team_delay_vs'], safety, executor_sha256_loaded=ck['executor_sha256'],
+                   vehicle_log=vehicle_log, lane_request_ticks=lane_ticks, lane_path='training (lcexec ActorStep)')
 
 
 def _mappo_lane_run(spec, cfg, work, *, world, stop, role, recorder=None, vehicle_log=True):
@@ -899,7 +1005,8 @@ def setup_check(runtime, checkpoint, sha256, binding=None):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description='N6 eval runner zero-physics checks')
-    p.add_argument('command', choices=('setup-check', 'load-check', 'parity-train'))
+    p.add_argument('command', choices=('setup-check', 'load-check', 'parity-train', 'lane-episode'))
+    p.add_argument('--work', help='lane-episode: the episode work dir')
     p.add_argument('--runtime', default='/home/ubuntu/e3final')
     p.add_argument('--checkpoint')
     p.add_argument('--sha256')
@@ -907,6 +1014,12 @@ def main(argv=None):
     p.add_argument('--spec', help='parity-train: the parity spec JSON (written by the launcher worker)')
     p.add_argument('--out', help='parity-train: output JSON (never overwritten)')
     a = p.parse_args(argv)
+    if a.command == 'lane-episode':
+        spec = json.loads(Path(a.spec).read_text(encoding='utf-8'))
+        value = lane_train_episode(spec, a.work)
+        with open(a.out, 'x', encoding='utf-8') as f:
+            json.dump(value, f, sort_keys=True)
+        return 0
     if a.command == 'parity-train':
         spec = json.loads(Path(a.spec).read_text(encoding='utf-8'))
         _check_parity_spec(spec)

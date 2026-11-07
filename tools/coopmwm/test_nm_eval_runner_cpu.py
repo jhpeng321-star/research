@@ -409,7 +409,11 @@ def test_mappo_lane_episode_steers_cavs_only_through_the_env_lane_path(env, monk
                                                       dict(vid='c2', is_cav=True)])
     monkeypatch.setattr(rerun_tracks_backend, 'safety', lambda result, trace: dict(collisions=0, teleports=0,
                                                                                     hard_brakes=0, ttc_events=0))
-    record = runner.episode(spec, env['cfg'], tmp_path/'work'/spec['job_id'])
+    with pytest.raises(ValueError, match='MAPPO_LANE runs only on the bound S-MAPPOWZL training path'):
+        runner.episode(dict(spec, checkpoint={k: v for k, v in spec['checkpoint'].items() if k != 'train_src'}),
+                       env['cfg'], tmp_path/'work'/'no_train_path')
+    record = runner._mappo_lane_run(spec, env['cfg'], tmp_path/'work'/spec['job_id'], world=spec['world'], stop=1200,
+                                    role='final_test')                   # the legacy lane-on loop (F11 plant path only)
     b = FakeBackend.made[-1]
     assert bound[-1]['role'] == 'final_test' and bound[-1]['checkpoint'] == '/frozen/mappo_d9042cc5.pt'
     assert b.checkpoint == '/frozen/mappo_d9042cc5.pt' and len(b.env.steps) == 900       # 300..1200 s
@@ -682,3 +686,95 @@ def test_rule_fair_runs_the_exact_s_multicrit_rule_on_the_u0_episode(env, monkey
     monkeypatch.setattr(mc, 'WALL_G', dict(mc.WALL_G, v_w=21.0))
     with pytest.raises(ValueError, match='differs from its registration'):
         runner.episode(spec, env['cfg'], env['tmp']/'work'/'tampered')
+
+
+
+# ---------------------------------------------------------------- amendment 17: MAPPO_LANE on the S-MAPPOWZL training path
+
+class LaneActor:
+    """Stand-in with the training class name (sanity_eval.LaneActor = ActorStep, deterministic)."""
+    def __init__(self):
+        self.resets = 0
+
+    def reset(self):
+        self.resets += 1
+
+    def __call__(self, state, with_lanes=True):
+        import numpy as np
+        t = int(state['t'])
+        return np.array([[.3, np.nan, -.2]]), np.array([[1 if t % 3 == 0 else -1, -1, 0]])
+
+
+class LaneEnv(LogEnv):
+    def __init__(self, spec):
+        super().__init__(300)
+        self.spec, self.steps, self.closed = spec, [], False
+
+    def reset(self, **kw):
+        self.reset_kw = kw
+        self.now = 300.
+        return dict(t=300)
+
+    def step(self, accel, lanes=None):
+        import numpy as np
+        self.steps.append((self.now, np.asarray(accel).tolist(), None if lanes is None else np.asarray(lanes).tolist()))
+        self.now += 1
+        return dict(t=int(self.now)), dict(interval=dict(speed_deficit_vehicle_seconds=2., source_wait_vehicle_seconds=.5,
+                                                         braking_vehicle_seconds=.25), done=False)
+
+    def close(self):
+        self.closed = True
+
+
+def _lane_modules(envs, writer='lcexec', actions=runner.LCEXEC_LANE_ACTIONS, actor=LaneActor):
+    md_ = types.SimpleNamespace(current=lambda: 'desc')
+    return (lambda path, lanes, lane_actions: (actor(), 'learned'),
+            lambda path: dict(policy=dict(lane_actions=actions), lanes=dict(dwell_s=5)),
+            lambda raw, fake: (dict(env_name='tools.nm_mappo.n1_adapter.make_env', env_kwargs=dict(lane_writer=writer)),
+                               None, []),
+            lambda spec: envs.append(LaneEnv(spec)) or envs[-1], md_,
+            lambda env, desc: [dict(vid='main.0', s_m=-900., v_mps=20., lane=0, is_cav=True, length_m=5.)],
+            lambda trace, a, b: 3.)
+
+
+def _lane_spec(env, tmp_path):
+    final_root = env['tmp']/'dry'/'final_root'
+    nm.register(root=env['root'], final_root=final_root, runtime=nm.FakeRuntime(), panel=env['panel'])
+    binding = nm.bind_fake_mappo(env['tmp']/'dry', final_root, 'MAPPO_LANE')
+    return nm.episode_specs('MAPPO_LANE', env['panel'], env['cfg'], env['root'], 'mappo_frozen', binding)[0], binding
+
+
+def test_mappo_lane_runs_the_training_execution_path_and_matches_it(env, tmp_path):
+    spec, binding = _lane_spec(env, tmp_path)
+    assert spec['checkpoint']['train_src_sha256'] == binding['train_src_sha256']
+    envs = []
+    record = runner.lane_train_episode(spec, tmp_path/'w1', modules=_lane_modules(envs))
+    e = envs[0]
+    assert e.reset_kw == dict(seed=989600, demand_vph=3200, penetration=0.6, warmup_s=300., horizon_s=900.) and e.closed
+    assert len(e.steps) == 900 and record['J_veh_s'] == pytest.approx(900*2.5)
+    assert record['safety'] == dict(collisions=0, teleports=0, hard_brakes=int(900*.25), ttc_events=3)
+    assert record['vehicle_log']['ticks'] == 900 and record['executor_sha256_loaded'] == binding['sha256']
+    assert record['lane_path'].startswith('training') and record['lane_request_ticks'] == 900
+    assert nm.check_episode(record, spec)['J_veh_s'] == pytest.approx(2250.)
+    # parity with the S-MAPPOWZL training loop (sanity_eval.run_arm: exe(state, with_lanes=True) -> env.step)
+    ref_env, actor = LaneEnv(None), LaneActor()
+    state = ref_env.reset()
+    for _ in range(900):
+        accel, lanes = actor(state, with_lanes=True)
+        state, _ = ref_env.step(accel, lanes=lanes)
+    assert json.dumps(e.steps) == json.dumps(ref_env.steps)           # identical commands and lane targets (NaN-safe)
+
+
+def test_mappo_lane_refuses_any_non_lcexec_execution(env, tmp_path):
+    spec, _ = _lane_spec(env, tmp_path)
+
+    class PolicyExecutor(LaneActor):
+        pass
+    for i, (kw, match) in enumerate(((dict(writer=None), 'lcexec lane writer'),
+                                     (dict(actions='tools.nm_mappo.lane_actions:provisional'), 'lane_actions'),
+                                     (dict(actor=PolicyExecutor), 'never a native-lane executor'))):
+        with pytest.raises(ValueError, match=match):
+            runner.lane_train_episode(spec, tmp_path/f'r{i}', modules=_lane_modules([], **kw))
+    Path(spec['checkpoint']['train_src'], 'tools/coopmwm/lc_runtime.py').write_text('# edited'+chr(10))
+    with pytest.raises(ValueError, match='training source tree differs'):
+        runner.lane_train_episode(spec, tmp_path/'r9', modules=_lane_modules([]))

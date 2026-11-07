@@ -84,7 +84,7 @@ RULE_STRATEGY = 'wall_h_solo2'
 RULE_LABEL = ('RULE: U0 + the S-REGIMEU0 wall_h_solo2 rule (one CAV holds in SUMO lane 2 at 15 m/s for 90 s, '
               'cooldown = hold), always on')
 #: arms independent of the clean5a training: pre-run (sealed) before clean5a launches
-PRERUN_ARMS = ('NATIVE', 'U0', 'RULE', 'RULE_FAIR')
+PRERUN_ARMS = ('NATIVE', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_LANE')     # MAPPO_LANE: amendment 17 (MAIN-approved)
 #: owner fairness decision (REGISTRATION 2026-11-07 04:0x, pre-results): RULE_FAIR = U0 + the EXACT S-MULTICRIT
 #: wall_g_solo2 rule always on (one lane-2 CAV holds 22 m/s for 120 s, dmax 1.0; c4/multicrit blob 4ff09522)
 RULE_FAIR_STRATEGY = 'wall_g_solo2'
@@ -281,7 +281,7 @@ def quote(base='mappo_u0', a_alias=True):
             need[f'u{u:03}_{a}'] = episode
             if a in CLAIM3C_ARMS:
                 need[f'u{u:03}_C3_{a}'] = c3
-    need.update({f'episodes_{a}': episode for a in COMPARATOR_ARMS})
+    need.update({f'episodes_{a}': episode for a in COMPARATOR_ARMS if a not in PRERUN_ARMS})
     need['parity_f11'] = PARITY_SIM_S
     need['decisions'] = 0
     total = sum(need.values())
@@ -791,7 +791,7 @@ def _wave_started(final_root, arm):
 
 
 def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', check=None, dry_run=False,
-               residual_path=None, residual_sha256=None, train_config=None):
+               residual_path=None, residual_sha256=None, train_config=None, train_src=None):
     """Bind a comparator executor (path + sha256, re-verified at every load). Rebinding is allowed
     only before that arm's wave is reserved; earlier bindings are kept."""
     final_root, arm = Path(final_root), _arm(arm)
@@ -821,6 +821,16 @@ def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', 
         meta = dict(check_export(arm, REQUIRED_SHA[arm], meta), dry_run_stand_in=True)
     else:
         meta = check_export(arm, sha256, meta)
+    if arm == 'MAPPO_LANE':          # amendment 17: the S-MAPPOWZL training execution path (tree manifest bound)
+        if train_config is None or train_src is None:
+            raise Blocked('MAPPO_LANE needs --train-config and --train-src (its training source tree)')
+        from tools.coopmwm.nm_eval_runner import LANE_TRAIN_FILES
+        missing = [f for f in LANE_TRAIN_FILES if not (Path(train_src)/f).is_file()]
+        if missing:
+            raise Blocked(f'--train-src lacks the training-path files {missing}')
+        manifest = {f: file_sha(Path(train_src)/f) for f in LANE_TRAIN_FILES}
+        residual = dict(residual or {}, train_src=str(train_src), train_src_files=manifest,
+                        train_src_sha256=hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest())
     if declared_unavailable(final_root, arm) is not None:
         raise Blocked(f'{arm} was declared unavailable; that declaration stands')
     if _wave_started(final_root, arm):
@@ -955,9 +965,13 @@ def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None, update=UPD
     elif arm == 'MAPPO_LANE':
         if binding is None:
             raise Blocked('MAPPO_LANE comparator not bound (bind-mappo --arm MAPPO_LANE)')
+        if not binding.get('train_src') or not binding.get('train_config'):
+            raise Blocked('MAPPO_LANE runs only on its training path: bind with --train-config and --train-src')
         checkpoint = dict(kind='mappo_lane', comparator_kind=binding['kind'], label=binding['label'],
                           executor_path=binding['path'], executor_sha256=binding['sha256'],
-                          binding_sha256=binding['binding_sha256'], binding_path=binding['binding_path'])
+                          binding_sha256=binding['binding_sha256'], binding_path=binding['binding_path'],
+                          train_config=binding['train_config'], train_config_sha256=binding['train_config_sha256'],
+                          train_src=binding['train_src'], train_src_sha256=binding['train_src_sha256'])
     elif arm == 'NATIVE':
         checkpoint = dict(kind='native')
     else:
@@ -1151,7 +1165,7 @@ class Runtime:
         ok = getattr(module, 'MAP', None) == MAP and callable(getattr(module, 'episode', None))
         return dict(ok=ok, native=ok and getattr(module, 'NATIVE', True) is not False,
                     decisions=ok and callable(getattr(module, 'decision_branch', None)),
-                    lane=ok and getattr(module, 'MAPPO_LANE', False) is True,
+                    lane=ok and getattr(module, 'LANE_TRAIN_PATH', False) is True,
                     rule=ok and getattr(module, 'RULE', False) is True and importlib.util.find_spec('tools.coopmwm.regimeu0') is not None,
                     rule_fair=ok and 'wall_g_solo2' in getattr(module, 'RULE_STRATEGIES', ())
                     and importlib.util.find_spec('tools.coopmwm.regimeu0_multicrit') is not None,
@@ -2447,7 +2461,10 @@ def execute(*, root, final_root, runtime, panel, panel_3c=None, allow_missing=()
                 status(current, 'SKIPPED', dict(reason='runner has no lane-capable MAPPO episode'))
                 continue
             parity_note = None
-            if report['runner'].get('parity') and bound.get('train_config'):
+            if bound.get('train_src'):
+                parity_note = ('F11 identical by construction: the comparator runs its own training execution path '
+                               '(amendment 17)')
+            elif report['runner'].get('parity') and bound.get('train_config'):
                 parity, more = run_parity(root=root, final_root=final_root, runtime=runtime, panel=panel, arm=arm,
                                           cfg=cfg, base=base, workers=workers)
                 sources.update(more)
@@ -2466,6 +2483,16 @@ def execute(*, root, final_root, runtime, panel, panel_3c=None, allow_missing=()
                              **({f'PARITY_{arm}': parity_note} if parity_note else {})),
                 comparators=dict(bindings, **{arm: bound}), scope=f'claim3b_{arm}', stem=f'CLAIM3B_{arm}_TABLES{sfx}',
                 **common)
+            if panel_3c is not None and arm in PRERUN_ARMS:      # its sealed 3c pre-run wave (amendment 17)
+                done3, more3 = run_waves([(f'C3_{arm}', 'episode', episode_specs(arm, panel_3c, cfg, root, base, bound,
+                                                                                   bindings.get('U0')))], **kw)
+                sources.update(more3)
+                out[f'claim3b_{arm}_3c'] = tables(
+                    panel=panel_3c, episodes=dict(episodes_3c, **{arm: {r['world_id']: r for r in done3[f'C3_{arm}']}}),
+                    decisions=None, sources={k: v for k, v in sources.items() if k.startswith('C3_')},
+                    missing={a: missing[a] for a in CLAIM3C_ARMS if a in missing},
+                    comparators={a: b for a, b in dict(bindings, **{arm: bound}).items() if a in ('U0', arm)},
+                    scope=f'claim3b_{arm}_3c', stem=f'CLAIM3B_{arm}_3C_TABLES{sfx}', **common)
             status(current, 'PASS', dict(analysis_sha256=out[f'claim3b_{arm}']['analysis_sha256']))
         current = f'DONE{sfx}'
         status(current, 'PASS', {k: v['analysis_sha256'] for k, v in out.items()})
@@ -2487,7 +2514,7 @@ def prerun_cap():
 
 
 PRERUN_CAP_FILE = 'PRERUN_CAP.json'
-PRERUN_CAP_MAX = 660_000                     # MAIN 2026-11-07: 432,000 -> 480,000 -> 530,000 -> 660,000 (RULE_FAIR)
+PRERUN_CAP_MAX = 800_000                     # MAIN 2026-11-07: ... -> 660,000 (RULE_FAIR) -> 800,000 (MAPPO_LANE, amend 17)
 
 
 def _cap_files(final_root):
@@ -2701,7 +2728,7 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
         if pre.physics and not os.environ.get('COOPMWM_MAP_SPEC'):
             raise Blocked('set COOPMWM_MAP_SPEC to the staged wz3to2 MAP_SPEC.json (N1 process map) before physics')
         if not runner['ok'] or ('NATIVE' in arms and not runner['native']) or ('RULE' in arms and not runner.get('rule')) \
-                or ('RULE_FAIR' in arms and not runner.get('rule_fair')):
+                or ('RULE_FAIR' in arms and not runner.get('rule_fair')) or ('MAPPO_LANE' in arms and not runner.get('lane')):
             raise Blocked(f'runner cannot run the pre-run arms: {runner}')
         if pre.physics:
             map_check(bind_map_api(None), panel)
@@ -2713,10 +2740,15 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
             if (u0['residual_path'], u0['residual_sha256']) != (plan['u0']['path'], plan['u0']['sha256']):
                 raise Blocked('the U0 binding residual is not the pre-run u0 copy')
         waves = []
+        bound = {arm: mappo_binding(final_root, arm) for arm in arms if arm in COMPARATOR_ARMS}
         for arm in arms:
-            waves.append((arm, 'episode', episode_specs(arm, panel, cfg, plant, 'mappo_frozen', None, u0)))
+            if arm in bound and bound[arm] is None:
+                raise Blocked(f'{arm} pre-run needs its binding first (bind-mappo --arm {arm})')
         for arm in arms:
-            waves.append((f'C3_{arm}', 'episode', episode_specs(arm, panel_3c, cfg, plant, 'mappo_frozen', None, u0)))
+            waves.append((arm, 'episode', episode_specs(arm, panel, cfg, plant, 'mappo_frozen', bound.get(arm), u0)))
+        for arm in arms:
+            waves.append((f'C3_{arm}', 'episode', episode_specs(arm, panel_3c, cfg, plant, 'mappo_frozen', bound.get(arm),
+                                                                 u0)))
         chunk = int(chunk or 2*workers)
         if chunk < 1:
             raise Blocked('chunk must be >= 1')
@@ -3122,6 +3154,14 @@ def bind_fake_mappo(out, final_root, arm='MAPPO_SPEED', residual=None):
         if not config.exists():
             config.write_text(f'# dry-run stand-in for the {arm} training run config' + chr(10), encoding='utf-8')
         extra = dict(train_config=config)
+        if arm == 'MAPPO_LANE':              # dry run: a stand-in training source tree (amendment 17)
+            from tools.coopmwm.nm_eval_runner import LANE_TRAIN_FILES
+            src = Path(out)/'fake_mappo_lane_train_src'
+            for f in LANE_TRAIN_FILES:
+                (src/f).parent.mkdir(parents=True, exist_ok=True)
+                if not (src/f).exists():
+                    (src/f).write_text('# dry-run stand-in' + chr(10), encoding='utf-8')
+            extra['train_src'] = src
     return bind_mappo(final_root=final_root, path=fake, sha256=file_sha(fake), kind=kind, arm=arm,
                       authority='DRY RUN ONLY - not N7', check=dict(status='dry run'), dry_run=arm in REQUIRED_SHA,
                       **extra)
@@ -3147,13 +3187,14 @@ def dry_run(*, out, panel, base='mappo_frozen', replicated=True, prerun=True):
                         u0_sha256=cfg['common_checkpoint_sha256'], runtime=runtime, panel=panel, panel_3c=panel_3c,
                         authority='DRY RUN ONLY')
         bind_fake_mappo(out, final_root, 'U0', residual=final_root/PRERUN_PLANT/'A_checkpoint_000.pt')
+        bind_fake_mappo(out, final_root, 'MAPPO_LANE')
         logcheck = prerun_logcheck(final_root=final_root, runtime=runtime, panel=panel)
         if logcheck['verdict'] != 'PASS':
             raise Blocked(f'dry-run logcheck failed: {logcheck["arms"]}')
         pre = prerun_execute(final_root=final_root, runtime=runtime, panel=panel, panel_3c=panel_3c, workers=16)
     plan = register(root=root, final_root=final_root, runtime=runtime, panel=panel)
     for arm in BOUND_ARMS:
-        if arm != 'U0' or not prerun:
+        if not prerun or arm not in ('U0', 'MAPPO_LANE'):
             bind_fake_mappo(out, final_root, arm, residual=root/'A_checkpoint_000.pt')
     value = execute(root=root, final_root=final_root, runtime=runtime, panel=panel, panel_3c=panel_3c,
                     poll=0, dry_run=True, update=PRIMARY_UPDATE)
@@ -3277,6 +3318,7 @@ def main(argv=None):
     p.add_argument('--plant-config', help='prerun-register: the clean5a CONFIG.json (plant source for NATIVE/U0/RULE)')
     p.add_argument('--u0-path', help='prerun-register: the common u0 checkpoint (A_checkpoint_000.pt)')
     p.add_argument('--u0-sha256', help='prerun-register: its sha256')
+    p.add_argument('--train-src', help='bind-mappo --arm MAPPO_LANE: the S-MAPPOWZL training source tree (amendment 17)')
     p.add_argument('--train-config', help="bind-mappo (MAPPO_SPEED/MAPPO_LANE): the comparator's own training run "
                                           'config (N7 toml) used by the F11 training-env path')
     p.add_argument('--cap', type=int, help='prerun-amend-cap: the new pre-run sub-cap (MAIN decision)')
@@ -3332,7 +3374,7 @@ def main(argv=None):
                 check_ = dict(status='not run', reason=repr(error))
             result = bind_mappo(final_root=a.final_root, path=a.mappo_path, sha256=a.mappo_sha256, kind=a.mappo_kind,
                                 arm=a.arm, authority=a.authority, check=check_, residual_path=a.residual_path,
-                                residual_sha256=a.residual_sha256, train_config=a.train_config)
+                                residual_sha256=a.residual_sha256, train_config=a.train_config, train_src=a.train_src)
         elif a.command == 'parity':
             report, _ = run_parity(root=a.root, final_root=a.final_root, runtime=runtime_(), panel=panel,
                                    arm=a.arm, workers=min(a.workers, 8))

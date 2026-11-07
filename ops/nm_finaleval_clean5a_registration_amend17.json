@@ -1,0 +1,49 @@
+{
+ "amendment": 17,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend16.json",
+  "registration_sha256": "1daa5fdddef264338d4a06f42f58d71e686cec1d720d5e70337f126965071977"
+ },
+ "authority": [
+  "MAIN 2026-11-07 (approved): MAPPO_LANE as a sealed pre-run arm (same panels and worlds) with runner support for N7's constraint: S-MAPPOWZL it48 (sha d13cd2f7..., BOUND_00048) must run on its training execution path (ActorStep with lane_actions tools.nm_mappo.lane_actions:lcexec and env lane_writer lcexec under the N1 wz3to2 binding, c4/nm-mappo-lane 126b899c), never a native-lane executor; parity tests; within 1,600,000"
+ ],
+ "cap_outlook": {
+  "allocation": 1600000,
+  "items": {
+   "checks": 1800,
+   "mappo_lane_prerun": 144000,
+   "prerun_charged": 654600,
+   "u12_B_R": 288000,
+   "u24_B_R": 288000,
+   "void_roots": 115200
+  },
+  "margin": 0.0727,
+  "total": 1491600
+ },
+ "mappo_lane": {
+  "binding": "bind-mappo --arm MAPPO_LANE --mappo-kind lane_retrained_wz3to2_final --train-config <run toml> --train-src <S-MAPPOWZL code root>; manifest of tools/nm_mappo/sanity_eval.py, tools/nm_mappo/lane_actions.py, tools/nm_mappo/n1_adapter.py, src/wms/control/mappo/agent.py, src/wms/control/mappo/rollout.py, tools/coopmwm/lc_runtime.py, tools/coopmwm/map_observations.py, tools/coopmwm/replay_bank.py",
+  "caveat": "the env path is the training CavSumoEnv (n1_adapter binding), not the leverprobe/G5 plant of the policy arms; same N1 scenarios and reducers",
+  "f11": "identical by construction (the eval runs the training execution path); no F11 physics job",
+  "panels": [
+   "3a panel v2 (96) -> claim 3b",
+   "3c D2400_p60 (24) -> claim3b_MAPPO_LANE_3c table"
+  ],
+  "path": "fresh interpreter rooted at the bound training source tree: tools.nm_mappo.sanity_eval resolve(config) -> wms build_env (n1_adapter.make_env lane_writer=lcexec) -> load_actor(lane_actions=lcexec) = LaneActor (ActorStep, deterministic); reset(seed, demand, penetration, warmup 300, horizon 900)",
+  "reducers": "J = sum of env interval speed deficit + source wait over [300, 1200) (the plant reducer); hard brakes = braking vehicle-seconds; collisions/teleports abort as the plant; TTC events from the map CAV-report observable trace; EVALUATION-ONLY ground-truth vehicle log",
+  "refusals": [
+   "env lane_writer != lcexec",
+   "lane_actions != tools.nm_mappo.lane_actions:lcexec",
+   "loader result not the LaneActor / lane_control != learned",
+   "executor, training config or training-tree manifest differ from the binding"
+  ]
+ },
+ "prerun_cap": {
+  "new": 800000,
+  "outlook": "654,600 + 144,000 = 798,600 <= 800,000"
+ },
+ "registered_utc": "2026-11-07T04:27:18.548548+00:00",
+ "registration_sha256": "e5f1521f50bda5504951e1f97b0d927cacd1171963f6491c4458d24943457057",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: zero-SUMO build; no MAPPO_LANE or clean5 result exists",
+ "tests": "runner: training-path episode == the S-MAPPOWZL training loop (identical env.step commands and lane targets), reducers, refusals of every non-lcexec execution; launcher: pre-run, reuse, 3c table; real 126b899c config resolves to lane_writer lcexec / lane_actions lcexec and ckpt_00048 loads as LaneActor (zero SUMO); existing arms unchanged (all suites pass)"
+}
