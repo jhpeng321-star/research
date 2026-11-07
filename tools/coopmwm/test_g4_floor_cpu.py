@@ -134,6 +134,8 @@ def test_memory_wait_alert_content(tmp_path, monkeypatch, no_prior):
     avail = iter([30*1024**3, 30*1024**3, 50*1024**3])
     snap = []
     monkeypatch.setattr(runner, '_mem_available_bytes', lambda: next(avail))
+    monkeypatch.setattr(runner, '_mem_total_bytes', lambda: 184*1024**3)      # hermetic: no /proc reads
+    monkeypatch.setattr(runner, '_resident_bytes', lambda root: 100*1024**3)  # floor reachable -> no FAULT
     monkeypatch.setattr(runner.time, 'sleep', lambda s: snap.extend(
         json.loads(p.read_text()) for p in tmp_path.glob('MEM_FLOOR_WAIT_*.json')))
     runner.admission(dict(load_max=40, mem_available_min_gb=40, run_root=str(tmp_path)))
