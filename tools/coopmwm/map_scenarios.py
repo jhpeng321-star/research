@@ -34,7 +34,7 @@ from pathlib import Path
 MAP = 'wz3to2'
 DEMANDS = (2400, 2800, 3200)
 SHARES = (0.2, 0.4, 0.6)
-EXTRA_CELLS = ((3200, 0.3),)        # c4/imitreplay only (S-LOWSHARE-U0)
+EXTRA_CELLS = ((3200, 0.3), (3200, 0.1), (3200, 0.05))   # c4/imitreplay only (S-LOWSHARE-U0 p30; S-MULTICRIT-VLOW p10, p05)
 #: MAIN 2026-11-06 (N11 F4): the canonical clean4 cell every agent uses (N3/PLANGEN/N4/N6).
 CANONICAL_CELL_KEY = 'D3200_p60'
 TRAIN_RANGE = (989200, 989599)
