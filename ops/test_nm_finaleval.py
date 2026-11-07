@@ -1135,3 +1135,28 @@ def test_eval_per_vehicle_equals_the_clean5b_f_training_table(tmp_path):
     groups, _ = fvl.groups(theirs, fvl.labels(theirs))
     mine = nm._group_means(ours, nm._labels(ours))
     assert {g: v['mean_s'] for g, v in groups.items()} == pytest.approx({g: mine[g] for g in groups}, abs=1e-3)
+
+
+# ---------------------------------------------------------------- amendment 17 addendum (N5 REVIEW_N6_5)
+
+def test_envparity_u0_plant_vs_training_env(panel, tmp_path, monkeypatch):
+    f = prerun_fixture(tmp_path/'same', panel)
+    value = nm.prerun_envparity(final_root=f['final_root'], runtime=f['runtime'], panel=panel)
+    assert value['verdict'] == 'IDENTICAL' and value['sim_s'] == 1_680 and set(value['worlds']) == {'989598', '989599'}
+    w = value['worlds']['989598']
+    assert w['compare']['identical'] and w['compare']['ticks'] == dict(plant=120, train=120) and w['J_identical']
+    rows = [r for r in nm.fe.ledger_rows(f['final_root']) if r['phase'] == 'v2v_final_envparity']
+    assert len(rows) == 4 and sum(r['sim_s'] for r in rows) == 1_680
+    assert nm.prerun_envparity(final_root=f['final_root'], runtime=nm.FakeRuntime(), panel=panel) == value   # sealed
+    monkeypatch.setattr(nm, 'FAKE_ENVPAR_DIFF', True)
+    g = prerun_fixture(tmp_path/'diff', panel)
+    value = nm.prerun_envparity(final_root=g['final_root'], runtime=g['runtime'], panel=panel)
+    assert value['verdict'] == 'DIFFERS'
+    first = [w['compare']['first_divergence'] for w in value['worlds'].values() if w['compare']['first_divergence']]
+    assert first and first[0]['t'] == 300 and first[0]['differing']      # reported exactly where, never patched
+
+
+def test_receipt_diff_lists_every_differing_key():
+    a = dict(cmd=['<binary:sumo>', '--step-length', '0.5'], files={'x.rou.xml': '1'}, env=dict(k='512', ttc='True'))
+    b = dict(cmd=['<binary:sumo>', '--step-length', '0.5'], files={'x.rou.xml': '2'}, env=dict(k='512', ttc='False'))
+    assert [d['key'] for d in nm._receipt_diff(a, b)] == ['env.ttc', 'files.x.rou.xml']

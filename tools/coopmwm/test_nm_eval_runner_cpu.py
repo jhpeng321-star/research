@@ -778,3 +778,36 @@ def test_mappo_lane_refuses_any_non_lcexec_execution(env, tmp_path):
     Path(spec['checkpoint']['train_src'], 'tools/coopmwm/lc_runtime.py').write_text('# edited'+chr(10))
     with pytest.raises(ValueError, match='training source tree differs'):
         runner.lane_train_episode(spec, tmp_path/'r9', modules=_lane_modules([]))
+
+
+def test_capture_start_never_starts_sumo_and_normalises_host_paths(tmp_path, monkeypatch):
+    scene = tmp_path/'scene'
+    scene.mkdir()
+    net = tmp_path/'net.xml'
+    net.write_text('<net/>')
+    (scene/'scenario.sumocfg').write_text(f'<c><net-file value="{net}"/><route-files value="{scene}/requests.rou.xml"/></c>')
+    (scene/'requests.rou.xml').write_text('<routes/>')
+    started = []
+    fake = types.ModuleType('traci')
+    fake.start = lambda cmd, *a, **k: started.append(cmd)
+    monkeypatch.setitem(sys.modules, 'traci', fake)
+
+    class Env:
+        scenario_root, requests, k, ttc = scene, [], 512, False
+
+        def reset(self):
+            import traci
+            traci.start(['C:/sumo/bin/sumo.exe', '-c', str(scene/'scenario.sumocfg'), '--step-length', '0.5'])
+    captured = runner.capture_start(Env().reset)
+    assert not started                                                  # SUMO never started
+    receipt = runner.start_receipt(captured)
+    assert receipt['cmd'] == ['<binary:sumo.exe>', '-c', '<file:scenario.sumocfg>', '--step-length', '0.5']
+    assert set(receipt['files']) == {'scenario.sumocfg', 'requests.rou.xml'} and receipt['env']['k'] == '512'
+    other = tmp_path/'elsewhere'/'scene'
+    other.parent.mkdir()
+    import shutil
+    shutil.copytree(scene, other)
+    (other/'scenario.sumocfg').write_text(f'<c><net-file value="{net}"/><route-files value="{other}/requests.rou.xml"/></c>')
+    again = runner.start_receipt(dict(captured, cmd=['/usr/bin/sumo', '-c', str(other/'scenario.sumocfg'), '--step-length',
+                                                    '0.5']))
+    assert again['files'] == receipt['files']                           # host paths normalised

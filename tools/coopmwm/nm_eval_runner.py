@@ -647,6 +647,211 @@ def _mappo_lane_episode(spec, cfg, work):
     return json.loads((work/'lane_record.json').read_text(encoding='utf-8'))
 
 
+# ---------------------------------------------------------------- amendment 17 addendum: plant vs training env
+
+ENVPAR_STOP = WARMUP_S+120
+ENV_ATTRS = ('k', 'ttc', 'population', 'controller', 'physics_log', 'cav_vtype', 'extra_sumo_cli', 'v2v',
+             'entry_queue_in_state', 'direct_accel_max_mps2', 'check_parity', 'mode', 'seed', 'demand', 'penetration',
+             'warmup_s', 'horizon_s')
+
+
+class _StartCaptured(Exception):
+    pass
+
+
+def _norm_bytes(data, roots):
+    for root in roots:
+        data = data.replace(str(root).encode(), b'<scene>').replace(str(root).replace('\\', '/').encode(), b'<scene>')
+    import re as _re
+
+    def repl(m):          # any other referenced existing file path -> <file:name:sha16> (host-independent)
+        p = Path(m.group(1).decode(errors='replace'))
+        return (b'"<file:'+p.name.encode()+b':'+_sha(p)[:16].encode()+b'>"') if p.is_absolute() and p.is_file() else m.group(0)
+    return _re.sub(rb'"([^"<>]+?)"', repl, data)
+
+
+def _norm_value(v):
+    p = Path(str(v)) if isinstance(v, (str, Path)) else None
+    if p is not None and p.is_absolute() and p.is_file():
+        return f'<file:{p.name}:{_sha(p)[:16]}>'
+    return v
+
+
+def capture_start(run):
+    """Run ``run()`` until SUMO would start (traci.start), capture the command and the env, never start SUMO."""
+    import inspect
+    import traci
+    captured = {}
+    original = traci.start
+
+    def start(cmd, *a, **k):
+        captured['cmd'] = [str(c) for c in cmd]
+        for info in inspect.stack():
+            env = info.frame.f_locals.get('self')
+            if env is not None and hasattr(env, 'scenario_root') and hasattr(env, 'requests'):
+                captured['env'] = env
+                break
+        raise _StartCaptured()
+    traci.start = start
+    try:
+        run()
+    except _StartCaptured:
+        pass
+    finally:
+        traci.start = original
+    if 'cmd' not in captured:
+        raise ValueError('SUMO start was not reached')
+    return captured
+
+
+def start_receipt(captured):
+    """Zero-SUMO receipt: normalised SUMO command line, scenario file hashes (scene dir normalised), env kwargs/config,
+    and the shas of every loaded traffic_shepherd module and of the env class hierarchy."""
+    import dataclasses
+    import inspect
+    import sys
+    env = captured.get('env')
+    files, cmd, roots = {}, [], set()
+    for c in captured['cmd']:
+        p = Path(c)
+        if p.suffix and p.is_file() and p.suffix in ('.sumocfg', '.xml', '.gz') or p.name.endswith('.rou.xml'):
+            roots.add(p.parent)
+    for c in captured['cmd']:
+        p = Path(c)
+        cmd.append(f'<file:{p.name}>' if p.parent in roots and p.is_file() else
+                   (f'<binary:{p.name}>' if c == captured['cmd'][0] else c))
+    for root in sorted(roots, key=str):
+        for f in sorted(root.iterdir(), key=lambda x: x.name):
+            if f.is_file():
+                files[f.name] = hashlib.sha256(_norm_bytes(f.read_bytes(), roots)).hexdigest()
+    attrs = {k: repr(getattr(env, k, None)) for k in ENV_ATTRS} if env is not None else {}
+    config = getattr(env, 'config', None)
+    if config is not None and dataclasses.is_dataclass(config):
+        attrs['config'] = json.dumps({k: _norm_value(v) for k, v in dataclasses.asdict(config).items()},
+                                     sort_keys=True, default=repr)
+    classes = {}
+    if env is not None:
+        for cls in type(env).__mro__:
+            try:
+                classes[f'{cls.__module__}.{cls.__qualname__}'] = _sha(inspect.getsourcefile(cls))
+            except (TypeError, OSError):
+                continue
+    modules = {}
+    for name, mod in sorted(sys.modules.items()):
+        f = getattr(mod, '__file__', None)
+        if name.startswith('traffic_shepherd') and f and Path(f).is_file():
+            modules[name] = _sha(f)
+    return dict(cmd=cmd, sumo_binary=captured['cmd'][0], files=files, env=attrs, env_classes=classes, modules=modules,
+                env_class=type(env).__qualname__ if env is not None else None)
+
+
+def _envpar_world(spec):
+    from . import map_descriptor as md, map_scenarios as ms
+    world = spec['world']
+    ms.guard(world, PARITY_ROLE)                      # TRAIN worlds only
+    if md.for_world(world).name != MAP:
+        raise ValueError(f'process map is not {MAP}')
+    if spec.get('kind') != 'envparity' or spec['arm'] != 'U0' or int(spec['sim_s']) != ENVPAR_STOP:
+        raise ValueError('envparity spec: U0, TRAIN world, 300 + 120 s')
+    return world
+
+
+def _train_env_parts(ck):
+    import hashlib as h
+    if _sha(ck['train_config']) != ck['train_config_sha256']:
+        raise ValueError('training config differs from its binding')
+    manifest = lane_train_manifest(ck['train_src'])
+    if h.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest() != ck['train_src_sha256']:
+        raise ValueError('training source tree differs from its binding')
+    from tools.nm_mappo.sanity_eval import load_actor, load_cfg, resolve
+    from wms.control.mappo.rollout import build_env
+    raw = load_cfg(ck['train_config'])
+    env_spec, _, _ = resolve(raw, fake=False)
+    return raw, env_spec, load_actor, build_env
+
+
+def start_receipt_train(spec):
+    """Fresh interpreter in the training tree: the S-MAPPOWZL env (lane_writer lcexec) up to SUMO start."""
+    world, ck = _envpar_world(spec), spec['checkpoint']
+    raw, env_spec, _, build_env = _train_env_parts(ck)
+    env = build_env(env_spec)
+    captured = capture_start(lambda: env.reset(seed=int(world['seed']), demand_vph=int(world['demand']),
+                                               penetration=float(world['penetration']), warmup_s=float(WARMUP_S),
+                                               horizon_s=float(ENVPAR_STOP-WARMUP_S)))
+    return start_receipt(captured)
+
+
+def start_receipt_plant(spec, cfg, work):
+    """The plant U0 path (accel_plant + frozen runtime + G5 + N1) up to SUMO start."""
+    world = _envpar_world(spec)
+    captured = capture_start(lambda: _policy_run(spec, cfg, work, world=world, stop=ENVPAR_STOP, role=PARITY_ROLE))
+    return start_receipt(captured)
+
+
+def envparity_train(spec, work):
+    """Fresh interpreter in the training tree: U0 (bound frozen export, deterministic, native lanes) for 120 s in the
+    S-MAPPOWZL training env after the 300 s warm-up; ground-truth vehicle log + the plant reducers."""
+    import numpy as np
+    world, ck = _envpar_world(spec), spec['checkpoint']
+    if _sha(ck['executor_path']) != ck['executor_sha256']:
+        raise ValueError('U0 executor differs from its binding')
+    raw, env_spec, load_actor, build_env = _train_env_parts(ck)
+    exe, lane_control = load_actor(ck['executor_path'], raw.get('lanes'), None)
+    env = build_env(env_spec)
+    vlog = VehicleLog(work)
+    totals = dict(team_delay_vs=0., collisions=0., teleports=0., hard_brake=0.)
+    try:
+        state = env.reset(seed=int(world['seed']), demand_vph=int(world['demand']), penetration=float(world['penetration']),
+                          warmup_s=float(WARMUP_S), horizon_s=float(ENVPAR_STOP-WARMUP_S))
+        exe.reset()
+        for _ in range(ENVPAR_STOP-WARMUP_S):
+            vlog.tick(env)
+            accel, lanes = exe(state, with_lanes=True)
+            if lanes is not None and bool(np.any(np.asarray(lanes) >= 0)):
+                raise ValueError('U0 must not issue lane commands (native lanes)')
+            state, info = env.step(accel, lanes=None)
+            interval = info.get('interval') or {}
+            totals['team_delay_vs'] += interval.get('speed_deficit_vehicle_seconds', 0.)+interval.get(
+                'source_wait_vehicle_seconds', 0.)
+            totals['hard_brake'] += interval.get('braking_vehicle_seconds', 0.)
+            totals['collisions'] += interval.get('collision_involvements', 0)
+            totals['teleports'] += interval.get('starting_teleports', 0)
+            if info.get('done') or info.get('terminated'):
+                break
+    finally:
+        vehicle_log = vlog.close()
+        if hasattr(env, 'close'):
+            env.close()
+    return dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='traced', kind='envparity', path='train',
+                J_veh_s=float(totals['team_delay_vs']), lane_control=lane_control,
+                safety=dict(collisions=int(totals['collisions']), teleports=int(totals['teleports']),
+                            hard_brakes=int(totals['hard_brake'])), vehicle_log=vehicle_log)
+
+
+def envparity(spec, cfg, work):
+    """One addendum parity episode: path 'plant' (the U0 plant episode, role check, stop 420) or 'train' (the
+    S-MAPPOWZL training env in a fresh interpreter rooted at the bound training tree)."""
+    import os
+    import subprocess
+    import sys
+    _envpar_world(spec)
+    work = Path(work)
+    work.mkdir(parents=True, exist_ok=True)
+    if spec['path'] == 'plant':
+        rec = _policy_run(spec, cfg, work, world=spec['world'], stop=ENVPAR_STOP, role=PARITY_ROLE)
+        return dict(rec, status='traced', kind='envparity', path='plant',
+                    safety={k: rec['safety'][k] for k in ('collisions', 'teleports', 'hard_brakes')})
+    src = Path(spec['checkpoint']['train_src'])
+    (work/'envpar_spec.json').write_text(json.dumps(spec, sort_keys=True), encoding='utf-8')
+    env = {k: v for k, v in os.environ.items() if k != 'COOPMWM_G5_RUNTIME'}
+    env['PYTHONPATH'] = os.pathsep.join([str(src), str(src/'src')]+([env['PYTHONPATH']] if env.get('PYTHONPATH') else []))
+    with (work/'envparity.log').open('w') as log:
+        subprocess.run([sys.executable, '-B', '-m', 'tools.coopmwm.nm_eval_runner', 'envparity-train', '--spec',
+                        str(work/'envpar_spec.json'), '--work', str(work), '--out', str(work/'envpar_record.json')],
+                       cwd=str(src), env=env, check=True, stdout=log, stderr=subprocess.STDOUT, timeout=3600)
+    return json.loads((work/'envpar_record.json').read_text(encoding='utf-8'))
+
+
 def lane_train_manifest(root):
     """sha256 of the training-path files of a source tree (bound at bind-mappo, re-verified per episode)."""
     return {f: _sha(Path(root)/f) for f in LANE_TRAIN_FILES}
@@ -1005,7 +1210,10 @@ def setup_check(runtime, checkpoint, sha256, binding=None):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description='N6 eval runner zero-physics checks')
-    p.add_argument('command', choices=('setup-check', 'load-check', 'parity-train', 'lane-episode'))
+    p.add_argument('command', choices=('setup-check', 'load-check', 'parity-train', 'lane-episode', 'envparity-train',
+                                       'start-receipt'))
+    p.add_argument('--path', choices=('plant', 'train'), help='start-receipt: which path')
+    p.add_argument('--cfg', help='start-receipt --path plant: the plant CONFIG.json')
     p.add_argument('--work', help='lane-episode: the episode work dir')
     p.add_argument('--runtime', default='/home/ubuntu/e3final')
     p.add_argument('--checkpoint')
@@ -1014,6 +1222,18 @@ def main(argv=None):
     p.add_argument('--spec', help='parity-train: the parity spec JSON (written by the launcher worker)')
     p.add_argument('--out', help='parity-train: output JSON (never overwritten)')
     a = p.parse_args(argv)
+    if a.command in ('envparity-train', 'start-receipt'):
+        spec = json.loads(Path(a.spec).read_text(encoding='utf-8'))
+        if a.command == 'envparity-train':
+            value = envparity_train(spec, a.work)
+        elif a.path == 'train':
+            value = start_receipt_train(spec)
+        else:
+            cfg = json.loads(Path(a.cfg).read_text(encoding='utf-8'))
+            value = start_receipt_plant(spec, cfg, a.work)
+        with open(a.out, 'x', encoding='utf-8') as f:
+            json.dump(value, f, sort_keys=True)
+        return 0
     if a.command == 'lane-episode':
         spec = json.loads(Path(a.spec).read_text(encoding='utf-8'))
         value = lane_train_episode(spec, a.work)

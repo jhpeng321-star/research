@@ -203,7 +203,7 @@ NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'
 ROOT = '/home/ubuntu/coopmwm_clean5a_wz3to2'            # cpuZ; pass --root explicitly
 FINAL_ROOT = '/home/ubuntu/coopmwm_clean5a_wz3to2_finaleval'
 MAX_WORKERS = 46                                          # cpuZ 48 cores (MAIN: run right after u24)
-PREFIXES = ('nmfinal_', 'nmdec_', 'nmparity_', 'nm3c_', 'nmlogcheck_')
+PREFIXES = ('nmfinal_', 'nmdec_', 'nmparity_', 'nm3c_', 'nmlogcheck_', 'nmenvpar_')
 RUNNER = 'tools.coopmwm.nm_eval_runner'
 RUNNER_CONTRACT = dict(
     module=RUNNER, MAP=MAP,
@@ -1137,8 +1137,8 @@ def process_groups(items):
 
 def _worker(kind, spec, cfg, work, runner):
     module = importlib.import_module(runner)
-    return getattr(module, dict(episode='episode', branch='decision_branch', parity='parity',
-                                logcheck='logcheck')[kind])(spec, cfg, work)
+    return getattr(module, dict(episode='episode', branch='decision_branch', parity='parity', logcheck='logcheck',
+                                envparity='envparity')[kind])(spec, cfg, work)
 
 
 class Runtime:
@@ -1328,6 +1328,17 @@ def fake_logcheck(spec, work):
                 work=str(work), pid=1000+len(spec['arm']))
 
 
+def fake_envparity(spec, work):
+    """Dry run: both paths write the same fake log (IDENTICAL) unless the world seed is odd and FAKE_ENVPAR_DIFF."""
+    vlog = _fake_vehicle_log(Path(work)/VEHICLE_LOG, spec['world']['seed'], 'U0' if spec['path'] == 'plant' or not
+                             FAKE_ENVPAR_DIFF else 'train', t1=spec['sim_s'])
+    return dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='traced', kind='envparity', path=spec['path'],
+                J_veh_s=1000.0, safety=dict(collisions=0, teleports=0, hard_brakes=0), vehicle_log=vlog)
+
+
+FAKE_ENVPAR_DIFF = False
+
+
 def fake_parity(spec):
     """Dry run: both paths trace the same deterministic fake CAV states and commands (IDENTICAL)."""
     seed = spec['world']['seed']
@@ -1380,6 +1391,7 @@ class FakeRuntime:
     def run(self, items, cfg, workers):
         self.calls.append(('run', len(items), workers))
         return [fake_logcheck(spec, work) if kind == 'logcheck' else fake_episode(spec, work) if kind == 'episode' else
+                fake_envparity(spec, work) if kind == 'envparity' else
                 dict(branch=fake_branch, parity=fake_parity)[kind](spec) for kind, spec, work in items]
 
 
@@ -3021,6 +3033,169 @@ def prerun_seqcheck(*, final_root, runtime, panel):
     return value
 
 
+# ---------------------------------------------------------------- amendment 17 addendum (N5 REVIEW_N6_5)
+
+ENVPAR_PHASE = 'v2v_final_envparity'
+ENVPAR_SEEDS = PARITY_WORLDS                     # 2 TRAIN worlds (D3200_p60)
+ENVPAR_STOP_S = 420
+
+
+def _envpar_specs(final_root, cfg, plant, panel):
+    from tools.coopmwm import map_scenarios as ms
+    plan = prerun_plan(final_root)
+    u0, lane = mappo_binding(final_root, 'U0'), mappo_binding(final_root, 'MAPPO_LANE')
+    if u0 is None or lane is None or not lane.get('train_src'):
+        raise Blocked('the addendum needs the U0 binding and the MAPPO_LANE training-path binding')
+    if (u0['residual_path'], u0['residual_sha256']) != (plan['u0']['path'], plan['u0']['sha256']):
+        raise Blocked('the U0 binding residual is not the pre-run u0 copy')
+    ck = dict(episode_specs('U0', panel, cfg, plant, 'mappo_frozen', None, u0)[0]['checkpoint'],
+              train_config=lane['train_config'], train_config_sha256=lane['train_config_sha256'],
+              train_src=lane['train_src'], train_src_sha256=lane['train_src_sha256'])
+    out = []
+    for seed in ENVPAR_SEEDS:
+        world = ms.world(seed, PARITY_CELL['demand'], PARITY_CELL['penetration'])
+        for path in ('plant', 'train'):
+            out.append(dict(job_id=f'nmenvpar_u0_{path}_{seed}', kind='envparity', arm='U0', path=path,
+                            world_id=f'{MAP}_train_{seed}', world=deepcopy(world), checkpoint=deepcopy(ck),
+                            sim_s=ENVPAR_STOP_S, window=dict(start_s=WARMUP_S, end_s=ENVPAR_STOP_S),
+                            panel_sha256='envparity (TRAIN worlds)', noise_seed=seed, deterministic=True, capture=None))
+    return out
+
+
+def _receipt_diff(a, b, prefix=''):
+    out = []
+    for k in sorted(set(a) | set(b)):
+        x, y = a.get(k), b.get(k)
+        if isinstance(x, dict) and isinstance(y, dict):
+            out += _receipt_diff(x, y, f'{prefix}{k}.')
+        elif x != y:
+            out.append(dict(key=f'{prefix}{k}', plant=x, train=y))
+    return out
+
+
+def env_equivalence(*, final_root, panel, python=None, runner=RUNNER):
+    """(a) Zero-SUMO: both paths run up to the SUMO start on TRAIN world 989598 (fresh interpreters: the plant from
+    this source tree with the G5 runtime, the training env from the bound S-MAPPOWZL tree); compare the normalised
+    command line, scenario files, env kwargs/config and module shas. Sealed ENV_EQUIV.json; never starts SUMO."""
+    import subprocess
+    final_root = Path(final_root)
+    target = final_root/'ENV_EQUIV.json'
+    if target.is_file():
+        return verify(read(target), 'receipt_sha256', 'ENV_EQUIV')
+    plant = final_root/PRERUN_PLANT
+    cfg = read(plant/'CONFIG.json')
+    spec = _envpar_specs(final_root, cfg, plant, panel)[0]
+    work = final_root/'envequiv'
+    work.mkdir(parents=True, exist_ok=True)
+    (work/'spec.json').write_text(json.dumps(spec, sort_keys=True), encoding='utf-8')
+    python = python or sys.executable
+    out = {}
+    for path in ('plant', 'train'):
+        env = dict(os.environ)
+        cwd = None
+        if path == 'plant':
+            env['COOPMWM_G5_RUNTIME'] = '1'
+        else:
+            env.pop('COOPMWM_G5_RUNTIME', None)
+            src = Path(spec['checkpoint']['train_src'])
+            cwd = str(src)
+            env['PYTHONPATH'] = os.pathsep.join([str(src), str(src/'src')]+([env['PYTHONPATH']] if env.get('PYTHONPATH') else []))
+        dest = work/f'start_{path}.json'
+        with (work/f'start_{path}.log').open('w') as log:
+            subprocess.run([python, '-B', '-m', runner, 'start-receipt', '--path', path, '--spec', str(work/'spec.json'),
+                            '--cfg', str(plant/'CONFIG.json'), '--work', str(work/f'work_{path}'), '--out', str(dest)],
+                           cwd=cwd, env=env, check=True, stdout=log, stderr=subprocess.STDOUT, timeout=1800)
+        out[path] = read(dest)
+    diffs = _receipt_diff({k: out['plant'][k] for k in ('cmd', 'files', 'env')},
+                          {k: out['train'][k] for k in ('cmd', 'files', 'env')})
+    module_diff = _receipt_diff(out['plant']['modules'], out['train']['modules'])
+    value = seal(dict(schema=SCHEMA+'.env_equivalence', world=spec['world'], sim_s=0, verdict='EQUIVALENT' if not diffs
+                      else 'DIFFERS', differences=diffs, module_differences=module_diff,
+                      sumo_binary=dict(plant=out['plant']['sumo_binary'], train=out['train']['sumo_binary']),
+                      env_class=dict(plant=out['plant']['env_class'], train=out['train']['env_class']),
+                      env_classes=dict(plant=out['plant']['env_classes'], train=out['train']['env_classes']),
+                      rule='N5 REVIEW_N6_5 fix (a): config/route/option/kwarg/module-sha equivalence on one TRAIN world'),
+                 'receipt_sha256')
+    publish(target, value)
+    return value
+
+
+def _log_ticks(path):
+    import gzip
+    heads, ticks = {}, {}
+    with gzip.open(path, 'rt', encoding='utf-8') as f:
+        for line in f:
+            x = json.loads(line)
+            if 'veh' in x:
+                heads[x['veh']] = x['id']
+            else:
+                ticks[x['t']] = {heads[k]: (s_, v, ln) for k, s_, v, ln in zip(x['k'], x['s'], x['v'], x['lane'])}
+    return ticks
+
+
+def envparity_compare(plant_log, train_log):
+    P, T = _log_ticks(plant_log), _log_ticks(train_log)
+    first, worst, n = None, dict(s_m=0., v_mps=0., lane=0), 0
+    for t in sorted(set(P) | set(T)):
+        a, b = P.get(t, {}), T.get(t, {})
+        bad = set(a) != set(b)
+        for vid in set(a) & set(b):
+            n += 1
+            (sa, va, la), (sb, vb, lb) = a[vid], b[vid]
+            worst['s_m'], worst['v_mps'] = max(worst['s_m'], abs(sa-sb)), max(worst['v_mps'], abs(va-vb))
+            worst['lane'] += la != lb
+            bad = bad or (sa, va, la) != (sb, vb, lb)
+        if bad and first is None:
+            first = dict(t=t, only_plant=sorted(set(a)-set(b))[:10], only_train=sorted(set(b)-set(a))[:10],
+                         differing=sorted(v for v in set(a) & set(b) if a[v] != b[v])[:10])
+    return dict(identical=first is None and set(P) == set(T), ticks=dict(plant=len(P), train=len(T)), pairs=n,
+                max_abs=worst, first_divergence=first)
+
+
+def prerun_envparity(*, final_root, runtime, panel, workers=4):
+    """(b) U0 plant vs S-MAPPOWZL training env: 2 TRAIN worlds x (300+120 s) x 2 paths = 1,680 sim-s in the
+    evaluation root ledger (phase v2v_final_envparity), canary first; pass = every vehicle's s/v/lane per second
+    and J identical. Sealed ENVPARITY_U0.json; reports the first divergence, never patches."""
+    final_root = Path(final_root)
+    target = final_root/'ENVPARITY_U0.json'
+    if target.is_file():
+        return verify(read(target), 'receipt_sha256', 'ENVPARITY_U0')
+    pre = runtime if isinstance(runtime, PrerunRuntime) else PrerunRuntime(runtime, final_root)
+    plant = final_root/PRERUN_PLANT
+    cfg = pre.config(plant)
+    specs = _envpar_specs(final_root, cfg, plant, panel)
+    if {sp['job_id'] for sp in specs} & {r['id'] for r in fe.ledger_rows(final_root)}:
+        raise Blocked('an interrupted addendum parity run is charged; never replay')
+    items = [('envparity', sp, str(final_root/'evaluation'/sp['job_id'])) for sp in specs]
+    own_reserve(final_root, [dict(id=specs[0]['job_id'], sim_s=specs[0]['sim_s'])], ENVPAR_PHASE,
+                cap=len(specs)*ENVPAR_STOP_S, calls=pre.calls)
+    first = pre.run(items[:1], cfg, 1)                         # canary: one plant job verified first
+    if first[0].get('status') != 'traced' or first[0]['vehicle_log']['ticks'] != ENVPAR_STOP_S-WARMUP_S:
+        raise Blocked('addendum parity canary failed; nothing else charged')
+    own_reserve(final_root, [dict(id=sp['job_id'], sim_s=sp['sim_s']) for sp in specs[1:]], ENVPAR_PHASE,
+                cap=len(specs)*ENVPAR_STOP_S, calls=pre.calls)
+    records = first+pre.run(items[1:], cfg, workers)
+    worlds = {}
+    for seed in ENVPAR_SEEDS:
+        rec = {r['path']: (r, it) for r, it in zip(records, items) if r['world']['seed'] == seed}
+        logs = {p: Path(rec[p][1][2])/VEHICLE_LOG for p in ('plant', 'train')}
+        for p in logs:
+            if file_sha(logs[p]) != rec[p][0]['vehicle_log']['sha256']:
+                raise Blocked(f'addendum parity {seed} {p}: vehicle log differs from its record')
+        cmp_ = envparity_compare(logs['plant'], logs['train'])
+        J = {p: rec[p][0]['J_veh_s'] for p in logs}
+        worlds[str(seed)] = dict(compare=cmp_, J=J, J_identical=J['plant'] == J['train'],
+                                 safety={p: rec[p][0]['safety'] for p in logs})
+    verdict = 'IDENTICAL' if all(w['compare']['identical'] and w['J_identical'] for w in worlds.values()) else 'DIFFERS'
+    value = seal(dict(schema=SCHEMA+'.envparity', verdict=verdict, worlds=worlds, sim_s=len(specs)*ENVPAR_STOP_S,
+                      phase=ENVPAR_PHASE, rule=('N5 REVIEW_N6_5 fix (b): U0 plant vs S-MAPPOWZL training env; pass = every '
+                                                'vehicle s/v/lane per second and J identical; on DIFFERS the MAPPO_LANE '
+                                                'contrasts are labelled "different simulator path" or rerun in the plant')),
+                 'receipt_sha256')
+    publish(target, value)
+    return value
+
+
 def prerun_compat(final_root, cfg, runtime):
     """The clean run may reuse the pre-run waves only if its plant view and common u0 equal the
     PRERUN_PLAN (zero physics; checked at register and again before the episodes)."""
@@ -3285,7 +3460,8 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument('command', choices=('register-panel', 'register-panel-3c', 'verify-panel', 'quote', 'check', 'register',
                                        'bind-arms', 'prerun-register', 'prerun-logcheck', 'prerun-seqcheck',
-                                       'prerun-amend-cap', 'authorize-replay', 'prerun-run', 'parity',
+                                       'prerun-amend-cap', 'authorize-replay', 'prerun-run', 'parity', 'env-equivalence',
+                                       'prerun-envparity',
                                        'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run'))
     p.add_argument('--root', default=ROOT)
     p.add_argument('--final-root', default=FINAL_ROOT)
@@ -3392,6 +3568,12 @@ def main(argv=None):
             value = prerun_seqcheck(final_root=a.final_root, runtime=Runtime(a.runner), panel=panel)
             result = dict(verdict=value['verdict'], receipt_sha256=value['receipt_sha256'], pids=value['pids'],
                           arms={k: v['check'] for k, v in value['arms'].items()})
+        elif a.command == 'env-equivalence':
+            value = env_equivalence(final_root=a.final_root, panel=panel, runner=a.runner)
+            result = {k: value[k] for k in ('verdict', 'differences', 'module_differences', 'env_class', 'receipt_sha256')}
+        elif a.command == 'prerun-envparity':
+            value = prerun_envparity(final_root=a.final_root, runtime=Runtime(a.runner), panel=panel)
+            result = {k: value[k] for k in ('verdict', 'worlds', 'receipt_sha256')}
         elif a.command == 'prerun-amend-cap':
             result = amend_prerun_cap(final_root=a.final_root, cap_sim_s=a.cap, authority=a.authority)
         elif a.command == 'authorize-replay':
