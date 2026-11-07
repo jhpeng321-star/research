@@ -305,7 +305,11 @@ def propose(state, own, rng):
     for i in rng.permutation(len(classes)):
         cls = classes[int(i)]
         if cls == 'verified':
-            ts = list(slot.get('templates') or ())
+            # clean5c bank entries {template, offer_condition}: offered only where their verified trigger and
+            # offer condition hold for this CAV now (own row + own sensing); plain template dicts as before.
+            from .fullpol_bank import offer_ok
+            ts = [x['template'] if 'offer_condition' in x else x for x in (slot.get('templates') or ())
+                  if 'offer_condition' not in x or offer_ok(x['offer_condition'], own, rows)]
             t = _lc().FreeProgram.from_dict(ts[int(rng.integers(len(ts)))]) if ts else None
         elif cls == 'structured':
             t = None

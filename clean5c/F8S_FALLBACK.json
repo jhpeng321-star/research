@@ -1,0 +1,546 @@
+{
+ "clip": 1.0,
+ "fairness": {
+  "banned": [
+   "wall_h_solo2"
+  ],
+  "provenance": "owner REGISTRATION 2026-11-07 04:0x (MAIN): wall_h_solo2 banned; EV-BC eligibility = every group (origin SUMO lane 0/1/2, HDV, CAV) mean per-vehicle delay increase <= 10 s vs u0 AND lb95 > 0 on total gain; reward term = sum_g n_g max(0, dB_g - dA_g - 10 s) veh-s, paired with frozen A on the same world, B = R",
+  "rule": "fullpol-clean5b-F-fairness-v1",
+  "threshold_s": 10.0
+ },
+ "provenance": "clean5b-F8S rule fallback (fc36f646 fullpol_fair; MULTICRIT confirm+taskb+p40) for clean5c, FULLPOL 2026-11-08",
+ "regime_rule": "cell",
+ "rows": [
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_duo12",
+   "group_increase_s": {
+    "L0_mean": -1.8609116762097766,
+    "L1_mean": 1.5459519827790809,
+    "L2_mean": 3.1355026560370014,
+    "cav_mean": 1.2069857063208378,
+    "hdv_mean": 0.46851893980457326
+   },
+   "lb95_veh_s": -1884.677151367829,
+   "mean_veh_s": -616.2933965346756,
+   "n": 16,
+   "regime": "D2400_p60",
+   "source": "MULTICRIT_taskb.json",
+   "sources": [
+    "MULTICRIT_taskb.json"
+   ],
+   "ub95_veh_s": 343.96822451639196,
+   "worst_group_increase_s": 3.1355026560370014
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_solo2",
+   "group_increase_s": {
+    "L0_mean": -0.046582437884380656,
+    "L1_mean": 2.9674107043149007,
+    "L2_mean": 3.5302542393382828,
+    "cav_mean": 1.9564790387119388,
+    "hdv_mean": 2.263076257988546
+   },
+   "lb95_veh_s": -3099.0243415457103,
+   "mean_veh_s": -1426.769192268938,
+   "n": 16,
+   "regime": "D2400_p60",
+   "source": "MULTICRIT_taskb.json",
+   "sources": [
+    "MULTICRIT_taskb.json"
+   ],
+   "ub95_veh_s": 150.39439702158091,
+   "worst_group_increase_s": 3.5302542393382828
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_solo2_gate0",
+   "group_increase_s": {
+    "L0_mean": -2.47032750342127,
+    "L1_mean": 0.44959188564925423,
+    "L2_mean": 2.3266192377578636,
+    "cav_mean": 0.0980308748733073,
+    "hdv_mean": 0.05521455969997724
+   },
+   "lb95_veh_s": -1455.2368095993127,
+   "mean_veh_s": -67.21750451503897,
+   "n": 16,
+   "regime": "D2400_p60",
+   "source": "MULTICRIT_taskb.json",
+   "sources": [
+    "MULTICRIT_taskb.json"
+   ],
+   "ub95_veh_s": 1414.379906490843,
+   "worst_group_increase_s": 2.3266192377578636
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_m_solo2",
+   "group_increase_s": {
+    "L0_mean": 2.614663514625172,
+    "L1_mean": 6.511319229946301,
+    "L2_mean": 8.344341871888687,
+    "cav_mean": 5.461876363040079,
+    "hdv_mean": 5.910753084519753
+   },
+   "lb95_veh_s": -4946.6318812600775,
+   "mean_veh_s": -3734.5964984388174,
+   "n": 16,
+   "regime": "D2400_p60",
+   "source": "MULTICRIT_taskb.json",
+   "sources": [
+    "MULTICRIT_taskb.json"
+   ],
+   "ub95_veh_s": -2563.03730191961,
+   "worst_group_increase_s": 8.344341871888687
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_duo12",
+   "group_increase_s": {
+    "L0_mean": -15.097055077851229,
+    "L1_mean": -12.501249706492949,
+    "L2_mean": 3.96750214317736,
+    "cav_mean": -6.138514819662454,
+    "hdv_mean": -8.226897941719901
+   },
+   "lb95_veh_s": 643.2845609458802,
+   "mean_veh_s": 5584.916851370742,
+   "n": 24,
+   "regime": "D2800_p40",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json",
+    "MULTICRIT_taskb.json"
+   ],
+   "ub95_veh_s": 10603.31456776943,
+   "worst_group_increase_s": 4.243964386891504
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_solo2",
+   "group_increase_s": {
+    "L0_mean": -12.174449133966398,
+    "L1_mean": -10.77924645861787,
+    "L2_mean": 4.4321764551487774,
+    "cav_mean": -6.041031992042363,
+    "hdv_mean": -5.677725847891239
+   },
+   "lb95_veh_s": -1095.3790635764963,
+   "mean_veh_s": 4784.437568119682,
+   "n": 16,
+   "regime": "D2800_p40",
+   "source": "MULTICRIT_taskb.json",
+   "sources": [
+    "MULTICRIT_confirm.json",
+    "MULTICRIT_taskb.json"
+   ],
+   "ub95_veh_s": 11291.285819634028,
+   "worst_group_increase_s": 4.4321764551487774
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_solo2_gate0",
+   "group_increase_s": {
+    "L0_mean": -11.957971485909392,
+    "L1_mean": -10.119200992671798,
+    "L2_mean": 2.923082007950244,
+    "cav_mean": -5.276882256097671,
+    "hdv_mean": -6.460013090138847
+   },
+   "lb95_veh_s": 183.0547653183185,
+   "mean_veh_s": 4612.352577338003,
+   "n": 24,
+   "regime": "D2800_p40",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json",
+    "MULTICRIT_taskb.json"
+   ],
+   "ub95_veh_s": 8899.216988128223,
+   "worst_group_increase_s": 2.923082007950244
+  },
+  {
+   "arm": "B",
+   "banned": true,
+   "baseline": "mappo",
+   "fair": false,
+   "family": "wall_h_solo2",
+   "group_increase_s": {
+    "L0_mean": -15.461665956484898,
+    "L1_mean": -12.272638697788267,
+    "L2_mean": 15.37857935369158,
+    "cav_mean": -1.999886816629288,
+    "hdv_mean": -4.801345360203493
+   },
+   "lb95_veh_s": -1399.730124793548,
+   "mean_veh_s": 2774.5372992368816,
+   "n": 24,
+   "regime": "D2800_p40",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 7235.317683710361,
+   "worst_group_increase_s": 15.37857935369158
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_m_solo2",
+   "group_increase_s": {
+    "L0_mean": -17.046005491629437,
+    "L1_mean": -15.04889837158026,
+    "L2_mean": 9.937917149282468,
+    "cav_mean": -6.450216279383974,
+    "hdv_mean": -7.241869803256019
+   },
+   "lb95_veh_s": 686.1909821343722,
+   "mean_veh_s": 5672.349425901291,
+   "n": 16,
+   "regime": "D2800_p40",
+   "source": "MULTICRIT_taskb.json",
+   "sources": [
+    "MULTICRIT_taskb.json"
+   ],
+   "ub95_veh_s": 11245.028507586881,
+   "worst_group_increase_s": 9.937917149282468
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_duo12",
+   "group_increase_s": {
+    "L0_mean": -15.590455573313989,
+    "L1_mean": -11.258069864281643,
+    "L2_mean": 3.015212929916222,
+    "cav_mean": -6.592223572748675,
+    "hdv_mean": -9.593770300818514
+   },
+   "lb95_veh_s": 3277.0526359791143,
+   "mean_veh_s": 6042.524893258964,
+   "n": 24,
+   "regime": "D2800_p60",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 8938.825559128689,
+   "worst_group_increase_s": 3.015212929916222
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_solo2",
+   "group_increase_s": {
+    "L0_mean": -11.079138208410834,
+    "L1_mean": -8.073890102306136,
+    "L2_mean": 2.69655561173267,
+    "cav_mean": -4.80741641238902,
+    "hdv_mean": -6.286937475241323
+   },
+   "lb95_veh_s": 1361.923631058456,
+   "mean_veh_s": 4196.395937410255,
+   "n": 24,
+   "regime": "D2800_p60",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 7219.991013027208,
+   "worst_group_increase_s": 2.69655561173267
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_solo2_gate0",
+   "group_increase_s": {
+    "L0_mean": -12.027091073892747,
+    "L1_mean": -9.772946528972325,
+    "L2_mean": 2.9671642366308326,
+    "cav_mean": -5.5595586108468575,
+    "hdv_mean": -7.154815911696356
+   },
+   "lb95_veh_s": 2165.8350205847796,
+   "mean_veh_s": 4728.456634087569,
+   "n": 24,
+   "regime": "D2800_p60",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 7391.505508784564,
+   "worst_group_increase_s": 2.9671642366308326
+  },
+  {
+   "arm": "B",
+   "banned": true,
+   "baseline": "mappo",
+   "fair": false,
+   "family": "wall_h_solo2",
+   "group_increase_s": {
+    "L0_mean": -19.984851256708442,
+    "L1_mean": -13.22734764292826,
+    "L2_mean": 13.914352142576455,
+    "cav_mean": -4.96881733406511,
+    "hdv_mean": -8.628973955222234
+   },
+   "lb95_veh_s": 1995.8391982337685,
+   "mean_veh_s": 5039.774879222329,
+   "n": 24,
+   "regime": "D2800_p60",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 8127.210429807137,
+   "worst_group_increase_s": 13.914352142576455
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_duo12",
+   "group_increase_s": {
+    "L0_mean": -28.432361730955805,
+    "L1_mean": -30.245294359643385,
+    "L2_mean": 9.816667179202136,
+    "cav_mean": -13.523332094897588,
+    "hdv_mean": -17.341582083101212
+   },
+   "lb95_veh_s": 8626.311943165263,
+   "mean_veh_s": 13966.351003259726,
+   "n": 24,
+   "regime": "D3200_p40",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 19219.026098393377,
+   "worst_group_increase_s": 9.816667179202136
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": false,
+   "family": "wall_g_solo2",
+   "group_increase_s": {
+    "L0_mean": -28.33812216306708,
+    "L1_mean": -28.029293004906975,
+    "L2_mean": 10.148012652778252,
+    "cav_mean": -14.411152049852566,
+    "hdv_mean": -15.41346900180082
+   },
+   "lb95_veh_s": 7837.4158354464735,
+   "mean_veh_s": 13335.01659055662,
+   "n": 24,
+   "regime": "D3200_p40",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 18250.29110433076,
+   "worst_group_increase_s": 10.148012652778252
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_solo2_gate0",
+   "group_increase_s": {
+    "L0_mean": -20.79333843909584,
+    "L1_mean": -22.275119352219505,
+    "L2_mean": 7.379318260562878,
+    "cav_mean": -11.000998618897617,
+    "hdv_mean": -12.059431522682829
+   },
+   "lb95_veh_s": 3708.1598413707684,
+   "mean_veh_s": 10341.84754377017,
+   "n": 24,
+   "regime": "D3200_p40",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 16725.172943867507,
+   "worst_group_increase_s": 7.379318260562878
+  },
+  {
+   "arm": "B",
+   "banned": true,
+   "baseline": "mappo",
+   "fair": false,
+   "family": "wall_h_solo2",
+   "group_increase_s": {
+    "L0_mean": -34.66654561502453,
+    "L1_mean": -43.40115922463268,
+    "L2_mean": 19.57828383224407,
+    "cav_mean": -16.914117661572824,
+    "hdv_mean": -20.582755372005728
+   },
+   "lb95_veh_s": 8915.848682526801,
+   "mean_veh_s": 17217.079415402233,
+   "n": 11,
+   "regime": "D3200_p40",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 24266.871487223427,
+   "worst_group_increase_s": 19.57828383224407
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_duo12",
+   "group_increase_s": {
+    "L0_mean": -27.810539326535377,
+    "L1_mean": -30.204582027138486,
+    "L2_mean": 9.238901688629179,
+    "cav_mean": -14.883998700571695,
+    "hdv_mean": -17.485426925795093
+   },
+   "lb95_veh_s": 8720.073183810793,
+   "mean_veh_s": 14127.393712499748,
+   "n": 24,
+   "regime": "D3200_p60",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 19858.557109405523,
+   "worst_group_increase_s": 9.238901688629179
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_solo2",
+   "group_increase_s": {
+    "L0_mean": -26.231090419610837,
+    "L1_mean": -30.232649099781742,
+    "L2_mean": 6.027499116707578,
+    "cav_mean": -15.975359857846238,
+    "hdv_mean": -17.185305902945675
+   },
+   "lb95_veh_s": 10238.155479189714,
+   "mean_veh_s": 14518.47249610092,
+   "n": 24,
+   "regime": "D3200_p60",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 18777.193869106013,
+   "worst_group_increase_s": 6.027499116707578
+  },
+  {
+   "arm": "B",
+   "banned": false,
+   "baseline": "mappo",
+   "fair": true,
+   "family": "wall_g_solo2_gate0",
+   "group_increase_s": {
+    "L0_mean": -21.85369550791361,
+    "L1_mean": -24.99750561016421,
+    "L2_mean": 7.123298431833173,
+    "cav_mean": -12.293665040853947,
+    "hdv_mean": -13.98868619957828
+   },
+   "lb95_veh_s": 7888.390675140315,
+   "mean_veh_s": 11498.608970981135,
+   "n": 24,
+   "regime": "D3200_p60",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 15186.221735344025,
+   "worst_group_increase_s": 7.123298431833173
+  },
+  {
+   "arm": "B",
+   "banned": true,
+   "baseline": "mappo",
+   "fair": false,
+   "family": "wall_h_solo2",
+   "group_increase_s": {
+    "L0_mean": -40.209178979240505,
+    "L1_mean": -46.47542015199912,
+    "L2_mean": 18.85657258683884,
+    "cav_mean": -20.94984865217006,
+    "hdv_mean": -24.025634670391838
+   },
+   "lb95_veh_s": 14515.226789539145,
+   "mean_veh_s": 19678.68942147269,
+   "n": 24,
+   "regime": "D3200_p60",
+   "source": "MULTICRIT_confirm.json",
+   "sources": [
+    "MULTICRIT_confirm.json"
+   ],
+   "ub95_veh_s": 25248.285662537943,
+   "worst_group_increase_s": 18.85657258683884
+  }
+ ],
+ "schema": "fullpol-regime-guidance-v1",
+ "source": {
+  "rule": "S-REGIME registered analysis (rg_analyze.py cell_stats): per strategy x cell paired seed differences of episode team delay J_total, seed bootstrap 10,000 resamples RNG 20261106, 2.5/97.5% quantiles",
+  "sha256": "25093cda661c90cb154936d350d54eb823137cef8fc4bd617100b3d5f22e4a60",
+  "sign": "gain = J(base) - J(strategy) in veh-s per episode (positive = lower team delay); S-REGIME rg_analyze reports difference = strategy - base, so gain mean = -mean_diff and lb95(gain) = -ub95(difference)",
+  "sources": [
+   {
+    "baseline": "mappo",
+    "name": "MULTICRIT_confirm.json",
+    "sha256": "8f7a91cbeb89e527e59633d281d12553ee8355ae80c1d371779aa03dd3edda4e"
+   },
+   {
+    "baseline": "mappo",
+    "name": "MULTICRIT_taskb.json",
+    "sha256": "555616f4a4015afcd6c9dce4c34bf742c73c5f6ad19206e6d44f0a89f445cb22"
+   },
+   {
+    "baseline": "mappo",
+    "name": "MULTICRIT_confirm.json",
+    "sha256": "fc509ce907c465c5c15460beb40ac046ef1a298c3202a7c086261fb00abfcbba"
+   }
+  ]
+ },
+ "weight": 1.0
+}
