@@ -28,7 +28,8 @@ Seeds: 989950-989999 only (MAIN allocation; LSSEARCH has 989900-989949). Map reg
     python -m tools.wzprop.wmverify registration --arms ARMS.json --cells D3200_p60:989950-989965 ... --cap N
     python -m tools.wzprop.wmverify dryrun       --arms ARMS.json --cells ... --out NEW_DIR      (no SUMO)
     python -m tools.wzprop.wmverify plan         --root R --regimeu0-root U --arms ARMS.json --cells ... --cap N
-                                                 --registration .../REGISTRATION.md [--prior-root R0] [--no-identity]
+                                                 --registration .../REGISTRATION.md [--prior-root R0]
+                                                 (every root carries its own identity episode: no bypass)
     python -m tools.wzprop.wmverify run          --root R [--workers 16]   (cpuV: nice 19, CUDA_VISIBLE_DEVICES=,
                                                  COOPMWM_MAP_SPEC=wz3to2 spec, COOPMWM_G5_RUNTIME=1)
     python -m tools.wzprop.wmverify worker       --root R --job ID
@@ -50,6 +51,7 @@ from pathlib import Path
 
 from . import geometry as G
 from . import strategy_search as SS
+from . import wmverify_fair as WF
 from . import wmverify_hook as VH
 from . import wmverify_n2 as N2
 
@@ -67,7 +69,8 @@ NOT_FAMILIES = (PARITY_ARM, BANNED_ARM)  # never ANALYSIS families (VERIFY only)
 GROUPS = ('reference', 'wm', 'wm_bounded', 'wm_fairer', 'structured', 'random')    # ARMS.json v3 lists
 OPTIONAL_GROUPS = ('wm_fair',)
 SINGLE_GROUPS = ('best_beating_incumbent', 'best')    # single spec / {archive: spec} in ARMS.json (dedup by key)
-FAIR_COMPONENT = 'road'                  # pervehicle primary component (S-MULTICRIT P4)
+REG_HEADER = f'### {STABLE_ID} (phase {PHASE}) - registration'     # exact header line (review REV-WMV3 b4)
+VEHICLE_LOG_DIR = 'vehicle_logs'         # <root>/vehicle_logs/<job id>/VEHICLES.jsonl.gz (N6 VehicleLog port)
 EPISODE_S = 1200
 DEFAULT_LANE_EXECUTOR = 'lcexec'       # MAIN ~00:0x: lane programs through the LCEXEC policy executor
 DEFAULT_HOLD_EXECUTOR = 'plant'        # hold strategies run as the S-REGIMEU0 RuleHook path (plant single writer)
@@ -291,17 +294,57 @@ def module_shas():
     return {k: _sha_file(p) for k, p in files.items() if p.exists()}
 
 
-def registration_check(text, *, cap, cells):
-    """The run's REGISTRATION.md must carry the S-WMVERIFY block (stable id, phase, seed range, cap) before physics."""
-    need = [STABLE_ID, PHASE, f'{SEED_RANGE[0]}-{SEED_RANGE[1]}']
-    missing = [x for x in need if x not in text]
-    if f'{int(cap):,}' not in text and str(int(cap)) not in text:
-        missing.append(f'cap {int(cap):,}')
-    for cell, *_ in cells:
-        if cell not in text:
-            missing.append(cell)
-    if missing:
-        raise ValueError(f'REGISTRATION.md lacks the S-WMVERIFY registration items {missing}')
+def registration_blocks(text):
+    """[(header line index, block text)] of every exact S-WMVERIFY registration header in REGISTRATION.md; a block
+    runs to the next markdown heading."""
+    lines = text.splitlines()
+    out = []
+    for i, line in enumerate(lines):
+        if line.rstrip() == REG_HEADER:
+            body = []
+            for x in lines[i + 1:]:
+                if x.startswith('#'):
+                    break
+                body.append(x)
+            out.append((i, '\n'.join(body)))
+    return out
+
+
+def _field(block, pattern):
+    m = re.search(pattern, block, re.M)
+    return None if m is None else m.group(1)
+
+
+def registration_check(text, *, cap, planned, jobs_sha256, arms_sha256, module_sha256):
+    """REGISTRATION.md must contain the exact header line and, in that block, this run's jobs digest, cap and
+    planned budget, ARMS.json sha256 and module sha256 (stray tokens elsewhere never open the gate)."""
+    blocks = registration_blocks(text)
+    if not blocks:
+        raise ValueError(f'REGISTRATION.md lacks the exact header line {REG_HEADER!r}')
+    problems = []
+    for _i, block in blocks:
+        got = dict(jobs=_field(block, r'^- Plan jobs sha256: ([0-9a-f]{64})\s*$'),
+                   cap=_field(block, r'cap ([0-9,]+) sim-s; planned [0-9,]+ sim-s'),
+                   planned=_field(block, r'cap [0-9,]+ sim-s; planned ([0-9,]+) sim-s'),
+                   arms=_field(block, r'^- ARMS\.json sha256: (\S+?)\.\s*$'),
+                   modules=_field(block, r'module sha256 (\{.*\})\.\s*$'))
+        if got['jobs'] != jobs_sha256:
+            problems.append(dict(block_jobs=got['jobs']))
+            continue
+        mods = json.loads(got['modules']) if got['modules'] else None
+        bad = [k for k, ok in (('cap', got['cap'] == f'{int(cap):,}'), ('planned', got['planned'] == f'{int(planned):,}'),
+                               ('arms', got['arms'] == (arms_sha256 or '<none>')),
+                               ('modules', mods == module_sha256)) if not ok]
+        if not bad:
+            return True
+        problems.append(dict(mismatch=bad))
+    raise ValueError(f'no S-WMVERIFY registration block matches this plan: {problems}')
+
+
+def jobs_digest(groups):
+    """Digest of the planned jobs (worlds, arms, specs, executors, sim_s) - the registered identity of the run."""
+    from tools.coopmwm import imitreplay as ir
+    return ir.digest(groups)
 
 
 def family_records(specs_by_cell, *, lane_executor=DEFAULT_LANE_EXECUTOR, hold_executor=DEFAULT_HOLD_EXECUTOR):
@@ -334,13 +377,19 @@ def family_records(specs_by_cell, *, lane_executor=DEFAULT_LANE_EXECUTOR, hold_e
 
 
 def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, groups=GROUPS, k=4, parity_seeds=2,
-         identity=True, lane_executor=DEFAULT_LANE_EXECUTOR, hold_executor=DEFAULT_HOLD_EXECUTOR, spec_paths=(),
+         lane_executor=DEFAULT_LANE_EXECUTOR, hold_executor=DEFAULT_HOLD_EXECUTOR, spec_paths=(),
          prior_roots=(), dry_run=False, banned_seeds=0):
+    """Every root carries its own identity episode (mandatory; review REV-WMV3 blocker 3)."""
     ir, R = _harness()
     root = guard_path(root)
     if (root / 'PLAN.json').exists():
         raise ValueError('PLAN.json already frozen')
     cells = list(cells)
+    for _c, _d, _p, seeds in cells:
+        for x in seeds:
+            check_seed(x)
+    if not dry_run and lane_executor != 'lcexec':
+        raise ValueError('lane programs are verified only by the LCEXEC policy executor (non-dry plans)')
     arms_doc = json.loads(guard_path(arms_path).read_text(encoding='utf-8')) if arms_path else {}
     extra = []
     for p in spec_paths:
@@ -351,14 +400,14 @@ def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, gr
     for pr in prior_roots:
         body = _read(Path(pr) / 'PLAN.json')
         prior |= {g['jobs'][0]['world']['seed'] for g in body['groups'] if g['stage'] == 'paired'}
-        if identity and any(g['stage'] == 'identity' for g in body['groups']):
-            raise ValueError('identity episode already planned in a prior root (use --no-identity)')
     clash = prior & {s for *_x, seeds in cells for s in seeds}
     if clash:
         raise ValueError(f'seeds already planned in a prior root: {sorted(clash)}')
-    gr = build_groups(cells, specs, R.world_of, parity_seeds=parity_seeds, identity=identity,
+    gr = build_groups(cells, specs, R.world_of, parity_seeds=parity_seeds, identity=True,
                       lane_executor=lane_executor, hold_executor=hold_executor, banned_seeds=banned_seeds)
     planned = sum(j['sim_s'] for g in gr for j in g['jobs'])
+    jobs_sha = jobs_digest(gr)
+    shas = module_shas()
     if planned > int(cap):
         raise ValueError(f'planned {planned} sim-s > cap {cap}')
     root.mkdir(parents=True, exist_ok=True)
@@ -366,7 +415,8 @@ def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, gr
     reg_sha = None
     if not dry_run:
         text = guard_path(registration_md).read_text(encoding='utf-8')
-        registration_check(text, cap=cap, cells=cells)
+        registration_check(text, cap=cap, planned=planned, jobs_sha256=jobs_sha,
+                           arms_sha256=ir.sha_file(guard_path(arms_path)) if arms_path else None, module_sha256=shas)
         reg_sha = hashlib.sha256(text.encode('utf-8')).hexdigest()
         src = Path(regimeu0_root) / 'inputs'
         (root / 'inputs').mkdir(exist_ok=True)
@@ -381,7 +431,6 @@ def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, gr
             shutil.copyfile(guard_path(arms_path), root / 'inputs' / 'ARMS.json')
             files['ARMS.json'] = dict(source=str(arms_path), sha256=ir.sha_file(root / 'inputs' / 'ARMS.json'))
     families = family_records(specs, lane_executor=lane_executor, hold_executor=hold_executor)
-    shas = module_shas()
     reg = dict(schema=SCHEMA, stable_id=STABLE_ID, phase=PHASE, cap_sim_s=int(cap), dry_run=bool(dry_run),
                seeds=sorted(s for *_x, seeds in cells for s in seeds), cells=[c[0] for c in cells],
                seed_range=list(SEED_RANGE), registration_md_sha256=reg_sha, module_sha256=shas, unix=time.time())
@@ -390,7 +439,7 @@ def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, gr
                 inputs=files, groups=gr, families=families, incumbent=INCUMBENT, parity_arm=PARITY_ARM,
                 banned_comparator=BANNED_ARM if banned_seeds else None, banned_seeds=int(banned_seeds),
                 parity_seeds=int(parity_seeds), lane_executor=lane_executor, hold_executor=hold_executor,
-                planned_sim_s=planned,
+                planned_sim_s=planned, jobs_sha256=jobs_sha,
                 cells=[dict(cell=c, demand=d, share=p, seeds=list(s)) for c, d, p, s in cells],
                 module_sha256=shas, registration_md_sha256=reg_sha, unix=time.time())
     body['plan_sha256'] = ir.digest({k2: v for k2, v in body.items() if k2 != 'unix'})
@@ -435,8 +484,7 @@ def worker(root, ident):
         raise ValueError('dry-run plan: no physics')
     job = _find_job(body, ident)
     hook = make_job_hook(job, R)
-    from . import pervehicle as PV
-    hook.pv = PV.PerVehicle()                    # eval-only LSSEARCH/MULTICRIT logger on EVERY arm (u0 included)
+    vlog = WF.VehicleLog(root / VEHICLE_LOG_DIR / ident)   # N6 eval-only ground-truth log on EVERY arm (u0 included)
     lc = needs_lc_runtime(job)
     original = (R.RuleHook, R._job, accel_plant.bind_runtime, os.environ.get('COOPMWM_LC_RUNTIME'))
     lc_record = None
@@ -451,31 +499,28 @@ def worker(root, ident):
         if lc:
             from tools.coopmwm import lc_runtime
             lc_runtime.install(j)                # after map_runtime.install (LCEXEC contract); idempotent
-        PV.install_on_observe(hook.pv)           # tools.leverprobe.backend is imported by now (observe-time install)
         return exact
     accel_plant.bind_runtime = bind_runtime
     R.RuleHook = lambda _name: hook
     R._job = lambda _root, _ident: dict(job)
     try:
-        summary = R.worker(root, ident)
+        with WF.logged_tick(vlog):               # wraps coopfree.tick BEFORE regimeu0.worker adds the Recorder
+            summary = R.worker(root, ident)
         if lc:
             from tools.coopmwm import lc_runtime
             lc_record = lc_runtime.installed_record()
     finally:
+        vlog_record = vlog.close()
         R.RuleHook, R._job, accel_plant.bind_runtime = original[:3]
         if original[3] is None:
             os.environ.pop('COOPMWM_LC_RUNTIME', None)
         else:
             os.environ['COOPMWM_LC_RUNTIME'] = original[3]
-    work = root / 'jobs' / ident
-    if work.exists() and not (work / 'PERVEH.json.gz').exists():
-        import gzip
-        with gzip.open(work / 'PERVEH.json.gz', 'xt', encoding='utf-8') as f:
-            json.dump(hook.pv.finish(), f)
     side = dict(schema=SCHEMA + '.job', id=ident, arm=job['arm'], executor=job['executor'],
                 strategy_key=None if job['strategy_spec'] is None else SS.strategy_key(job['strategy_spec']),
                 activations=len(getattr(hook, 'acts', []) or []),
                 receipts=hook.receipts() if hasattr(hook, 'receipts') else None, lc_runtime=lc_record,
+                vehicle_log=vlog_record,
                 error=bool(summary.get('error')))
     _write_new(root / 'jobs' / ident / 'WMVERIFY.json', side)
     return summary
@@ -538,14 +583,41 @@ def arm_alias(body):
     return lambda arm: names.get(arm, arm)
 
 
+def root_kind(body):
+    """'wm_verify' | 'wmsearch'; any other root (e.g. S-HOLDPIN, cancelled) is refused."""
+    if body.get('schema') == SCHEMA + '.plan':
+        return 'wm_verify'
+    if body.get('schema') in WMSEARCH_SCHEMAS:
+        return 'wmsearch'
+    raise ValueError(f"root schema {body.get('schema')!r} is not a wm_verify / S-WMSEARCH plan (refused)")
+
+
+def banned_arms(body):
+    """Aliased arm names that are never FULLPOL-facing: the banned comparator and EVERY arm whose spec holds the
+    banned firm 15 m/s hold (strategy_search.banned), whatever its name (review REV-WMV3 blocker 2)."""
+    alias = arm_alias(body)
+    out = set()
+    if root_kind(body) == 'wmsearch':
+        for arm, spec in (body.get('specs') or {}).items():
+            if spec is not None and (SS.banned(spec) or alias(arm) == BANNED_ARM):
+                out.add(alias(arm))
+        return out
+    for g in body['groups']:
+        for j in g['jobs']:
+            spec = j.get('strategy_spec')
+            if j['arm'] == BANNED_ARM or (spec is not None and SS.banned(spec)):
+                out.add(alias(j['arm']))
+    return out
+
+
 def wmsearch_families(body):
     """VERIFY families of an S-WMSEARCH root: executed by strategy_hook.make_hook (G5 lane path), NOT the LCEXEC
     policy executor (closing-lane lane targets were refused by the frozen env there)."""
     out = {}
     alias = arm_alias(body)
     for arm, spec in (body.get('specs') or {}).items():
-        if spec is None or alias(arm) in (BASE_ARM, INCUMBENT, BANNED_ARM):
-            continue
+        if spec is None or alias(arm) in (BASE_ARM, INCUMBENT, BANNED_ARM) or SS.banned(spec):
+            continue                             # banned specs: comparator-only, never a family
         tpl, tsha = VH.family_template(spec)
         out[alias(arm)] = dict(spec=spec, strategy_key=SS.strategy_key(spec), executor='plant', cells={},
                                template=tpl, template_sha256=tsha, offer_condition=VH.offer_condition(spec),
@@ -564,12 +636,13 @@ def collect(roots):
     """regimeu0.analyze's per-seed rows (verbatim records) + identity + parity/side records."""
     ir, R = _harness()
     roots = [Path(r) for r in ([roots] if isinstance(roots, (str, Path)) else roots)]
-    from . import pervehicle as PV
     rows, side, identity, parity, failed, arms = [], {}, None, [], [], []
-    fair, perveh = {}, []                    # fair[cell][component][seed][arm] = pervehicle.fairness_of(...)
+    vehicles, vlogs, identities, banned = {}, [], [], set()   # vehicles[cell][arm][seed] = WF.per_vehicle dict
     for root in roots:
         body = _read(root / 'PLAN.json')
+        root_kind(body)
         alias = arm_alias(body)
+        banned |= banned_arms(body)
 
         def load(ident):
             p = root / 'jobs' / ident / 'SUMMARY.json.gz'
@@ -582,6 +655,9 @@ def collect(roots):
                     identity = dict(team_delay_vs=tot, expected=R.IDENTITY['expected_team_delay_vs'],
                                     equal=tot is not None and abs(tot - R.IDENTITY['expected_team_delay_vs']) < 1e-6,
                                     error=(s.get('error') or {}).get('error'))
+                    identities.append(dict(identity, root=str(root)))
+                else:
+                    identities.append(dict(root=str(root), equal=False, missing=True))
                 continue
             sums = {alias(j['arm']): load(j['id']) for j in g['jobs']}
             for j in g['jobs']:
@@ -591,23 +667,18 @@ def collect(roots):
                 if p.exists():
                     side[(g['jobs'][0]['world']['seed'], alias(j['arm']))] = _read(p)
                 w0 = g['jobs'][0]['world']
-                q = root / 'jobs' / j['id'] / 'PERVEH.json.gz'
-                pv = ir._read(q) if q.exists() else None
                 summ = root / 'jobs' / j['id'] / 'SUMMARY.json.gz'
-                if summ.exists() and alias(j['arm']) != PARITY_ARM:
-                    rec_pv = dict(seed=w0['seed'], cell=w0['cell_key'], arm=alias(j['arm']),
-                                  present=pv is not None and not pv.get('error'),
-                                  error=None if pv is None else pv.get('error'))
-                    if rec_pv['present']:
-                        rec_pv.update(sum_road_vs=pv.get('sum_road_vs'), sum_source_vs=pv.get('sum_source_vs'),
-                                      road_outside_population_vs=pv.get('road_outside_population_vs'),
-                                      n=len(pv.get('rows') or ()))
-                        for comp in PV.COMPONENTS:
-                            fo = PV.fairness_of(pv, comp)
-                            if fo is not None:
-                                fair.setdefault(w0['cell_key'], {}).setdefault(comp, {}).setdefault(
-                                    w0['seed'], {})[alias(j['arm'])] = fo
-                    perveh.append(rec_pv)
+                if summ.exists() and j['arm'] != PARITY_ARM:
+                    vpath = root / VEHICLE_LOG_DIR / j['id'] / WF.VEHICLE_LOG
+                    rec_v = dict(seed=w0['seed'], cell=w0['cell_key'], arm=alias(j['arm']), present=vpath.exists())
+                    if rec_v['present']:
+                        pv, problems = WF.per_vehicle(vpath)
+                        rec_v.update(vehicles=len(pv), problems=problems, ok=not problems and bool(pv))
+                        if rec_v['ok']:
+                            vehicles.setdefault(w0['cell_key'], {}).setdefault(alias(j['arm']), {})[w0['seed']] = pv
+                    else:
+                        rec_v['ok'] = False
+                    vlogs.append(rec_v)
             w = g['jobs'][0]['world']
             base = sums.get(BASE_ARM)
             row = dict(seed=w['seed'], cell=w['cell_key'], root=str(root), arms={})
@@ -640,8 +711,8 @@ def collect(roots):
                         first_act is not None and rec['first_divergence_s'] >= first_act)
                 row['arms'][arm] = rec
             rows.append(row)
-    return dict(roots=roots, rows=rows, side=side, identity=identity, parity=parity, failed=failed, arms=arms,
-                fair=fair, perveh=perveh)
+    return dict(roots=roots, rows=rows, side=side, identity=identity, identities=identities, parity=parity,
+                failed=failed, arms=arms, vehicles=vehicles, vehicle_logs=vlogs, banned=sorted(banned))
 
 
 def cells_from_rows(rows, arms):
@@ -698,8 +769,9 @@ def analysis(roots, col=None):
     """ANALYSIS.json body in EXACTLY the S-REGIMEU0 schema (keys of regimeu0.analyze)."""
     ir, R = _harness()
     col = col or collect(roots)
-    order = [BASE_ARM] + [a for a in col['arms'] if a != BASE_ARM and a not in NOT_FAMILIES]
-    rows = [dict(r, arms={a: x for a, x in r['arms'].items() if a not in NOT_FAMILIES}) for r in col['rows']]
+    excluded = set(NOT_FAMILIES) | set(col['banned'])
+    order = [BASE_ARM] + [a for a in col['arms'] if a != BASE_ARM and a not in excluded]
+    rows = [dict(r, arms={a: x for a, x in r['arms'].items() if a not in excluded}) for r in col['rows']]
     rep = dict(schema=R.SCHEMA + '.analysis', roots=[str(r) for r in col['roots']],
                spent=sum(ir.spent(r) for r in col['roots']),
                plan_sha256=[_read(Path(r) / 'PLAN.json')['plan_sha256'] for r in col['roots']], cells={},
@@ -711,27 +783,23 @@ def analysis(roots, col=None):
 
 
 def fairness(col, arms):
-    """Per cell per arm: pervehicle.paired_fairness vs u0 and vs the incumbent for both delay components (road =
-    primary) + the owner's ALLOWED flag (every group's mean per-vehicle delay change vs u0 <= 10 s/veh, point
-    estimate, road component; the CI-upper variant is reported)."""
-    from . import pervehicle as PV
+    """Per cell per arm: N6 amendment-13 co-primary groups (wmverify_fair.co_primary_groups, labels from u0 by
+    vehicle id, depart delay included) vs u0 and vs the incumbent; ALLOWED = all five co-primary groups present
+    and passing vs u0 (point estimate <= 10 s); unavailable fairness = not allowed."""
     out = {}
-    for cell, comps in sorted(col['fair'].items()):
+    for cell, reports in sorted(col['vehicles'].items()):
+        worlds = sorted(reports.get(BASE_ARM, {}))
         cell_out = {}
         for arm in arms:
-            if arm == BASE_ARM:
+            if arm == BASE_ARM or arm not in reports:
                 continue
-            rec = {}
-            for comp in PV.COMPONENTS:
-                by_seed = comps.get(comp) or {}
-                rec[comp] = {ref: PV.paired_fairness(by_seed, arm, ref) for ref in (BASE_ARM, INCUMBENT)
-                             if ref != arm}
-            f0 = (rec.get(FAIR_COMPONENT) or {}).get(BASE_ARM)
-            cell_out[arm] = dict(fairness=rec, allowed=None if f0 is None else bool(f0['allowed_point']),
-                                 allowed_ci_upper=None if f0 is None else bool(f0['allowed_ci_upper']),
-                                 worst_group=None if f0 is None else f0['worst_group'],
-                                 worst_group_diff=None if f0 is None else f0['worst_group_diff'],
-                                 label='banned comparator' if arm == BANNED_ARM else None)
+            vs = {ref: WF.co_primary_groups(reports, worlds, arm, ref, reference=BASE_ARM)
+                  for ref in (BASE_ARM, INCUMBENT) if ref != arm}
+            f0 = vs[BASE_ARM]
+            cell_out[arm] = dict(fairness=vs, allowed=bool(f0.get('all_pass')),
+                                 groups_vs_u0={g: v.get('increase_mean_s') for g, v in (f0.get('groups') or {}).items()},
+                                 vehicles_missing=f0.get('vehicles_missing'),
+                                 label='banned comparator' if arm in col['banned'] else None)
         out[cell] = cell_out
     return out
 
@@ -739,8 +807,9 @@ def fairness(col, arms):
 def allowed_analysis(rep, fair):
     """ANALYSIS_ALLOWED.json: the same S-REGIMEU0 schema restricted, per cell, to u0 + the families whose owner
     fairness flag is ALLOWED (missing fairness = not allowed). The banned comparator is never a family."""
-    out = dict(rep, cells={}, seeds=[], allowed_rule='every group (origin SUMO lane 0/1/2, HDV, CAV) mean per-vehicle '
-               'road delay change vs u0 <= 10 s/veh (point estimate; owner 2026-11-07, REGISTRATION 04:03)')
+    out = dict(rep, cells={}, seeds=[], allowed_rule='every co-primary group (origin:L0/L1/L2, class:hdv, class:cav; '
+               'labels from u0 by vehicle id; N6 amendment-13 convention incl. depart delay) mean per-vehicle delay '
+               'increase vs u0 <= 10 s (point estimate), all five groups present (owner 2026-11-07, REGISTRATION 04:03)')
     keep = {}
     for cell, arms in rep['cells'].items():
         ok = {a for a, v in (fair.get(cell) or {}).items() if v.get('allowed') is True}
@@ -821,11 +890,10 @@ def checks(roots, col=None):
 
     def add(name, ok, **detail):
         res.append(dict(name=name, ok=bool(ok), **detail))
-    planned_identity = any(g['stage'] == 'identity' for r in roots for g in _read(Path(r) / 'PLAN.json')['groups'])
-    if planned_identity:
-        idn = col['identity']
-        add('identity_u0_989599', idn is not None and idn['equal'], value=idn,
-            expected=R.IDENTITY['expected_team_delay_vs'])
+    ids = col.get('identities') or []
+    add('identity_u0_989599', bool(ids) and all(x.get('equal') for x in ids), identities=ids,
+        expected=R.IDENTITY['expected_team_delay_vs'],
+        rule='mandatory: at least one identity episode and every analyzed identity episode exact')
     bad = [dict(seed=r['seed'], cell=r['cell'], arm=a, first_divergence_s=x.get('first_divergence_s'),
                 first_activation_s=x.get('first_activation_s'))
            for r in col['rows'] for a, x in r['arms'].items() if x.get('status') == 'ok' and a != BASE_ARM
@@ -865,9 +933,9 @@ def checks(roots, col=None):
         u0_sha256=sorted(x for x in shas if x))
     if col['failed']:
         warn.append(dict(name='failed_jobs', jobs=col['failed']))
-    missing = [dict(seed=p['seed'], cell=p['cell'], arm=p['arm'], error=p['error']) for p in col.get('perveh') or ()
-               if not p['present']]
-    add('perveh_present_every_episode', not missing, missing=missing[:50], n_missing=len(missing))
+    missing = [dict(x) for x in col.get('vehicle_logs') or () if not x.get('ok')]
+    add('vehicle_log_present_every_episode', not missing and bool(col.get('vehicle_logs')), missing=missing[:50],
+        n_missing=len(missing))
     lane_arms = {}
     for (seed, arm), sd in col['side'].items():
         if sd.get('executor') != 'lcexec' or not sd.get('receipts'):
@@ -913,11 +981,14 @@ def checks(roots, col=None):
                                  for s in safety.values()))
 
 
-def results_rows(rows):
-    """REGIMEU0_RESULTS.jsonl episode rows (FULLPOL's alternative input; J_300_1200_vs = control-window J)."""
+def results_rows(rows, excluded=()):
+    """REGIMEU0_RESULTS.jsonl episode rows (J_300_1200_vs = control-window J) of FAMILY arms only (u0 included; the
+    parity arm, the banned comparator and every banned-spec arm excluded)."""
     out = []
     for r in rows:
         for arm, x in sorted(r['arms'].items()):
+            if arm in excluded:
+                continue
             if x.get('status') not in ('ok', 'failed'):
                 continue
             if x['status'] == 'failed':
@@ -947,34 +1018,48 @@ def analyze(roots, out_dir=None):
     for r in roots:
         body = _read(r / 'PLAN.json')
         for name, f in (body.get('families') or wmsearch_families(body)).items():
-            families.setdefault(name, f)
+            if name not in col['banned'] and not SS.banned(f['spec']):
+                families.setdefault(name, f)
     order = [BASE_ARM] + [a for a in col['arms'] if a != BASE_ARM]
+    excluded = set(NOT_FAMILIES) | set(col['banned'])
     fair = fairness(col, order)
     ver = dict(schema=SCHEMA + '.verify', stable_id=STABLE_ID, phase=PHASE, roots=[str(r) for r in roots],
                plan_sha256=rep['plan_sha256'], incumbent=INCUMBENT, banned_comparator=BANNED_ARM,
                convention='diff = arm - reference (same seed): J over [300, 1200) s veh-s, group mean per-vehicle '
-                          'delay change s/veh; negative = better. ALLOWED = every group change vs u0 <= 10 s/veh '
-                          '(point, road component); CI upper reported',
+                          'delay change s/veh; negative = better. ALLOWED = N6 amendment 13 (labels from u0 by vehicle '
+                          'id; all five co-primary groups <= 10 s point; depart delay included)',
+               banned_arms=col['banned'],
                families=families, vs_incumbent=contrasts(col['rows'], order), fairness=fair, integrity=chk,
                parity=col['parity'])
     for cell, arms in ver['vs_incumbent'].items():
-        if BANNED_ARM in arms:
-            arms[BANNED_ARM]['label'] = 'banned comparator (owner 2026-11-07); never an ANALYSIS family'
+        for a in set(arms) & excluded - {PARITY_ARM}:
+            arms[a]['label'] = 'banned comparator (owner 2026-11-07); never an ANALYSIS family'
     summ = {}
     for cell, arms in ver['vs_incumbent'].items():
         fc = fair.get(cell) or {}
-        allowed = sorted(a for a in arms if a not in NOT_FAMILIES and (fc.get(a) or {}).get('allowed') is True)
+        allowed = sorted(a for a in arms if a not in excluded and (fc.get(a) or {}).get('allowed') is True)
         beat = sorted(a for a in allowed if arms[a].get('beats_ref_ci'))
         best = min((a for a in allowed if arms[a].get('mean_diff') is not None), key=lambda a: arms[a]['mean_diff'],
                    default=None)
-        summ[cell] = dict(n_strategies=len([a for a in arms if a not in NOT_FAMILIES]), allowed=allowed,
-                          not_allowed=sorted(a for a in arms if a not in NOT_FAMILIES and a not in allowed),
+        summ[cell] = dict(n_strategies=len([a for a in arms if a not in excluded]), allowed=allowed,
+                          not_allowed=sorted(a for a in arms if a not in excluded and a not in allowed),
                           incumbent_allowed=(fc.get(INCUMBENT) or {}).get('allowed'),
                           beat_incumbent_ci_allowed=beat, best_allowed=best,
                           best_allowed_vs_incumbent=None if best is None else {k: arms[best].get(k) for k in
                                                                                ('n', 'mean_diff', 'ci95', 'rel_diff',
                                                                                 'better_share')})
     ver['summary'] = summ
+    ver['analysis_written'] = bool(chk['ok'])
+    if not chk['ok']:
+        # FAIL CLOSED (review REV-WMV3 blocker 3): no FULLPOL-facing file when an integrity check fails
+        ver['summary'] = dict(blocked='integrity failed: no ANALYSIS / ANALYSIS_ALLOWED / RESULTS written',
+                              failed_checks=[c['name'] for c in chk['checks'] if not c['ok']])
+        if out_dir is not None:
+            out = guard_path(out_dir)
+            out.mkdir(parents=True, exist_ok=False)
+            _write_new(out / 'VERIFY.json', ver)
+            _write_new(out / 'CHECK.json', chk)
+        return None, ver
     if out_dir is not None:
         out = guard_path(out_dir)
         out.mkdir(parents=True, exist_ok=False)
@@ -987,7 +1072,7 @@ def analyze(roots, out_dir=None):
         _write_new(out / 'VERIFY.json', ver)
         _write_new(out / 'CHECK.json', chk)
         with (out / 'RESULTS.jsonl').open('x', encoding='utf-8') as f:
-            for row in results_rows(col['rows']):
+            for row in results_rows(col['rows'], excluded):
                 f.write(json.dumps(row, sort_keys=True, default=str) + '\n')
     return rep, ver
 
@@ -1002,13 +1087,19 @@ def budget(cells, n_candidates_by_cell, parity_seeds=2, identity=True, banned_se
     return total
 
 
-def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, identity=True,
-                      lane_executor=DEFAULT_LANE_EXECUTOR, hold_executor=DEFAULT_HOLD_EXECUTOR, arms_sha256=None,
-                      regimeu0_u0_sha256=None, smoke_seeds=1, banned_seeds=0):
-    planned = budget(cells, {c: len(v) for c, v in specs_by_cell.items()}, parity_seeds, identity, banned_seeds)
+def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, lane_executor=DEFAULT_LANE_EXECUTOR,
+                      hold_executor=DEFAULT_HOLD_EXECUTOR, arms_sha256=None, regimeu0_u0_sha256=None, smoke_seeds=1,
+                      banned_seeds=0):
+    _ir, R = _harness()
+    gr = build_groups(cells, specs_by_cell, R.world_of, parity_seeds=parity_seeds, identity=True,
+                      lane_executor=lane_executor, hold_executor=hold_executor, banned_seeds=banned_seeds)
+    planned = sum(j['sim_s'] for g in gr for j in g['jobs'])
     shas = module_shas()
     lines = [
-        f'### {STABLE_ID} (phase {PHASE}) - registration (append BEFORE any physics)',
+        REG_HEADER,
+        '- Append BEFORE any physics; `plan` refuses unless this exact header and the jobs digest, cap / planned '
+        'budget, ARMS.json sha256 and module sha256 below match the run.',
+        f'- Plan jobs sha256: {jobs_digest(gr)}',
         '- Question: do the WORLD-MODEL-PROPOSED strategies (WM-C ARMS.json v3: delay / bounded / fairer archives, '
         'structured, random, reference) beat the gentle incumbent wall_g_solo2 and MAPPO u0 per demand cell on fresh '
         'TRAIN-type seeds, when executed by the POLICY executor, and are they ALLOWED under the owner fairness bound '
@@ -1035,7 +1126,7 @@ def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, identity=Tru
             f'{s["name"]} [{src}, {SS.strategy_key(s)}, '
             f'{VH.resolve_executor(s, lane_executor=lane_executor, hold_executor=hold_executor)}]' for src, s in lst))
     lines += [
-        f'- ARMS.json sha256: {arms_sha256 or "<ARMS.json>"}.',
+        f'- ARMS.json sha256: {arms_sha256 or "<none>"}.',
         '- Executors: trigger, member selection and timing = WM-C strategy_hook.StrategyCore (same select_members, '
         'roles, gate, cooldown as the WM search). Hold-only strategies (executor plant): hold law clip(v_w - v, -dmax, '
         '1.0) as the absolute pre-safety request through the plant single writer (MAPPO safety downstream), own-lane '
@@ -1052,23 +1143,26 @@ def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, identity=Tru
         'anything else is rejected.',
         f'- Code: c4/wmverify; module sha256 {json.dumps(shas, sort_keys=True)}.',
         f'- Budget (phase {PHASE}): cap {int(cap):,} sim-s; planned {planned:,} sim-s '
-        f'({"identity 1,200 + " if identity else ""}seeds x arms x 1,200 + parity).',
+        '(identity 1,200 per root + seeds x arms x 1,200 + parity / comparator arms).',
         f'- Stage A (smoke): identity + the first {smoke_seeds} seed(s) of every cell, all arms -> '
         '`python -m tools.wzprop.wmverify check` must pass (identity 53,269.32889342696 veh-s, CRN, executor '
         'parity, ledger, inputs; warnings reviewed: LCEXEC refusals, lane programs without executed lane requests, '
-        'never-activated strategies) before stage B (remaining seeds, --prior-root A --no-identity).',
+        'never-activated strategies) before stage B (remaining seeds, --prior-root A; stage B repeats the identity '
+        'episode). analyze writes no ANALYSIS file when any integrity check fails (fail closed).',
         '- Analysis (fixed before results): regimeu0.analyze per cell (paired diff vs u0, bootstrap 10,000 RNG '
         '20261106, 2.5/97.5%), strategy - wall_g_solo2 paired contrasts (same bootstrap), per-seed better/worse '
         'shares, beats-u0-and-incumbent share, safety (collisions, teleports, hard braking, TTC<3 s; deltas vs u0 and '
-        'vs the incumbent); per-group fairness with the eval-only LSSEARCH/MULTICRIT per-vehicle logger '
-        '(tools/wzprop/pervehicle.py, every arm incl. u0): groups origin SUMO lane 0/1/2 and HDV/CAV, paired mean '
-        'per-vehicle delay change vs u0 and vs the incumbent with 95% CIs (bootstrap 10,000 RNG 20261107), ALLOWED = '
-        'every group change vs u0 <= 10 s/veh (point, road component; CI upper reported), CVaR90 / p90 / Gini '
-        'changes. diff = arm - reference; negative = better. No thresholds tuned on these seeds.',
+        'vs the incumbent); per-group fairness = N6 amendment 13 exactly (c4/nm-finaleval 4397d777: eval-only '
+        'VehicleLog on every arm incl. u0; per-vehicle delay = window speed deficit + depart delay if inserted after '
+        '300 s; labels from u0 by vehicle id: origin = first logged row at t >= 300 if upstream of the drop, else '
+        'origin:undefined (reported only); class hdv/cav; missing vehicles counted both ways; ALLOWED = all five '
+        'co-primary groups present and mean increase vs u0 <= 10 s (point; 95% CI reported, whole-world bootstrap '
+        '10,000 seed 20261104); own-arm labels = sensitivity). Banned 15 m/s specs are never FULLPOL-facing. diff = '
+        'arm - reference; negative = better. No thresholds tuned on these seeds.',
         '- Stop rules: STOP file; cap; failed integrity check -> stop and report; charged jobs are never re-run.',
-        '- Outputs: ANALYSIS.json and ANALYSIS_ALLOWED.json (S-REGIMEU0 schema; FULLPOL build_guidance(mappo=...)), '
+        '- Outputs: ANALYSIS_ALLOWED.json (FULLPOL reads this file only; S-REGIMEU0 schema), ANALYSIS.json, '
         'VERIFY.json (families: spec, executor, LCEXEC template(s), offer condition, lcexec_parity / n2_parity; '
-        'contrasts; fairness; integrity), RESULTS.jsonl, CHECK.json, PERVEH.json.gz per episode.',
+        'contrasts; fairness; integrity), RESULTS.jsonl (families only), CHECK.json, VEHICLES.jsonl.gz per episode.',
     ]
     return '\n'.join(lines) + '\n', planned
 
@@ -1154,7 +1248,6 @@ def main(argv=None):
         if name == 'registration':
             a.add_argument('--cap', type=int, required=True)
             a.add_argument('--regimeu0-root')
-            a.add_argument('--no-identity', action='store_true')
         if name == 'dryrun':
             a.add_argument('--out', required=True)
             a.add_argument('--fake-seconds', type=int, default=900)
@@ -1164,7 +1257,6 @@ def main(argv=None):
             a.add_argument('--cap', type=int, required=True)
             a.add_argument('--registration', required=True, help='the run REGISTRATION.md with the S-WMVERIFY block')
             a.add_argument('--prior-root', action='append', default=[])
-            a.add_argument('--no-identity', action='store_true')
     a = sub.add_parser('run')
     a.add_argument('--root', required=True)
     a.add_argument('--workers', type=int, default=16)
@@ -1219,7 +1311,7 @@ def main(argv=None):
         if x.regimeu0_root:
             u0 = _read(Path(x.regimeu0_root) / 'PLAN.json')['inputs']['u0.pt']['sha256']
         text, planned = registration_text(cells=cells, specs_by_cell=specs, cap=x.cap, parity_seeds=x.parity_seeds,
-                                          identity=not x.no_identity, lane_executor=x.lane_executor,
+                                          lane_executor=x.lane_executor,
                                           hold_executor=x.hold_executor, banned_seeds=x.banned_seeds,
                                           arms_sha256=_sha_file(x.arms) if x.arms else None, regimeu0_u0_sha256=u0)
         if planned > x.cap:
@@ -1235,7 +1327,7 @@ def main(argv=None):
     elif x.cmd == 'plan':
         body = plan(x.root, regimeu0_root=x.regimeu0_root, arms_path=x.arms, cells=cells, cap=x.cap,
                     registration_md=x.registration, groups=groups, k=x.k, parity_seeds=x.parity_seeds,
-                    identity=not x.no_identity, lane_executor=x.lane_executor, hold_executor=x.hold_executor,
+                    lane_executor=x.lane_executor, hold_executor=x.hold_executor,
                     spec_paths=x.spec, prior_roots=x.prior_root, banned_seeds=x.banned_seeds)
         print(json.dumps(dict(plan_sha256=body['plan_sha256'], planned_sim_s=body['planned_sim_s'],
                               arms=sorted(body['families']), groups=len(body['groups']))))
@@ -1254,6 +1346,8 @@ def main(argv=None):
         rep, ver = analyze(x.root, x.out)
         print(json.dumps(dict(integrity_ok=ver['integrity']['ok'], safety_clean=ver['integrity']['safety_clean'],
                               summary=ver['summary']), indent=1, default=str))
+        if not ver['integrity']['ok']:
+            raise SystemExit(1)              # fail closed: no FULLPOL-facing file was written
 
 
 if __name__ == '__main__':

@@ -1,4 +1,6 @@
-"""S-HOLDPIN (phase hold_pin_check, <= 100,000 sim-s; MAIN 2026-11-07 ~00:5x): does the UNPINNED solo2 hold - what the
+"""CANCELLED by the owner (see CANCELLED); not runnable.
+
+S-HOLDPIN (phase hold_pin_check, <= 100,000 sim-s; MAIN 2026-11-07 ~00:5x): does the UNPINNED solo2 hold - what the
 policy's N2 executor runs (wmverify_n2: identical speed writes, NO laneChangeMode 513 pin) - keep the gain that
 S-REGIMEU0 measured with the pinned solo2 (regimeu0.RuleHook: G5 own-lane target = lcMode 513)?
 
@@ -99,7 +101,16 @@ def registration_text(regimeu0_u0_sha256=None):
     return '\n'.join(lines) + '\n', planned
 
 
+CANCELLED = ('S-HOLDPIN is CANCELLED by the owner (REGISTRATION: "S-HOLDPIN check skipped"; the firm 15 m/s '
+             'hold is banned): plan and run refuse; a new owner-approved registration block is required')
+
+
 def plan(root, *, regimeu0_root, registration_md, cap=CAP):
+    raise ValueError(CANCELLED)
+
+
+def _plan_cancelled_reference(root, *, regimeu0_root, registration_md, cap=CAP):
+    """The former plan body (kept for the record; unreachable)."""
     ir, R = V._harness()
     root = V.guard_path(root)
     if (root / 'PLAN.json').exists():
@@ -137,7 +148,7 @@ def plan(root, *, regimeu0_root, registration_md, cap=CAP):
 
 
 def run(root, **kw):
-    return V.run(root, phase=PHASE, **kw)
+    raise ValueError(CANCELLED)
 
 
 def _summaries(root, ir):

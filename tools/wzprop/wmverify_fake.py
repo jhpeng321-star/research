@@ -57,8 +57,35 @@ class FakeEnv:
         self.done = False
         self._version, self._gap_cache = 0, None
         self.pv_req, self.pv_origin, self.pv_road = {}, {}, {}      # fake per-vehicle record (PerVehicle fields)
+        self.depart_delay = {}                                       # vid -> fake depart delay (VehicleLog getter)
         if not lc_runtime:
             self.lc_tick = None
+
+    # ---- the plant frame / builder / TraCI getters VehicleLog reads (wmverify_fair, N6 port)
+    @property
+    def frame(self):
+        import numpy as np
+        from types import SimpleNamespace
+        vids = sorted(self.veh)
+        d = [self.veh[v] for v in vids]
+        return SimpleNamespace(present=np.ones(len(vids), bool), vid_index=np.arange(len(vids)),
+                               s=np.array([x['s'] for x in d], float), v=np.array([x['v'] for x in d], float),
+                               a=np.array([x.get('a', 0.0) for x in d], float), lane=np.array([x['lane'] for x in d], int),
+                               lane_carry=np.array([x['lane'] for x in d], int), junction=np.zeros(len(vids), bool),
+                               is_cav=np.array([x['cav'] for x in d], bool))
+
+    @property
+    def builder(self):
+        from types import SimpleNamespace
+        return SimpleNamespace(vehicle_ids=sorted(self.veh))
+
+    @property
+    def api(self):
+        from types import SimpleNamespace
+        env = self
+        return SimpleNamespace(vehicle=SimpleNamespace(
+            getRoute=lambda vid: ['up', 'wz'],
+            getDepartDelay=lambda vid: float(env.depart_delay.get(vid, 0.0))))
 
     # ---- observation
     def rows(self):
@@ -165,6 +192,7 @@ class FakeEnv:
                 self.n += 1
                 self.veh[vid] = dict(s=START_S, v=25.0, lane=lane, cav=self.rng.random() < self.share)
                 self.pv_req[vid] = (float(self.now), bool(self.veh[vid]['cav']))
+                self.depart_delay[vid] = float((self.n * 7) % 5) * 0.5
                 self.pv_origin[vid] = ('up', 2 - lane)
         road = sum(max(0.0, V_FREE - d['v']) / V_FREE for d in self.veh.values())
         if 300 <= self.now < 1200:
@@ -202,6 +230,7 @@ def run_episode(hook, *, seed=989950, share=0.6, seconds=1200, lc_runtime=True, 
         if t < warmup_s:                                   # native warmup 0-300 s: no controller, no series
             env.step({}, env.commands(), None)
             continue
+        ticker(b, controller, None)                        # coopfree.tick entry: pre-step (VehicleLog)
         rows = env.rows()
         commands = env.commands()
         desired = controller.apply(rows, commands, t)
@@ -210,7 +239,6 @@ def run_episode(hook, *, seed=989950, share=0.6, seconds=1200, lc_runtime=True, 
             controller.lane_actors()
         info = env.step(desired, commands, targets)
         controller.observe_lane(info)
-        ticker(b, controller, None)
         if record is not None:
             trace.append(dict(t=t, desired={k: (round(v['requested_raw'], 9), round(v['acceleration_residual'], 9))
                                             for k, v in desired.items()},

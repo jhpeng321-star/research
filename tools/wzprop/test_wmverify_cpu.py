@@ -263,7 +263,8 @@ def _fake_root(tmp_path, arms=('u0', 'wall_g_solo2', 'wall_g', 'wall_g_solo0'), 
             (root / 'jobs' / j['id']).mkdir()
             with gzip.open(root / 'jobs' / j['id'] / 'SUMMARY.json.gz', 'wt', encoding='utf-8') as f:
                 json.dump(_summary(hook, res, j), f)
-    (root / 'PLAN.json').write_text(json.dumps(dict(groups=groups, plan_sha256='p', inputs={})))
+    (root / 'PLAN.json').write_text(json.dumps(dict(schema=V.SCHEMA + '.plan', groups=groups, plan_sha256='p',
+                                                    inputs={})))
     (root / 'REGISTRATION.json').write_text(json.dumps(dict(cap_sim_s=10 ** 6)))
     return root
 
@@ -277,19 +278,106 @@ def test_analysis_equals_regimeu0_analyze(tmp_path):
     assert set(got) == set(ref) == {'schema', 'roots', 'spent', 'plan_sha256', 'cells', 'seeds', 'identity'}
 
 
+# ------------------------------------------------------------------------------------------ fairness (N6 port)
+def _vlog(path, heads, ticks):
+    with gzip.open(path, 'wt', encoding='utf-8') as f:
+        for h in heads:
+            f.write(json.dumps(h) + '\n')
+        for t in ticks:
+            f.write(json.dumps(t) + '\n')
+
+
+def test_per_vehicle_first_logged_row_and_depart_delay(tmp_path, monkeypatch):
+    """nm_finaleval.vehicle_log_report rules: origin = WM lane of the first row at t >= 300 if upstream of the drop
+    (else 'D' = undefined); delay = window speed deficit + depart delay only if first seen after 300 s."""
+    from tools.wzprop import wmverify_fair as WF
+    monkeypatch.setattr(WF, 'HORIZON_S', 303)
+    heads = [dict(veh=0, id='a', cav=False, origin='up', depart_delay_s=4.0, first_t=300),     # on road at 300
+             dict(veh=1, id='b', cav=True, origin='up', depart_delay_s=2.5, first_t=301),      # inserted later
+             dict(veh=2, id='c', cav=False, origin='up', depart_delay_s=0.0, first_t=300)]     # first seen past drop
+    v = 31.29 / 2
+    ticks = [dict(t=300, k=[0, 2], s=[-500.0, 80.0], v=[v, 31.29], a=[0, 0], lane=[0, 1]),
+             dict(t=301, k=[0, 1, 2], s=[-480.0, -2600.0, 100.0], v=[v, 31.29, 31.29], a=[0, 0, 0], lane=[1, 2, 1]),
+             dict(t=302, k=[0, 1], s=[-460.0, -2580.0], v=[v, 31.29], a=[0, 0], lane=[1, 2])]
+    _vlog(tmp_path / 'v.jsonl.gz', heads, ticks)
+    pv, problems = WF.per_vehicle(tmp_path / 'v.jsonl.gz')
+    assert problems == []
+    assert pv['a'] == [1.5, 'L2', False]          # first row lane 0 (WM) -> L2; depart delay NOT added (first_t 300)
+    assert pv['b'] == [2.5, 'L0', True]           # inserted after 300: depart delay added; WM lane 2 -> L0
+    assert pv['c'] == [0.0, 'D', False]           # first logged row downstream of the drop -> undefined
+    assert WF._labels(pv)['c'] == ('class:hdv', 'origin:undefined')
+
+
+def test_co_primary_groups_labels_from_u0_by_vehicle_id():
+    """Amendment 13: labels from u0 applied by vehicle id (an arm's own insertion lane is ignored), undefined
+    reported only, missing vehicles counted both ways, ALLOWED needs all five groups present and passing."""
+    from tools.wzprop import wmverify_fair as WF
+    u0, arm = {}, {}
+    for w in (1, 2):
+        u0[w] = {'h0': [10.0, 'L0', False], 'h1': [10.0, 'L1', False], 'c2': [10.0, 'L2', True],
+                 'x': [10.0, 'D', False], 'gone': [10.0, 'L1', False]}
+        # same vehicles, but h0 entered on another lane in the arm (its own label would be L2) and +5 s for all
+        arm[w] = {'h0': [15.0, 'L2', False], 'h1': [15.0, 'L1', False], 'c2': [15.0, 'L2', True],
+                  'x': [15.0, 'D', False], 'new': [99.0, 'L0', True]}
+    r = WF.co_primary_groups({'u0': u0, 'arm': arm}, [1, 2], 'arm', 'u0', reference='u0')
+    g = r['groups']
+    assert g['origin:L0']['increase_mean_s'] == pytest.approx(5.0)          # h0 stays in L0 (u0 label)
+    assert g['origin:undefined']['increase_mean_s'] == pytest.approx(5.0) and not g['origin:undefined']['registered']
+    assert r['vehicles_missing']['arm'] == dict(not_in_reference=2, reference_not_in_arm=2)
+    assert r['all_pass'] is True
+    own = r['sensitivity_own_arm_labels']['groups']
+    assert own['origin:L0']['increase_mean_s'] != pytest.approx(5.0)       # own-arm labels differ (sensitivity)
+    # a co-primary group absent -> not allowed (fail closed)
+    for w in (1, 2):
+        u0[w].pop('c2')
+        arm[w].pop('c2')
+        arm[w].pop('new')
+    r2 = WF.co_primary_groups({'u0': u0, 'arm': arm}, [1, 2], 'arm', 'u0', reference='u0')
+    assert r2['groups']['class:cav']['status'] == 'unavailable' and r2['all_pass'] is False
+    # one world only -> every group unavailable -> not allowed
+    assert WF.co_primary_groups({'u0': u0, 'arm': arm}, [1], 'arm', 'u0', reference='u0')['all_pass'] is False
+
+
+# ------------------------------------------------------------------------------------------ registration gate
+def test_registration_gate_exact_block(tmp_path):
+    cells = V.parse_cells(['D3200_p60:989950-989951'])
+    specs = {'D3200_p60': [('wm', dict(inc(), name='g_v18', roles=[dict(SS.INCUMBENT['roles'][0], v_w=18.0)]))]}
+    text, planned = V.registration_text(cells=cells, specs_by_cell=specs, cap=40_000, parity_seeds=1)
+    _ir, _R = V._harness()
+    gr = V.build_groups(cells, specs, R.world_of, parity_seeds=1)
+    sha, mods = V.jobs_digest(gr), V.module_shas()
+    assert V.registration_check(text, cap=40_000, planned=planned, jobs_sha256=sha, arms_sha256=None,
+                                module_sha256=mods)
+    stray = ('S-WMVERIFY wm_verify 989950-989999 40,000 D3200_p60 ' + text.split('\n', 1)[1])   # no exact header
+    with pytest.raises(ValueError, match='exact header'):
+        V.registration_check(stray, cap=40_000, planned=planned, jobs_sha256=sha, arms_sha256=None, module_sha256=mods)
+    for kw in (dict(jobs_sha256='0' * 64), dict(cap=50_000), dict(planned=planned + 1200), dict(arms_sha256='ab'),
+               dict(module_sha256=dict(mods, wmverify='x'))):
+        args = dict(cap=40_000, planned=planned, jobs_sha256=sha, arms_sha256=None, module_sha256=mods)
+        args.update(kw)
+        with pytest.raises(ValueError, match='no S-WMVERIFY registration block'):
+            V.registration_check(text, **args)
+
+
+def test_holdpin_is_cancelled(tmp_path):
+    from tools.wzprop import holdpin as HP
+    with pytest.raises(ValueError, match='CANCELLED'):
+        HP.plan(tmp_path / 'hp', regimeu0_root=tmp_path, registration_md=tmp_path / 'R.md')
+    with pytest.raises(ValueError, match='CANCELLED'):
+        HP.run(tmp_path / 'hp')
+
+
 # ------------------------------------------------------------------------------------------ end to end (fake episode)
-def _registration(tmp_path, cells, specs, cap, parity_seeds=1):
+def _registration(tmp_path, cells, specs, cap, parity_seeds=1, banned_seeds=0, arms=None):
     text, planned = V.registration_text(cells=cells, specs_by_cell=specs, cap=cap, regimeu0_u0_sha256='u0sha',
-                                        parity_seeds=parity_seeds)
+                                        parity_seeds=parity_seeds, banned_seeds=banned_seeds,
+                                        arms_sha256=None if arms is None else ir.sha_file(arms))
     p = tmp_path / 'REGISTRATION.md'
-    p.write_text('# run registrations\n' + text, encoding='utf-8')
+    p.write_text('# run registrations\nS-WMVERIFY wm_verify mention elsewhere\n\n' + text, encoding='utf-8')
     return p, planned
 
 
-def test_end_to_end_plan_worker_analyze(tmp_path, monkeypatch, wz):
-    import torch
-    from tools.coopfree import backend as cfb
-    from tools.coopmwm import accel_plant, coop_warmstart, v2v_runtime
+def _e2e_inputs(tmp_path):
     reg_root = tmp_path / 'regimeu0'
     (reg_root / 'inputs').mkdir(parents=True)
     (reg_root / 'inputs' / 'CONFIG.json').write_text('{}')
@@ -302,17 +390,51 @@ def test_end_to_end_plan_worker_analyze(tmp_path, monkeypatch, wz):
                                                            roles=[dict(SS.INCUMBENT['roles'][0], v_w=18.0)])],
                                                   structured=[], random=[], incumbent=inc(),
                                                   banned_comparator=solo2())}))
+    return reg_root, arms
+
+
+def _fake_physics(monkeypatch):
+    import torch
+    from tools.coopfree import backend as cfb
+    from tools.coopmwm import accel_plant, coop_warmstart, v2v_runtime
+    from tools.wzprop import wmverify_fair as WF
+    monkeypatch.setenv(md.ENV, 'bound-by-fixture')
+    monkeypatch.setenv('COOPMWM_G5_RUNTIME', '1')
+    monkeypatch.setattr(v2v_runtime, 'load_checkpoint', lambda *a, **k: (torch.nn.Linear(1, 1), None, None, None))
+    monkeypatch.setattr(coop_warmstart, 'state_sha256', lambda m: 'fake')
+    monkeypatch.setattr(cfb, 'tick', F.fake_tick)
+    monkeypatch.setattr(WF, 'HORIZON_S', SECONDS)          # fake episodes stop at SECONDS (the log window too)
+    episode = F.fake_episode_factory()
+
+    def fake_episode(job, **kw):
+        return episode(dict(job, stop=SECONDS), **kw)
+    monkeypatch.setattr(accel_plant, 'episode', fake_episode)
+
+
+def _run_all(root, body):
+    for j in [j for g in body['groups'] for j in g['jobs']]:
+        assert ir.charge(root, [(j['id'], j['sim_s'], 'paired')])
+        s = V.worker(root, j['id'])
+        assert not s['error'], s['error']
+
+
+def test_end_to_end_plan_worker_analyze(tmp_path, monkeypatch, wz):
+    reg_root, arms = _e2e_inputs(tmp_path)
     cells = V.parse_cells(['D3200_p60:989950-989951'])
     specs = {'D3200_p60': V.candidates(json.loads(arms.read_text()), 'D3200_p60')}
     cap = 40_000
-    reg, planned = _registration(tmp_path, cells, specs, cap)
-    with pytest.raises(ValueError, match='lacks'):
+    reg, planned = _registration(tmp_path, cells, specs, cap, banned_seeds=1, arms=arms)
+    with pytest.raises(ValueError, match='no S-WMVERIFY registration block'):
         V.plan(tmp_path / 'bad', regimeu0_root=reg_root, arms_path=arms, cells=cells, cap=cap + 1,
-               registration_md=reg)
+               registration_md=reg, parity_seeds=1, banned_seeds=1)
+    with pytest.raises(ValueError, match='no S-WMVERIFY registration block'):     # budget differs from the block
+        V.plan(tmp_path / 'bad2', regimeu0_root=reg_root, arms_path=arms, cells=cells, cap=cap,
+               registration_md=reg, parity_seeds=1, banned_seeds=0)
     root = tmp_path / 'run'
     body = V.plan(root, regimeu0_root=reg_root, arms_path=arms, cells=cells, cap=cap, registration_md=reg,
                   parity_seeds=1, banned_seeds=1)
-    assert body['planned_sim_s'] == planned + 1200 == 1200 * (1 + 2 * 4 + 1 + 1)
+    assert body['planned_sim_s'] == planned == 1200 * (1 + 2 * 4 + 1 + 1)
+    assert body['groups'][0]['stage'] == 'identity'                      # mandatory, no bypass
     fam = body['families']
     assert fam['wmv_lc_closing']['executor'] == 'lcexec' and fam['g_v18']['executor'] == 'plant'
     assert fam['wmv_lc_closing']['lcexec_parity']['id'] == 'S-LCEXEC-SMOKE' and fam['g_v18']['lcexec_parity'] is None
@@ -322,27 +444,25 @@ def test_end_to_end_plan_worker_analyze(tmp_path, monkeypatch, wz):
                                             'g_v18']
     with pytest.raises(ValueError, match='prior root'):
         V.plan(tmp_path / 'run2', regimeu0_root=reg_root, arms_path=arms, cells=cells, cap=cap, registration_md=reg,
-               prior_roots=[root], identity=False)
-    # ---- fake physics through regimeu0.worker
-    monkeypatch.setenv(md.ENV, 'bound-by-fixture')
-    monkeypatch.setenv('COOPMWM_G5_RUNTIME', '1')
-    monkeypatch.setattr(v2v_runtime, 'load_checkpoint', lambda *a, **k: (torch.nn.Linear(1, 1), None, None, None))
-    monkeypatch.setattr(coop_warmstart, 'state_sha256', lambda m: 'fake')
-    monkeypatch.setattr(cfb, 'tick', F.fake_tick)
-    episode = F.fake_episode_factory()
-
-    def fake_episode(job, **kw):
-        return episode(dict(job, stop=SECONDS), **kw)
-    monkeypatch.setattr(accel_plant, 'episode', fake_episode)
-    for j in jobs:
-        assert ir.charge(root, [(j['id'], j['sim_s'], 'paired')])
-        s = V.worker(root, j['id'])
-        assert not s['error'], s['error']
-        side = json.loads((root / 'jobs' / j['id'] / 'WMVERIFY.json').read_text())
-        assert side['executor'] == j['executor']
+               prior_roots=[root], parity_seeds=1, banned_seeds=1)
+    _fake_physics(monkeypatch)
+    _run_all(root, body)
     assert ir.spent(root) == body['planned_sim_s']
+    assert all((root / V.VEHICLE_LOG_DIR / j['id'] / 'VEHICLES.jsonl.gz').exists() for j in jobs)
+    # ---- the fake plant cannot reproduce the identity J -> FAIL CLOSED: no FULLPOL-facing file
+    blocked = tmp_path / 'blocked'
+    rep0, ver0 = V.analyze([root], blocked)
+    assert rep0 is None and not ver0['analysis_written']
+    assert sorted(p.name for p in blocked.iterdir()) == ['CHECK.json', 'VERIFY.json']
+    assert 'identity_u0_989599' in ver0['summary']['failed_checks']
+    with pytest.raises(SystemExit):
+        V.main(['analyze', '--root', str(root), '--out', str(tmp_path / 'blocked_cli')])
+    # ---- explicit test-only override of the identity reference (the fake identity episode's own J)
+    idj = ir._read(root / 'jobs' / V.IDENTITY_JOB / 'SUMMARY.json.gz')['totals']['team_delay_vs']
+    monkeypatch.setattr(R, 'IDENTITY', dict(R.IDENTITY, expected_team_delay_vs=idj))
     out = tmp_path / 'analysis'
     rep, ver = V.analyze([root], out)
+    assert ver['integrity']['ok'], [c for c in ver['integrity']['checks'] if not c['ok']]
     assert set(rep) == {'schema', 'roots', 'spent', 'plan_sha256', 'cells', 'seeds', 'identity'}
     assert rep['schema'] == R.SCHEMA + '.analysis'
     cell = rep['cells']['D3200_p60']
@@ -357,32 +477,36 @@ def test_end_to_end_plan_worker_analyze(tmp_path, monkeypatch, wz):
         v = vs[a]
         d = [rep['seeds'][i]['arms'][a]['J'] - rep['seeds'][i]['arms']['wall_g_solo2']['J'] for i in range(2)]
         assert v['mean_diff'] == pytest.approx(sum(d) / 2) and math.isclose(v['better_share'], sum(x < 0 for x in d) / 2)
-    # per-group fairness (fake per-vehicle records), ALLOWED filter
+    # per-group fairness: N6 amendment 13 (labels from u0), ALLOWED filter
     fair = ver['fairness']['D3200_p60']
-    for a in ('wall_g_solo2', 'wmv_lc_closing', 'g_v18', 'wall_h_solo2'):
-        f0 = fair[a]['fairness']['road']['u0']
-        assert f0['n'] == (1 if a == 'wall_h_solo2' else 2) and fair[a]['allowed'] == f0['allowed_point']
-        assert set(f0['groups']) <= {'lane0', 'lane1', 'lane2', 'hdv', 'cav'} and 'cvar90' in f0
-        assert 'wall_g_solo2' in fair[a]['fairness']['road'] or a == 'wall_g_solo2'
+    for a in ('wall_g_solo2', 'wmv_lc_closing', 'g_v18'):
+        f0 = fair[a]['fairness']['u0']
+        assert f0['reference'] == 'u0' and f0['n_worlds'] == 2 and fair[a]['allowed'] == f0['all_pass']
+        assert set(f0['groups']) == {'origin:L0', 'origin:L1', 'origin:L2', 'class:hdv', 'class:cav',
+                                     'origin:undefined'}
+        assert 'sensitivity_own_arm_labels' in f0 and set(f0['vehicles_missing']) == {a, 'u0'}
+    assert fair['wall_h_solo2']['label'] == 'banned comparator'
     allowed = json.loads((out / 'ANALYSIS_ALLOWED.json').read_text())
     keep = {a for a in ('wall_g_solo2', 'wmv_lc_closing', 'g_v18') if fair[a]['allowed']}
     assert set(allowed['cells']['D3200_p60']) == {'u0'} | keep and allowed['schema'] == rep['schema']
     assert {r['family'] for r in _fullpol_rows(allowed)} == keep
     assert ver['summary']['D3200_p60']['allowed'] == sorted(a for a in ('wmv_lc_closing', 'g_v18') if fair[a]['allowed'])
-    assert ver['summary']['D3200_p60']['incumbent_allowed'] == fair['wall_g_solo2']['allowed']
     chk = ver['integrity']
     names = {c['name']: c['ok'] for c in chk['checks']}
     assert names['executor_parity_solo2_core_equals_incumbent'] and names['crn_no_divergence_before_first_activation']
-    assert names['perveh_present_every_episode']
-    assert names['ledger_within_cap_no_uncharged_jobs'] and names['inputs_u0_identical_and_equal_regimeu0']
-    assert names['identity_u0_989599'] is False             # the fake plant cannot reproduce 53,269.33 veh-s
+    assert names['vehicle_log_present_every_episode'] and names['identity_u0_989599']
     assert chk['lane_receipts']['wmv_lc_closing']['sessions'] > 0
     assert ver['families']['wmv_lc_closing']['template']['schema'] == 'lcexec-free-program-v1'
     res = [json.loads(x) for x in (out / 'RESULTS.jsonl').read_text().splitlines()]
-    assert {r['arm'] for r in res} == {'u0', 'wall_g_solo2', 'wall_h_solo2', 'wmv_lc_closing', 'g_v18'}
+    assert {r['arm'] for r in res} == {'u0', 'wall_g_solo2', 'wmv_lc_closing', 'g_v18'}    # no banned rows
     assert all('J_300_1200_vs' in r for r in res)
     with pytest.raises(FileExistsError):
         V.analyze([root], out)
+    # ---- a missing vehicle log also fails closed
+    (root / V.VEHICLE_LOG_DIR / jobs[3]['id'] / 'VEHICLES.jsonl.gz').unlink()
+    rep2, ver2 = V.analyze([root], tmp_path / 'blocked2')
+    assert rep2 is None and 'vehicle_log_present_every_episode' in ver2['summary']['failed_checks']
+    assert not (tmp_path / 'blocked2' / 'ANALYSIS_ALLOWED.json').exists()
 
 
 def test_dryrun_reports_incumbent_parity(tmp_path, wz):
@@ -399,14 +523,8 @@ def test_dryrun_reports_incumbent_parity(tmp_path, wz):
         V.run(tmp_path / 'dry')
 
 
-def test_wmsearch_root_converts_to_regimeu0_schema(tmp_path):
-    """S-WMSEARCH v2 (wmsearch_u0) roots -> the same ANALYSIS schema, arms renamed to spec names, inc ->
-    wall_g_solo2, the banned solo2 arm never a family; strategy - incumbent contrasts agree with analyze_rows."""
-    from tools.wzprop import wmsearch_u0 as WS
-    a = dict(inc(), name='g_v18', roles=[dict(SS.INCUMBENT['roles'][0], v_w=18.0)])
-    b = next(s for s in SS.seeds() if s['name'] == 'g2_stagger40')
-    specs = dict(u0=None, inc=inc(), solo2=solo2(), wm_0=a, str_0=b)
-    root = tmp_path / 'ws'
+def _wmsearch_root(tmp_path, schema, specs, name='ws'):
+    root = tmp_path / name
     (root / 'jobs').mkdir(parents=True)
     groups, rows = [], []
     for seed in (989770, 989771):
@@ -424,20 +542,51 @@ def test_wmsearch_root_converts_to_regimeu0_schema(tmp_path):
                 json.dump(summ, f)
             rec['J'][j['arm']] = R.control_j(summ)
         rows.append(rec)
-    (root / 'PLAN.json').write_text(json.dumps(dict(schema='wmc.wmsearch_u0.v2.plan', groups=groups, specs=specs,
+    (root / 'PLAN.json').write_text(json.dumps(dict(schema=schema, groups=groups, specs=specs,
                                                     plan_sha256='w', inputs={'u0.pt': dict(sha256='u0')})))
     (root / 'REGISTRATION.json').write_text(json.dumps(dict(cap_sim_s=10 ** 6)))
-    rep, ver = V.analyze([root], tmp_path / 'out')
-    assert set(rep['cells']['D3200_p60']) == {'u0', 'wall_g_solo2', 'g_v18', 'g2_stagger40'}
-    ref = WS.analyze_rows(rows, specs, n_boot=200)['arms']
+    return root, rows
+
+
+def test_wmsearch_roots_banned_specs_never_fullpol_facing_and_fail_closed(tmp_path):
+    """S-WMSEARCH v1/v2 roots: banned-spec arms (v1 structured solo2_v15_h120, the solo2 comparator) are excluded
+    from ANALYSIS / RESULTS / families by SPEC; the conversion still agrees with wmsearch_u0.analyze_rows; without
+    identity episode / vehicle logs analyze FAILS CLOSED (no ANALYSIS files)."""
+    from tools.wzprop import wmsearch_u0 as WS
+    a = dict(inc(), name='g_v18', roles=[dict(SS.INCUMBENT['roles'][0], v_w=18.0)])
+    v15 = dict(solo2(), name='solo2_v15_h120', cooldown_s=120, roles=[dict(SS.SOLO2['roles'][0], hold_s=120)])
+    specs = dict(u0=None, solo2=solo2(), str_0=v15, wm_0=a)            # v1: solo2 incumbent, pre-ban 15 m/s spec
+    root, rows = _wmsearch_root(tmp_path, V.WMSEARCH_SCHEMA, specs)
+    col = V.collect([root])
+    assert set(col['banned']) == {'wall_h_solo2', 'solo2_v15_h120'}
+    rep = V.analysis([root], col)
+    assert set(rep['cells']['D3200_p60']) == {'u0', 'g_v18'}
+    assert all(not ({'wall_h_solo2', 'solo2_v15_h120'} & set(r['arms'])) for r in rep['seeds'])
+    assert {r['arm'] for r in V.results_rows(col['rows'], set(V.NOT_FAMILIES) | set(col['banned']))} == {'u0', 'g_v18'}
+    assert set(V.wmsearch_families(json.loads((root / 'PLAN.json').read_text()))) == {'g_v18'}
+    _r, ver = V.analyze([root], tmp_path / 'out_v1')
+    assert _r is None and not (tmp_path / 'out_v1' / 'ANALYSIS.json').exists()
+    assert {'identity_u0_989599', 'vehicle_log_present_every_episode'} <= set(ver['summary']['failed_checks'])
+    assert 'solo2_v15_h120' not in ver['families']
+    # v2: inc -> wall_g_solo2, solo2 -> banned comparator; contrasts agree with analyze_rows
+    b = next(s for s in SS.seeds() if s['name'] == 'g2_stagger40')
+    specs2 = dict(u0=None, inc=inc(), solo2=solo2(), wm_0=a, str_0=b)
+    root2, rows2 = _wmsearch_root(tmp_path, 'wmc.wmsearch_u0.v2.plan', specs2, name='ws2')
+    col2 = V.collect([root2])
+    assert set(V.analysis([root2], col2)['cells']['D3200_p60']) == {'u0', 'wall_g_solo2', 'g_v18', 'g2_stagger40'}
+    order = ['u0'] + [x for x in col2['arms'] if x != 'u0']
+    vs = V.contrasts(col2['rows'], order)['D3200_p60']
+    ref = WS.analyze_rows(rows2, specs2, n_boot=200)['arms']
     for arm, name in (('wm_0', 'g_v18'), ('str_0', 'g2_stagger40')):
-        assert ver['vs_incumbent']['D3200_p60'][name]['mean_diff'] == pytest.approx(ref[arm]['vs_inc']['mean'])
-        assert ver['families'][name]['source_arm'] == arm and ver['families'][name]['executor'] == 'plant'
-    assert {r['family'] for r in _fullpol_rows(rep)} == {'wall_g_solo2', 'g_v18', 'g2_stagger40'}
-    assert 'wall_h_solo2' in ver['vs_incumbent']['D3200_p60']
-    names = {c['name']: c['ok'] for c in ver['integrity']['checks']}
-    assert names['inputs_u0_identical_and_equal_regimeu0'] and names['executor_parity_solo2_core_equals_incumbent']
-    assert 'identity_u0_989599' not in names
+        assert vs[name]['mean_diff'] == pytest.approx(ref[arm]['vs_inc']['mean'])
+
+
+def test_analyze_refuses_foreign_roots(tmp_path):
+    root = tmp_path / 'hp'
+    root.mkdir()
+    (root / 'PLAN.json').write_text(json.dumps(dict(schema='wmverify.holdpin.v1.plan', groups=[])))
+    with pytest.raises(ValueError, match='refused'):
+        V.collect([root])
 
 
 def test_n2_parity_hold_strategies():
@@ -468,57 +617,3 @@ def test_n2_parity_hold_strategies():
     b = F.run_episode(VH.make_hook(solo2(), executor='n2'), seed=989950, seconds=SECONDS, record=True)
     assert [x['desired'] for x in a['trace']] == [x['desired'] for x in b['trace']]   # fake plant ignores lcMode
     assert any(x['g5'] for x in a['trace']) and not any(x['g5'] for x in b['trace'])
-
-
-def test_holdpin_plan_and_analysis(tmp_path):
-    """S-HOLDPIN: plan = identity + 72 unpinned solo2 episodes on the S-REGIMEU0 worlds (87,600 sim-s, executor n2);
-    analysis pairs them with REUSED regimeu0-format u0 / pinned summaries (CRN, diffs, lane leaving)."""
-    from tools.wzprop import holdpin as HP
-    reg_root = tmp_path / 'regimeu0'
-    (reg_root / 'inputs').mkdir(parents=True)
-    (reg_root / 'inputs' / 'CONFIG.json').write_text('{}')
-    (reg_root / 'inputs' / 'u0.pt').write_bytes(b'u0')
-    (reg_root / 'PLAN.json').write_text(json.dumps(dict(inputs={'u0.pt': dict(sha256=ir.sha_file(
-        reg_root / 'inputs' / 'u0.pt'))})))
-    text, planned = HP.registration_text('x')
-    reg = tmp_path / 'REGISTRATION.md'
-    reg.write_text(text, encoding='utf-8')
-    root = tmp_path / 'hp'
-    body = HP.plan(root, regimeu0_root=reg_root, registration_md=reg)
-    jobs = [j for g in body['groups'] for j in g['jobs']]
-    assert body['planned_sim_s'] == planned == 87_600 and len(jobs) == 73
-    assert {j['executor'] for j in jobs[1:]} == {'n2'} and jobs[0]['id'] == V.IDENTITY_JOB
-    assert {(j['world']['cell_key'], j['world']['seed']) for j in jobs[1:]} == {
-        (c, s) for c, _d, _p, seeds in HP.CELLS for s in seeds}
-    # fake summaries: reused comparators (regimeu0 format) + treatment with the n2 hook's lane receipts
-    ref = tmp_path / 'ref'
-    (ref / 'jobs').mkdir(parents=True)
-    groups = []
-    for seed in (989850, 989851):
-        w = R.world_of(seed)
-        js = [dict(id=f's{seed}_{a}', arm=a, strategy=None if a == 'u0' else a, world=w, sim_s=1200)
-              for a in ('u0', 'wall_h_solo2')]
-        groups.append(dict(stage='paired', cell=w['cell_key'], jobs=js))
-        for j in js:
-            hook = R.RuleHook(j['strategy'])
-            res = F.run_episode(hook, seed=seed, seconds=SECONDS)
-            (ref / 'jobs' / j['id']).mkdir()
-            with gzip.open(ref / 'jobs' / j['id'] / 'SUMMARY.json.gz', 'wt', encoding='utf-8') as f:
-                json.dump(_summary(hook, res, j), f)
-        tj = next(j for j in jobs if j['world']['seed'] == seed and j['world']['cell_key'] == 'D3200_p60')
-        hook = VH.make_hook(tj['strategy_spec'], executor='n2')
-        res = F.run_episode(hook, seed=seed, seconds=SECONDS)
-        (root / 'jobs' / tj['id']).mkdir(parents=True)
-        with gzip.open(root / 'jobs' / tj['id'] / 'SUMMARY.json.gz', 'wt', encoding='utf-8') as f:
-            json.dump(_summary(hook, res, tj), f)
-        (root / 'jobs' / tj['id'] / 'WMVERIFY.json').write_text(json.dumps(dict(receipts=hook.receipts())))
-    (ref / 'PLAN.json').write_text(json.dumps(dict(groups=groups)))
-    out = HP.analyze([root], [ref])
-    c = out['cells']['D3200_p60']
-    assert c['n'] == 2 and not c['crn_violations'] and c['same_first_activation_as_pinned'] == 2
-    # the fake plant ignores laneChangeMode: unpinned == pinned exactly, so the diff is 0 and the vs-u0 diff equals
-    # the pinned effect
-    assert c['unpinned_minus_pinned']['mean_diff'] == 0.0
-    assert c['unpinned_minus_u0']['mean_diff'] == pytest.approx(c['pinned_minus_u0_same_seeds']['mean_diff'])
-    assert c['lane_leaving']['holds'] > 0 and c['lane_leaving']['held_seconds'] > 0
-    assert out['integrity']['crn_ok'] and out['cells']['D2400_p60']['n'] == 0
