@@ -3,11 +3,11 @@
  "status": "READY (pre-results). Pre-run NATIVE/U0/RULE/RULE_FAIR sealed and unopened (654,600 sim-s charged in the own root). MAPPO_LANE bound (binding 6270abcc); its pre-run waits for the N5 review of amendment 17c and the IMITREPLAY zero-SUMO env-equivalence rerun. PRIMARY = clean5b-F8P u12, SECONDARY = u24; MAPPO_SPEED unavailable; F7 not built.",
  "branch": "c4/nm-finaleval",
  "worktree": "E:/agent-work/c4-nm-finaleval",
- "head": "174acb5c",
+ "head": "c527c774",
  "new_sim_s_by_n6": 0,
  "deploy": {
-  "dir": "E:/agent-work/c4-nm-finaleval/tmp/n6_deploy_fe5ab464",
-  "src": "u12 SRC = c4/clean5b-g4pool d27a8cb2 + overlay fe5ab464 (amendment 20); run clean5b-F8S root /home/ubuntu/coopmwm20261108_clean5bf8s",
+  "dir": "E:/agent-work/c4-nm-finaleval/tmp/n6_deploy_c527c774",
+  "src": "u12 SRC = c4/clean5b-g4pool d27a8cb2 + overlay c527c774 (amendments 20+21; only ops/nm_finaleval.py differs from fe5ab464)",
   "operator": "IMITREPLAY (af2a7943)"
  },
  "registrations": {
@@ -35,7 +35,8 @@
   "amend17c": "24d041a8c613580650368383affb0b03590855fd115e3b93c7ddb525fc6958ce",
   "amend18": "18099cc974f8fbc544d0161a0ed546f26d2c61e49c2f5d5f1674afd8eaf007d6",
   "amend19": "f20ed796a08de76f873da3e267e24ba43938c75f2dcb61d25c73f3d2ae76aa8d",
-  "amend20": "27ede9d748a593f6d43f12623f6e1695efc5d9dd7d71a1fdb886799b36eaf416"
+  "amend20": "27ede9d748a593f6d43f12623f6e1695efc5d9dd7d71a1fdb886799b36eaf416",
+  "amend21": "d493b1d38f6372fbd0a230cf8cd5ce80b5912f316c2a2058969a531b434cd306"
  },
  "panels": {
   "claim3a_3b": "3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130",
@@ -81,10 +82,11 @@
   "bind-mappo --arm MAPPO_LANE ... --train-config (when delivered)"
  ],
  "open_items": [
-  "N5 review of 17c/18/19/20",
-  "IMITREPLAY: restage u12 SRC = d27a8cb2 + overlay fe5ab464",
-  "IMITREPLAY: env-equivalence rerun + envparity-assess, then MAPPO_LANE pre-run",
-  "u12 PRIMARY run when clean5b-F8S u12 exports (~Nov 9 02:00)",
+  "IMITREPLAY on cpuW: manifest check + host-identity (amendment 21) before any N6 dispatch",
+  "N5 review of 17c-21",
+  "IMITREPLAY: restage u12 SRC = d27a8cb2 + overlay c527c774",
+  "env-equivalence rerun + envparity-assess, then MAPPO_LANE pre-run",
+  "u12 PRIMARY run (~Nov 9 02:00)",
   "training-side test_resume3 Windows path failure: N4 to confirm on Linux"
  ],
  "tests": {
