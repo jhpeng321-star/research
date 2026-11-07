@@ -211,6 +211,38 @@ def registered_last_update(cfg):
     return stop['after_update']
 
 
+FRESH_UPDATE_RULE = ('clean5b-F8 memory fix (MAIN 2026-11-07 ~10:2x): every arm update runs in a fresh child process of the '
+                     'arm owner (same code, config, env and niceness; state from the saved checkpoints/files as in a '
+                     'resume); the child exits after writing <arm>_UPDATE_<u>.json, so its episode memory is returned')
+
+
+def fresh_update_process(cfg):
+    """Opt-in (absent = the original in-process loop, byte-identical)."""
+    value = cfg.get('arm_update_process')
+    if value is None:
+        return False
+    if value != FRESH_UPDATE_RULE:
+        raise ValueError('arm_update_process must be the registered FRESH_UPDATE_RULE')
+    return True
+
+
+def run_update_process(cfg, arm, u):
+    """One update in a fresh child (python -m tools.coopmwm.launch_training update ...); fail closed on exit != 0."""
+    import subprocess
+    import sys
+    root = Path(cfg['run_root'])
+    command = [sys.executable, '-B', '-u', '-m', 'tools.coopmwm.launch_training', 'update',
+               '--config', str(root/'CONFIG.json'), '--arm', arm, '--update', str(u)]
+    code = subprocess.run(command, cwd=os.getcwd(), env=os.environ.copy(), stdin=subprocess.DEVNULL).returncode
+    done = root/f'{arm}_UPDATE_{u:03}.json'
+    if code != 0 or not done.exists():
+        raise RuntimeError(f'fresh update process for {arm} u{u} failed (exit {code}); no automatic retry')
+    receipt = read(done); verify_sealed(receipt, 'update_sha256')
+    if receipt['config_sha256'] != digest(cfg):
+        raise ValueError('fresh update process wrote a different runtime config')
+    return receipt
+
+
 def run_arm(cfg, arm):
     root = Path(cfg['run_root'])
     release(cfg)
@@ -226,7 +258,10 @@ def run_arm(cfg, arm):
             if receipt['config_sha256'] != digest(cfg):
                 raise ValueError('cannot adopt a different final runtime')
             continue
-        update(cfg, arm, u)
+        if fresh_update_process(cfg):
+            run_update_process(cfg, arm, u)
+        else:
+            update(cfg, arm, u)
     write(root/f'{arm}_COMPLETE.json', dict(arm=arm, updates=last, unix=time.time(),
         **({} if last == 24 else dict(registered_stop=cfg['registered_stop']))))
 
@@ -342,13 +377,23 @@ def run_monitor(cfg):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['arm', 'monitor'])
+    parser.add_argument('action', choices=['arm', 'monitor', 'update'])
     parser.add_argument('--config', required=True)
     parser.add_argument('--arm', choices=['A', 'B', 'R'])
+    parser.add_argument('--update', type=int)
     args = parser.parse_args()
     cfg = checked_config(args.config)
     try:
-        if args.action == 'arm':
+        if args.action == 'update':
+            # fresh per-update child of a registered arm owner (FRESH_UPDATE_RULE); never adopts or redoes
+            if not fresh_update_process(cfg) or args.arm is None or args.update is None:
+                raise ValueError('update action needs the registered arm_update_process rule, --arm and --update')
+            if (Path(cfg['run_root'])/f'{args.arm}_UPDATE_{args.update:03}.json').exists():
+                raise ValueError('update already completed; never redo an attempted update')
+            torch.set_num_threads(1)
+            release(cfg)                                   # same launch-time bindings the owner verified
+            update(cfg, args.arm, args.update)
+        elif args.action == 'arm':
             run_arm(cfg, args.arm)
         else:
             run_monitor(cfg)

@@ -136,8 +136,14 @@ def worlds_by_update_8():
     return out
 
 
+def _fresh_rule():
+    from .launch_training import FRESH_UPDATE_RULE    # each arm update in a fresh child: memory freed per update
+    return FRESH_UPDATE_RULE
+
+
 VARIANT_F8 = dict(VARIANT_F, quote_file=F8_QUOTE_FILE, worlds=worlds_by_update_8,
-                  cfg_overrides=dict(load_max=LOAD_MAX, wave_workers=F8_WAVE_WORKERS, mem_available_min_gb=F8_MEM_MIN_GB),
+                  cfg_overrides=dict(load_max=LOAD_MAX, wave_workers=F8_WAVE_WORKERS, mem_available_min_gb=F8_MEM_MIN_GB,
+                                     arm_update_process=_fresh_rule()),
                   design=F_DESIGN+' '+F8_NOTE, authority=F_AUTHORITY+'; '+F8_NOTE,
                   newmap_extra=dict(VARIANT_F['newmap_extra'], variant='clean5b-F8', episodes_per_update=F8_EPISODES,
                                     half_episode_note=F8_NOTE))
