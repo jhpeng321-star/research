@@ -113,11 +113,17 @@ def resumed_replacement(failed,used,precharged,ident):
     if receipt.exists():                      # idempotent: a second resume reuses the recorded replacement
         world=read(receipt)['replacement_world']
     else:
+        # escalation limits counted by hand over this wave's recorded failures (run_train_jobs is not involved)
+        prefix=f"{ident}_{failed['arm']}_";parent=path.parent
+        failures=sum(1 for d in parent.glob(prefix+'*') if (d/'EPISODE_FAILED.json').exists())
+        if failures>=MAX_CONSECUTIVE_EPISODE_FAILURES or failures>MAX_EPISODE_FAILURE_SHARE*max(1,len(used)):
+            raise EpisodeFailureEscalation(f'{failures} failed episodes in {prefix[:-1]} (resume escalation limits)')
         world=replacement_world(failed['world'],set(used),set(precharged)|{failed['id']},failed['arm'],ident)
         if world is None:raise ValueError('no replacement TRAIN world for resumed failure '+failed['id'])
         write(receipt,dict(timestamp_utc=timestamp(),id=failed['id'],world=failed['world'],claims_replayed=False,
             excluded_from_update=True,replacement_world=world,rule=RESUME_ENV+'=1 operator resume (MAIN 2026-11-07)',
-            original_receipt_bytes=(path/'EPISODE_FAILED.json').stat().st_size))
+            original_receipt_bytes=(path/'EPISODE_FAILED.json').stat().st_size,wave_failures=failures,
+            limits=dict(consecutive=MAX_CONSECUTIVE_EPISODE_FAILURES,share=MAX_EPISODE_FAILURE_SHARE)))
     return replacement_job(failed,world,ident)
 
 

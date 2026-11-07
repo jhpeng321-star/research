@@ -146,6 +146,11 @@ def penalties(cfg, arm, episodes, ref, threshold_s=THRESHOLD_S):
         if e.get('practice'):
             skipped.append(dict(episode_id=e['id'], reason='practice start (no same-world A episode)'))
             continue
+        if e.get('fair_unpaired_replacement'):
+            # registered rule (MAIN 2026-11-07, B = R): a failure-replacement world is outside the update's
+            # registered worlds, so it has no same-world A episode; skipped and receipted like practice starts
+            skipped.append(dict(episode_id=e['id'], reason=e['fair_unpaired_replacement']))
+            continue
         seed = str(e['world']['seed'])
         if seed not in ref or 'vehicle_groups' not in e:
             raise ValueError(f'fairness reward: missing paired A / own group summary for {e["id"]} (fail closed)')

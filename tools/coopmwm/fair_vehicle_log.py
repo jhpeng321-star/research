@@ -305,18 +305,28 @@ def write_a(run_root, update, episodes):
     return dict(worlds=sorted(summaries, key=int), path=str(a_groups_path(run_root, update)))
 
 
-def attach(run_root, update, episodes):
-    """B/R: vehicle_groups (+ vehicle_groups_unpaired) on every ordinary episode from A's labels (fail closed)."""
+REPLACEMENT_RULE = ('failure-replacement world outside the update registered worlds: no same-world A episode '
+                    '(MAIN 2026-11-07; B = R; receipted, no fairness term)')
+
+
+def attach(run_root, update, episodes, registered_seeds=None):
+    """B/R: vehicle_groups (+ vehicle_groups_unpaired) on every ordinary episode from A's labels (fail closed).
+    ``registered_seeds`` (the update's registered worlds): an episode on a world OUTSIDE them is a failure
+    replacement, has no same-world A episode, and is marked for the receipted fairness skip instead."""
     path = a_labels_path(run_root, update)
     if not path.exists():
         raise ValueError(f'fairness logger: A labels {path} missing before B/R train (fail closed)')
     label_map = json.loads(path.read_text(encoding='utf-8'))
-    out = dict(episodes=0, unpaired=0, practice_skipped=0)
+    out = dict(episodes=0, unpaired=0, practice_skipped=0, replacement_skipped=0)
     for e in episodes:
         if e.get('practice'):
             out['practice_skipped'] += 1
             continue
         seed = str(e['world']['seed'])
+        if registered_seeds is not None and int(seed) not in registered_seeds:
+            e['fair_unpaired_replacement'] = REPLACEMENT_RULE
+            out['replacement_skipped'] += 1
+            continue
         if seed not in label_map:
             raise ValueError(f'fairness logger: no A labels for world {seed} (fail closed)')
         lab = {vid: tuple(v) for vid, v in label_map[seed].items()}
@@ -337,4 +347,5 @@ def update_step(cfg, arm, update, episodes):
         return None
     if arm == 'A':
         return dict(arm='A', **write_a(cfg['run_root'], update, episodes))
-    return dict(arm=arm, **attach(cfg['run_root'], update, episodes))
+    registered = {int(w['seed']) for w in cfg['worlds_by_update'][str(update)]}
+    return dict(arm=arm, **attach(cfg['run_root'], update, episodes, registered_seeds=registered))

@@ -55,10 +55,22 @@ def prune_update(root, u):
     name = record_path if not record_path.exists() else record_path.with_name(record_path.stem+f'.{int(time.time())}.json')
     with name.open('x', encoding='utf-8') as f:
         json.dump(record, f, indent=1); f.flush(); os.fsync(f.fileno())
+    shas = {x['path']: x['sha256'] for x in record['inputs']}
     for p in inputs:
         gz = p.with_name(p.name+'.gz')
-        with open(p, 'rb') as src, gzip.open(gz, 'xb', compresslevel=3) as dst:
-            shutil.copyfileobj(src, dst, 1 << 20)
+        if not gz.exists():
+            tmp = p.with_name(p.name+'.gz.tmp')       # an interrupted earlier attempt leaves only a .tmp
+            with open(p, 'rb') as src, gzip.open(tmp, 'wb', compresslevel=3) as dst:
+                shutil.copyfileobj(src, dst, 1 << 20)
+            with open(tmp, 'ab') as f:
+                os.fsync(f.fileno())
+            os.replace(tmp, gz)
+        h = hashlib.sha256()                          # verify the gzip decodes to the recorded bytes before unlink
+        with gzip.open(gz, 'rb') as f:
+            for block in iter(lambda: f.read(1 << 20), b''):
+                h.update(block)
+        if h.hexdigest() != shas[str(p.relative_to(root))]:
+            raise ValueError(f'gzip of {p} does not reproduce the recorded sha256; original kept')
         p.unlink()
     for p in caps:
         p.unlink()

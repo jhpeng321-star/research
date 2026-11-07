@@ -98,7 +98,7 @@ def test_groups_use_a_labels_by_id_and_report_unpaired(tmp_path):
 
 
 def test_update_step_writes_a_then_attaches_b_and_fails_closed(tmp_path, cfg):
-    on = fair_cfg(dict(cfg, run_root=str(tmp_path/'root')))
+    on = fair_cfg(dict(cfg, run_root=str(tmp_path/'root'), worlds_by_update={'1': [dict(seed=989220), dict(seed=989221)], '2': [dict(seed=989220)]}))
     ra, ta, _ = run_log(tmp_path, 'a')
     rb, tb_, _ = run_log(tmp_path, 'b', slow=8.)
     ea = [dict(id='A1', world=dict(seed=989220), vehicle_log=ra, vehicle_table=ta)]
@@ -109,10 +109,10 @@ def test_update_step_writes_a_then_attaches_b_and_fails_closed(tmp_path, cfg):
     out_a = fv.update_step(on, 'A', 1, ea)
     assert out_a['worlds'] == ['989220'] and fv.a_groups_path(on['run_root'], 1).is_file()
     out_b = fv.update_step(on, 'B', 1, eb)
-    assert out_b == dict(arm='B', episodes=1, unpaired=0, practice_skipped=1)
+    assert out_b == dict(arm='B', episodes=1, unpaired=0, practice_skipped=1, replacement_skipped=0)
     assert set(eb[0]['vehicle_groups']) == set(fv.REGISTERED_GROUPS) and 'vehicle_groups' not in eb[1]
     for broken in (dict(eb[0], vehicle_table={}), dict(eb[0], vehicle_log=dict(rb, ticks=899)),
-                   dict(eb[0], world=dict(seed=1))):
+                   dict(eb[0], world=dict(seed=989221))):
         with pytest.raises(ValueError, match='fail closed'):
             fv.update_step(on, 'B', 1, [{k: v for k, v in broken.items() if k != 'vehicle_groups'}])
     off = dict(on, clean5_ev=dict(on['clean5_ev'], fair=dict(on['clean5_ev']['fair'], reward=False)))
@@ -126,7 +126,7 @@ def test_fairness_reward_reads_real_logger_output_and_fails_closed(cfg, monkeypa
     from .v2v_runtime import controller_class
     from .test_track2_backend_cpu import fake_load
     fake_load(monkeypatch)
-    on = fair_cfg(dict(cfg, run_root=str(tmp_path/'root')))
+    on = fair_cfg(dict(cfg, run_root=str(tmp_path/'root'), worlds_by_update={'1': [dict(seed=989220)]}))
     ra, ta, _ = run_log(tmp_path, 'a')
     rb, tb_, _ = run_log(tmp_path, 'b', slow=14.)                 # B much slower: some groups beyond +10 s
     fv.update_step(on, 'A', 1, [dict(id='A1', world=dict(seed=989220), vehicle_log=ra, vehicle_table=ta)])

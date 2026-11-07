@@ -1,6 +1,7 @@
 """Immutable, single-owner paired PPO; WM guides exploration, SUMO grades it."""
 import argparse
 import copy
+import json
 from concurrent.futures import ProcessPoolExecutor
 import multiprocessing
 import os
@@ -53,6 +54,10 @@ def _mem_available_bytes():
     return int(mem['MemAvailable'].split()[0])*1024
 
 
+DISK_WAIT_ALERT_S = 1800      # alert file after 30 min below the floor (liveness checker reports it)
+DISK_WAIT_TIMEOUT_S = 6*3600  # then fail loudly instead of waiting forever
+
+
 def _disk_free_bytes(path):
     import shutil
     return shutil.disk_usage(path).free
@@ -67,7 +72,18 @@ def admission(b):
         floor = int(floor)
         if not 8 <= floor <= 1000:
             raise ValueError('COOPMWM_DISK_MIN_GB must be an int in 8..1000')
+        started, alerted = time.time(), False
         while _disk_free_bytes(b.get('run_root', '.')) < floor*1024**3:
+            waited = time.time()-started
+            if waited > DISK_WAIT_ALERT_S and not alerted:
+                alert = Path(b.get('run_root', '.'))/f'DISK_FLOOR_WAIT_{os.getpid()}.json'
+                try:
+                    alert.write_text(json.dumps(dict(pid=os.getpid(), floor_gb=floor, waited_s=waited, unix=time.time())))
+                except OSError:
+                    pass
+                alerted = True
+            if waited > DISK_WAIT_TIMEOUT_S:
+                raise RuntimeError(f'disk floor {floor} GB not met for {waited:.0f} s (timeout; free disk space)')
             time.sleep(30)
     need = b.get('mem_available_min_gb')
     if need is not None:
