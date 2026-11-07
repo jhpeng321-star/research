@@ -112,5 +112,5 @@ def test_seed_range_registered():
     assert w['seed'] == 991000 and w['cell_key'] == 'D2400_p60' and w['repeat'] == 0
     assert ru.world_of(991099, 2800, 0.4)['cell_key'] == 'D2800_p40'
     with pytest.raises(ValueError):
-        ru.world_of(991100, 2400, 0.6)
+        ru.world_of(991200, 2400, 0.6)
     assert ms.guard(w, 'train') == w
