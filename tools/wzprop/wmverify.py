@@ -86,6 +86,14 @@ SLOTS = (1,)                             # S-REGIMEU0: one activation at a time 
 CLOSING_SUMO_LANE = 0                    # up lane 0 ends at X_B (WM lane 2)
 IDENTITY_JOB = 'identity_s989599_u0'
 N2_FIXTURE_S = 700                       # n2_parity fixture: fake plant 300 s warmup + 400 s control
+# owner re-plan 2026-11-07 (PAUSE_WMVERIFY_20261107): hold-arm continuation (only_executors=('plant',) on seeds a
+# STOPPED prior root planned but never charged) + the opt-in ungated pilot (executor lcexec_ungated, pilot roots only)
+PILOT = 'ungated'
+PILOT_SUFFIX = '_ungated'
+PILOT_EXECUTOR = 'lcexec_ungated'
+PILOT_LABEL = ('UNGATED PILOT (WMVERIFY-only, owner 2026-11-07): lane requests failing ONLY the own-sensing gap test '
+               'passed to SUMO (laneChangeMode 513 decides); old gate verdict logged as would_withhold; descriptive, '
+               'n = 2 seeds per arm; NEVER pooled with the gated arms, never an ANALYSIS / ANALYSIS_ALLOWED / bank family')
 
 
 # ------------------------------------------------------------------------------------------ helpers
@@ -284,6 +292,86 @@ def build_groups(cells, specs_by_cell, world_of, *, parity_seeds=2, identity=Tru
     return groups
 
 
+def select_executors(specs_by_cell, executors, *, lane_executor=DEFAULT_LANE_EXECUTOR,
+                     hold_executor=DEFAULT_HOLD_EXECUTOR):
+    """Keep only the candidates whose resolved executor is in ``executors`` (re-plan B2: the hold arms, 'plant')."""
+    if executors is None:
+        return specs_by_cell
+    keep = set(executors)
+    return {cell: [(src, s) for src, s in lst
+                   if VH.resolve_executor(s, lane_executor=lane_executor, hold_executor=hold_executor) in keep]
+            for cell, lst in specs_by_cell.items()}
+
+
+def pilot_specs(specs_by_cell, arms):
+    """The pilot arms (names) of every cell: each must be a planned candidate executed by the gated LCEXEC executor."""
+    out = {}
+    for cell, lst in specs_by_cell.items():
+        by = {s['name']: (src, s) for src, s in lst}
+        missing = [a for a in arms if a not in by]
+        if missing:
+            raise ValueError(f'pilot arms not among the {cell} candidates: {missing}')
+        bad = [a for a in arms if VH.resolve_executor(by[a][1]) != 'lcexec']
+        if bad:
+            raise ValueError(f'pilot arms must be lcexec (lane-program) candidates: {bad}')
+        if len(set(arms)) != len(arms):
+            raise ValueError('duplicate pilot arms')
+        out[cell] = [by[a] for a in arms]
+    return out
+
+
+def build_pilot_groups(cells, pilot_by_cell, world_of):
+    """Ungated pilot: the mandatory identity episode, then per seed ONLY the pilot jobs (arm '<name>_ungated',
+    executor lcexec_ungated, the unchanged spec). Their u0 / incumbent / gated references are the prior root's
+    charged jobs of the same seed (paired CRN: same world); no reference job is ever re-run."""
+    groups = [dict(stage='identity', jobs=[dict(id=IDENTITY_JOB, arm=BASE_ARM, strategy=None, strategy_spec=None,
+                                                executor='u0', world=world_of(989599), sim_s=EPISODE_S)])]
+    depth = max(len(seeds) for *_x, seeds in cells)
+    for i in range(depth):
+        for cell, demand, share, seeds in cells:
+            if i >= len(seeds):
+                continue
+            s = seeds[i]
+            w = world_of(int(s), int(demand), float(share))
+            if w['cell_key'] != cell:
+                raise ValueError(f'world cell {w["cell_key"]} != {cell}')
+            jobs = []
+            for _source, spec in pilot_by_cell[cell]:
+                gated = f'{cell}_s{s}_{spec["name"]}'
+                jobs.append(dict(id=gated + PILOT_SUFFIX, arm=spec['name'] + PILOT_SUFFIX, strategy=spec['name'],
+                                 strategy_spec=spec, executor=PILOT_EXECUTOR, world=w, sim_s=EPISODE_S,
+                                 label=PILOT_LABEL,
+                                 pilot=dict(gated_arm=spec['name'], gated_job=gated, u0_job=f'{cell}_s{s}_{BASE_ARM}',
+                                            incumbent_job=f'{cell}_s{s}_{INCUMBENT}')))
+            groups.append(dict(stage='pilot', cell=cell, jobs=jobs))
+    return groups
+
+
+def _prior_jobs(prior_roots):
+    """{job id: (root, job)} over the prior roots' paired groups (pilot pairing; identity episodes and superseded
+    never-charged groups skipped)."""
+    out = {}
+    sup = superseded_groups(prior_roots)
+    for pr in prior_roots:
+        body = _read(Path(pr) / 'PLAN.json')
+        for g in body['groups']:
+            if g['stage'] != 'paired' or (body.get('plan_sha256'), g['jobs'][0]['world']['seed']) in sup:
+                continue
+            for j in g['jobs']:
+                if j['id'] in out:
+                    raise ValueError(f'job id {j["id"]} planned in two prior roots')
+                out[j['id']] = (Path(pr), j)
+    return out
+
+
+def _committed(root):
+    """Phase sim-s a prior root holds: what it charged when STOPPED (never resumed) or complete, else its plan."""
+    ir, _R = _harness()
+    body = _read(Path(root) / 'PLAN.json')
+    spent = ir.spent(root)
+    return spent if (Path(root) / 'STOP').exists() else max(spent, int(body.get('planned_sim_s') or 0))
+
+
 def module_shas():
     here = Path(__file__).resolve().parent
     coop = here.parent / 'coopmwm'
@@ -379,8 +467,17 @@ def family_records(specs_by_cell, *, lane_executor=DEFAULT_LANE_EXECUTOR, hold_e
 
 def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, groups=GROUPS, k=4, parity_seeds=2,
          lane_executor=DEFAULT_LANE_EXECUTOR, hold_executor=DEFAULT_HOLD_EXECUTOR, spec_paths=(),
-         prior_roots=(), dry_run=False, banned_seeds=0):
-    """Every root carries its own identity episode (mandatory; review REV-WMV3 blocker 3)."""
+         prior_roots=(), dry_run=False, banned_seeds=0, only_executors=None, supersede_uncharged=False,
+         pilot_arms=None):
+    """Every root carries its own identity episode (mandatory; review REV-WMV3 blocker 3).
+
+    Re-plan modes (owner 2026-11-07; both off by default = the 0eee867c plan):
+    * ``only_executors=('plant',)`` + ``supersede_uncharged``: hold-arm continuation (B2). Seeds of a prior root are
+      refused unless that root is STOPPED and NONE of the seed group's jobs was charged there (the stopped root's
+      never-run groups are superseded, recorded in PLAN 'supersedes' and skipped by collect); the phase total
+      (prior roots' committed sim-s + this plan) must stay within the cap.
+    * ``pilot_arms=[names]``: the ungated pilot (executor lcexec_ungated): the seeds MUST be planned and charged in a
+      prior root with u0, the incumbent and the gated arm DONE (pairing); pilot job ids differ from every prior id."""
     ir, R = _harness()
     root = guard_path(root)
     if (root / 'PLAN.json').exists():
@@ -391,26 +488,80 @@ def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, gr
             check_seed(x)
     if not dry_run and lane_executor != 'lcexec':
         raise ValueError('lane programs are verified only by the LCEXEC policy executor (non-dry plans)')
+    if pilot_arms and (only_executors is not None or supersede_uncharged or banned_seeds):
+        raise ValueError('the pilot plan has no hold-continuation / banned-comparator options')
     arms_doc = json.loads(guard_path(arms_path).read_text(encoding='utf-8')) if arms_path else {}
     extra = []
     for p in spec_paths:
         doc = json.loads(guard_path(p).read_text(encoding='utf-8'))
         extra += doc if isinstance(doc, list) else [doc]
     specs = {cell: candidates(arms_doc, cell, groups, k, extra, lane_executor) for cell, *_ in cells}
-    prior = set()
-    for pr in prior_roots:
+    specs = select_executors(specs, only_executors, lane_executor=lane_executor, hold_executor=hold_executor)
+    wanted = {s for *_x, seeds in cells for s in seeds}
+    prior, supersedes = set(), []
+    for pr in ([] if pilot_arms else prior_roots):
         body = _read(Path(pr) / 'PLAN.json')
-        prior |= {g['jobs'][0]['world']['seed'] for g in body['groups'] if g['stage'] == 'paired'}
-    clash = prior & {s for *_x, seeds in cells for s in seeds}
+        charged = {c['id'] for c in ir.charges(pr)} if supersede_uncharged else set()
+        sup = []
+        for g in body['groups']:
+            if g['stage'] != 'paired':
+                continue
+            seed = g['jobs'][0]['world']['seed']
+            if (supersede_uncharged and seed in wanted and (Path(pr) / 'STOP').exists()
+                    and not any(j['id'] in charged for j in g['jobs'])):
+                sup.append(dict(seed=seed, cell=g['cell'], job_ids=[j['id'] for j in g['jobs']]))
+            else:
+                prior.add(seed)
+        if sup:
+            supersedes.append(dict(root=str(pr), plan_sha256=body['plan_sha256'], groups=sup,
+                                   rule='prior root STOPPED; none of these groups charged; never resumed'))
+    clash = prior & wanted
     if clash:
         raise ValueError(f'seeds already planned in a prior root: {sorted(clash)}')
-    gr = build_groups(cells, specs, R.world_of, parity_seeds=parity_seeds, identity=True,
-                      lane_executor=lane_executor, hold_executor=hold_executor, banned_seeds=banned_seeds)
+    pilot = None
+    if pilot_arms:
+        pspecs = pilot_specs(specs, list(pilot_arms))
+        gr = build_pilot_groups(cells, pspecs, R.world_of)
+        specs = {}
+        pj = _prior_jobs(prior_roots)
+        pairs = []
+        for g in gr:
+            for j in g['jobs']:
+                if j['id'] in pj:
+                    raise ValueError(f'pilot job id {j["id"]} equals a prior job id (charged jobs are never re-run)')
+                if g['stage'] != 'pilot':
+                    continue
+                refs = {}
+                for key in ('u0_job', 'incumbent_job', 'gated_job'):
+                    ref = j['pilot'][key]
+                    if ref not in pj:
+                        raise ValueError(f'pilot reference {ref} is not planned in a prior root')
+                    proot, pjob = pj[ref]
+                    if pjob['world'] != j['world']:
+                        raise ValueError(f'pilot reference {ref}: world differs (no paired CRN)')
+                    if not dry_run and not (proot / 'jobs' / ref / 'DONE.json').exists():
+                        raise ValueError(f'pilot reference {ref} is not DONE in {proot}')
+                    if key == 'gated_job' and (pjob['strategy_spec'] != j['strategy_spec']
+                                               or pjob['executor'] != 'lcexec'):
+                        raise ValueError(f'pilot reference {ref}: not the gated lcexec run of the same spec')
+                    refs[key] = dict(root=str(proot), id=ref)
+                pairs.append(dict(job=j['id'], arm=j['arm'], seed=j['world']['seed'], **refs))
+        pilot = dict(kind=PILOT, executor=PILOT_EXECUTOR, label=PILOT_LABEL, arms=list(pilot_arms), pairs=pairs)
+    else:
+        gr = build_groups(cells, specs, R.world_of, parity_seeds=parity_seeds, identity=True,
+                          lane_executor=lane_executor, hold_executor=hold_executor, banned_seeds=banned_seeds)
     planned = sum(j['sim_s'] for g in gr for j in g['jobs'])
     jobs_sha = jobs_digest(gr)
     shas = module_shas()
     if planned > int(cap):
         raise ValueError(f'planned {planned} sim-s > cap {cap}')
+    phase = None
+    if pilot_arms or supersede_uncharged or only_executors is not None:
+        prior_committed = {str(pr): _committed(pr) for pr in prior_roots}
+        phase = dict(prior_committed=prior_committed, this_plan=planned,
+                     total=sum(prior_committed.values()) + planned, cap=int(cap))
+        if phase['total'] > int(cap):
+            raise ValueError(f'phase total {phase["total"]} sim-s (prior roots + this plan) > cap {cap}')
     root.mkdir(parents=True, exist_ok=True)
     files = {}
     reg_sha = None
@@ -443,6 +594,14 @@ def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, gr
                 planned_sim_s=planned, jobs_sha256=jobs_sha,
                 cells=[dict(cell=c, demand=d, share=p, seeds=list(s)) for c, d, p, s in cells],
                 module_sha256=shas, registration_md_sha256=reg_sha, unix=time.time())
+    if only_executors is not None:
+        body['only_executors'] = sorted(only_executors)
+    if supersedes:
+        body['supersedes'] = supersedes
+    if pilot is not None:
+        body['pilot'] = pilot
+    if phase is not None:
+        body['phase_budget'] = phase
     body['plan_sha256'] = ir.digest({k2: v for k2, v in body.items() if k2 != 'unix'})
     _write_new(root / 'PLAN.json', body)
     return body
@@ -484,6 +643,8 @@ def worker(root, ident):
     if body.get('dry_run'):
         raise ValueError('dry-run plan: no physics')
     job = _find_job(body, ident)
+    if job['executor'] in VH.PILOT_EXECUTORS and not body.get('pilot'):
+        raise ValueError(f'executor {job["executor"]!r} runs only in a registered pilot root')
     hook = make_job_hook(job, R)
     vlog = WF.VehicleLog(root / VEHICLE_LOG_DIR / ident)   # N6 eval-only ground-truth log on EVERY arm (u0 included)
     lc = needs_lc_runtime(job)
@@ -633,15 +794,28 @@ def wmsearch_families(body):
     return out
 
 
+def superseded_groups(roots):
+    """{(prior plan_sha256, seed)} of the never-charged seed groups that a later root of this set re-planned
+    (PLAN 'supersedes', re-plan B2); empty for the 0eee867c roots."""
+    out = set()
+    for root in roots:
+        for sup in _read(Path(root) / 'PLAN.json').get('supersedes') or ():
+            out |= {(sup['plan_sha256'], g['seed']) for g in sup['groups']}
+    return out
+
+
 def collect(roots):
     """regimeu0.analyze's per-seed rows (verbatim records) + identity + parity/side records."""
     ir, R = _harness()
     roots = [Path(r) for r in ([roots] if isinstance(roots, (str, Path)) else roots)]
     rows, side, identity, parity, failed, arms = [], {}, None, [], [], []
     vehicles, vlogs, identities, banned = {}, [], [], set()   # vehicles[cell][arm][seed] = WF.per_vehicle dict
+    superseded = superseded_groups(roots)
     for root in roots:
         body = _read(root / 'PLAN.json')
         root_kind(body)
+        if body.get('pilot'):
+            raise ValueError(f'{root} is an ungated PILOT root: never pooled with gated arms (use pilot_report)')
         alias = arm_alias(body)
         banned |= banned_arms(body)
 
@@ -660,6 +834,8 @@ def collect(roots):
                 else:
                     identities.append(dict(root=str(root), equal=False, missing=True))
                 continue
+            if (body.get('plan_sha256'), g['jobs'][0]['world']['seed']) in superseded:
+                continue                         # never-charged group of a STOPPED root, re-planned by a later root
             sums = {alias(j['arm']): load(j['id']) for j in g['jobs']}
             for j in g['jobs']:
                 if alias(j['arm']) not in arms and j['arm'] != PARITY_ARM:
@@ -880,6 +1056,51 @@ def contrasts(rows, arms, ref=INCUMBENT):
     return out
 
 
+LANE_EXECUTORS = ('lcexec', PILOT_EXECUTOR)
+
+
+def lane_receipts(side):
+    """Per arm: LCEXEC receipts summed over seeds. executed_lane_changes = env status 'issued' only (changeLane to
+    another lane sent to SUMO); 'held' (same-lane hold request) is reported apart and never counted as executed."""
+    lane_arms = {}
+    for (_seed, arm), sd in side.items():
+        if sd.get('executor') not in LANE_EXECUTORS or not sd.get('receipts'):
+            continue
+        rc = sd['receipts']
+        pr = rc.get('protocol') or {}
+        a = lane_arms.setdefault(arm, dict(seeds=0, activations=0, sessions=0, refused=0, lc_ticks=0, status={},
+                                           gate_withheld={}, executed_lane_changes=0, held_requests=0,
+                                           completed_lane_changes=0))
+        a['seeds'] += 1
+        a['activations'] += rc.get('activations', 0)
+        a['sessions'] += pr.get('sessions', 0)
+        a['refused'] += pr.get('n_refusals', 0)
+        a['lc_ticks'] += rc.get('lc_ticks', 0)
+        for k, v in (rc.get('lc_vehicle_status') or {}).items():
+            a['status'][k] = a['status'].get(k, 0) + v
+        for k, v in (pr.get('gate_withheld') or {}).items():
+            a['gate_withheld'][k] = a['gate_withheld'].get(k, 0) + v
+        a['executed_lane_changes'] += int((rc.get('lc_vehicle_status') or {}).get('issued', 0))
+        a['held_requests'] += int((rc.get('lc_vehicle_status') or {}).get('held', 0))
+        a['completed_lane_changes'] += int(rc.get('lc_completed', 0) or 0)
+        if 'ungated' in pr:
+            a['would_withhold'] = a.get('would_withhold', 0) + int(pr['ungated'].get('would_withhold', 0))
+    return lane_arms
+
+
+def lane_warnings(lane_arms):
+    """LCEXEC refusals; lane programs that activated but executed no lane change. Re-plan (d): only 'issued' (a lane
+    change requested to SUMO) is an executed lane change; 'held' (a same-lane hold request) stays a hold (0eee867c
+    counted issued + held, so lc01_g22 / g2_lc01 escaped this warning)."""
+    warn = []
+    for arm, a in lane_arms.items():
+        if a['refused']:
+            warn.append(dict(name='lcexec_refused_activations', arm=arm, **a))
+        if a['activations'] and not a['executed_lane_changes']:
+            warn.append(dict(name='lane_program_without_executed_lane_requests', arm=arm, **a))
+    return warn
+
+
 def checks(roots, col=None):
     """Integrity checks (must pass before ANALYSIS.json is used): identity episode J, CRN (no divergence before the
     first activation), executor parity (solo2_core == wall_h_solo2), ledger/cap, inputs; warnings: failed jobs,
@@ -923,6 +1144,19 @@ def checks(roots, col=None):
                         uncharged_dirs=sorted(dirs - charged)))
     add('ledger_within_cap_no_uncharged_jobs', all(x['spent'] <= x['cap'] and not x['uncharged_dirs'] for x in led),
         roots=led)
+    charged_by_plan = {}
+    for r in roots:
+        charged_by_plan.setdefault(_read(Path(r) / 'PLAN.json')['plan_sha256'], set()).update(
+            c['id'] for c in ir.charges(r))
+    sup_rows = []
+    for r in roots:
+        for s in _read(Path(r) / 'PLAN.json').get('supersedes') or ():
+            for g in s['groups']:
+                sup_rows.append(dict(by=str(r), root=s['root'], seed=g['seed'], prior_root_analyzed=s['plan_sha256']
+                                     in charged_by_plan, charged=sorted(set(g['job_ids'])
+                                                                        & charged_by_plan.get(s['plan_sha256'], set()))))
+    if sup_rows:                                  # re-plan B2: a superseded group must stay uncharged forever
+        add('superseded_groups_never_charged', not any(x['charged'] for x in sup_rows), groups=sup_rows)
     shas, refs = set(), set()
     for r in roots:
         body = _read(Path(r) / 'PLAN.json')
@@ -937,28 +1171,8 @@ def checks(roots, col=None):
     missing = [dict(x) for x in col.get('vehicle_logs') or () if not x.get('ok')]
     add('vehicle_log_present_every_episode', not missing and bool(col.get('vehicle_logs')), missing=missing[:50],
         n_missing=len(missing))
-    lane_arms = {}
-    for (seed, arm), sd in col['side'].items():
-        if sd.get('executor') != 'lcexec' or not sd.get('receipts'):
-            continue
-        rc = sd['receipts']
-        pr = rc.get('protocol') or {}
-        a = lane_arms.setdefault(arm, dict(seeds=0, activations=0, sessions=0, refused=0, lc_ticks=0, status={},
-                                           gate_withheld={}))
-        a['seeds'] += 1
-        a['activations'] += rc.get('activations', 0)
-        a['sessions'] += pr.get('sessions', 0)
-        a['refused'] += pr.get('n_refusals', 0)
-        a['lc_ticks'] += rc.get('lc_ticks', 0)
-        for k, v in (rc.get('lc_vehicle_status') or {}).items():
-            a['status'][k] = a['status'].get(k, 0) + v
-        for k, v in (pr.get('gate_withheld') or {}).items():
-            a['gate_withheld'][k] = a['gate_withheld'].get(k, 0) + v
-    for arm, a in lane_arms.items():
-        if a['refused']:
-            warn.append(dict(name='lcexec_refused_activations', arm=arm, **a))
-        if a['activations'] and not (a['status'].get('issued', 0) + a['status'].get('held', 0)):
-            warn.append(dict(name='lane_program_without_executed_lane_requests', arm=arm, **a))
+    lane_arms = lane_receipts(col['side'])
+    warn += lane_warnings(lane_arms)
     acts = {}
     for r in col['rows']:
         for a, x in r['arms'].items():
@@ -1078,6 +1292,140 @@ def analyze(roots, out_dir=None):
     return rep, ver
 
 
+# ------------------------------------------------------------------------------------------ ungated pilot (separate)
+def pilot_report(pilot_root, prior_roots):
+    """PILOT_UNGATED.json body: per pilot episode the paired gated run of the same arm and the u0 / incumbent runs of
+    the same seed (prior roots' charged jobs, same world), diffs (arm - reference; negative = better), safety, lane
+    receipts (executed = 'issued' only; would_withhold = gap-only passes), fairness vs u0 (descriptive). Its own
+    integrity (identity, ledger, inputs, pairing, CRN, vehicle logs). NEVER pooled: no ANALYSIS / ALLOWED / bank."""
+    ir, R = _harness()
+    proot = Path(pilot_root)
+    body = _read(proot / 'PLAN.json')
+    if (body.get('pilot') or {}).get('kind') != PILOT:
+        raise ValueError(f'{proot} is not an ungated pilot root')
+    pj = _prior_jobs(prior_roots)
+
+    def load(root, ident):
+        p = Path(root) / 'jobs' / ident / 'SUMMARY.json.gz'
+        return ir._read(p) if p.exists() else None
+
+    def side(root, ident):
+        p = Path(root) / 'jobs' / ident / 'WMVERIFY.json'
+        return _read(p) if p.exists() else None
+
+    def vlog(root, ident):
+        p = Path(root) / VEHICLE_LOG_DIR / ident / WF.VEHICLE_LOG
+        if not p.exists():
+            return None
+        pv, problems = WF.per_vehicle(p)
+        return pv if pv and not problems else None
+
+    res, episodes, ids = [], [], []
+    reports, sides = {}, {}
+    for g in body['groups']:
+        if g['stage'] == 'identity':
+            s = load(proot, g['jobs'][0]['id'])
+            tot = None if s is None else (s.get('totals') or {}).get('team_delay_vs')
+            ids.append(dict(root=str(proot), team_delay_vs=tot, expected=R.IDENTITY['expected_team_delay_vs'],
+                            equal=tot is not None and abs(tot - R.IDENTITY['expected_team_delay_vs']) < 1e-6))
+            continue
+        for j in g['jobs']:
+            w, p = j['world'], j['pilot']
+            refs = {}
+            for key, name in (('gated_job', 'gated'), ('u0_job', BASE_ARM), ('incumbent_job', INCUMBENT)):
+                r_root, r_job = pj.get(p[key], (None, None))
+                ok_ref = r_job is not None and r_job['world'] == w
+                refs[name] = (r_root, p[key], load(r_root, p[key]) if ok_ref else None, ok_ref)
+            s = load(proot, j['id'])
+            ep = dict(seed=w['seed'], cell=w['cell_key'], arm=j['arm'], gated_arm=p['gated_arm'], job=j['id'],
+                      references={k: dict(root=None if v[0] is None else str(v[0]), id=v[1], same_world=v[3],
+                                          present=v[2] is not None) for k, v in refs.items()})
+            if s is None or s.get('error'):
+                ep['status'] = 'not_run' if s is None else 'failed'
+                episodes.append(ep)
+                continue
+            ep.update(status='ok', J=R.control_j(s), activations=len(s.get('activations') or ()), safety=ir.safety(s))
+            for k, (_r, _i, ref, _ok) in refs.items():
+                if ref is not None and not ref.get('error'):
+                    ep[f'J_{k}'] = R.control_j(ref)
+                    ep[f'diff_vs_{k}'] = ep['J'] - ep[f'J_{k}']
+                    ep[f'safety_{k}'] = ir.safety(ref)
+                    ep[f'first_divergence_vs_{k}_s'] = ir.first_divergence(ref, s)
+            first_act = min((a['t'] for a in s.get('activations') or ()), default=None)
+            fd = ep.get(f'first_divergence_vs_{BASE_ARM}_s')
+            ep['first_activation_s'] = first_act
+            ep['crn_ok'] = BASE_ARM in {k for k, v in refs.items() if v[2] is not None} and (
+                fd is None or (first_act is not None and fd >= first_act))
+            sd_u, sd_g = side(proot, j['id']), side(refs['gated'][0], refs['gated'][1]) if refs['gated'][0] else None
+            sides[(w['seed'], j['arm'])] = sd_u or {}
+            if sd_g:
+                sides[(w['seed'], p['gated_arm'])] = sd_g
+            for arm, (r_root, ident) in ((j['arm'], (proot, j['id'])), (p['gated_arm'], refs['gated'][:2]),
+                                         (BASE_ARM, refs[BASE_ARM][:2]), (INCUMBENT, refs[INCUMBENT][:2])):
+                if r_root is not None:
+                    pv = vlog(r_root, ident)
+                    if pv is not None:
+                        reports.setdefault(w['cell_key'], {}).setdefault(arm, {})[w['seed']] = pv
+            ep['vehicle_log_ok'] = (w['seed'] in reports.get(w['cell_key'], {}).get(j['arm'], {}))
+            episodes.append(ep)
+    lanes = lane_receipts(sides)
+    fair = {}
+    for cell, rep_c in reports.items():
+        worlds = sorted(rep_c.get(BASE_ARM, {}))
+        for arm in sorted(a for a in rep_c if a.endswith(PILOT_SUFFIX)):
+            gated = arm[:-len(PILOT_SUFFIX)]
+            fair.setdefault(cell, {})[arm] = dict(
+                vs_u0=WF.co_primary_groups(rep_c, worlds, arm, BASE_ARM, reference=BASE_ARM),
+                gated_vs_u0=WF.co_primary_groups(rep_c, worlds, gated, BASE_ARM, reference=BASE_ARM)
+                if gated in rep_c else None)
+    summary = {}
+    for arm in body['pilot']['arms']:
+        eps = [e for e in episodes if e['gated_arm'] == arm and e['status'] == 'ok']
+        summary[arm + PILOT_SUFFIX] = dict(n=len(eps), **{
+            f'mean_diff_vs_{k}': _mean([e[f'diff_vs_{k}'] for e in eps if f'diff_vs_{k}' in e])
+            for k in ('gated', BASE_ARM, INCUMBENT)},
+            per_seed={str(e['seed']): {k: e.get(f'diff_vs_{k}') for k in ('gated', BASE_ARM, INCUMBENT)} for e in eps},
+            collisions=sum(float((e['safety'] or {}).get('collisions') or 0.) for e in eps),
+            teleports=sum(float((e['safety'] or {}).get('teleports') or 0.) for e in eps),
+            lane=lanes.get(arm + PILOT_SUFFIX), lane_gated=lanes.get(arm))
+    led = dict(root=str(proot), cap=_read(proot / 'REGISTRATION.json')['cap_sim_s'], spent=ir.spent(proot),
+               uncharged_dirs=sorted({p.name for p in proot.glob('jobs/*') if p.is_dir() and p.name != '_logs'}
+                                     - {c['id'] for c in ir.charges(proot)}))
+    u0s = {(body['inputs'].get('u0.pt') or {}).get('sha256')} | {
+        ((_read(Path(r) / 'PLAN.json')['inputs'].get('u0.pt')) or {}).get('sha256') for r in prior_roots}
+
+    def add(name, ok, **detail):
+        res.append(dict(name=name, ok=bool(ok), **detail))
+    add('identity_u0_989599', bool(ids) and all(x['equal'] for x in ids), identities=ids)
+    add('pairing_references_present_same_world',
+        all(all(v['present'] and v['same_world'] for v in e['references'].values()) for e in episodes),
+        missing=[dict(job=e['job'], refs=e['references']) for e in episodes
+                 if not all(v['present'] and v['same_world'] for v in e['references'].values())])
+    add('pilot_episodes_ok', all(e['status'] == 'ok' for e in episodes),
+        not_ok=[dict(job=e['job'], status=e['status']) for e in episodes if e['status'] != 'ok'])
+    add('crn_no_divergence_before_first_activation', all(e.get('crn_ok') for e in episodes if e['status'] == 'ok'),
+        violations=[e['job'] for e in episodes if e['status'] == 'ok' and not e.get('crn_ok')])
+    add('ledger_within_cap_no_uncharged_jobs', led['spent'] <= led['cap'] and not led['uncharged_dirs'], **led)
+    add('inputs_u0_identical_to_prior_roots', len(u0s) == 1 and None not in u0s, u0_sha256=sorted(x for x in u0s if x))
+    add('vehicle_log_present_every_pilot_episode', all(e.get('vehicle_log_ok') for e in episodes if e['status'] == 'ok'))
+    return dict(schema=SCHEMA + '.pilot_ungated', stable_id=STABLE_ID, phase=PHASE, label=PILOT_LABEL,
+                pilot_root=str(proot), plan_sha256=body['plan_sha256'], prior_roots=[str(r) for r in prior_roots],
+                convention='diff = J(ungated arm) - J(reference) on the same seed (control window [300, 1200) s, '
+                           'veh-s); negative = the ungated arm is better; references = prior roots charged jobs',
+                integrity=dict(ok=all(x['ok'] for x in res), checks=res), summary=summary, episodes=episodes,
+                lane_receipts=lanes, fairness_vs_u0=fair, pooled_with_gated=False)
+
+
+def write_pilot(out_dir, pilot_root, prior_roots):
+    """PILOT_UNGATED.json (exact bytes) into ``out_dir`` (created if needed; the file is never overwritten)."""
+    rep = pilot_report(pilot_root, prior_roots)
+    out = guard_path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(rep, indent=1, sort_keys=True, default=str) + '\n'
+    (out / 'PILOT_UNGATED.json').open('xb').write(text.encode('utf-8'))
+    return rep, hashlib.sha256(text.encode('utf-8')).hexdigest()
+
+
 # ------------------------------------------------------------------------------------------ registration text
 def budget(cells, n_candidates_by_cell, parity_seeds=2, identity=True, banned_seeds=0):
     total = EPISODE_S if identity else 0
@@ -1168,6 +1516,120 @@ def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, lane_executo
     return '\n'.join(lines) + '\n', planned
 
 
+REPLAN_NOTE = ('- Re-plan (owner 2026-11-07, PAUSE_WMVERIFY_20261107): stage A DONE (plan 170c97c3, 33,600 sim-s, check '
+               'passed); stage B (plan 1d87d4b9) STOPPED with 96,000 sim-s charged (groups 989951-989953; the 10 '
+               'interrupted 989953 jobs stay charged and are never re-run). Finding: the own-sensing lane gate '
+               '(lc_families.lane_gate -> LaneRules._target_gap_ok) withheld ~99% of lane-change requests in heavy '
+               'traffic (22 of 2,781 passed in the A/B tapes); withheld requests are dropped, so SUMO never tried them.')
+
+
+def _phase_line(prior_committed, planned, cap):
+    if prior_committed is None:
+        return '- Phase total: prior roots committed <from plan> + this root.'
+    total = int(prior_committed) + int(planned)
+    if total > int(cap):
+        raise ValueError(f'phase total {total} > cap {cap}')
+    return (f'- Phase total (phase {PHASE}): prior roots committed {int(prior_committed):,} sim-s + this root '
+            f'{int(planned):,} sim-s = {total:,} sim-s <= cap {int(cap):,} sim-s (plan re-checks against the prior '
+            'roots: STOPPED roots count their charges, others their plan).')
+
+
+def b2_registration_text(*, cells, specs_by_cell, cap, arms_sha256=None, regimeu0_u0_sha256=None,
+                         prior_committed=None, executors=('plant',)):
+    """Registration block of the hold-arm continuation B2 (plan --only-executor plant --supersede-uncharged
+    --parity-seeds 0 --prior-root A --prior-root B): the 0eee867c block text with the B2 jobs, the excluded lcexec
+    arms and the re-plan rules. ``specs_by_cell`` = the full candidate list (the excluded arms are named)."""
+    kept = select_executors(specs_by_cell, executors)
+    text, planned = registration_text(cells=cells, specs_by_cell=kept, cap=cap, parity_seeds=0,
+                                      arms_sha256=arms_sha256, regimeu0_u0_sha256=regimeu0_u0_sha256)
+    dropped = {c: [s['name'] for _src, s in lst if s['name'] not in {x['name'] for _y, x in kept[c]}]
+               for c, lst in specs_by_cell.items()}
+    lines = text.rstrip('\n').split('\n')
+    out = []
+    for line in lines:
+        if line.startswith('- Arms per seed group'):
+            line = line.replace(f'{PARITY_ARM} (the same rule via strategy_hook.StrategyCore on the plant path, '
+                                'executor parity, first 0 seeds per cell, VERIFY only); ',
+                                f'({PARITY_ARM} executor parity already run in stages A/B: not repeated); ')
+        if line.startswith('- Code: c4/wmverify;'):
+            line = line.replace('- Code: c4/wmverify;', '- Code: c4/wmverify-replan (0eee867c + re-plan; the module '
+                                'sha256 pin it);')
+        if line.startswith('- Stage A (smoke)'):
+            line = ('- Stage B2 (hold-arm continuation): identity + the remaining seeds, hold (plant) arms + u0 + '
+                    'the incumbent only; plan --prior-root A --prior-root B --only-executor plant --supersede-uncharged '
+                    '--parity-seeds 0 (B must keep its STOP file; its never-charged groups for these seeds are recorded '
+                    'in PLAN supersedes, skipped by collect, and check fails if any of them is ever charged). '
+                    '`check --root A B B2` must pass before analyze; analyze --root A B B2 (fail closed). The lcexec '
+                    'arms keep only their A/B seeds (989950-989953) and are reported as such.')
+        out.append(line)
+        if line.startswith('- Plan jobs sha256:'):
+            out.append(REPLAN_NOTE)
+            out.append('- B2 excludes the lane-program (lcexec) arms on these seeds: ' + '; '.join(
+                f'{c}: {", ".join(v)}' for c, v in dropped.items()) + '. Hold (plant) arms: ' + '; '.join(
+                f'{c}: {len(v)}' for c, v in kept.items()) + '.')
+            out.append(_phase_line(prior_committed, planned, cap))
+        if line.startswith('- Analysis (fixed before results)'):
+            out.append('- Analysis fix (d) (owner 2026-11-07, before results): the check counts only env status '
+                       "'issued' (a lane change requested to SUMO) as an executed lane change; 'held' (same-lane hold "
+                       'request) stays a hold. No other analysis rule changes.')
+    return '\n'.join(out) + '\n', planned
+
+
+def pilot_registration_text(*, cells, pilot_by_cell, cap, arms_sha256=None, regimeu0_u0_sha256=None,
+                            prior_committed=None, selection_note=''):
+    """Registration block of the ungated pilot root (plan --pilot-arm NAME ... --prior-root A --prior-root B
+    [--prior-root B2])."""
+    _ir, R = _harness()
+    gr = build_pilot_groups(cells, pilot_by_cell, R.world_of)
+    planned = sum(j['sim_s'] for g in gr for j in g['jobs'])
+    shas = module_shas()
+    lines = [
+        REG_HEADER,
+        '- Append BEFORE any physics; `plan` refuses unless this exact header and the jobs digest, cap / planned '
+        'budget, ARMS.json sha256 and module sha256 below match the run.',
+        f'- Plan jobs sha256: {jobs_digest(gr)}',
+        '- Question (UNGATED PILOT, descriptive): when program lane requests that fail ONLY the own-sensing gap test '
+        'are passed to SUMO (members laneChangeMode 513: SUMO\'s own lane-change safety decides), do the lane '
+        'programs execute lane changes, and how do J and safety move vs the SAME arm gated (stage B, same seed), u0 '
+        'and the incumbent? Output = PILOT_UNGATED.json, a separate labelled section; never pooled with the gated '
+        'arms, never an ANALYSIS / ANALYSIS_ALLOWED / bank family, never FULLPOL-facing.',
+        REPLAN_NOTE,
+        f'- Base: MAPPO u0 d9042cc5 = the S-REGIMEU0 inputs u0.pt (sha256 {regimeu0_u0_sha256 or "<from regimeu0 PLAN>"}'
+        '), coopmwm clean4 plant, wz3to2, native warmup 0-300 s, episodes 1,200 s, J = team delay over [300, 1200) s.',
+        '- Cells / seeds: ' + '; '.join(f'{c} {s[0]}-{s[-1]} ({len(s)})' for c, _d, _p, s in cells) + ' (seeds already '
+        'run in stage B: every pilot job pairs with the charged, DONE stage-B jobs of the same world = gated arm, u0, '
+        'incumbent; those references are never re-run; plan refuses a missing / not DONE / different-world reference '
+        'and any pilot job id equal to a prior job id).',
+        '- Pilot arms [gated arm, strategy key, executor]: ' + '; '.join(
+            f'{c}: ' + ', '.join(f'{s["name"]}{PILOT_SUFFIX} [{s["name"]}, {SS.strategy_key(s)}, {PILOT_EXECUTOR}]'
+                                 for _src, s in lst) for c, lst in pilot_by_cell.items()) + '.',
+        f'- Pilot arm choice (fixed before any pilot outcome): {selection_note or "<see report>"}',
+        f'- ARMS.json sha256: {arms_sha256 or "<none>"}.',
+        f'- Executor {PILOT_EXECUTOR} (WMVERIFY-only, opt-in per job, never a default): the LCEXEC policy executor '
+        'of stages A/B unchanged except that a lane request refused by lc_families.lane_gate ONLY because of the '
+        'target-lane gap test is passed on (gap-only = the same gate passes on the ego row alone); adjacency, '
+        'target-lane existence (closing lane only on the approach), the LaneRules edge guard, sensing validity and the '
+        'env edge-end guard still refuse. Each passed request is logged with the old verdict would_withhold (t, vid, '
+        'source, target). With the option off every executor decision is identical to 0eee867c (CPU replay of the '
+        'stage A/B tapes).',
+        f'- Code: c4/wmverify-replan (0eee867c + re-plan; the module sha256 pin it); module sha256 '
+        f'{json.dumps(shas, sort_keys=True)}.',
+        f'- Budget (phase {PHASE}): cap {int(cap):,} sim-s; planned {planned:,} sim-s '
+        '(identity 1,200 per root + seeds x pilot arms x 1,200).',
+        _phase_line(prior_committed, planned, cap),
+        '- Analysis (fixed before results): `python -m tools.wzprop.wmverify pilot --pilot-root P --prior-root A B '
+        '[B2] --out DIR` -> PILOT_UNGATED.json: per episode J and diff vs the gated arm, u0 and the incumbent (same '
+        'seed; negative = better), safety (collisions, teleports, hard braking, TTC<3 s) of the ungated and the '
+        'references, lane receipts (executed lane changes = status issued only; held apart; would_withhold count), '
+        'per-group fairness vs u0 (descriptive); integrity (identity exact, pairing, CRN, ledger, u0 input, vehicle '
+        'logs). n = 2 seeds per arm: no bootstrap, no thresholds, no verdict on the arms.',
+        '- Stop rules: STOP file; cap; any collision or teleport in a pilot episode -> report before anything else; '
+        'failed integrity -> stop and report; charged jobs are never re-run.',
+        '- Outputs: PILOT_UNGATED.json (separate labelled section), VEHICLES.jsonl.gz per episode.',
+    ]
+    return '\n'.join(lines) + '\n', planned
+
+
 # ------------------------------------------------------------------------------------------ dry run (no SUMO)
 def bind_map_for_dryrun():
     """Bind the wz3to2 descriptor in THIS process when nothing is bound (the lcexec executor reads md.current())."""
@@ -1247,9 +1709,18 @@ def main(argv=None):
         a.add_argument('--banned-seeds', type=int, default=0,
                        help='seeds per cell with the BANNED solo2 comparator arm (labelled; never a family)')
         _executor_args(a)
+        if name in ('registration', 'plan'):
+            a.add_argument('--only-executor', action='append', default=None,
+                           help='re-plan B2: keep only candidates with this resolved executor (e.g. plant)')
+            a.add_argument('--supersede-uncharged', action='store_true',
+                           help='re-plan B2: seeds of a STOPPED prior root whose groups were never charged')
+            a.add_argument('--pilot-arm', action='append', default=None,
+                           help='ungated pilot: candidate name run with executor lcexec_ungated (pilot root only)')
         if name == 'registration':
             a.add_argument('--cap', type=int, required=True)
             a.add_argument('--regimeu0-root')
+            a.add_argument('--prior-committed', type=int, help='re-plan: phase sim-s committed by the prior roots')
+            a.add_argument('--selection-note', default='', help='pilot: the arm choice justification (text)')
         if name == 'dryrun':
             a.add_argument('--out', required=True)
             a.add_argument('--fake-seconds', type=int, default=900)
@@ -1272,6 +1743,10 @@ def main(argv=None):
     a.add_argument('--root', required=True, nargs='+')
     a = sub.add_parser('analyze')
     a.add_argument('--root', required=True, nargs='+')
+    a.add_argument('--out', required=True)
+    a = sub.add_parser('pilot', help='ungated pilot: PILOT_UNGATED.json (separate section, never pooled)')
+    a.add_argument('--pilot-root', required=True)
+    a.add_argument('--prior-root', required=True, nargs='+')
     a.add_argument('--out', required=True)
     x = ap.parse_args(argv)
     if x.cmd == 'validate':
@@ -1314,10 +1789,23 @@ def main(argv=None):
         u0 = None
         if x.regimeu0_root:
             u0 = _read(Path(x.regimeu0_root) / 'PLAN.json')['inputs']['u0.pt']['sha256']
-        text, planned = registration_text(cells=cells, specs_by_cell=specs, cap=x.cap, parity_seeds=x.parity_seeds,
-                                          lane_executor=x.lane_executor,
-                                          hold_executor=x.hold_executor, banned_seeds=x.banned_seeds,
-                                          arms_sha256=_sha_file(x.arms) if x.arms else None, regimeu0_u0_sha256=u0)
+        arms_sha = _sha_file(x.arms) if x.arms else None
+        if x.pilot_arm:
+            text, planned = pilot_registration_text(cells=cells, pilot_by_cell=pilot_specs(specs, x.pilot_arm),
+                                                    cap=x.cap, arms_sha256=arms_sha, regimeu0_u0_sha256=u0,
+                                                    prior_committed=x.prior_committed,
+                                                    selection_note=x.selection_note)
+        elif x.only_executor or x.supersede_uncharged:
+            if x.parity_seeds != 0 or x.banned_seeds or not x.only_executor:
+                raise SystemExit('B2 registration: --only-executor plant, --parity-seeds 0, no banned seeds')
+            text, planned = b2_registration_text(cells=cells, specs_by_cell=specs, cap=x.cap, arms_sha256=arms_sha,
+                                                 regimeu0_u0_sha256=u0, prior_committed=x.prior_committed,
+                                                 executors=tuple(x.only_executor))
+        else:
+            text, planned = registration_text(cells=cells, specs_by_cell=specs, cap=x.cap,
+                                              parity_seeds=x.parity_seeds, lane_executor=x.lane_executor,
+                                              hold_executor=x.hold_executor, banned_seeds=x.banned_seeds,
+                                              arms_sha256=arms_sha, regimeu0_u0_sha256=u0)
         if planned > x.cap:
             raise SystemExit(f'planned {planned} > cap {x.cap}')
         sys.stdout.write(text)
@@ -1332,9 +1820,19 @@ def main(argv=None):
         body = plan(x.root, regimeu0_root=x.regimeu0_root, arms_path=x.arms, cells=cells, cap=x.cap,
                     registration_md=x.registration, groups=groups, k=x.k, parity_seeds=x.parity_seeds,
                     lane_executor=x.lane_executor, hold_executor=x.hold_executor,
-                    spec_paths=x.spec, prior_roots=x.prior_root, banned_seeds=x.banned_seeds)
+                    spec_paths=x.spec, prior_roots=x.prior_root, banned_seeds=x.banned_seeds,
+                    only_executors=tuple(x.only_executor) if x.only_executor else None,
+                    supersede_uncharged=x.supersede_uncharged, pilot_arms=x.pilot_arm)
         print(json.dumps(dict(plan_sha256=body['plan_sha256'], planned_sim_s=body['planned_sim_s'],
-                              arms=sorted(body['families']), groups=len(body['groups']))))
+                              arms=sorted(body['families']) or sorted({j['arm'] for g in body['groups']
+                                                                       for j in g['jobs']}),
+                              groups=len(body['groups']), phase_budget=body.get('phase_budget'))))
+    elif x.cmd == 'pilot':
+        rep, sha = write_pilot(x.out, x.pilot_root, x.prior_root)
+        print(json.dumps(dict(sha256=sha, integrity_ok=rep['integrity']['ok'], summary=rep['summary']), indent=1,
+                         default=str))
+        if not rep['integrity']['ok']:
+            raise SystemExit(1)
     elif x.cmd == 'run':
         print(run(x.root, workers=x.workers, low_workers=x.low_workers, load_high=x.load_high,
                   normal_priority=x.normal_priority))

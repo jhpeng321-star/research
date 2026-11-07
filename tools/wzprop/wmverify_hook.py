@@ -190,7 +190,83 @@ class LcexecExecutor:
                     gate_withheld=dict(self.gate), released=dict(self.released), session_log=self.sessions[:50])
 
 
-EXECUTORS = {'plant': None, 'n2': None, 'lcexec': LcexecExecutor}
+GAP_REASON = 'unsafe_gap_or_edge'          # lc_families.lane_gate's reason for BOTH the gap test and the edge guard
+
+
+def gap_only_failure(gate, vid, target, rows, frame, n_lanes):
+    """(verdict, gap_only) of one lane request. ``gate`` = lc_families.lane_gate (unchanged). ``gap_only`` is True
+    iff the gate refuses the request ONLY because of the target-lane gap test (``LaneRules._target_gap_ok``): the
+    same gate re-run on the ego's own row alone (no other vehicle sensed -> no gap constraint) passes, so adjacency,
+    target-lane existence (closing lane only on the approach), the LaneRules edge guard and the ego-row validity all
+    pass. Any other refusal (not_adjacent, no_target_lane, edge guard, malformed / junction sensing) is not gap-only."""
+    ok, reason = gate(vid, target, rows, frame, n_lanes)
+    if ok or reason != GAP_REASON:
+        return (bool(ok), reason), False
+    ego = [r for r in rows if r.get('vid') == vid]
+    if len(ego) != 1:
+        return (False, reason), False
+    ok1, reason1 = gate(vid, target, ego, frame, n_lanes)
+    return (False, reason), bool(ok1 and reason1 == 'ok')
+
+
+class LcexecUngatedExecutor(LcexecExecutor):
+    """WMVERIFY-ONLY pilot variant of the LCEXEC policy executor (owner 2026-11-07 re-plan; opt-in per job,
+    executor name 'lcexec_ungated'; never a default, never a FULLPOL family). Identical to ``LcexecExecutor`` except
+    in ``Protocol.commands``: a program lane request that the own-sensing lane gate refuses ONLY because of the
+    target-lane gap test (``gap_only_failure``) is passed to SUMO (env.lc_tick -> changeLane; members run
+    laneChangeMode 513, so SUMO's own lane-change safety decides); adjacency, target-lane existence, the LaneRules
+    edge guard, sensing validity and the env edge-end guard still refuse. Every gap-only pass is logged per request
+    with the old verdict as 'would_withhold'."""
+    name = 'lcexec_ungated'
+    LOG_CAP = 20000                              # per-request log entries kept in the receipt (count is exact)
+
+    def __init__(self, spec, core, end_s=END_S):
+        super().__init__(spec, core, end_s)
+        self.would_withhold = []
+        self.would_withhold_n = 0
+        self.gate_calls = Counter()
+
+    def _init(self):
+        super()._init()
+        proto, lf = self.proto, self.lf
+        commands = proto.commands
+
+        def ungated_commands(now, active, **kw):
+            original = lf.lane_gate
+
+            def gate(vid, target, rows, frame, n_lanes):
+                (ok, reason), gap_only = gap_only_failure(original, vid, target, rows, frame, n_lanes)
+                if ok:
+                    self.gate_calls['pass_' + reason] += 1
+                    return ok, reason
+                if not gap_only:
+                    self.gate_calls['withheld_' + reason] += 1
+                    return ok, reason
+                self.gate_calls['passed_gap_only'] += 1
+                self.would_withhold_n += 1
+                if len(self.would_withhold) < self.LOG_CAP:
+                    ego = next(r for r in rows if r.get('vid') == vid)
+                    self.would_withhold.append(dict(t=int(now), vid=vid, source=int(ego['lane']), target=int(target),
+                                                    old_verdict='would_withhold', old_reason=reason))
+                return True, 'ok'
+            lf.lane_gate = gate
+            try:
+                return commands(now, active, **kw)
+            finally:
+                lf.lane_gate = original
+        proto.commands = ungated_commands
+
+    def receipts(self):
+        out = super().receipts()
+        out['ungated'] = dict(rule='gap-only lane-gate refusals passed to SUMO (laneChangeMode 513 decides)',
+                              would_withhold=self.would_withhold_n, gate_calls=dict(self.gate_calls),
+                              would_withhold_log=self.would_withhold,
+                              log_truncated=self.would_withhold_n > len(self.would_withhold))
+        return out
+
+
+EXECUTORS = {'plant': None, 'n2': None, 'lcexec': LcexecExecutor, 'lcexec_ungated': LcexecUngatedExecutor}
+PILOT_EXECUTORS = ('lcexec_ungated',)      # WMVERIFY pilot-only: never resolved by default, never a family
 
 
 def register_executor(name, cls):

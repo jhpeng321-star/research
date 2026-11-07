@@ -46,6 +46,8 @@ def build(analysis_dir, roots):
     rows = []
     for root in [Path(r) for r in roots]:
         body = _read(root / 'PLAN.json')
+        if body.get('pilot'):
+            raise ValueError(f'{root} is an ungated PILOT root: never a bank source (never pooled)')
         for g in body['groups']:
             if g['stage'] != 'paired':
                 continue
