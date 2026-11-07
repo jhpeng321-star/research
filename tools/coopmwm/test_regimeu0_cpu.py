@@ -114,3 +114,28 @@ def test_seed_range_registered():
     with pytest.raises(ValueError):
         ru.world_of(991200, 2400, 0.6)
     assert ms.guard(w, 'train') == w
+
+
+def _r2_rows(drop_v=8.0, l2_v=28.0, l1_v=12.0):
+    rows = [cav('x', -1000., 0, v=27.), cav('y', -600., 0, v=27.), cav('z', -900., 1, v=12.),
+            cav('far', -100., 1, v=drop_v)]
+    rows += [dict(vid=f'h{i}', s_m=-500.+40*i, v_mps=drop_v, lane=1, is_cav=False) for i in range(10)]
+    rows += [dict(vid='a2', s_m=-450., v_mps=l2_v, lane=0, is_cav=False), dict(vid='a1', s_m=-800., v_mps=l1_v, lane=1, is_cav=False)]
+    return rows
+
+
+def test_r2_picks_most_downstream_lane2_cav_when_situation_holds():
+    ctl = Ctl()
+    hook = ru.RuleHook('r2_solo2')
+    hook(ctl, {}, {})
+    rows = _r2_rows()
+    cmds = {r['vid']: .2 for r in rows if r['is_cav']}
+    out = ctl.apply(rows, cmds, 300)
+    assert sorted(out) == ['y'] and hook.next_ok == 420 and hook.acts[0]['sumo_lanes'] == [2]
+    assert out['y']['requested_raw'] == pytest.approx(-1.0) and hook.acts[0]['r2']['drop_speed'] < 15
+    slow_l2 = [dict(r, v_mps=9.0) if r['lane'] == 0 else r for r in _r2_rows()]   # lane 2 not faster than lane 1
+    for bad in (_r2_rows(drop_v=20.0), slow_l2):
+        ctl2 = Ctl()
+        h2 = ru.RuleHook('r2_solo2')
+        h2(ctl2, {}, {})
+        assert ctl2.apply(bad, {r['vid']: .2 for r in bad if r['is_cav']}, 300) == {} and h2.acts == []

@@ -61,10 +61,45 @@ STRATEGIES.update({'wall_m_solo2': ('wall_m', 2),            # lane-2 member hol
 #: start gate: a new group starts only if, for every holding member, at most max_behind observed vehicles
 #: (CAV reports + RSU detections, i.e. the rows the controller sees) are in its WM lane within behind_m behind it.
 GATES = {'wall_g_solo2_gate0': dict(behind_m=100.0, max_behind=0)}
+# S-MULTICRIT-R2 (MAIN 2026-11-07 23:40; thresholds fixed before the run): situation trigger, no wall pick.
+STRATEGIES['r2_solo2'] = ('wall_g', 2)
+R2 = dict(drop_window_m=600.0, drop_speed_max=15.0, ahead_m=500.0, lane_gap_min=5.0)
+S_DROP = RELEASE_S
+
+
+def _mean(x):
+    return sum(x)/len(x) if x else None
+
+
+def r2_situation(rows, cand):
+    """(a) mean observed speed over the last 600 m before the drop < 15 m/s; (b) observed WM-lane-0 (SUMO 2) mean
+    speed over [s, s+500] exceeds WM-lane-1 (SUMO 1) by > 5 m/s. Rows = the controller's rows (CAV reports + RSU)."""
+    up = [r for r in rows if float(r['s_m']) < S_DROP]
+    ds = _mean([float(r['v_mps']) for r in up if float(r['s_m']) >= S_DROP-R2['drop_window_m']])
+    s = float(cand['s_m'])
+    ahead = [r for r in up if s <= float(r['s_m']) <= s+R2['ahead_m']]
+    v0 = _mean([float(r['v_mps']) for r in ahead if int(r['lane']) == 0])
+    v1 = _mean([float(r['v_mps']) for r in ahead if int(r['lane']) == 1])
+    ok = ds is not None and ds < R2['drop_speed_max'] and v0 is not None and v1 is not None and v0-v1 > R2['lane_gap_min']
+    return ok, dict(drop_speed=ds, v_l2_ahead=v0, v_l1_ahead=v1)
+
+
+def pick_r2(cavs, rows):
+    """Free CAVs in SUMO lane 2 (WM lane 0) inside the zone that satisfy R2; the most downstream one holds."""
+    c = [r for r in cavs if int(r['lane']) == 0 and ZONE_S[0] <= float(r['s_m']) <= ZONE_S[1]]
+    ok = []
+    for r in c:
+        good, info = r2_situation(rows, r)
+        if good:
+            ok.append((float(r['s_m']), r, info))
+    if not ok:
+        return None, None
+    ok.sort(key=lambda x: -x[0])
+    return ok[0][1], ok[0][2]
 GROUP_ARMS = ('wall_h', 'wall_g')
 ARMS = ('u0', 'wall_h_solo2', 'wall_h', 'wall_h_solo0')
 ALL_ARMS = ('u0', 'wall_h_solo2', 'wall_h', 'wall_h_solo0', 'wall_g', 'wall_g_solo2', 'wall_g_solo0',
-            'wall_m_solo2', 'wall_g_duo12', 'wall_g_solo2_gate0')
+            'wall_m_solo2', 'wall_g_duo12', 'wall_g_solo2_gate0', 'r2_solo2')
 
 
 def solo_lanes(solo):
@@ -160,8 +195,14 @@ class RuleHook(ir.Recorder):
             self.issued.append([t, vid, round(a, 4)])
         if t >= self.next_ok:
             free = [r for r in by.values() if r['vid'] not in self.active and r['vid'] in commands]
-            wall = pick_wall(free)
-            if wall:
+            r2info = None
+            if self.strategy == 'r2_solo2':
+                cand, r2info = pick_r2(free, rows)
+                wall = [cand] if cand is not None else None
+                members = list(wall) if wall else []
+            else:
+                wall = pick_wall(free)
+            if wall and self.strategy != 'r2_solo2':
                 lanes_sel = solo_lanes(STRATEGIES[self.strategy][1])
                 members = [c for c in wall if lanes_sel is None or sumo_lane(c['lane']) in lanes_sel]
                 gate = GATES.get(self.strategy)
@@ -174,6 +215,8 @@ class RuleHook(ir.Recorder):
                            wall=[c['vid'] for c in wall], sumo_lanes=[sumo_lane(c['lane']) for c in members],
                            s=[round(c['s_m'], 2) for c in members], v=[round(c['v_mps'], 3) for c in members],
                            span=round(max(xs)-min(xs), 2), release={})
+                if r2info is not None:
+                    act['r2'] = {k: (None if v is None else round(v, 3)) for k, v in r2info.items()}
                 self.acts.append(act)
                 self.next_ok = t+self.params['hold_s']
                 for c in members:
@@ -280,6 +323,21 @@ def worker(root, ident):
     from . import accel_plant
     original_tick = cfb.tick
     cfb.tick = hook.tick_wrapper(original_tick)
+    truth = None
+    if os.environ.get('MULTICRIT_TRUTH_LOG') == '1':
+        # S-MULTICRIT-R2: read-only TraCI getters after each step (evaluation-only per-vehicle truth: id, lane id,
+        # lane position, speed; never vType / driver parameters).
+        truth = gzip.open(work/'truth.jsonl.gz', 'xt', encoding='utf-8')
+        inner = cfb.tick
+
+        def tick(b, controller=None, trace=None):
+            audit = inner(b, controller, trace)
+            v = b.traci.vehicle
+            truth.write(json.dumps(dict(t=round(float(b.env.now), 3), v=[[i, v.getLaneID(i), round(v.getLanePosition(i), 2),
+                                                                          round(v.getSpeed(i), 4)] for i in v.getIDList()]),
+                                   separators=(',', ':'))+'\n')
+            return audit
+        cfb.tick = tick
     result, error = None, None
     try:
         result = accel_plant.episode(accel, controller_hook=hook)
@@ -288,6 +346,8 @@ def worker(root, ident):
         error = dict(error=repr(exc), traceback=traceback.format_exc())
     finally:
         cfb.tick = original_tick
+        if truth is not None:
+            truth.close()
     lane_out = {}
     steps = (result or {}).get('steps') or (hook.controller.events if hook.controller is not None else [])
     for e in steps:
