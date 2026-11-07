@@ -734,12 +734,14 @@ def start_receipt(captured):
                 classes[f'{cls.__module__}.{cls.__qualname__}'] = _sha(inspect.getsourcefile(cls))
             except (TypeError, OSError):
                 continue
-    modules = {}
+    modules, module_paths = {}, {}
     for name, mod in sorted(sys.modules.items()):
         f = getattr(mod, '__file__', None)
-        if name.startswith('traffic_shepherd') and f and Path(f).is_file():
+        if name.split('.')[0] in ('traffic_shepherd', 'tools', 'wms') and f and Path(f).is_file():
             modules[name] = _sha(f)
+            module_paths[name] = str(Path(f).resolve())     # where each module was imported from (N5 .pth note)
     return dict(cmd=cmd, sumo_binary=captured['cmd'][0], files=files, env=attrs, env_classes=classes, modules=modules,
+                module_paths=module_paths,
                 env_class=type(env).__qualname__ if env is not None else None)
 
 

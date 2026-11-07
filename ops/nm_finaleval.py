@@ -3113,6 +3113,7 @@ def env_equivalence(*, final_root, panel, python=None, runner=RUNNER):
                       sumo_binary=dict(plant=out['plant']['sumo_binary'], train=out['train']['sumo_binary']),
                       env_class=dict(plant=out['plant']['env_class'], train=out['train']['env_class']),
                       env_classes=dict(plant=out['plant']['env_classes'], train=out['train']['env_classes']),
+                      module_paths=dict(plant=out['plant'].get('module_paths'), train=out['train'].get('module_paths')),
                       rule='N5 REVIEW_N6_5 fix (a): config/route/option/kwarg/module-sha equivalence on one TRAIN world'),
                  'receipt_sha256')
     publish(target, value)
