@@ -502,6 +502,15 @@ def test_end_to_end_plan_worker_analyze(tmp_path, monkeypatch, wz):
     assert all('J_300_1200_vs' in r for r in res)
     with pytest.raises(FileExistsError):
         V.analyze([root], out)
+    # ---- verified-plan bank (clean5c): allowed families only, never banned / parity arms
+    from tools.wzprop import wmverify_bank as BK
+    bank = BK.build(out, [root])
+    assert {r['family'] for r in bank} <= keep and all(r['family'] not in ('wall_h_solo2', 'inc_core') for r in bank)
+    assert all(r['members'] and r['template'] for r in bank) and all(r['seed'] in (989950, 989951) for r in bank)
+    if keep - {'wall_g_solo2'}:
+        assert bank
+    with pytest.raises(ValueError, match='fail closed'):
+        BK.build(tmp_path / 'blocked', [root])
     # ---- a missing vehicle log also fails closed
     (root / V.VEHICLE_LOG_DIR / jobs[3]['id'] / 'VEHICLES.jsonl.gz').unlink()
     rep2, ver2 = V.analyze([root], tmp_path / 'blocked2')

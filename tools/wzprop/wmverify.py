@@ -1065,10 +1065,10 @@ def analyze(roots, out_dir=None):
         out = guard_path(out_dir)
         out.mkdir(parents=True, exist_ok=False)
         text = json.dumps(rep, indent=1, sort_keys=True, default=str) + '\n'
-        (out / 'ANALYSIS.json').open('x', encoding='utf-8').write(text)
+        (out / 'ANALYSIS.json').open('xb').write(text.encode('utf-8'))       # exact bytes (sha below)
         ver['analysis_sha256'] = hashlib.sha256(text.encode('utf-8')).hexdigest()
         allowed_text = json.dumps(allowed_analysis(rep, fair), indent=1, sort_keys=True, default=str) + '\n'
-        (out / 'ANALYSIS_ALLOWED.json').open('x', encoding='utf-8').write(allowed_text)
+        (out / 'ANALYSIS_ALLOWED.json').open('xb').write(allowed_text.encode('utf-8'))
         ver['analysis_allowed_sha256'] = hashlib.sha256(allowed_text.encode('utf-8')).hexdigest()
         _write_new(out / 'VERIFY.json', ver)
         _write_new(out / 'CHECK.json', chk)
