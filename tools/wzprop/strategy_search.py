@@ -591,7 +591,7 @@ def search_cell(wm, states, cfg=None, log=None):
 def select_for_sumo(result, k=4, archive='delay', fair=False, exclude=()):
     """Top strategies of one archive, distinct descriptor cells first (then the next best to fill k); comparators,
     banned strategies and strategies that never activated on the final states are excluded; 'delay' / 'bounded'
-    picks also need a positive predicted total gain vs u0."""
+    picks also need a positive predicted total gain vs u0 ('delay': a positive LCB)."""
     archive = 'fair' if fair else archive
     ok = []
     for r in sorted(result['final'], key=rank_key(archive)):
@@ -599,6 +599,8 @@ def select_for_sumo(result, k=4, archive='delay', fair=False, exclude=()):
             continue
         if r['key'] in set(exclude) or not r.get('feasible') or (archive in ('delay', 'bounded')
                                                                    and r['gain_vs_base'] <= 0):
+            continue
+        if archive == 'delay' and r['gain_vs_base_lcb'] <= 0:
             continue
         ok.append(r)
     out, cells = [], set()
@@ -615,9 +617,9 @@ def select_for_sumo(result, k=4, archive='delay', fair=False, exclude=()):
 
 
 def wm_arms(result, k=4):
-    """ARMS.json WM groups: archive (a), then (b) and (c) excluding strategies already picked by earlier groups."""
+    """ARMS.json WM groups: archive (a), then (c) and (b) excluding strategies already picked by earlier groups."""
     out, seen = {}, set()
-    for group, arch in (('wm', 'delay'), ('wm_bounded', 'bounded'), ('wm_fairer', 'fairer'), ('wm_fair', 'fair')):
+    for group, arch in (('wm', 'delay'), ('wm_fairer', 'fairer'), ('wm_bounded', 'bounded'), ('wm_fair', 'fair')):
         out[group] = select_for_sumo(result, k, arch, exclude=seen)
         seen |= {strategy_key(s) for s in out[group]}
     return out
