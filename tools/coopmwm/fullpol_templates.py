@@ -307,9 +307,16 @@ def propose(state, own, rng):
         if cls == 'verified':
             # clean5c bank entries {template, offer_condition}: offered only where their verified trigger and
             # offer condition hold for this CAV now (own row + own sensing); plain template dicts as before.
-            from .fullpol_bank import offer_ok
+            from . import fullpol_bank as fb
+            ledger = state.get('ledger')
+
+            def gate(x):
+                fam = x['template'].get('source', {}).get('variant')
+                entry = False if ledger is None else ledger.get(fam)
+                return (fb.session_ok(x['offer_condition'], entry, state.get('now'))
+                        and fb.offer_ok(x['offer_condition'], own, rows))
             ts = [x['template'] if 'offer_condition' in x else x for x in (slot.get('templates') or ())
-                  if 'offer_condition' not in x or offer_ok(x['offer_condition'], own, rows)]
+                  if 'offer_condition' not in x or gate(x)]
             t = _lc().FreeProgram.from_dict(ts[int(rng.integers(len(ts)))]) if ts else None
         elif cls == 'structured':
             t = None

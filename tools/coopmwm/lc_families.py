@@ -436,7 +436,7 @@ def _propose(state, own, rng):
     args = state.get('generator_args') or {}
     view = dict(now=state['now'], map=state['map'], frame=state['frame'], cap=state['cap'],
                 range_m=state['range_m'], sensed=sensed, rows=sensed, registry=lp.REGISTRY,
-                generator_args=args, fullpol=args)
+                generator_args=args, fullpol=args, ledger=state.get('ledger'))
     if 'length_m' in own:
         own_row = _row(own)
     else:
@@ -604,6 +604,7 @@ class Protocol:
         self.last_published, self.last_joins, self.last_commands = [], [], {}
         self.last_labels, self.last_gate, self.last_request, self.expired = [], {}, {}, []
         self.just_released = []
+        self.started = {}           # template source variant -> start times of its initiated sessions
 
     # ------------------------------------------------ inputs
     def _expire(self, now):
@@ -681,7 +682,15 @@ class Protocol:
         return dict(now=_second(now), families=PROGRAM_FAMILIES, offers=self.offers.get(vid, ()),
                     cap=self.cap, range_m=self.range_m, map=self.frame.name, frame=self.frame,
                     n_lanes=self.n_lanes, sensed=tuple(self.sensed.get(vid, ())), propose=self.propose,
-                    generator_args=self.settings.get('generator_args') or {})
+                    generator_args=self.settings.get('generator_args') or {}, ledger=self.ledger())
+
+    def ledger(self):
+        """{template source variant: (active sessions, last start s)} for the generator's slots/cooldown gate."""
+        out = {}
+        for variant, starts in self.started.items():
+            active = sum(1 for s in self.sessions.values() if (s['template'].source or {}).get('variant') == variant)
+            out[variant] = dict(active=active, last_start_s=max(starts))
+        return out
 
     def events(self, members, free):
         return {v for v in members if v in free and any(
@@ -726,6 +735,9 @@ class Protocol:
             session['executors'][ego] = self._executor(session, ego)
             self.sessions[option.session_id] = session
             self.membership[ego] = option.session_id
+            variant = (template.source or {}).get('variant')
+            if variant is not None:
+                self.started.setdefault(variant, []).append(now)
             return True
         session = self.sessions.get(option.session_id)
         if session is None or session['closed'] or option.slot in session['slots'] \

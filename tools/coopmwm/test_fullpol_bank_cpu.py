@@ -123,11 +123,41 @@ def test_offer_condition_enforced_on_the_slate(monkeypatch):
     fp_cls = type('FP', (), {'from_dict': staticmethod(lambda d: d)})
     monkeypatch.setattr(ft, '_lc', lambda: type('LC', (), {'FreeProgram': fp_cls}))
     monkeypatch.setattr(ft, '_view', lambda frame: None)
-    slot = dict(classes=['verified'], templates=[dict(template={'x': 1}, offer_condition=cond)])
-    state = lambda rows: dict(frame=None, rows=rows, fullpol=slot)  # noqa: E731
-    assert ft.propose(state([own, r('p', -1100, 1)]), own, np.random.default_rng(0)) == [{'x': 1}]
-    assert ft.propose(state([own]), own, np.random.default_rng(0)) == []             # no partner: no target
+    tpl = {'x': 1, 'source': dict(variant='wm_x')}
+    slot = dict(classes=['verified'], templates=[dict(template=tpl, offer_condition=dict(cond, slots=1, cooldown_s=120))])
+
+    def state(rows, ledger, now=500):
+        return dict(frame=None, rows=rows, fullpol=slot, now=now, ledger=ledger)
+    pair = [own, r('p', -1100, 1)]
+    rng = np.random.default_rng(0)
+    assert ft.propose(state(pair, {}), own, rng) == [tpl]
+    assert ft.propose(state([own], {}), own, rng) == []                                # no partner: no target
     assert calls == [1, 0]
+    # slots / cooldown (the bank's decision rule): no target while a session of the family runs or cools down
+    assert ft.propose(state(pair, {'wm_x': dict(active=1, last_start_s=300)}), own, rng) == []
+    assert ft.propose(state(pair, {'wm_x': dict(active=0, last_start_s=400)}), own, rng) == []    # 500 < 520
+    assert ft.propose(state(pair, {'wm_x': dict(active=0, last_start_s=380)}), own, rng) == [tpl]  # 500 >= 500
+    assert ft.propose(state(pair, None), own, rng) == []                                  # no ledger: closed
+    assert calls == [1, 0, 1]
+
+
+def test_offer_wall_member_rule_exact():
+    """wall: one in-zone CAV per lane 0/1/2, all members (acting CAV included) in ONE spread_m window."""
+    cond = dict(trigger='wall', own_wm_lanes=[0, 1], zone_s=[-1724.56, -324.56], spread_m=200.,
+                roles=[dict(wm_lane=1), dict(wm_lane=0)], gate=None, start_gate=None, slots=1, cooldown_s=120)
+
+    def r(v, s, ln):
+        return dict(vid=v, s_m=float(s), lane=ln, v_mps=20., is_cav=True)
+    own = r('e', -1000, 0)
+    assert fb.offer_ok(cond, own, [r('a', -950, 1), r('b', -850, 2)])                 # spread 150: offered
+    assert fb.offer_ok(cond, own, [r('a', -1100, 1), r('b', -900, 2)])                # spread 200: offered
+    assert not fb.offer_ok(cond, own, [r('a', -1150, 1), r('b', -850, 2)])            # 150 behind + 150 ahead
+    assert fb.offer_ok(cond, own, [r('a', -1150, 1), r('b', -850, 2), r('c', -950, 1)])   # another lane-1 CAV fits
+    assert not fb.offer_ok(cond, own, [r('a', -950, 1), r('b', -1800, 2)])            # lane-2 partner out of zone
+    assert not fb.offer_ok(cond, r('e', -400, 0), [r('a', -350, 1), r('b', -300, 2)])  # partner past the zone end
+    assert not fb.offer_ok(cond, own, [r('a', -950, 1)])                               # lane 2 missing
+    assert not fb.offer_ok(cond, r('e', -1000, 2), [r('a', -950, 1), r('b', -900, 0)])  # own lane 2 not verified
+    assert fb.session_ok(cond, None, 300) and not fb.session_ok(cond, False, 300)
 
 
 def test_real_bank_d3200_p60(cfg):
@@ -157,3 +187,16 @@ def test_real_bank_mc(cfg):
     assert all(t['offer_condition'] for t in doc['clean5c']['templates'])
     assert not any(r['fair_label'] == 'over_fair_bound' for r in bank if not r['regime'].startswith('D3200'))
     assert fe.settings(ev_cfg(cfg, guidance=doc, parity=fb.eligible_families(doc)))
+
+
+def test_protocol_ledger_counts_sessions_per_variant():
+    """LCEXEC Protocol.ledger(): active sessions + last start per template source variant (generator gate input)."""
+    from . import lc_families as lf
+    proto = lf.Protocol.__new__(lf.Protocol)
+    proto.reset()
+    tpl = type('T', (), {'source': dict(variant='wm_x')})()
+    proto.sessions = {'a': dict(template=tpl)}
+    proto.started = {'wm_x': [300, 420]}
+    assert proto.ledger() == {'wm_x': dict(active=1, last_start_s=420)}
+    proto.sessions = {}
+    assert proto.ledger() == {'wm_x': dict(active=0, last_start_s=420)}

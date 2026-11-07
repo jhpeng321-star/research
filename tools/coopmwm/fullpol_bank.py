@@ -216,27 +216,50 @@ def wm_families(arms_docs):
 def offer_ok(cond, own, rows):
     """Verified trigger/offer condition at this step from the acting CAV's own row + own sensing (WM frame).
 
-    Checked: own WM lane in own_wm_lanes; own s inside zone_s; trigger 'wall' = a CAV in every other WM lane
-    within spread_m (own sensing); trigger 'lanes' = a CAV in each other role lane within spread_m. Gates /
-    start gates are not evaluable from this view: fail closed (never offered). Cooldown / slots are session
-    limits enforced by the protocol, not here."""
+    Same member rule the bank verified: own WM lane in own_wm_lanes; trigger 'wall' = one CAV in every WM lane
+    0/1/2 (and every role lane), 'lanes' = one CAV per role lane; every member (the acting CAV included) inside
+    zone_s, and all of them inside ONE window of width spread_m. Gates / start gates are not evaluable from
+    this view: fail closed (never offered). Slots / cooldown: session_ok."""
     if not cond or cond.get('gate') or cond.get('start_gate'):
         return False
     lane, s = int(own['lane']), float(own['s_m'])
-    if int(lane) not in [int(x) for x in cond.get('own_wm_lanes') or ()]:
+    if lane not in [int(x) for x in cond.get('own_wm_lanes') or ()]:
         return False
     zone = cond.get('zone_s')
-    if zone is not None and not float(zone[0]) <= s <= float(zone[1]):
+
+    def in_zone(x):
+        return zone is None or float(zone[0]) <= x <= float(zone[1])
+    if not in_zone(s):
         return False
-    spread = float(cond.get('spread_m', 0.))
-    cavs = [r for r in rows if r.get('is_cav') and r['vid'] != own['vid'] and abs(float(r['s_m'])-s) <= spread]
     if cond.get('trigger') == 'wall':
         need = {int(r['wm_lane']) for r in cond.get('roles') or ()} | {0, 1, 2}
     elif cond.get('trigger') == 'lanes':
         need = {int(r['wm_lane']) for r in cond.get('roles') or ()}
     else:
         return False
-    return all(any(int(r['lane']) == ln for r in cavs) for ln in need - {lane})
+    spread = float(cond.get('spread_m', 0.))
+    cavs = [(float(r['s_m']), int(r['lane'])) for r in rows
+            if r.get('is_cav') and r['vid'] != own['vid'] and in_zone(float(r['s_m']))]
+    others = need - {lane}
+    for lo in sorted({x for x, _ in cavs} | {s}):
+        if not lo <= s <= lo+spread:
+            continue
+        if all(any(ln == want and lo <= x <= lo+spread for x, ln in cavs) for want in others):
+            return True
+    return False
+
+
+def session_ok(cond, entry, now):
+    """Verified decision rule: fewer than `slots` sessions of this family active and now >= last start +
+    cooldown_s. ``entry`` = the protocol ledger's {active, last_start_s} for the family (None = never started).
+    A missing ledger (protocol without one) fails closed."""
+    if entry is False:
+        return False
+    if entry is None:
+        return True
+    if int(entry['active']) >= int(cond.get('slots', 1)):
+        return False
+    return float(now) >= float(entry['last_start_s'])+float(cond.get('cooldown_s', 0.))
 
 
 if __name__ == '__main__':
