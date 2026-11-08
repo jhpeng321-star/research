@@ -221,6 +221,9 @@ def run(root, arm, u, code, demo=None, demo_sha=None):
     from tools.coopmwm.launch_training import read
     from tools.coopmwm import clean4_restart as c4
     cfg = read(Path(root)/'CONFIG.json')
+    spec = (cfg.get('newmap') or {}).get('map_spec')
+    if spec and not os.environ.get('COOPMWM_MAP_SPEC'):     # the run's own process map (as its workers had)
+        os.environ['COOPMWM_MAP_SPEC'] = str(guard(spec))
     budget = cfg.get('clean4_budget') or {}
     if budget.get('run') in c4.APPROVED_BY_RUN:          # replay only: the recorded run's own approved envelope
         c4.APPROVED_BY_RUN[budget['run']] = budget['approved_sim_s']
