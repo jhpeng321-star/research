@@ -262,7 +262,7 @@ def prepare_c(source, *, root=C_ROOT, g4_workers=C_G4_WORKERS, learn_threads_max
 # BOTH delay and fairness.
 
 P20_CELLS = ('D2400_p20', 'D2800_p20', 'D3200_p20')
-P20_PRIORITY = dict(D3200_p20='delay', D2800_p20='fair_and_delay', D2400_p20='fairness')
+P20_PRIORITY = dict(D3200_p20='delay', D2800_p20='fair_and_delay', D2400_p20='fairness', D3200_p40='delay')
 P20_RULE_FAMILIES = ('wall_g_duo12', 'wall_g_solo2')   # LOWCAV D3200_p20 PASS (multicrit/lowcav MULTICRIT_confirm)
 P20_G4_WORKERS = 6        # REV-SPD 13:51: measured G4 worker peak 7.1 GB -> 6 workers (peak 163.8 GB); both p20 runs
 P20_PRIORITY_RULE = (
@@ -276,10 +276,23 @@ P20_NOTE = ('p20 (owner REGISTRATION 2026-11-08 17:22): training cells = 20% CAV
             'TRAIN seeds, episodes, speed code and B = R code; only the guidance differs. '+P20_PRIORITY_RULE)
 
 
+P20_HM_CELLS = ('D2800_p20', 'D3200_p20')   # owner 2026-11-08 22:49: heavy + medium only (4/4 per update)
+#: owner 2026-11-08 ~23:0x: CLEAN5C5 = D3200_p20 + D2800_p20 + D3200_p40, 8 episodes/update split 3/3/2 (D3200_p40
+#: starts without WM guidance; plans join at update boundaries via bank growth). Fixed per-update pattern.
+C5_CELLS = ('D2800_p20', 'D3200_p20', 'D3200_p40')
+C5_PATTERN = ('D3200_p20', 'D2800_p20', 'D3200_p40')*2+('D3200_p20', 'D2800_p20')
+
+
 def _check_p20_cells(cells):
-    if tuple(sorted(cells)) != P20_CELLS:
-        raise ValueError('p20 cells must be exactly '+repr(P20_CELLS))
-    return P20_CELLS
+    got = tuple(sorted(cells))
+    if got not in (P20_CELLS, P20_HM_CELLS, C5_CELLS):
+        raise ValueError('p20 cells must be exactly '+repr(P20_CELLS)+', '+repr(P20_HM_CELLS)+' or '+repr(C5_CELLS))
+    return got
+
+
+def cell_pattern(cells):
+    """The per-update world pattern: C5 = 3/3/2 (C5_PATTERN), else the cells rotating."""
+    return C5_PATTERN if tuple(sorted(cells)) == C5_CELLS else tuple(cells)
 
 
 def p20_eligible(p, threshold_s=None):
@@ -399,14 +412,16 @@ def check_p20_guidance(doc, cells, *, wm):
     return none
 
 
-def _p20_variant(base, cells, g4_workers, *, label, wm, doc, overrides, learnfix=True):
+def _p20_variant(base, cells, g4_workers, *, label, wm, doc, overrides, learnfix=True, bank_growth_control=None):
     none = check_p20_guidance(doc, cells, wm=wm)
     sources = ({c: v['source'] for c, v in doc['p20']['cells'].items()} if doc.get('situational') is None else
                {c: ('wm_situational' if c not in none else 'none') for c in cells})
     note = P20_NOTE+f' {label}: per-cell guidance source {sources}.'
-    return dict(base, cell_keys=cells, worlds=lambda: worlds_by_update_8(cells), guidance_missing_ok=none,
+    return dict(base, cell_keys=cells, worlds=lambda: worlds_by_update_8(cell_pattern(cells)), guidance_missing_ok=none,
                 cfg_overrides=dict(overrides, g4_workers=g4_workers,
-                                   **({'learnfix': _learnfix_value()} if learnfix else {})),
+                                   **({'learnfix': _learnfix_value()} if learnfix else {}),
+                                   **({} if bank_growth_control is None else {'bank_growth': _bank_growth_value(
+                                       bank_growth_control)})),
                 design=base['design']+' '+note+(' '+LEARNFIX_NOTE if learnfix else ''),
                 authority=base['authority']+'; '+note,
                 newmap_extra=dict(base['newmap_extra'], variant=label, p20_note=note, no_guidance_cells=list(none),
@@ -423,6 +438,11 @@ def _learnfix_value():
     return learnfix.value()
 
 
+def _bank_growth_value(control):
+    from .bank_growth import RULE
+    return dict(rule=RULE, control=str(control))
+
+
 def prepare_f8_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS, learnfix=True,
                    **kwargs):
     """Rule-guided p20 (F8 code; B = LOWCAV duo12 / wall_g_solo2 EV-BC where eligible, R = none)."""
@@ -433,10 +453,11 @@ def prepare_f8_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P2
 
 
 def prepare_c_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS,
-                  learn_threads_max=C_LEARN_THREADS_MAX, learnfix=True, **kwargs):
+                  learn_threads_max=C_LEARN_THREADS_MAX, learnfix=True, bank_growth_control=None, **kwargs):
     """WM-guided p20 (clean5c code; B = WMVERIFY-verified p20 WM plans, rule fallback labelled, R = none;
     B and R the same templates)."""
     cells = _check_p20_cells(cells)
     variant = _p20_variant(VARIANT_C, cells, g4_workers, label='clean5c-p20', wm=True, doc=guidance_doc,
-                           overrides=_c_overrides(g4_workers, learn_threads_max), learnfix=learnfix)
+                           overrides=_c_overrides(g4_workers, learn_threads_max), learnfix=learnfix,
+                           bank_growth_control=bank_growth_control)
     return c5.prepare(source, root=root, variant=variant, guidance_doc=guidance_doc, **kwargs)

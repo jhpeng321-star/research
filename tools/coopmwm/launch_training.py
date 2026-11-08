@@ -166,6 +166,8 @@ def update(cfg, arm, u, *, smoke=False):
     artifacts = root/'smoke' if smoke else root
     native = production.backend_config(cfg, root=artifacts, smoke=smoke)
     native['update'] = u
+    from .bank_growth import update_view as bank_growth_view
+    native, bank_growth = bank_growth_view(native, arm, u, smoke=smoke)   # c4/learnfix (opt-in; absent = no-op)
     from . import g4_runtime as g4
     paired_credit = arm != 'A' and g4.enabled(native, u, smoke=smoke)
     health(root)
@@ -233,6 +235,8 @@ def update(cfg, arm, u, *, smoke=False):
     if ('clean3_budget' in cfg or 'clean4_budget' in cfg) and cfg.get('mined_moves') and arm != 'A':
         from .clean3_mined import usage
         extra['clean3_mined_usage'] = usage(native, arm, episodes, learning, artifacts)
+    if bank_growth is not None:
+        extra['bank_growth'] = bank_growth          # c4/learnfix: update-boundary guidance / demo snapshot
     if fair_log is not None:
         extra['fair_vehicle_log'] = fair_log     # clean5b-F receipt (A: groups file; B/R: paired/unpaired counts)
     if resume is not None and resume['replacements']:

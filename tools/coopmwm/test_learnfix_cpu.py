@@ -1,0 +1,114 @@
+"""c4/learnfix CPU contracts (LEARNDIAG fix): EV-BC labels/weights, fairness on acting rows, choice-row PPO."""
+# ruff: noqa: F811 (imported pytest fixtures are test parameters)
+from copy import deepcopy
+
+import pytest
+import torch
+
+from . import fullpol_learn as fl, learnfix as lf, track2_backend as tb
+from .test_track2_backend_cpu import cfg, cpu_threads, fake_load, reward_result, sample  # noqa: F401
+
+
+def test_settings_registration():
+    assert lf.settings({}) is None
+    v = lf.value()
+    assert lf.settings(dict(learnfix=v)) == v and v['epochs'] == 4 and v['minibatch_ticks'] == 32
+    for bad in (dict(v, rule='x'), dict(v, epochs=0), dict(v, extra=1), dict(v, row_weight_cap=2.)):
+        with pytest.raises(ValueError, match='learnfix'):
+            lf.settings(dict(learnfix=bad))
+
+
+def test_balance_equal_totals_and_cap():
+    w = lf.balance(['act']*2+['none']*1042)
+    assert w['act'] == 1. and w['none'] == pytest.approx(2/1042)
+    assert 2*w['act'] == pytest.approx(1042*w['none'])                      # equal total weight
+    assert lf.balance(['act']*10+['none']*4) == dict(act=.4, none=1.)        # row weight <= 1
+    assert lf.balance(['act']*3) == dict(act=1., none=0.)
+    assert lf.balance(['none']*50) == dict(act=0., none=0.)                  # lone none labels: never pushed
+
+
+def test_fairness_harm_lands_on_the_acting_rows_only():
+    """Example: episode e1 harmed groups by 300 veh-s vs its paired A episode; only the two rows that took a
+    non-none trigger action carry it (150 each); passive rows and the harmless episode keep their local reward."""
+    targets = {('e1', 300): [-1., -1.], ('e1', 301): [-1., -1.], ('e2', 300): [-1.]}
+    acting = {('e1', 300): [True, False], ('e1', 301): [False, True], ('e2', 300): [True]}
+    out, receipt = lf.apply_fair_acting(targets, {'e1': 300., 'e2': 0.}, acting)
+    assert out == {('e1', 300): [-151., -1.], ('e1', 301): [-1., -151.], ('e2', 300): [-1.]}
+    assert receipt == [dict(episode_id='e1', harm_veh_s=300., acting_rows=2, attributed=True),
+                       dict(episode_id='e2', harm_veh_s=0., acting_rows=1, attributed=False)]
+    out, receipt = lf.apply_fair_acting(targets, {'e1': 300.}, {k: [False]*len(v) for k, v in targets.items()})
+    assert out == targets and receipt[0]['attributed'] is False              # nobody acted: no PPO harm
+
+
+class _B:
+    def __init__(self, mask):
+        self.mask = torch.tensor(mask)
+
+
+def test_advantages_cell_baseline_and_choice_normalisation():
+    ticks = [dict(batch=_B([[True, True], [True, False]]), adv=[5., 100.], cell='A'),
+             dict(batch=_B([[True, True]]), adv=[3.], cell='A'),
+             dict(batch=_B([[True, True]]), adv=[-10.], cell='B')]
+    r = lf.advantages(ticks)
+    assert r['cell_baseline'] == dict(A=4., B=-10.) and r['choice_rows'] == 3
+    assert float(ticks[0]['norm_adv'][1]) == 0.                              # no choice: no advantage
+    vals = torch.cat([t['norm_adv'][t['batch'].mask[:, 1:].any(1)] for t in ticks])
+    assert float(vals.mean()) == pytest.approx(0., abs=1e-6)
+
+
+def _trig(vid, table, mask):
+    return dict(context=dict(members=[vid]), tables=[table], mask=[mask])
+
+
+def test_ev_labels_act_explicit_none_unlabelled():
+    """act = a qualifying family offered (teacher admits / no teacher); none ONLY on an explicit teacher reject;
+    otherwise unlabelled (no BC loss)."""
+    entry = lambda fam: dict(family='free_program_initiate', template=dict(source=dict(variant=fam)))  # noqa: E731
+    rows = {'m': dict(family='m', lb95_veh_s=5., mean_veh_s=6.)}
+    offered = _trig('v', [None, entry('m')], [True, True])
+    other = _trig('v', [None, entry('x')], [True, True])
+    assert fl._learnfix_targets(None, offered, rows, None)[0][2] == 'act'
+    assert fl._learnfix_targets(None, offered, rows, lambda r, i: 'admit')[0][2] == 'act'
+    assert fl._learnfix_targets(None, offered, rows, lambda r, i: 'reject')[0][:1] == (0,)
+    assert fl._learnfix_targets(None, offered, rows, lambda r, i: 'reject')[0][2] == 'none'
+    assert fl._learnfix_targets(None, offered, rows, lambda r, i: 'unknown')[0][2] == 'unlabelled'
+    assert fl._learnfix_targets(None, other, rows, None)[0][2] == 'unlabelled'          # no target offered
+    assert fl._learnfix_targets(None, _trig('v', [None, None], [True, False]), rows, None) == [None]
+    # inherited path unchanged: no target offered -> 'none' label (the LEARNDIAG collapse)
+    assert fl.ev_targets(None, other, rows)[0][0] == 0
+
+
+def _episodes(cfg, n):
+    _, s, _ = sample(cfg)
+    episodes, rows = [], []
+    for k in range(n):
+        episodes.append(dict(id=f'ep{k}', arm='B', world=dict(cell_key='D2800_p20', seed=k),
+                             steps=[dict(time_s=300, sample=deepcopy(s))]))
+        for r in reward_result(cfg, s)['rows']:
+            rows.append(dict(r, episode_id=f'ep{k}'))
+    return episodes, dict(reward_result(cfg, s), rows=rows)
+
+
+@pytest.mark.parametrize('fix', [False, True])
+def test_train_learnfix_receipt_kl_cap_entropy_and_rng(cfg, monkeypatch, fix):
+    fake_load(monkeypatch)
+    run = dict(cfg, **({'learnfix': lf.value(minibatch_ticks=4)} if fix else {}))
+    runtime = tb.build_arm_runtime(run, 'B')['runtime']
+    runtime.safety_checked = True
+    monkeypatch.setattr(runtime, 'bank_pairs', lambda: ([], {}))
+    episodes, envelope = _episodes(run, 12)
+    gen = runtime.generator.get_state().clone()
+    rng = torch.get_rng_state().clone()
+    report = runtime.train(episodes, rewards=envelope)
+    assert torch.equal(runtime.generator.get_state(), gen)                  # shared episode RNG untouched
+    if not fix:
+        assert 'learnfix' not in report and report['trigger']
+        return
+    assert torch.equal(torch.get_rng_state(), rng)                         # minibatch order: own generator
+    r = report['learnfix']
+    assert report['trigger'] == [] and r['ticks'] == 12 and r['rule'] == lf.RULE
+    assert r['final_choice_kl'] <= r['kl_budget'] and all(s['choice_kl'] <= r['kl_budget'] for s in r['steps']
+                                                         if s['accepted'])
+    assert r['entropy_weight'] <= .1*r['adv_rms']/max(r['mean_entropy'], 1e-6)+1e-12
+    assert r['entropy_weight'] <= cfg['trigger_ppo']['entropy_weight']
+    assert {s['epoch'] for s in r['steps']} <= set(range(4)) and all(s['ticks'] <= 4 for s in r['steps'])

@@ -14,7 +14,6 @@ import gzip
 import json
 import os
 import sys
-from copy import deepcopy
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -78,6 +77,10 @@ def run(root, arm, u, fix):
     from tools.coopmwm.fair_vehicle_log import update_step as fair_update_step
     from tools.coopmwm.launch_training import read
     cfg = read(Path(root)/'CONFIG.json')
+    from tools.coopmwm import clean4_restart as c4      # replay only: the recorded run's own approved envelope
+    budget = cfg.get('clean4_budget') or {}
+    if budget.get('run') in c4.APPROVED_BY_RUN:
+        c4.APPROVED_BY_RUN[budget['run']] = budget['approved_sim_s']
     native = production.backend_config(cfg)
     native['update'] = u
     if fix:

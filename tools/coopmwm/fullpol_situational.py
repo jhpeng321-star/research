@@ -407,10 +407,12 @@ def main(argv=None):
     ap.add_argument('--structured', nargs='*', default=(), help="WM-C ARMS files: their 'structured' arms are not WM")
     ap.add_argument('--allowed-scope', choices=ALLOWED_SCOPES, default='all')
     ap.add_argument('--mode', choices=MODES, default='own_sensing', help='onset_bin mode (ONSET files must match)')
+    ap.add_argument('--cells', nargs='+', default=None, help='training cells (default the three p20 cells)')
     ap.add_argument('--provenance', required=True)
     ap.add_argument('--out', required=True)
     a = ap.parse_args(argv)
-    from .clean5b_restart import P20_CELLS
+    from .clean5b_restart import P20_CELLS as ALL_CELLS, _check_p20_cells
+    P20_CELLS = ALL_CELLS if a.cells is None else _check_p20_cells(a.cells)
     out = Path(a.out)
     if out.exists():
         raise SystemExit('refusing to overwrite '+str(out))

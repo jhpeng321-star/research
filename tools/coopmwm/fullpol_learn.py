@@ -848,6 +848,17 @@ def supervise(runtime, episodes=()):
     records, bank = bank_records(policy, cfg, arm)
     ev, ev_receipt = ev_bc_records(cfg, arm, episodes)
     records = records+ev
+    demo_receipt = None
+    from . import demo_bc
+    demo = demo_bc.settings(cfg) if arm == 'B' else None
+    if demo is not None:
+        # c4/learnfix: the fixed verified-seed demo set, its own record kind (equal mass vs online targets)
+        doc = demo_bc.load(demo['path'], demo['sha256'])
+        demo_records = demo_bc.demo_records(doc['items'])
+        records = records+demo_records
+        demo_receipt = dict(rule=demo_bc.RULE, sha256=demo['sha256'], records=len(demo_records),
+                            act=sum(r['meta']['label'] == 'act' for r in demo_records),
+                            none=sum(r['meta']['label'] == 'none' for r in demo_records))
     labelled = {(r['meta']['episode_id'], r['meta']['time_s']) for r in ev}
     unlabelled = unlabelled_batches(episodes, labelled) if learn['report_kl_unlabelled'] else []
     before = _logits(policy, unlabelled) if unlabelled else []
@@ -863,6 +874,7 @@ def supervise(runtime, episodes=()):
     policy.layer._check_frozen()
     accepted = [p['kl'] for p in fit['passes'] if p['accepted']]
     out = dict(schema=SCHEMA, arm=arm, records=len(records), bank=bank, ev_bc=ev_receipt, fit=fit,
+               **({} if demo_receipt is None else dict(demo_bc=demo_receipt)),
                kl_rule='registered: mean KL over the supervised contexts <= kl_budget (unchanged)',
                kl_budget=budget, epochs=epochs,
                report_bc_kl=dict(kl_supervised=accepted[-1] if accepted else 0., accepted_steps=len(accepted),
