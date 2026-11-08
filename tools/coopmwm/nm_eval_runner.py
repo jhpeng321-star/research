@@ -312,6 +312,35 @@ def multicrit_digest(module=None):
     return hashlib.sha256('\n'.join(parts).encode()).hexdigest()
 
 
+ORACLE_ARMS = ('ORACLE', 'ORACLE_WM')          # amendment 25 / 25b B1 (N6 runner_status contract)
+ORACLE_PLAN_SOURCE = dict(ORACLE='all', ORACLE_WM='wm')
+
+
+def oracle_hook(ck, world, arm='ORACLE'):
+    """Amendment 25/25b ORACLE (plan_source None: every admitted row of the union bank) / ORACLE_WM (plan_source
+    'wm': the WM-source rows of the same bank): oracle_plan.make_hook on the FROZEN union bank (file sha re-verified) for this world's
+    cell_key (world['cell_key'] only; must equal the bound ck['cell_key']); the executed ORACLE code must equal its
+    registration (oracle_digest == ck['oracle_sha256']). Returns (hook, loaded digest)."""
+    from . import oracle_plan
+    if arm not in ORACLE_ARMS:
+        raise ValueError(f'unknown ORACLE arm {arm!r}')
+    source = ck.get('oracle_plan_source')
+    if source != ORACLE_PLAN_SOURCE[arm]:
+        raise ValueError(f'ORACLE: ck oracle_plan_source {source!r} is not {ORACLE_PLAN_SOURCE[arm]!r} for arm {arm}')
+    cell = world.get('cell_key')
+    if not cell or cell != ck.get('cell_key'):
+        raise ValueError('ORACLE: world cell_key missing or not the bound cell_key')
+    bank = ck.get('oracle_bank') or {}
+    path = Path(bank.get('path', ''))
+    if not path.is_file() or _sha(path) != bank.get('file_sha256'):
+        raise ValueError('ORACLE: bank changed after registration')
+    loaded = oracle_plan.oracle_digest()
+    if loaded != ck.get('oracle_sha256'):
+        raise ValueError('ORACLE: oracle_plan differs from its registration (oracle_sha256)')
+    doc = json.loads(path.read_text(encoding='utf-8'))
+    return oracle_plan.make_hook(doc, cell, plan_source=None if source == 'all' else 'wm'), loaded
+
+
 def rule_hook(strategy, expected_sha256):
     import importlib
     if strategy not in RULE_STRATEGIES:
@@ -425,9 +454,10 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     native = production.backend_config(cfg)
     ck = spec['checkpoint']
     arm, update = ck['arm'], int(ck['update'])
-    executor, loaded, rule = native['checkpoint'], None, None
-    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED'):
-        kind = dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator')[spec['arm']]
+    executor, loaded, rule, oracle = native['checkpoint'], None, None, None
+    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED') + ORACLE_ARMS:
+        kind = dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator',
+                    ORACLE='oracle', ORACLE_WM='oracle')[spec['arm']]
         if ck.get('kind') != kind or (arm, update) != ('A', 0):
             raise ValueError(f'{spec["arm"]} arm = its bound executor + the bound common u0 (zero residual)')
         # the bound zero-residual u0 (A_checkpoint_000.pt, sha re-verified), loaded by the SAME
@@ -439,6 +469,9 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
         executor, loaded = bound_executor(ck)        # U0/RULE: the frozen d9042cc5 export (pin unchanged)
         if spec['arm'] in ('RULE', 'RULE_FAIR'):
             rule = rule_hook(ck['rule'], ck['rule_sha256'])
+        if spec['arm'] in ORACLE_ARMS:
+            oracle = oracle_hook(ck, world, spec['arm'])
+            rule = oracle
     else:
         path = Path(native['run_root'])/f'{arm}_checkpoint_{update:03}.pt'
         if Path(ck['path']) != path or rc.sha(path) != ck['file_sha256']:
@@ -475,7 +508,10 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     if loaded is not None:
         extra['executor_sha256_loaded'] = loaded
     extra['vehicle_log'] = vehicle_log
-    if rule is not None:
+    if oracle is not None:
+        extra['oracle_sha256_loaded'] = oracle[1]
+        extra['oracle'] = oracle[0].receipts()
+    elif rule is not None:
         h = rule[0]
         extra['rule_sha256_loaded'] = rule[1]
         extra['rule'] = dict(strategy=h.strategy, activations=len(h.acts), issued=len(h.issued),
@@ -1056,7 +1092,7 @@ def episode(spec, cfg, work):
         return _native_episode(spec, cfg, work)
     if spec['arm'] == 'MAPPO_LANE':
         return _mappo_lane_episode(spec, cfg, work)
-    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED'):
+    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED') + ORACLE_ARMS:
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
 
