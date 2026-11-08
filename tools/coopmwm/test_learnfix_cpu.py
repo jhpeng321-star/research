@@ -129,7 +129,7 @@ def test_train_learnfix_receipt_kl_cap_entropy_and_rng(cfg, monkeypatch, fix):
 def test_learnfix2_settings_none_bias_and_credit_cap(cfg, monkeypatch):
     assert lf.settings2({}) is None
     v = lf.value2()
-    assert lf.settings2(dict(learnfix2=v)) == v and v['none_bias'] == lf.NONE_BIAS and v['credit_cap'] == 2. and v['update_kl_cap'] == .06
+    assert lf.settings2(dict(learnfix2=v)) == v and v['none_bias'] == lf.NONE_BIAS and v['credit_cap'] == 2. and v['update_kl_cap'] == .075
     for bad in (dict(v, rule='x'), dict(v, none_bias=4), dict(v, extra=1), dict(v, credit_cap=0.)):
         with pytest.raises(ValueError, match='learnfix2'):
             lf.settings2(dict(learnfix2=bad))
@@ -157,3 +157,36 @@ def test_none_bias_shifts_only_the_none_logit(cfg, monkeypatch):
     l0 = plain.policy.trigger.distribution(batch.context, batch.descriptors, batch.mask)[0]
     l1 = b.distribution(batch.context, batch.descriptors, batch.mask)[0]
     assert torch.allclose(l1[:, 0], l0[:, 0]+lf.NONE_BIAS) and torch.equal(l1[:, 1:], l0[:, 1:])
+
+
+def test_bc_guard_reverts_steps_over_the_cumulative_update_cap(cfg, monkeypatch):
+    """learnfix2 guard: an EV-BC step is kept only while the cumulative all-choice-row KL vs the update-start
+    policy stays <= cap; over it the step is reverted and BC stops (unlabelled rows cannot drift unbounded)."""
+    from .trigger_policy import TriggerBatch
+    fake_load(monkeypatch)
+    runtime = tb.build_arm_runtime(cfg, 'B')['runtime']
+    _, s, _ = sample(cfg)
+    b = tb._batch(s['track2_trigger'])
+    choice = b.mask[:, 1:].any(1)
+    assert bool(choice.any())
+    i = int(choice.nonzero()[0])
+    slot = int(b.mask[i, 1:].nonzero()[0])+1
+    actions = torch.zeros_like(b.actions)
+    actions[i] = slot
+    same = torch.nn.functional.one_hot(actions, b.mask.shape[1]).bool()
+    w = torch.zeros(len(actions))
+    w[i] = 1.
+    record = dict(batch=TriggerBatch(b.context, b.tables, b.descriptors, b.mask, actions, b.logp, b.values),
+                  weight=1., equivalent=same, row_weight=w, meta=dict(kind='ev_bc'))
+    trig = runtime.policy.trigger
+    for g in runtime.policy.trigger_optimizer.param_groups:
+        g['lr'] = .05
+    ticks = [dict(batch=b)]
+    start = [trig.distribution(b.context, b.descriptors, b.mask)[0].detach()]
+    before = deepcopy(trig.state_dict())
+    tight = fl.bc_steps(runtime.policy, [record], epochs=5, kl_budget=10., max_grad_norm=.5, guard=(ticks, start, 1e-9))
+    assert tight['passes'] == [dict(accepted=False, kl=tight['passes'][0]['kl'], choice_kl=tight['passes'][0]['choice_kl'])]
+    assert all(torch.equal(v, trig.state_dict()[k]) for k, v in before.items())       # reverted
+    loose = fl.bc_steps(runtime.policy, [record], epochs=3, kl_budget=10., max_grad_norm=.5, guard=(ticks, start, 10.))
+    assert all(p['accepted'] for p in loose['passes']) and len(loose['passes']) == 3
+    assert lf.choice_kl(trig, ticks, start) == pytest.approx(loose['passes'][-1]['choice_kl'])
