@@ -158,6 +158,39 @@ def plan_activations(guidance, onsets, effects, members):
     return acts, skipped
 
 
+def unconditional_activations(guidance, bank_paths, cells=None):
+    """(activations, skipped) of the doc's UNCONDITIONAL rows (situational.unconditional '<cell>/<family>'):
+    every executed activation of that plan in the given BANK files (any onset bin), paired effect = the seed's
+    episode-level diff_vs_u0 (the unconditional confirmation is vs u0), reference tape for none rows = u0."""
+    unc = {tuple(k.split('/', 1)) for k in (guidance['situational'].get('unconditional') or {})}
+    tags = plan_sources(guidance)
+    acts, skipped, effects = [], [], {}
+    rows = []
+    for f in bank_paths:
+        with open(guard_path(f), encoding='utf-8') as fh:
+            rows += [json.loads(line) for line in fh]
+    for r in rows:
+        if (r['cell'], r['family']) in unc and r.get('diff_vs_u0') is not None:
+            key = (root_name(r['root']), r['cell'], int(r['seed']), r['family'])
+            d = float(r['diff_vs_u0'])
+            if key in effects and abs(effects[key]-d) > 1e-6:
+                raise ValueError(f'inconsistent per-seed effect for {key}')
+            effects[key] = d
+    for r in sorted(rows, key=lambda r: (r['root'], r['cell'], int(r['seed']), r['family'], int(r['t']))):
+        if (r['cell'], r['family']) not in unc or (cells and r['cell'] not in cells):
+            continue
+        key = (root_name(r['root']), r['cell'], int(r['seed']), r['family'])
+        base = dict(root=key[0], cell=r['cell'], seed=key[2], family=r['family'], t=int(r['t']),
+                    source=tags.get(r['family'], source_tag(r['family'])), bin='unconditional',
+                    holder=(r.get('members') or [None])[0], admission='unconditional', ref_arms=['u0'])
+        if key not in effects:
+            skipped.append(dict(base, reason='no per-seed u0 effect'))
+            continue
+        acts.append(dict(base, diff=effects[key], members=list(r.get('members') or [])))
+    assert_verification_seeds({a['seed'] for a in acts})
+    return acts, skipped
+
+
 def job_name(cell, seed, arm):
     return f'{cell}_s{int(seed)}_{arm}'
 
@@ -165,8 +198,9 @@ def job_name(cell, seed, arm):
 def window(t, lookback=None):
     """The policy decision seconds that may carry an activation at onset second t: [t - lookback, t] (>= 300).
     The trigger decides every decision_interval_s (60 s) plus event seconds, so the plant's onset second is
-    usually not a decision second; the demo uses the LATEST decision second in this window whose slate offers
-    the plan to an acting member (pre-onset state: the plan has not acted yet)."""
+    usually not a decision second. The extractor makes a decision due at every second of this window
+    (featurize force_decision) and the demo uses the LATEST second whose slate offers the plan to an acting
+    member (normally the onset second itself; pre-onset state, the plan has not acted yet)."""
     lb = LOOKBACK_S if lookback is None else int(lookback)
     return list(range(max(300, int(t)-lb), int(t)+1))
 
@@ -175,18 +209,18 @@ def work_list(acts, lookback=None):
     """{tape key: {root, job, until, ticks}} needed by build_items; tape key = <root>__<job>."""
     want = {}
 
-    def add(root, job, t):
+    def add(root, job, t, lb):
         k = f'{root}__{job}'
         w = want.setdefault(k, dict(root=root, job=job, until=0, ticks=set()))
         w['until'] = max(w['until'], int(t))
-        w['ticks'].update(window(t, lookback))
+        w['ticks'].update(window(t, lb))
     for a in acts:
         if a['diff'] < 0:
-            add(a['root'], job_name(a['cell'], a['seed'], a['family']), a['t'])
+            add(a['root'], job_name(a['cell'], a['seed'], a['family']), a['t'], a.get('lookback', lookback))
         elif a['diff'] > 0:
-            for arm in REFERENCE_ARMS:
+            for arm in a.get('ref_arms') or REFERENCE_ARMS:
                 if arm != a['family']:
-                    add(a['root'], job_name(a['cell'], a['seed'], arm), a['t'])
+                    add(a['root'], job_name(a['cell'], a['seed'], arm), a['t'], a.get('lookback', lookback))
     return {k: dict(v, ticks=sorted(v['ticks'])) for k, v in sorted(want.items())}
 
 
@@ -244,10 +278,13 @@ def featurizer(cfg, base, worker_state, *, seed=0):
     return policy, ctl
 
 
-def featurize(cfg, base, worker_state, seconds, want, *, seed=0, strip=True, inputs=None):
+def featurize(cfg, base, worker_state, seconds, want, *, seed=0, strip=True, inputs=None, force_decision=()):
     """{t: track2_trigger record or None} for t in ``want``, replaying every second from 300 to max(want) exactly
     as accel_plant does: controller.apply(rows, commands, t) then observe_issued(the second's tape line).
-    ``inputs`` (parity only): {t: (rows, commands)} = the recorded training controller inputs."""
+    ``inputs`` (parity only): {t: (rows, commands)} = the recorded training controller inputs.
+    ``force_decision``: seconds at which the trigger's periodic decision clock is made due (last_decision reset),
+    so a trigger record (the full slate) exists there; only the decision PHASE changes (the trigger picks none,
+    so no session or state follows from it). Training decides every decision_interval_s from its own phase."""
     policy, ctl = featurizer(cfg, base, worker_state, seed=seed)
     out = {}
     last = max(want) if want else 299
@@ -257,6 +294,8 @@ def featurize(cfg, base, worker_state, seconds, want, *, seed=0, strip=True, inp
         rows, commands, issued = tape_inputs(seconds[t], strip=strip)
         if inputs is not None:
             rows, commands = inputs[t]
+        if t in force_decision:
+            policy.last_decision = None
         n = len(ctl.events)
         ctl.apply(rows, commands, t)
         if len(ctl.events) != n+1:
@@ -306,7 +345,11 @@ def member_slots(trigger, family, members, cfg=None):
 
 
 def build_items(acts, triggers, cfg=None, lookback=None):
-    """(items, skipped). ``triggers``: {(tape key, t): trigger record or None}."""
+    """(items, skipped). ``triggers``: {(tape key, t): trigger record or None}, or a list of such dicts = the
+    same replay under several slate draws (candidate_rng seeds; which candidates a slate offers is random in
+    training too). Per activation and tape, the first draw (in list order) with a decision second in the
+    onset window whose slate offers the plan to an acting member is used (meta slate_draw)."""
+    slates = triggers if isinstance(triggers, list) else [triggers]
     helped = [-a['diff'] for a in acts if a['diff'] < 0]
     hurt = [a['diff'] for a in acts if a['diff'] > 0]
     help_max, hurt_max = max(helped or [1.]), max(hurt or [1.])
@@ -316,27 +359,35 @@ def build_items(acts, triggers, cfg=None, lookback=None):
             skipped.append(dict(_meta(a), reason='zero paired effect'))
             continue
         kind = 'act' if a['diff'] < 0 else 'none'
-        arms = [a['family']] if kind == 'act' else [x for x in REFERENCE_ARMS if x != a['family']]
+        arms = ([a['family']] if kind == 'act' else
+                [x for x in (a.get('ref_arms') or REFERENCE_ARMS) if x != a['family']])
         base_w = (-a['diff']/help_max) if kind == 'act' else (a['diff']/hurt_max)/len(arms)
         for arm in arms:
             job = job_name(a['cell'], a['seed'], arm)
             key = f"{a['root']}__{job}"
             meta = dict(_meta(a), job=job, tape_key=key, tape_arm=arm)
-            decisions = [t for t in reversed(window(a['t'], lookback)) if triggers.get((key, t)) is not None]
-            if not decisions:
-                skipped.append(dict(meta, kind=kind, reason='no trigger decision in the onset window'))
-                continue
-            chosen = None
-            for t in decisions:
-                hits = member_slots(triggers[(key, t)], a['family'], a['members'], cfg)
-                if hits:
-                    chosen = t
+            chosen = trig = None
+            any_decision = False
+            for k, per_seed in enumerate(slates):
+                decisions = [t for t in reversed(window(a['t'], a.get('lookback', lookback)))
+                             if per_seed.get((key, t)) is not None]
+                any_decision |= bool(decisions)
+                for t in decisions:
+                    hits = member_slots(per_seed[(key, t)], a['family'], a['members'], cfg)
+                    if hits:
+                        chosen, trig = t, per_seed[(key, t)]
+                        meta.update(slate_draw=k)
+                        break
+                if chosen is not None:
                     break
+            if not any_decision:
+                skipped.append(dict(meta, kind=kind,
+                                    reason='no trigger decision offering an admitted plan in the onset window'))
+                continue
             if chosen is None:
-                skipped.append(dict(meta, kind=kind, decision_ticks=decisions,
+                skipped.append(dict(meta, kind=kind,
                                     reason='plan not offered to any member row in the onset window'))
                 continue
-            trig = triggers[(key, chosen)]
             meta.update(decision_t=chosen, onset_offset_s=chosen-a['t'])
             for row, slot, vid in hits:
                 w = base_w/len(hits)
@@ -350,8 +401,11 @@ def build_items(acts, triggers, cfg=None, lookback=None):
 
 
 def _meta(a):
+    unc = a.get('admission') == 'unconditional'
     return dict(root=a['root'], cell=a['cell'], seed=a['seed'], t=a['t'], family=a['family'], source=a['source'],
-                bin=a['bin'], diff_vs_incumbent=a['diff'], members=list(a['members']))
+                bin=a['bin'], admission=a.get('admission', 'situational'),
+                effect_reference='u0' if unc else INCUMBENT,
+                **{('diff_vs_u0' if unc else 'diff_vs_incumbent'): a['diff']}, members=list(a['members']))
 
 
 def summary(items):
@@ -436,36 +490,39 @@ def bank_families(cfg):
 
 
 def compare_records(got, rec, families=()):
-    """Comparison of two track2_trigger records. Exact: context (the policy observation) and row members. Per
-    row, the RNG-INDEPENDENT offered entries - slot 0 'none' and the guidance bank-template entries (``families``,
-    the demo label space) - with their descriptors, in order. The slate's other candidates (N2 group_hold /
-    lane_drop_initiate parameters, LCEXEC free_program draws) are drawn from candidate_rng; the training episode's
-    stream is not recoverable from its RESULT, so they are counted, not compared."""
+    """Comparison of two track2_trigger records. Exact: context (the policy observation), row members, and per
+    row slot 0 ('none': entry, mask, descriptor). Bank-template entries (``families``, the demo label space)
+    offered in BOTH records on the same row must be identical (entry + descriptor). WHICH candidates a slate
+    offers (N2 group_hold / lane_drop_initiate parameters, LCEXEC free_program and verified-template draws) is
+    drawn from candidate_rng, whose training stream is not recoverable from the RESULT; offered-only-on-one-side
+    counts are reported, not compared."""
     from .fullpol_learn import option_labels
     fams = set(families)
 
-    def det(r):
-        out = []
-        for i, row in enumerate(r['tables']):
-            keep = []
-            for j, e in enumerate(row):
-                if not r['mask'][i][j]:
-                    continue
-                if j == 0 or (e is not None and fams & set(option_labels(e))):
-                    keep.append((j if j == 0 else None, _j(e), _j(r['descriptors'][i][j])))
-            out.append(keep)
+    def bank(r, i):
+        out = {}
+        for j, e in enumerate(r['tables'][i]):
+            if j and r['mask'][i][j] and e is not None:
+                for f in fams & set(option_labels(e)):
+                    out.setdefault(f, (_j(e), _j(r['descriptors'][i][j])))
         return out
-
-    def n_offered(r):
-        return sum(bool(m) for row in r['mask'] for m in row)
-    dg, dr = det(got), det(rec)
     out = dict(context=_j(got['context']) == _j(rec['context']), rows=len(got['tables']) == len(rec['tables']))
-    out['rng_independent_entries'] = bool(out['rows'] and dg == dr)
-    out['n_rng_independent'] = sum(len(x) for x in dr)
-    out['n_bank_entries'] = sum(len(x) for x in dr)-len(dr)
-    out['offered_entries'] = dict(recorded=n_offered(rec), replay=n_offered(got))
-    out['full_tables'] = _j(got['tables']) == _j(rec['tables'])
-    out['ok'] = out['context'] and out['rows'] and out['rng_independent_entries']
+    slot0 = both = same = one_side = 0
+    if out['rows']:
+        for i in range(len(rec['tables'])):
+            slot0 += (_j(got['tables'][i][0]) == _j(rec['tables'][i][0]) and got['mask'][i][0] == rec['mask'][i][0]
+                      and _j(got['descriptors'][i][0]) == _j(rec['descriptors'][i][0]))
+            bg, br = bank(got, i), bank(rec, i)
+            for f in set(bg) | set(br):
+                if f in bg and f in br:
+                    both += 1
+                    same += bg[f] == br[f]
+                else:
+                    one_side += 1
+    n = len(rec['tables'])
+    out.update(slot0_equal=f'{slot0}/{n}', bank_entries_both=both, bank_entries_equal=same,
+               bank_entries_one_side_rng=one_side, full_tables=_j(got['tables']) == _j(rec['tables']))
+    out['ok'] = bool(out['context'] and out['rows'] and slot0 == n and same == both)
     return out
 
 
@@ -508,6 +565,12 @@ HOST_ROOTS = {  # WMVERIFY root name -> (host, job root); REGISTRATION.md WMVERI
     'wmv_mc': ('cpuW', '/home/ubuntu/wmverify_mc_tapes/wmv_mc'),
     'wmv_rep': ('cpuW', '/home/ubuntu/wmverify_mc_tapes/wmv_rep'),
     'wmv_p20': ('cpuW', '/home/ubuntu/wmverify_p20/wmv_p20'),
+    'wmv_unc': ('cpuW', '/home/ubuntu/wmverify_mc_tapes/wmv_unc'),
+    'wmv_r5': ('cpuW', '/home/ubuntu/wmverify_p20/wmv_r5'),
+    'wmv_r6': ('cpuW', '/home/ubuntu/wmverify_p20/wmv_r6'),
+    'wmv_sl': ('cpuW', '/home/ubuntu/wmverify_p20/wmv_sl'),
+    'wmv_cfd': ('cpuW', '/home/ubuntu/wmverify_p20/wmv_cfd'),
+    'wmv_r6c': ('gpuA', '/root/autodl-fs/wmverify_20261108/wmv_r6c'),
 }
 
 
@@ -527,6 +590,26 @@ def cmd_plan(a):
     guidance = json.loads(Path(guard_path(a.guidance)).read_bytes())
     effects, members = read_bank(a.bank)
     acts, skipped = plan_activations(guidance, read_onsets(a.ponset), effects, members)
+    for x in acts:
+        x['admission'] = 'situational'
+        x['lookback'] = a.lookback
+    if a.cells:
+        skipped += [dict(x, reason='cell not selected') for x in acts if x['cell'] not in a.cells]
+        acts = [x for x in acts if x['cell'] in a.cells]
+    if a.sources:
+        skipped += [dict(x, reason='plan source not selected') for x in acts if x['source'] not in a.sources]
+        acts = [x for x in acts if x['source'] in a.sources]
+    if a.unconditional_bank:
+        ua, us = unconditional_activations(guidance, a.unconditional_bank, a.cells)
+        if a.sources:
+            ua = [x for x in ua if x['source'] in a.sources]
+        if a.unconditional_families:
+            skipped += [dict(x, reason='unconditional family not selected') for x in ua
+                        if x['family'] not in a.unconditional_families]
+            ua = [x for x in ua if x['family'] in a.unconditional_families]
+        for x in ua:
+            x['lookback'] = a.unconditional_lookback
+        acts, skipped = acts+ua, skipped+us
     work = work_list(acts)
     reqs = {}
     for key, w in work.items():
@@ -536,7 +619,8 @@ def cmd_plan(a):
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     plan = dict(schema=SCHEMA_NPZ+'.plan', guidance=dict(path=a.guidance, sha256=sha256_file(a.guidance)),
-                ponset=_inputs_receipt(a.ponset), bank=_inputs_receipt(a.bank), activations=acts,
+                ponset=_inputs_receipt(a.ponset), bank=_inputs_receipt(a.bank),
+                unconditional_bank=_inputs_receipt(a.unconditional_bank or ()), cells=a.cells, activations=acts,
                 skipped=skipped, work=work, requests={h: len(r) for h, r in reqs.items()})
     (out/'PLAN.json').write_bytes((json.dumps(plan, indent=1, sort_keys=True)+'\n').encode('utf-8'))
     for host, jobs in reqs.items():
@@ -558,7 +642,46 @@ def _worker_init(run_root, guidance_path, threads):
 
 def _worker_tape(path, ticks, seed):
     cfg, base, state = _WORKER['rt']
-    return featurize(cfg, base, state, tape_seconds(path), set(ticks), seed=seed)
+    return featurize(cfg, base, state, tape_seconds(path), set(ticks), seed=seed, force_decision=set(ticks))
+
+
+def slim_cache(path, families, cfg=None):
+    """{t: trigger} of a cached draw, only the records offering one of ``families`` on some row."""
+    from .fullpol_learn import option_labels
+    families, keep = set(families), {}
+    if Path(path).exists():
+        for t, trig in json.loads(gzip.decompress(Path(path).read_bytes()))['triggers'].items():
+            if trig is not None and any(e is not None and families & set(option_labels(e, cfg))
+                                        for row in trig['tables'] for e in row):
+                keep[int(t)] = trig
+    return keep
+
+
+def _worker_slim(path, families):
+    return slim_cache(path, families, _WORKER['rt'][0])
+
+
+class LazySlates:
+    """{(tape key, t): trigger} view of one draw's trigger cache. Each tape file is read once and only the
+    records whose slate offers one of ``families`` on some row are kept (all others can never give an item)."""
+
+    def __init__(self, cache, seed, families, cfg=None):
+        self.cache, self.seed, self.families, self.cfg, self.data = Path(cache), int(seed), set(families), cfg, {}
+
+    def _load(self, key):
+        self.data[key] = slim_cache(self.cache/f'{key}__seed{self.seed}.json.gz', self.families, self.cfg)
+
+    def get(self, k, default=None):
+        key, t = k
+        if key not in self.data:
+            self._load(key)
+        return self.data[key].get(int(t), default)
+
+    def __getitem__(self, k):
+        v = self.get(k)
+        if v is None:
+            raise KeyError(k)
+        return v
 
 
 def cmd_extract(a):
@@ -568,37 +691,51 @@ def cmd_extract(a):
     if sha256_file(plan['guidance']['path']) != plan['guidance']['sha256']:
         raise ValueError('guidance changed since PLAN')
     cfg = runtime(a.run_root, guidance)[0]
-    cache = Path(a.out)/'triggers'
+    cache = Path(a.cache) if a.cache else Path(a.out)/'triggers'
     cache.mkdir(parents=True, exist_ok=True)
-    triggers, tape_receipts, todo = {}, {}, []
+    tape_receipts, todo = {}, []
     for key, w in sorted(plan['work'].items()):
         path = Path(a.tapes)/f'{key}.jsonl.gz'
         if not path.exists():
             tape_receipts[key] = dict(missing=True)
             continue
         tape_receipts[key] = dict(sha256=sha256_file(path), ticks=w['ticks'])
-        cpath = cache/f'{key}.json.gz'
+        cpath = cache/f'{key}__seed{a.seed}.json.gz'
+        if a.build_only:
+            continue
         if cpath.exists():
             c = json.loads(gzip.decompress(cpath.read_bytes()))
-            if c['tape_sha256'] == tape_receipts[key]['sha256'] and c['ticks'] == w['ticks'] and c['seed'] == a.seed:
-                for t, trig in c['triggers'].items():
-                    triggers[(key, int(t))] = trig
+            ok = c['tape_sha256'] == tape_receipts[key]['sha256'] and c['ticks'] == w['ticks'] and c['seed'] == a.seed
+            del c
+            if ok:
                 continue
         todo.append((key, str(path), w['ticks']))
     with ProcessPoolExecutor(max_workers=a.workers, initializer=_worker_init,
                              initargs=(a.run_root, plan['guidance']['path'], a.threads)) as pool:
         futs = {pool.submit(_worker_tape, path, ticks, a.seed): (key, ticks) for key, path, ticks in todo}
-        for fut in futs:
-            key, ticks = futs[fut]
+        for fut in list(futs):
+            key, ticks = futs.pop(fut)
             got = fut.result()
-            for t, trig in got.items():
-                triggers[(key, t)] = trig
-            cpath = cache/f'{key}.json.gz'
+            cpath = cache/f'{key}__seed{a.seed}.json.gz'
             cpath.write_bytes(gzip.compress(json.dumps(dict(tape_sha256=tape_receipts[key]['sha256'], ticks=ticks,
                                                             seed=a.seed, triggers={str(t): v for t, v in got.items()}),
                                                        sort_keys=True).encode('utf-8')))
-            print(json.dumps(dict(tape=key, ticks=ticks)), flush=True)
-    items, skipped = build_items(plan['activations'], triggers, cfg)
+            print(json.dumps(dict(tape=key, ticks=len(ticks))), flush=True)
+            del got, fut
+    if a.no_build:
+        return
+    if a.seed not in a.draw_seeds:
+        raise ValueError('--seed must be one of --draw-seeds')
+    fams = sorted({x['family'] for x in plan['activations']})
+    slates = [LazySlates(cache, seed, fams, cfg) for seed in a.draw_seeds]
+    with ProcessPoolExecutor(max_workers=a.workers, initializer=_worker_init,
+                             initargs=(a.run_root, plan['guidance']['path'], a.threads)) as pool:
+        futs = {pool.submit(_worker_slim, str(cache/f'{key}__seed{sl.seed}.json.gz'), fams): (sl, key)
+                for sl in slates for key in plan['work']}
+        for fut in list(futs):
+            sl, key = futs.pop(fut)
+            sl.data[key] = fut.result()
+    items, skipped = build_items(plan['activations'], slates, cfg)
     skipped = plan['skipped']+skipped+[dict(tape_key=k, reason='tape missing') for k, r in tape_receipts.items()
                                        if r.get('missing')]
     provenance = dict(rule='DEMOX demo_extract v1 (MAIN 2026-11-08; wm+rule admitted pairs)',
@@ -607,7 +744,7 @@ def cmd_extract(a):
                       run_root=dict(path=str(a.run_root), **{n: sha256_file(Path(a.run_root)/n) for n in
                                     ('CONFIG.json', 'B_checkpoint_000.pt', 'B_track2_000.pt')}),
                       featurizer='track2_backend.episode_components(controller_class(acceleration.Controller)), '
-                                 'trigger forced none, noise_seed %d' % a.seed,
+                                 'trigger forced none, decision forced due at every window second, slate draws (noise_seed) %s' % a.draw_seeds,
                       parity=json.loads(Path(a.parity).read_bytes()) if a.parity else None)
     manifest = write_outputs(items, skipped, a.out, provenance)
     print(json.dumps(dict(json=manifest['json'], npz=manifest['npz'], **{k: manifest['summary'][k] for k in
@@ -623,13 +760,23 @@ def main(argv=None):
     p.add_argument('--guidance', required=True)
     p.add_argument('--ponset', nargs='+', required=True)
     p.add_argument('--bank', nargs='+', required=True)
+    p.add_argument('--unconditional-bank', nargs='*', default=[])
+    p.add_argument('--cells', nargs='*', default=[])
+    p.add_argument('--unconditional-lookback', type=int, default=10)
+    p.add_argument('--sources', nargs='*', default=[], help='keep only these plan sources (wm, rule)')
+    p.add_argument('--unconditional-families', nargs='*', default=[])
+    p.add_argument('--lookback', type=int, default=LOOKBACK_S, help='situational onset window (s)')
     p.add_argument('--out', required=True)
     p = sub.add_parser('extract')
     p.add_argument('--plan', required=True)
     p.add_argument('--run-root', required=True)
     p.add_argument('--tapes', required=True)
-    p.add_argument('--seed', type=int, default=0)
+    p.add_argument('--seed', type=int, default=0, help='replay noise_seed computed in this call')
+    p.add_argument('--draw-seeds', type=int, nargs='+', default=[0], help='cached slate draws used, in order')
     p.add_argument('--parity')
+    p.add_argument('--no-build', action='store_true', help='featurize + cache only')
+    p.add_argument('--cache', help='trigger cache dir (default <out>/triggers)')
+    p.add_argument('--build-only', action='store_true', help='no featurization; build from the cached draws')
     p.add_argument('--workers', type=int, default=8)
     p.add_argument('--threads', type=int, default=1)
     p.add_argument('--out', required=True)

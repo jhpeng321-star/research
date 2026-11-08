@@ -146,7 +146,7 @@ def test_build_items_labels_and_weights():
                    ('none', 991167, 0, 2, 0.25, 'rule'), ('none', 991167, 0, 2, 0.25, 'rule')]
     assert all(0 < x['weight'] <= 1 for x in items)
     reasons = sorted(s['reason'] for s in skipped)
-    assert reasons == ['no trigger decision in the onset window',
+    assert reasons == ['no trigger decision offering an admitted plan in the onset window',
                        'plan not offered to any member row in the onset window']
     s = dx.summary(items)
     assert (s['rows'], s['act'], s['none'], s['plans'], s['sources']) == (5, 2, 3, ['duo12_v20', 'mut_a'],
@@ -162,7 +162,7 @@ def test_build_items_latest_offering_decision_in_window():
     assert [(x['meta']['decision_t'], x['meta']['onset_offset_s'], x['row']) for x in items] == [(340, -40, 0),
                                                                                                   (340, -40, 1)]
     items, skipped = dx.build_items(acts, triggers, lookback=5)
-    assert not items and skipped[0]['reason'] == 'no trigger decision in the onset window'
+    assert not items and skipped[0]['reason'] == 'no trigger decision offering an admitted plan in the onset window'
 
 
 def test_tape_inputs_commands():
@@ -212,3 +212,17 @@ def test_host_reducer(tmp_path):
     assert sorted(seconds) == [300, 301, 302, 303, 304]
     with pytest.raises(SystemExit):
         host.main(['--request', str(req), '--out', str(tmp_path/'out')])
+
+
+def test_compare_records_rng_entries_not_compared():
+    rec = _trigger([['mut_a', 'r1'], ['r2']])
+    got = _trigger([['mut_a', 'r9'], ['mut_a']])
+    out = dx.compare_records(got, rec, ['mut_a'])
+    assert out['ok'] and out['slot0_equal'] == '2/2' and out['bank_entries_both'] == 1
+    assert out['bank_entries_one_side_rng'] == 1 and not out['full_tables']
+    bad = json.loads(json.dumps(got))
+    bad['context']['x'][0] = [1., 0.]
+    assert not dx.compare_records(bad, rec, ['mut_a'])['ok']
+    bad = json.loads(json.dumps(got))
+    bad['descriptors'][0][1] = [9., 9.]
+    assert not dx.compare_records(bad, rec, ['mut_a'])['ok']
