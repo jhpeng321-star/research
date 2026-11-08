@@ -638,3 +638,16 @@ def test_dense_option1_hold_speeds_18_to_22_only():
         with pytest.raises(ValueError):
             V.check_spec(dict(base, roles=[dict(SS.INCUMBENT['roles'][0], v_w=v)]))
     assert 19.0 not in SS.grids(search=True)['v_w'] and 15.0 not in SS.grids(search=True)['v_w']
+
+
+def test_fairx_worst_group_and_cvar90_paired():
+    from tools.wzprop import wmverify_fairx as FX
+    u0 = {str(i): [10.0 + i, 'L0' if i % 3 == 0 else ('L1' if i % 3 == 1 else 'L2'), i % 5 == 0] for i in range(20)}
+    arm = {k: [d + (5.0 if o == 'L2' else 0.0), o, c] for k, (d, o, c) in u0.items()}
+    rep = FX.report({'D2400_p20': {1: {'u0': u0, 'x': arm}, 2: {'u0': u0, 'x': arm}}}, n_boot=200)
+    r = rep['D2400_p20']['x']['vs_u0']
+    assert r['worst_group'] == 'origin:L2' and abs(r['worst_group_inc'] - 5.0) < 1e-9
+    # worst 2 of 20 vehicles: u0 ids 19, 18 (29, 28); arm adds 5 to L2 (i%3==2): 29 -> 29? id 19 is L1, 18 is L0
+    per = sorted((d for d, _, _ in arm.values()), reverse=True)
+    assert abs(r['cvar90_diff'] - (sum(per[:2]) / 2 - 28.5)) < 1e-9
+    assert FX.headline(rep, 'D2400')[0].startswith('D2400_p20 x: worst origin:L2 +5.0')
