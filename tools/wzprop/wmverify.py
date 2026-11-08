@@ -257,8 +257,21 @@ def candidates(arms_doc, cell, groups=GROUPS, k=4, extra=(), lane_executor=DEFAU
 
 
 # ------------------------------------------------------------------------------------------ plan
+def pairs_of(arms_doc, cells):
+    """PAIR arms (owner 2026-11-09 01:38): {cell: [(name, mini-bank)]} from an ARMS-format doc whose cell entry
+    carries 'pairs': [{name, specs: [...]}] (executor: the reviewed ORACLE hook, tools.wzprop.wmverify_oracle)."""
+    from . import wmverify_oracle as WO
+    out = {}
+    for cell, *_x in cells:
+        items = ((arms_doc or {}).get(cell) or {}).get('pairs')
+        if items:
+            out.update(WO.pair_arms({cell: items}))
+    return out
+
+
 def build_groups(cells, specs_by_cell, world_of, *, parity_seeds=2, identity=True,
-                 lane_executor=DEFAULT_LANE_EXECUTOR, hold_executor=DEFAULT_HOLD_EXECUTOR, banned_seeds=0):
+                 lane_executor=DEFAULT_LANE_EXECUTOR, hold_executor=DEFAULT_HOLD_EXECUTOR, banned_seeds=0,
+                 pairs_by_cell=None):
     """Identity group first, then paired seed groups round-robin over cells (seed index major) so a partial run
     covers every cell."""
     groups = []
@@ -292,6 +305,12 @@ def build_groups(cells, specs_by_cell, world_of, *, parity_seeds=2, identity=Tru
                                  strategy_spec=spec, world=w, sim_s=EPISODE_S,
                                  executor=VH.resolve_executor(spec, lane_executor=lane_executor,
                                                               hold_executor=hold_executor)))
+            names = {j['arm'] for j in jobs}
+            for name, bank in (pairs_by_cell or {}).get(cell, ()):
+                if name in names or name in RESERVED:
+                    raise ValueError(f'pair arm name {name!r} clashes with another arm')
+                jobs.append(dict(id=f'{cell}_s{s}_{name}', arm=name, strategy=name, strategy_spec=None,
+                                 executor='oracle_bank', oracle_bank=bank, world=w, sim_s=EPISODE_S))
             groups.append(dict(stage='paired', cell=cell, jobs=jobs))
     return groups
 
@@ -383,7 +402,8 @@ def module_shas():
                  strategy_hook=here / 'strategy_hook.py', strategy_search=here / 'strategy_search.py',
                  regimeu0=coop / 'regimeu0.py', imitreplay=coop / 'imitreplay.py', lc_runtime=coop / 'lc_runtime.py',
                  lc_program=coop / 'lc_program.py', lc_families=coop / 'lc_families.py', lc_roles=coop / 'lc_roles.py',
-                 map_scenarios=coop / 'map_scenarios.py')
+                 map_scenarios=coop / 'map_scenarios.py', oracle_plan=coop / 'oracle_plan.py',
+                 wmverify_oracle=here / 'wmverify_oracle.py')
     return {k: _sha_file(p) for k, p in files.items() if p.exists()}
 
 
@@ -553,7 +573,8 @@ def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, gr
         pilot = dict(kind=PILOT, executor=PILOT_EXECUTOR, label=PILOT_LABEL, arms=list(pilot_arms), pairs=pairs)
     else:
         gr = build_groups(cells, specs, R.world_of, parity_seeds=parity_seeds, identity=True,
-                          lane_executor=lane_executor, hold_executor=hold_executor, banned_seeds=banned_seeds)
+                          lane_executor=lane_executor, hold_executor=hold_executor, banned_seeds=banned_seeds,
+                          pairs_by_cell=pairs_of(arms_doc, cells))
     planned = sum(j['sim_s'] for g in gr for j in g['jobs'])
     jobs_sha = jobs_digest(gr)
     shas = module_shas()
@@ -630,6 +651,9 @@ def make_job_hook(job, R):
         return R.RuleHook(job['strategy'])
     if job['executor'] in VH.EXECUTORS:
         return VH.make_hook(job['strategy_spec'], warmup_s=R.WARMUP_S, executor=job['executor'])
+    if job['executor'] == 'oracle_bank':                 # PAIR arms: the reviewed ORACLE hook on a mini-bank
+        from . import wmverify_oracle as WO
+        return WO.make_recorder(job['oracle_bank'], job['world']['cell_key'])
     raise ValueError(job['executor'])
 
 
@@ -1442,10 +1466,11 @@ def budget(cells, n_candidates_by_cell, parity_seeds=2, identity=True, banned_se
 
 def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, lane_executor=DEFAULT_LANE_EXECUTOR,
                       hold_executor=DEFAULT_HOLD_EXECUTOR, arms_sha256=None, regimeu0_u0_sha256=None, smoke_seeds=1,
-                      banned_seeds=0):
+                      banned_seeds=0, pairs_by_cell=None):
     _ir, R = _harness()
     gr = build_groups(cells, specs_by_cell, R.world_of, parity_seeds=parity_seeds, identity=True,
-                      lane_executor=lane_executor, hold_executor=hold_executor, banned_seeds=banned_seeds)
+                      lane_executor=lane_executor, hold_executor=hold_executor, banned_seeds=banned_seeds,
+                      pairs_by_cell=pairs_by_cell)
     planned = sum(j['sim_s'] for g in gr for j in g['jobs'])
     shas = module_shas()
     lines = [
@@ -1479,6 +1504,13 @@ def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, lane_executo
         lines.append(f'  - {cell}: ' + ', '.join(
             f'{s["name"]} [{src}, {SS.strategy_key(s)}, '
             f'{VH.resolve_executor(s, lane_executor=lane_executor, hold_executor=hold_executor)}]' for src, s in lst))
+    for cell, lst in (pairs_by_cell or {}).items():
+        from . import wmverify_oracle as WO
+        lines.append(f'  - {cell} PAIR arms (executor oracle_bank = reviewed ORACLE hook c4/oracle-arm 8bc436df, '
+                     f'oracle_digest {WO.ORACLE_DIGEST[:16]}; unconditional mini-bank rows in priority order, '
+                     'per-family sessions on different CAV groups): ' + ', '.join(
+                         f'{name} [' + ' + '.join(f"{r['family']} {r['template_sha256']}" for r in bank['rows'])
+                         + f'; bank {WO.bank_sha(bank)[:16]}]' for name, bank in lst))
     lines += [
         f'- ARMS.json sha256: {arms_sha256 or "<none>"}.',
         '- Executors: trigger, member selection and timing = WM-C strategy_hook.StrategyCore (same select_members, '
@@ -1810,7 +1842,8 @@ def main(argv=None):
             text, planned = registration_text(cells=cells, specs_by_cell=specs, cap=x.cap,
                                               parity_seeds=x.parity_seeds, lane_executor=x.lane_executor,
                                               hold_executor=x.hold_executor, banned_seeds=x.banned_seeds,
-                                              arms_sha256=arms_sha, regimeu0_u0_sha256=u0)
+                                              arms_sha256=arms_sha, regimeu0_u0_sha256=u0,
+                                              pairs_by_cell=pairs_of(doc, cells))
         if planned > x.cap:
             raise SystemExit(f'planned {planned} > cap {x.cap}')
         sys.stdout.write(text)

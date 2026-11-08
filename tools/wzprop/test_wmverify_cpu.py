@@ -664,3 +664,53 @@ def test_fairx_worst_group_and_cvar90_paired():
     assert FX.headline(rep, 'D2400')[0].startswith('D2400_p20 x: worst origin:L2 +5.0')
     assert r['worst_group_cvar90'] == 'origin:L2' and abs(r['worst_group_cvar90_diff'] - 5.0) < 1e-9
     assert abs(r['group_cvar90']['origin:L0']['mean']) < 1e-9
+
+
+# ------------------------------------------------------------------------------------------ PAIR arms (2026-11-09)
+def _pair_doc():
+    from tools.wzprop import strategy_search as SS2
+    duo = SS2._spec('duo12_v20', 'wall', [SS2._role(1, dict(v_w=20.0, dmax=1.0, hold_s=120)),
+                                           SS2._role(2, dict(v_w=20.0, dmax=1.0, hold_s=120))])
+    solo = SS2._spec('mut_solo0', 'lanes', [SS2._role(0, dict(v_w=19.0, dmax=1.0, hold_s=90))])
+    return {'D2800_p20': dict(pairs=[dict(name='duo_alone', specs=[duo]),
+                                     dict(name='pair_duo_solo0', specs=[duo, solo])])}
+
+
+def test_pair_oracle_is_the_reviewed_hook():
+    from tools.coopmwm import oracle_plan as OP
+    from tools.wzprop import wmverify_oracle as WO
+    raw = (Path(OP.__file__)).read_bytes().replace(b'\r\n', b'\n')
+    assert WO.git_blob_sha(raw) == WO.ORACLE_BLOB and WO.check_oracle() == WO.ORACLE_DIGEST
+
+
+def test_pair_minibank_rebuilds_and_plans_pair_jobs():
+    from tools.wzprop import wmverify_oracle as WO
+    pb = V.pairs_of(_pair_doc(), [('D2800_p20', 2800, 0.2, [991372])])
+    names = [n for n, _ in pb['D2800_p20']]
+    assert names == ['duo_alone', 'pair_duo_solo0']
+    from tools.coopmwm import oracle_plan as OP
+    plans, refused = OP.bank_plans(pb['D2800_p20'][1][1], 'D2800_p20')
+    assert [p['family'] for p in plans] == ['duo12_v20', 'mut_solo0'] and not refused
+    assert {p['row_class'] for p in plans} == {'unconditional'}
+    gr = V.build_groups([('D2800_p20', 2800, 0.2, [991372])], {'D2800_p20': []}, R.world_of, parity_seeds=0,
+                        pairs_by_cell=pb)
+    jobs = gr[1]['jobs']
+    assert [j['arm'] for j in jobs] == ['u0', 'wall_g_solo2', 'duo_alone', 'pair_duo_solo0']
+    assert jobs[3]['executor'] == WO.EXECUTOR and jobs[3]['strategy_spec'] is None and jobs[3]['oracle_bank']
+    with pytest.raises(ValueError):
+        WO.mini_bank('D2800_p20', [dict(_pair_doc()['D2800_p20']['pairs'][0]['specs'][0], roles=[
+            dict(lane=2, rank=0, v_w=20.0, dmax=1.0, hold_s=120, onset_s=0, lc_target=1)])])
+
+
+def test_pair_recorder_runs_concurrent_families_on_fake_plant():
+    from tools.wzprop import wmverify_oracle as WO
+    pb = V.pairs_of(_pair_doc(), [('D2800_p20', 2800, 0.2, [991372])])
+    job = dict(executor=WO.EXECUTOR, oracle_bank=pb['D2800_p20'][1][1], world=dict(cell_key='D2800_p20'))
+    hook = V.make_job_hook(job, R)
+    res = F.run_episode(hook, seed=991372, seconds=SECONDS, share=0.2)
+    rec = hook.receipts()
+    assert rec['oracle_sha256'] == WO.ORACLE_DIGEST and rec['oracle']['refused_counts'] == {}
+    assert rec['oracle']['activations'] == len(hook.acts) and res['totals'] is not None
+    hook2 = V.make_job_hook(job, R)
+    res2 = F.run_episode(hook2, seed=991372, seconds=SECONDS, share=0.2)
+    assert res2['totals'] == res['totals'] and hook2.receipts() == rec           # deterministic
