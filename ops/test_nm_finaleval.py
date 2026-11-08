@@ -1387,3 +1387,44 @@ def test_applicability_conditional_analysis_on_applicable_worlds(tmp_path):
     assert b['non_applicable']['total_minus_U0']['diff'] == pytest.approx(0.)
     assert nm.applicability_tables(tmp_path, dict(cell=dict(cell_key='D3200_p20')), have, reports, worlds,
                                    ['B', 'U0'], boot)['status'] == 'unavailable'
+
+
+def test_oracle_arms_bind_after_training_and_validate_their_receipts(panel, tmp_path, monkeypatch):
+    """Amendment 25b: ORACLE (WM + rule rows) and ORACLE_WM (WM rows) = bound U0 + oracle_plan on the sealed
+    end-of-training bank; p20x primary panel only; the bank must equal the applicability-label bank."""
+    f = make(tmp_path, panel)
+    u0 = dict(kind='u0_transferred_d9042cc5', label='u0', path='/x/it168.pt', sha256='e'*64, binding_sha256='f'*64,
+              binding_path='/x/b.json', residual_path='/x/A_checkpoint_000.pt', residual_sha256='c'*64)
+    with pytest.raises(nm.Blocked, match='p20x primary panel only'):
+        nm.episode_specs('ORACLE', panel, f['cfg'], f['root'], 'mappo_u0', None, u0)
+    assert 'oracle_ORACLE' not in nm.quote('mappo_u0')['need_ceiling']          # p60 quote unchanged
+    monkeypatch.setattr(nm, 'SETTING', 'p20x')
+    assert nm.oracle_binding(f['final_root']) is None
+    with pytest.raises(nm.Blocked, match='not bound'):
+        nm.episode_specs('ORACLE', panel, f['cfg'], f['root'], 'mappo_u0', None, u0)
+    binding = nm.seal(dict(bank=dict(path='/x/bank.json', file_sha256='b'*64), oracle_sha256='d'*64), 'receipt_sha256')
+    nm.publish(f['final_root']/nm.ORACLE_BINDING, binding)
+    assert nm.oracle_binding(f['final_root']) == binding
+    specs = {a: nm.episode_specs(a, panel, f['cfg'], f['root'], 'mappo_u0', binding, u0) for a in nm.ORACLE_ARMS}
+    ck = specs['ORACLE_WM'][0]['checkpoint']
+    assert ck['kind'] == 'oracle' and (ck['arm'], ck['update']) == ('A', 0) and ck['executor_sha256'] == 'e'*64
+    assert ck['oracle_plan_source'] == 'wm' and specs['ORACLE'][0]['checkpoint']['oracle_plan_source'] == 'all'
+    assert ck['oracle_bank'] == dict(path='/x/bank.json', file_sha256='b'*64) and ck['oracle_sha256'] == 'd'*64
+    assert ck['cell_key'] == panel['cell']['cell_key'] and specs['ORACLE'][0]['capture'] is None
+    assert nm.wave_name('ORACLE', 12) == 'ORACLE' and 'oracle_ORACLE_WM' in nm.quote('mappo_u0')['need_ceiling']
+    good = nm.fake_episode(specs['ORACLE'][0])
+    assert nm.check_episode(good, specs['ORACLE'][0])['oracle_sha256_loaded'] == 'd'*64
+    for mutate, match in ((lambda r: r.update(oracle_sha256_loaded='0'*64), 'oracle_plan actually loaded'),
+                          (lambda r: r.pop('oracle'), 'oracle receipts missing'),
+                          (lambda r: r.update(executor_sha256_loaded='0'*64), 'executor actually loaded')):
+        bad = deepcopy(good)
+        mutate(bad)
+        with pytest.raises(nm.Blocked, match=match):
+            nm.check_episode(bad, specs['ORACLE'][0])
+    u0_spec = nm.episode_specs('NATIVE', panel, f['cfg'], f['root'], 'mappo_u0')[0]
+    with pytest.raises(nm.Blocked, match='outside an ORACLE arm'):
+        nm.check_episode(dict(nm.fake_episode(u0_spec), oracle={}), u0_spec)
+    nm.publish(f['final_root']/'APPLICABILITY_t.json', nm.seal(dict(bank=dict(sha256='9'*64)), 'receipt_sha256'))
+    with pytest.raises(nm.Blocked, match='bank'):
+        nm.oracle_binding(f['final_root'])
+    assert set(nm.APPLICABILITY_ARMS) == {'B', 'ORACLE', 'ORACLE_WM'} and set(nm.ORACLE_ARMS) <= set(nm.CLAIM3A_ARMS)

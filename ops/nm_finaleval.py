@@ -68,15 +68,28 @@ A_ALIAS_LABEL = ('A = U0: the frozen control arm (no PPO update) carries the u0 
 ARMS = ('A', 'B', 'R')
 DECISION_ARMS = ('B', 'R')
 BASES = ('mappo_frozen', 'mappo_u0', 'native')   # clean5a: frozen S-MAPPOWZ snapshot base (A = base alone)
-ORDER = ('B', 'A', 'R', 'RULE', 'RULE_FAIR', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
+ORDER = ('B', 'A', 'R', 'RULE', 'RULE_FAIR', 'ORACLE', 'ORACLE_WM', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
 #: MAIN 2026-11-06 (FAIRAUDIT F6): 7 arms; BASE is an alias (U0 for a mappo_u0 base, NATIVE for native)
-EPISODE_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
+EPISODE_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE', 'ORACLE', 'ORACLE_WM')
 COMPARATOR_ARMS = ('MAPPO_SPEED', 'MAPPO_LANE')        # claim 3b, one seal per comparator
 BOUND_ARMS = ('U0',)+COMPARATOR_ARMS                    # executors bound by path + sha256
-CLAIM3A_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'NATIVE')
+CLAIM3A_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'NATIVE', 'ORACLE', 'ORACLE_WM')   # +25b oracle bounds
 #: records of these arms carry the executor sha actually loaded (bound executors)
-EXECUTOR_ARMS = ('U0', 'RULE', 'RULE_FAIR')+COMPARATOR_ARMS
+EXECUTOR_ARMS = ('U0', 'RULE', 'RULE_FAIR', 'ORACLE', 'ORACLE_WM')+COMPARATOR_ARMS
 RULE_ARMS = ('RULE', 'RULE_FAIR')
+#: amendments 25 + 25b (MAIN 2026-11-09 00:06, pre-outcome): privileged upper bounds, NOT deployable. Both = U0 (bound
+#: u0 executor, A/0) + oracle_plan on the frozen end-of-training bank (CLEAN5C5 final-update snapshot, bound only
+#: after training ends via a sealed ORACLE_BINDING.json). ORACLE: every admitted row (WM + rule, provenance-tagged);
+#: ORACLE_WM: WM-sourced rows only. Per-family bank cooldown; unconditional rows act whenever a feasible group exists
+#: (any bin, incl. unobserved); situational rows keep priority when admitted and feasible. Primary panel only.
+ORACLE_ARMS = ('ORACLE', 'ORACLE_WM')
+ORACLE_PLAN_SOURCE = dict(ORACLE='all', ORACLE_WM='wm')
+ORACLE_SIM_S = 115_200                                 # per oracle arm: 96 primary worlds x 1,200 s
+ORACLE_BINDING = 'ORACLE_BINDING.json'
+ORACLE_LABELS = dict(ORACLE='ORACLE: U0 + every admitted verified plan of the frozen bank (WM + rule), privileged '
+                            'bins - upper bound, not deployable',
+                     ORACLE_WM='ORACLE_WM: U0 + the WM-sourced admitted plans of the frozen bank only, privileged '
+                               'bins - upper bound, not deployable')
 #: MAIN registration (pre-results): RULE = U0 + the solo2 rule always on (one CAV holding in SUMO lane 2
 #: with wall_h parameters, cooldown = hold) = the EXACT S-REGIMEU0 implementation (c4/imitreplay
 #: tools/coopmwm/regimeu0.py RuleHook('wall_h_solo2')): the hand-designed cooperation baseline.
@@ -283,9 +296,10 @@ SETTINGS['p20x'] = dict(SETTINGS['p20'],
                    'registered for evaluation only at runtime by the N6 runner (N1 guard otherwise unchanged; TRAIN '
                    'roles still refuse it)')),
     PANEL_FILE=HERE/'nm_eval_panel_wz3to2_p20x_D2800.json', PANEL_3C_FILE=None,
-    ALLOCATION_SIM_S=1_026_520,
-    ALLOCATION_AUTHORITY=('N6 amendment 23b: the p20x root debits the same final-eval allocation 1,750,000; remainder '
-                          'after the p20 root (723,480) = 1,026,520 (own ledger)'))
+    ALLOCATION_SIM_S=1_974_720,
+    ALLOCATION_AUTHORITY=('MAIN 2026-11-08 23:27 (owner delegation): final-eval allocation raised 1,750,000 -> 2,700,000 '
+                          '(incl. ORACLE + ORACLE_WM 2 x 115,200, amendment 25b); the p20x roots debit it after the p20 '
+                          'root (723,480) and the void p20x r1 checks (1,800): 1,974,720 (own ledgers)'))
 
 
 #: sealed panel digests of the p20 panels (written at registration, amendment 22)
@@ -381,6 +395,8 @@ def quote(base='mappo_u0', a_alias=True):
             if a in CLAIM3C_ARMS:
                 need[f'u{u:03}_C3_{a}'] = c3
     need.update({f'episodes_{a}': episode for a in COMPARATOR_ARMS if a not in PRERUN_ARMS})
+    if SETTING == 'p20x':                # amendment 25b: ORACLE + ORACLE_WM on the p20x primary panel only
+        need.update({f'oracle_{a}': episode for a in ORACLE_ARMS})
     need['parity_f11'] = PARITY_SIM_S
     need['decisions'] = 0
     total = sum(need.values())
@@ -1049,6 +1065,33 @@ def gate(root, cfg, runtime, binding, final_root=None, update=UPDATE):
 
 # ---------------------------------------------------------------- specs and records
 
+def check_oracle_binding(binding):
+    """The sealed ORACLE binding (amendment 25b): the frozen end-of-training bank (path + file sha256) and the
+    oracle_plan digest; bound only after the CLEAN5C5 final update, never before."""
+    if binding is None:
+        raise Blocked(f'ORACLE arms not bound: no sealed {ORACLE_BINDING} (bound after training ends)')
+    bank = binding.get('bank') or {}
+    if (not bank.get('path') or not re.fullmatch('[0-9a-f]{64}', str(bank.get('file_sha256')))
+            or not re.fullmatch('[0-9a-f]{64}', str(binding.get('oracle_sha256')))
+            or not re.fullmatch('[0-9a-f]{64}', str(binding.get('receipt_sha256')))):
+        raise Blocked(f'{ORACLE_BINDING}: bank path/file_sha256, oracle_sha256 and receipt_sha256 required')
+    return binding
+
+
+def oracle_binding(final_root):
+    """The sealed ORACLE_BINDING.json of this root, else None. Its bank must be the bank of every sealed
+    applicability label file (amendments 24/25: one frozen end-of-training bank)."""
+    path = Path(final_root)/ORACLE_BINDING
+    if not path.is_file():
+        return None
+    value = check_oracle_binding(verify(read(path), 'receipt_sha256', path.name))
+    for labels in sorted(Path(final_root).glob('APPLICABILITY_*.json')):
+        got = verify(read(labels), 'receipt_sha256', labels.name)['bank']['sha256']
+        if got != value['bank']['file_sha256']:
+            raise Blocked(f'{ORACLE_BINDING} bank {value["bank"]["file_sha256"][:8]} != {labels.name} bank {got[:8]}')
+    return value
+
+
 def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None, update=UPDATE):
     root = Path(root)
     if arm in ARMS:
@@ -1082,6 +1125,19 @@ def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None, update=UPD
                           binding_sha256=binding['binding_sha256'], binding_path=binding['binding_path'],
                           train_config=binding['train_config'], train_config_sha256=binding['train_config_sha256'],
                           train_src=binding['train_src'], train_src_sha256=binding['train_src_sha256'])
+    elif arm in ORACLE_ARMS:
+        if SETTING != 'p20x':
+            raise Blocked(f'{arm} is registered for the p20x primary panel only (amendment 25b)')
+        if u0 is None:
+            raise Blocked(f'{arm} needs the U0 binding (frozen executor + zero-residual u0): bind-mappo --arm U0')
+        check_oracle_binding(binding)
+        checkpoint = dict(kind='oracle', comparator_kind=u0['kind'], label=u0['label'], executor_path=u0['path'],
+                          executor_sha256=u0['sha256'], binding_sha256=u0['binding_sha256'],
+                          binding_path=u0['binding_path'], path=u0['residual_path'], file_sha256=u0['residual_sha256'],
+                          update=0, arm='A', cell_key=panel['cell']['cell_key'],
+                          oracle_bank=dict(path=binding['bank']['path'], file_sha256=binding['bank']['file_sha256']),
+                          oracle_sha256=binding['oracle_sha256'], oracle_plan_source=ORACLE_PLAN_SOURCE[arm],
+                          oracle_binding_sha256=binding['receipt_sha256'])
     elif arm == 'NATIVE':
         checkpoint = dict(kind='native')
     else:
@@ -1172,6 +1228,15 @@ def check_episode(record, spec):
         if not re.fullmatch(re.escape(spec['job_id'])+r'__r[0-9]+', str(record['work_dir'])):
             raise Blocked(f'{what}: work_dir is not a replay dir of this job')
         out['work_dir'] = record['work_dir']
+    if spec['arm'] in ORACLE_ARMS:
+        if record.get('oracle_sha256_loaded') != spec['checkpoint']['oracle_sha256']:
+            raise Blocked(f'{what}: oracle_plan actually loaded differs from its binding (never silent)')
+        if not isinstance(record.get('oracle'), dict):
+            raise Blocked(f'{what}: oracle receipts missing')
+        out['oracle_sha256_loaded'] = record['oracle_sha256_loaded']
+        out['oracle'] = deepcopy(record['oracle'])
+    elif record.get('oracle') is not None:
+        raise Blocked(f'{what}: oracle receipts outside an ORACLE arm')
     if spec['arm'] in RULE_ARMS:
         if record.get('rule_sha256_loaded') != spec['checkpoint']['rule_sha256']:
             raise Blocked(f'{what}: S-REGIMEU0 rule actually loaded differs from its registration')
@@ -1271,7 +1336,7 @@ class Runtime:
             module = importlib.import_module(self.runner)
         except ImportError as error:
             return dict(ok=False, reason=f'{self.runner} not importable: {error!r}', native=False, decisions=False,
-                        lane=False, rule=False, rule_fair=False, parity=False)
+                        lane=False, rule=False, rule_fair=False, parity=False, oracle=False)
         ok = getattr(module, 'MAP', None) == MAP and callable(getattr(module, 'episode', None))
         return dict(ok=ok, native=ok and getattr(module, 'NATIVE', True) is not False,
                     decisions=ok and callable(getattr(module, 'decision_branch', None)),
@@ -1281,6 +1346,8 @@ class Runtime:
                     rule_fair=ok and 'wall_g_solo2' in getattr(module, 'RULE_STRATEGIES', ())
                     and importlib.util.find_spec('tools.coopmwm.regimeu0_multicrit') is not None,
                     parity=ok and getattr(module, 'PARITY', False) is True and callable(getattr(module, 'parity', None)),
+                    oracle=ok and set(ORACLE_ARMS) <= set(getattr(module, 'ORACLE_ARMS', ()))
+                    and importlib.util.find_spec('tools.coopmwm.oracle_plan') is not None,
                     reason=None if ok else f'{self.runner} lacks MAP={MAP!r} or episode()')
 
     def frozen_a_check(self, cfg, root, update):
@@ -1381,7 +1448,7 @@ def _fake_vehicle_log(path, seed, arm, t0=WARMUP_S, t1=HORIZON_S):
 def fake_episode(spec, work=None):
     w, arm = spec['world'], spec['arm']
     u = _h(w['seed'], arm)/0xffffffff
-    factor = dict(NATIVE=1.06, U0=1.0, RULE=.985, RULE_FAIR=.99, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985,
+    factor = dict(NATIVE=1.06, U0=1.0, RULE=.985, RULE_FAIR=.99, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985, ORACLE=.97, ORACLE_WM=.98,
                   B=0.975)[arm]
     record = dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='graded',
                   vehicle_log=(_fake_vehicle_log(Path(work)/VEHICLE_LOG, w['seed'], arm) if work is not None else
@@ -1392,6 +1459,9 @@ def fake_episode(spec, work=None):
                               ttc_events=_h(w['seed'], arm, 't') % 11))
     if arm in EXECUTOR_ARMS:
         record['executor_sha256_loaded'] = spec['checkpoint']['executor_sha256']
+    if arm in ORACLE_ARMS:
+        record['oracle_sha256_loaded'] = spec['checkpoint']['oracle_sha256']
+        record['oracle'] = dict(plan_source=spec['checkpoint']['oracle_plan_source'], activations=_h(w['seed'], arm) % 4)
     if arm in RULE_ARMS:
         record['rule_sha256_loaded'] = spec['checkpoint']['rule_sha256']
         record['rule'] = dict(strategy=spec['checkpoint']['rule'], activations=_h(w['seed'], 'rule') % 9+1, issued=600,
@@ -1853,7 +1923,7 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
                   B=f'B u{update} (cooperation layer + SUMO-verified guidance)',
                   R=f'R u{update} (cooperation layer, no guidance = the no-guidance arm)',
                   NATIVE='native SUMO CAV driving', U0=U0_LABEL,
-                  RULE=RULE_LABEL, RULE_FAIR=RULE_FAIR_LABEL,
+                  RULE=RULE_LABEL, RULE_FAIR=RULE_FAIR_LABEL, **ORACLE_LABELS,
                   **{a: mappo_label(loaded[a], a)[1] if a in loaded else f'{a} (not run)' for a in COMPARATOR_ARMS})
     if MAPPO_LANE_OOD:                                   # amendment 22: disclosed in every table that carries the arm
         labels['MAPPO_LANE'] += ' - '+MAPPO_LANE_OOD
@@ -2376,7 +2446,7 @@ def tail_vs_u0(reports, worlds, bootstrap, names, reference='U0'):
     return out
 
 
-APPLICABILITY_ARMS = ('B', 'ORACLE')        # amendment 24 primary (B) and amendment 25 (ORACLE, privileged bound)
+APPLICABILITY_ARMS = ('B', 'ORACLE', 'ORACLE_WM')   # amendment 24 primary (B); amendments 25/25b privileged bounds
 
 
 def applicability_labels(final_root, cell_key):
@@ -2424,8 +2494,9 @@ def applicability_tables(final_root, panel, have, reports, worlds, names, bootst
         row['meets_primary'] = bool(a.get('total_lower') and (a.get('groups') or {}).get('all_pass') is True
                                     and (a.get('tail_cvar90') or {}).get('passes') is True)
         row['non_applicable_not_worse'] = (row.get('non_applicable') or {}).get('not_worse')
-        row['role'] = dict(B='PRIMARY (amendment 24)', ORACLE='privileged upper bound (amendment 25), not deployable',
-                           MAPPO_LANE='secondary')[arm]
+        row['role'] = dict(B='PRIMARY (amendment 24)', ORACLE='privileged upper bound (amendments 25/25b: WM + rule '
+                           'rows), not deployable', ORACLE_WM='privileged upper bound (amendment 25b: WM rows only), '
+                           'not deployable', MAPPO_LANE='secondary')[arm]
         out['arms'][arm] = row
     return out
 
@@ -2635,6 +2706,16 @@ def execute(*, root, final_root, runtime, panel, panel_3c=None, allow_missing=()
                 else:
                     raise Blocked(f'{rarm}: runner has no {why} (--allow-missing {rarm})')
             compat = prerun_compat(final_root, cfg, runtime)
+            oracle = oracle_binding(final_root) if SETTING == 'p20x' else None
+            for oarm in ORACLE_ARMS if SETTING == 'p20x' else ():
+                if oracle is None:
+                    missing[oarm] = f'not bound: no sealed {ORACLE_BINDING} (bound after training ends)'
+                elif report['runner'].get('oracle'):
+                    arms.append(oarm)
+                elif oarm in allow_missing:
+                    missing[oarm] = 'runner has no ORACLE arms (tools.coopmwm.oracle_plan)'
+                else:
+                    raise Blocked(f'{oarm}: bound but the runner has no ORACLE arms (--allow-missing {oarm})')
         elif a_alias:
             raise Blocked('A is the frozen U0 alias but U0 was declared unavailable')
         else:
@@ -2645,7 +2726,8 @@ def execute(*, root, final_root, runtime, panel, panel_3c=None, allow_missing=()
         current = f'EPISODES{sfx}'
 
         def specs_for(arm, pnl):
-            return episode_specs(arm, pnl, cfg, root, base, bindings.get(arm), bindings.get('U0'), update)
+            bound = oracle_binding(final_root) if arm in ORACLE_ARMS else bindings.get(arm)
+            return episode_specs(arm, pnl, cfg, root, base, bound, bindings.get('U0'), update)
         specs = {arm: specs_for(arm, panel) for arm in arms}
         if any(specs[arm][0]['checkpoint']['file_sha256'] != gated['checkpoint_sha256'][arm] for arm in ARMS if arm in arms):
             raise Blocked(f'u{update} checkpoint changed after the gate')
@@ -3776,14 +3858,21 @@ def _analyse_published(root, final_root, runtime, panel, panel_3c=None, update=P
             return None, 'no published wave receipt'
         if arm in BOUND_ARMS and arm not in bindings:
             raise Blocked(f'{arm} wave published without a binding')
-        specs = episode_specs(arm, pnl, cfg, root, base, bindings.get(arm), bindings.get('U0'), update)
+        binding = bindings.get(arm)
+        if arm in ORACLE_ARMS:
+            if prefix:
+                raise Blocked(f'{arm} runs on the primary panel only (amendment 25b)')
+            binding = oracle_binding(final_root)
+            if binding is None:
+                raise Blocked(f'{arm} wave published without a sealed {ORACLE_BINDING}')
+        specs = episode_specs(arm, pnl, cfg, root, base, binding, bindings.get('U0'), update)
         records, source, covered = published(final_root, name, specs, check_episode)
         if covered < len(specs):
             return None, f'wave incomplete ({covered}/{len(specs)} published)'
         return ({r['world_id']: r for r in records}, source), None
     episodes, sources, missing = {}, {}, {}
     for arm in EPISODE_ARMS:
-        if arm == 'A' and a_alias:
+        if (arm == 'A' and a_alias) or (arm in ORACLE_ARMS and SETTING != 'p20x'):
             continue
         got, why = load(arm, panel)
         if got is None:
