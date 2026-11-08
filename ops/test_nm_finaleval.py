@@ -1510,3 +1510,19 @@ def test_bank_run_amendment27_runs_the_bank_arms_in_their_own_phase(p20x, tmp_pa
     assert sum(r['sim_s'] for r in rows if r['phase'] == nm.BANK_PHASE) == 345_600
     with pytest.raises(nm.Blocked, match='bank-run arms'):
         nm.prerun_execute(final_root=final_root, runtime=runtime, panel=p20x, panel_3c=None, arms=('ORACLE', 'U0'))
+    with um.patch.object(nm, 'LEARNED_MODEL_SHA256', nm.file_sha(model)):
+        with pytest.raises(nm.Blocked, match='needs U0'):
+            nm.bank_analyse(final_root=final_root, panel=p20x)
+        run_prerun(dict(f, panel=p20x, panel_3c=None), arms=('U0', 'MAPPO_LANE'), workers=8, chunk=192)
+        with pytest.raises(nm.Blocked, match='applicability labels'):
+            nm.bank_analyse(final_root=final_root, panel=p20x)
+        worlds = [r['world_id'] for r in p20x['worlds']]
+        nm.publish(final_root/'APPLICABILITY_t.json', nm.seal(dict(
+            bank=dict(sha256=nm.file_sha(bank)), cells={'D2800_p20': dict(worlds=96, applicable_worlds=48, rate_worlds=.5)},
+            worlds={w: dict(applicable=i % 2 == 0) for i, w in enumerate(worlds)}), 'receipt_sha256'))
+        out = nm.bank_analyse(final_root=final_root, panel=p20x)
+        assert set(out['arms']) == set(nm.BANK_ARMS) and out['applicability']['applicable_worlds'] == 48
+        row = out['arms']['ORACLE_WM']['vs_U0']
+        assert set(row) == {'all', 'applicable', 'non_applicable', 'breakdown', 'non_breakdown'}
+        assert row['applicable']['n_worlds'] == 48 and 'total_minus_ref' in row['all'] and 'vs_MAPPO_LANE' in out['arms']['ORACLE']
+        assert out['breakdown_rule'].startswith('U0 stop_and_go') and (final_root/'BANK_TABLES.json').is_file()

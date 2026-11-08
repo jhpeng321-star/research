@@ -2552,6 +2552,110 @@ def applicability_tables(final_root, panel, have, reports, worlds, names, bootst
     return out
 
 
+#: amendment 27 analysis (registered by N6 before any bank-arm outcome): BREAKDOWN worlds (secondary subset) = the
+#: panel worlds whose U0 episode shows at least one stop-and-go event (v >= 5 -> v < 1, ground-truth vehicle log);
+#: labelled from U0 logs only.
+BREAKDOWN_RULE = 'U0 stop_and_go >= 1 (ground-truth vehicle log of the U0 episode on the same world)'
+
+
+def _bank_compare(have, reports, worlds, arm, reference, bootstrap):
+    """X - reference on ``worlds``: paired total delay (CI95), the five group co-criteria, CVaR90 tail."""
+    if len(worlds) < 2:
+        return dict(status='unavailable', n_worlds=len(worlds))
+    x = np.array([have[arm][w]['J_veh_s'] for w in worlds], float)
+    y = np.array([have[reference][w]['J_veh_s'] for w in worlds], float)
+    total = fe.paired_stats(x, y, bootstrap)
+    sub = {a: {w: reports[a][w] for w in worlds} for a in (arm, reference)}
+    pair = dict(B=sub[arm], A=sub[reference])
+    pair[reference] = sub[reference]
+    groups = co_primary_groups(pair, worlds, bootstrap, reference=reference)
+    tail = tail_criterion(dict(B=sub[arm], A=sub[reference]), worlds, bootstrap, 'A')
+    return dict(n_worlds=len(worlds), total_minus_ref=total, total_lower=bool(total['ci95'][1] < 0),
+                not_worse=bool(total['ci95'][0] <= 0), groups=groups, tail_cvar90=tail,
+                meets=bool(total['ci95'][1] < 0 and (groups or {}).get('all_pass') is True
+                           and (tail or {}).get('passes') is True))
+
+
+def bank_analyse(*, final_root, panel, runtime=None):
+    """Zero physics (amendments 24-27): the bank arms vs U0 (and vs MAPPO_LANE) on the p20x primary panel from the
+    published waves of this root: all / applicable / non-applicable (amendment-24 labels) / breakdown worlds; total
+    delay CI95, the group fairness co-criteria, CVaR90; applicability rate. Sealed BANK_TABLES.json."""
+    final_root = Path(final_root)
+    if SETTING != 'p20x':
+        raise Blocked('bank arms: p20x only')
+    plan = prerun_plan(final_root)
+    if plan is None:
+        raise Blocked('PRERUN_PLAN.json missing')
+    plant = final_root/PRERUN_PLANT
+    cfg = read(plant/'CONFIG.json')
+    u0 = mappo_binding(final_root, 'U0')
+    oracle = oracle_binding(final_root)
+    if u0 is None or oracle is None:
+        raise Blocked('bank analysis needs the U0 binding and the sealed ORACLE_BINDING')
+    bound = dict(MAPPO_LANE=mappo_binding(final_root, 'MAPPO_LANE'), **{a: oracle for a in BANK_ARMS})
+    worlds = [r['world_id'] for r in panel['worlds']]
+    bootstrap = dict(panel['contract']['bootstrap'])
+    have, sources, missing = {}, {}, {}
+    for arm in ('U0', 'MAPPO_LANE')+BANK_ARMS:
+        if arm == 'MAPPO_LANE' and bound['MAPPO_LANE'] is None:
+            missing[arm] = 'not bound'
+            continue
+        specs = episode_specs(arm, panel, cfg, plant, 'mappo_frozen', bound.get(arm), u0)
+        records, source, covered = published(final_root, arm, specs, check_episode)
+        if covered < len(specs):
+            missing[arm] = f'{covered}/{len(specs)} published'
+            continue
+        have[arm], sources[arm] = {r['world_id']: r for r in records}, source
+    if 'U0' not in have or not set(BANK_ARMS) & set(have):
+        raise Blocked(f'bank analysis needs U0 and at least one complete bank arm: {missing}')
+    reports = {}
+    for arm in have:
+        rows = {w: episode_log_report(final_root, have[arm][w]) for w in worlds}
+        if any(r is None or not r['ok'] for r in rows.values()):
+            raise Blocked(f'{arm}: vehicle logs missing or invalid on this host')
+        reports[arm] = rows
+    labels = applicability_labels(final_root, panel['cell']['cell_key'])
+    if labels is None:
+        raise Blocked('no sealed applicability labels for this cell (amendment 24)')
+    if labels['bank']['sha256'] != oracle['bank']['file_sha256']:
+        raise Blocked('applicability labels and ORACLE_BINDING bind different banks')
+    app = [w for w in worlds if labels['worlds'][w]['applicable']]
+    breakdown = [w for w in worlds if reports['U0'][w]['stop_and_go'] >= 1]
+    subsets = dict(all=worlds, applicable=app, non_applicable=[w for w in worlds if w not in set(app)],
+                   breakdown=breakdown, non_breakdown=[w for w in worlds if w not in set(breakdown)])
+    arms = {}
+    for arm in [a for a in BANK_ARMS if a in have]:
+        row = dict(label=dict(ORACLE_LABELS)[arm], mean_J_veh_s=float(np.mean([have[arm][w]['J_veh_s'] for w in worlds])),
+                   safety_totals={k: int(sum(have[arm][w]['safety'][k] for w in worlds)) for k in SAFETY})
+        for reference in [r for r in ('U0', 'MAPPO_LANE') if r in have]:
+            row[f'vs_{reference}'] = {name: _bank_compare(have, reports, ws, arm, reference, bootstrap)
+                                       for name, ws in subsets.items()}
+        receipts = [have[arm][w].get('oracle') or have[arm][w].get('learned_trigger') or {} for w in worlds]
+        row['activations'] = dict(worlds_with_any=sum(1 for r in receipts if r.get('activations')),
+                                  total=sum(int(r.get('activations') or 0) for r in receipts))
+        arms[arm] = row
+    value = seal(dict(schema=SCHEMA+'.bank_tables', amendments=['24', '25', '25b', '26', '27'],
+                      panel_sha256=panel['panel_sha256'], convention='diff = X - reference; negative = X has less delay',
+                      primary_criterion=('applicable worlds: X - U0 CI95 upper < 0 AND groups all_pass AND CVaR90 '
+                                         'passes (amendment 24); bank arms are bounds (ORACLE, ORACLE_WM) or the '
+                                         'insurance / deployability arm (LEARNED_TRIGGER), never the B primary'),
+                      breakdown_rule=BREAKDOWN_RULE, oracle_binding_sha256=oracle['receipt_sha256'],
+                      labels_receipt_sha256=labels['receipt_sha256'], bank_sha256=labels['bank']['sha256'],
+                      applicability=dict(rate=labels['cells'][panel['cell']['cell_key']], applicable_worlds=len(app)),
+                      breakdown_worlds=len(breakdown), reference_means={r: float(np.mean([have[r][w]['J_veh_s'] for w in worlds]))
+                                                                      for r in ('U0', 'MAPPO_LANE') if r in have},
+                      sources={k: v.get('receipt_sha256') if isinstance(v, dict) else v for k, v in sources.items()},
+                      missing=missing, bootstrap=bootstrap, arms=arms), 'analysis_sha256')
+    target = final_root/'BANK_TABLES.json'
+    if target.exists():
+        old = verify(read(target), 'analysis_sha256', target.name)
+        if old['analysis_sha256'] != value['analysis_sha256']:
+            publish(final_root/f'BANK_TABLES_{int(time.time())}.json', value)
+        return value
+    publish(target, value)
+    return value
+
+
 def secondary_tables(*, final_root, panel, have, names, alias, dry_run=False):
     """SECONDARY, report-only (amendment 5): every arm vs every comparator present, per metric: paired whole-world
     bootstrap CI + per-seed fractions/quartiles; per-world values per arm (the per-seed table)."""
@@ -4032,7 +4136,7 @@ def main(argv=None):
                                        'prerun-amend-cap', 'authorize-replay', 'prerun-run', 'parity', 'env-equivalence',
                                        'prerun-envparity', 'envparity-assess', 'host-identity',
                                        'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run',
-                                       'bind-oracle', 'bank-run'))
+                                       'bind-oracle', 'bank-run', 'bank-analyse'))
     p.add_argument('--setting', choices=('p60',)+tuple(SETTINGS), default=os.environ.get('NM_SETTING', 'p60'),
                    help='evaluation setting (amendment 22): p60 = the registered default; p20 = the 20%% CAV panels')
     p.add_argument('--root', default=None)
@@ -4192,6 +4296,9 @@ def main(argv=None):
             value = bind_oracle(final_root=a.final_root, bank_path=a.bank, model_path=a.model, authority=a.authority,
                                 banks=dict(ORACLE=a.oracle_bank) if a.oracle_bank else None)
             result = dict(receipt_sha256=value['receipt_sha256'], bank=value['bank'], banks=value['banks'])
+        elif a.command == 'bank-analyse':
+            value = bank_analyse(final_root=a.final_root, panel=panel)
+            result = dict(analysis_sha256=value['analysis_sha256'], missing=value['missing'])
         elif a.command == 'bank-run':
             import fcntl
             arms = tuple(x for x in a.bank_arms.split(',') if x)
