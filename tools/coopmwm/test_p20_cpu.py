@@ -40,7 +40,7 @@ def test_p20_worlds_same_seeds_p20_cells_only():
 def test_p20_cell_validation():
     assert c5b.P20_CELLS == ('D2400_p20', 'D2800_p20', 'D3200_p20')
     assert c5b._check_p20_cells(('D3200_p20', 'D2400_p20', 'D2800_p20')) == c5b.P20_CELLS
-    for bad in (('D3200_p20', 'D2800_p20'), ('D2400_p20', 'D2800_p20', 'D3200_p60'),
+    for bad in (('D3200_p20', 'D3200_p40'), ('D2400_p20', 'D2800_p20', 'D3200_p60'),
                 ('D2400_p20', 'D2800_p20', 'D3200_p20', 'D3200_p20')):
         with pytest.raises(ValueError, match='p20 cells'):
             c5b._check_p20_cells(bad)
@@ -58,7 +58,7 @@ def test_built_guidance_docs():
         assert c5b.check_p20_guidance(doc, c5b.P20_CELLS, wm=is_wm) == ('D2400_p20', 'D2800_p20')   # "none"
         assert {c: v['source'] for c, v in doc['p20']['cells'].items()} == dict(D2400_p20='none', D2800_p20='none',
                                                                                 D3200_p20=src)
-        assert {c: v['priority'] for c, v in doc['p20']['cells'].items()} == c5b.P20_PRIORITY
+        assert {c: v['priority'] for c, v in doc['p20']['cells'].items()} == {c: c5b.P20_PRIORITY[c] for c in c5b.P20_CELLS}
     with pytest.raises(ValueError, match='LOWCAV'):
         c5b.check_p20_guidance(wm, c5b.P20_CELLS, wm=False)
     with pytest.raises(ValueError, match='p20-selected'):
