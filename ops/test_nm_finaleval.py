@@ -186,8 +186,8 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     assert secondary['update'] == 24 and secondary['evaluation'] == 'SECONDARY (u24)' and 'B_u024' in secondary['sources']
     assert secondary['tables']['arms']['B']['label'].startswith('B u24')
     t = claim3a['tables']
-    arms = set(nm.CLAIM3A_ARMS)-set(nm.ORACLE_ARMS)          # oracle arms: p20x primary only (amendment 25b)
-    assert not set(nm.ORACLE_ARMS) & set(t['arms']) and not set(nm.ORACLE_ARMS) & set(claim3a['missing'])
+    arms = set(nm.CLAIM3A_ARMS)-set(nm.BANK_ARMS)            # bank arms: p20x primary only (amendments 25b/26)
+    assert not set(nm.BANK_ARMS) & set(t['arms']) and not set(nm.BANK_ARMS) & set(claim3a['missing'])
     assert t['base']['alias_of'] == alias and t['arms'][alias]['label'].endswith('= BASE')
     assert set(t['total_benefit']['vs_NATIVE']['rows']) == arms-{'NATIVE'}
     assert set(t['total_benefit']['vs_BASE']['rows']) == arms-{alias}
@@ -267,7 +267,7 @@ def test_runner_without_decision_branches_never_blocks_the_evaluation(panel, tmp
 def test_the_real_runner_module_satisfies_the_contract():
     status = nm.Runtime().runner_status()
     assert status == dict(ok=True, native=True, decisions=False, lane=True, rule=True, rule_fair=True, parity=True,
-                          oracle=True, reason=None)                         # oracle: amendment 25b runner arms
+                          oracle=True, learned=True, reason=None)           # amendments 25b/26 runner arms
     status = nm.Runtime('tools.coopmwm.no_such_nm_runner').runner_status()
     assert status['ok'] is False and 'not importable' in status['reason']
 
@@ -1431,4 +1431,37 @@ def test_oracle_arms_bind_after_training_and_validate_their_receipts(panel, tmp_
     nm.publish(f['final_root']/'APPLICABILITY_t.json', nm.seal(dict(bank=dict(sha256='9'*64)), 'receipt_sha256'))
     with pytest.raises(nm.Blocked, match='bank'):
         nm.oracle_binding(f['final_root'])
-    assert set(nm.APPLICABILITY_ARMS) == {'B', 'ORACLE', 'ORACLE_WM'} and set(nm.ORACLE_ARMS) <= set(nm.CLAIM3A_ARMS)
+    assert set(nm.APPLICABILITY_ARMS) == {'B', 'ORACLE', 'ORACLE_WM', 'LEARNED_TRIGGER'}
+    assert set(nm.BANK_ARMS) <= set(nm.CLAIM3A_ARMS) and 'oracle_LEARNED_TRIGGER' in nm.quote('mappo_u0')['need_ceiling']
+
+
+def test_learned_trigger_arm_binds_its_pinned_model_and_validates_its_receipts(panel, tmp_path, monkeypatch):
+    """Amendment 26: LEARNED_TRIGGER = ORACLE_WM executor + frozen classifier admission; model doc sealed with the
+    bank in ORACLE_BINDING.json; the registered digest is checked on every record."""
+    f = make(tmp_path, panel)
+    monkeypatch.setattr(nm, 'SETTING', 'p20x')
+    u0 = dict(kind='u0_transferred_d9042cc5', label='u0', path='/x/it168.pt', sha256='e'*64, binding_sha256='f'*64,
+              binding_path='/x/b.json', residual_path='/x/A_checkpoint_000.pt', residual_sha256='c'*64)
+    bare = nm.seal(dict(bank=dict(path='/x/bank.json', file_sha256='b'*64), oracle_sha256='d'*64), 'receipt_sha256')
+    with pytest.raises(nm.Blocked, match='learned_trigger_model'):
+        nm.episode_specs('LEARNED_TRIGGER', panel, f['cfg'], f['root'], 'mappo_u0', bare, u0)
+    model = dict(path='/x/ops/learned_trigger/LEARNED_TRIGGER_MODEL.json', file_sha256=nm.LEARNED_MODEL_SHA256)
+    binding = nm.seal(dict(bank=dict(path='/x/bank.json', file_sha256='b'*64), oracle_sha256='d'*64,
+                           learned_trigger_model=model), 'receipt_sha256')
+    spec = nm.episode_specs('LEARNED_TRIGGER', panel, f['cfg'], f['root'], 'mappo_u0', binding, u0)[0]
+    ck = spec['checkpoint']
+    assert ck['kind'] == 'learned_trigger' and (ck['arm'], ck['update']) == ('A', 0) and ck['learned_trigger_model'] == model
+    assert ck['learned_trigger_sha256'] == nm.LEARNED_TRIGGER_SHA256 and 'oracle_plan_source' not in ck
+    assert ck['oracle_bank'] == dict(path='/x/bank.json', file_sha256='b'*64) and spec['capture'] is None
+    good = nm.fake_episode(spec)
+    assert nm.check_episode(good, spec)['learned_trigger_sha256_loaded'] == nm.LEARNED_TRIGGER_SHA256
+    for mutate, match in ((lambda r: r.update(learned_trigger_sha256_loaded='0'*64), 'learned_trigger actually'),
+                          (lambda r: r.pop('learned_trigger'), 'learned_trigger receipts missing'),
+                          (lambda r: r.update(oracle={}), 'outside an ORACLE arm')):
+        bad = deepcopy(good)
+        mutate(bad)
+        with pytest.raises(nm.Blocked, match=match):
+            nm.check_episode(bad, spec)
+    native = nm.episode_specs('NATIVE', panel, f['cfg'], f['root'], 'mappo_u0')[0]
+    with pytest.raises(nm.Blocked, match='outside the LEARNED_TRIGGER arm'):
+        nm.check_episode(dict(nm.fake_episode(native), learned_trigger={}), native)
