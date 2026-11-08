@@ -166,8 +166,6 @@ def update(cfg, arm, u, *, smoke=False):
     artifacts = root/'smoke' if smoke else root
     native = production.backend_config(cfg, root=artifacts, smoke=smoke)
     native['update'] = u
-    from .bank_growth import update_view as bank_growth_view
-    native, bank_growth = bank_growth_view(native, arm, u, smoke=smoke)   # c4/learnfix (opt-in; absent = no-op)
     from . import g4_runtime as g4
     paired_credit = arm != 'A' and g4.enabled(native, u, smoke=smoke)
     health(root)
@@ -181,6 +179,9 @@ def update(cfg, arm, u, *, smoke=False):
         # B has frozen its practice plan/count before R starts; neither arm
         # optimizes until both complete ordinary-training inputs are published.
         wait_for(g4.input_path(native, 'B', u), root)
+    # c4/learnfix bank growth (opt-in; absent = no-op): AFTER the waits, so B has frozen the update's snapshot
+    from .bank_growth import update_view as bank_growth_view
+    native, bank_growth = bank_growth_view(native, arm, u, smoke=smoke)
     started = dict(arm=arm, update=u, pid=os.getpid(), unix=time.time(),
                    config_sha256=digest(cfg), smoke=smoke)
     write(_resume_name(artifacts/f'updates/{arm}_{u:03}_STARTED.json'), started)
