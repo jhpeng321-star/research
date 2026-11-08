@@ -186,7 +186,8 @@ def test_dry_run_end_to_end_is_zero_physics(panel, tmp_path, monkeypatch, base):
     assert secondary['update'] == 24 and secondary['evaluation'] == 'SECONDARY (u24)' and 'B_u024' in secondary['sources']
     assert secondary['tables']['arms']['B']['label'].startswith('B u24')
     t = claim3a['tables']
-    arms = set(nm.CLAIM3A_ARMS)
+    arms = set(nm.CLAIM3A_ARMS)-set(nm.ORACLE_ARMS)          # oracle arms: p20x primary only (amendment 25b)
+    assert not set(nm.ORACLE_ARMS) & set(t['arms']) and not set(nm.ORACLE_ARMS) & set(claim3a['missing'])
     assert t['base']['alias_of'] == alias and t['arms'][alias]['label'].endswith('= BASE')
     assert set(t['total_benefit']['vs_NATIVE']['rows']) == arms-{'NATIVE'}
     assert set(t['total_benefit']['vs_BASE']['rows']) == arms-{alias}
@@ -265,7 +266,8 @@ def test_runner_without_decision_branches_never_blocks_the_evaluation(panel, tmp
 
 def test_the_real_runner_module_satisfies_the_contract():
     status = nm.Runtime().runner_status()
-    assert status == dict(ok=True, native=True, decisions=False, lane=True, rule=True, rule_fair=True, parity=True, reason=None)
+    assert status == dict(ok=True, native=True, decisions=False, lane=True, rule=True, rule_fair=True, parity=True,
+                          oracle=True, reason=None)                         # oracle: amendment 25b runner arms
     status = nm.Runtime('tools.coopmwm.no_such_nm_runner').runner_status()
     assert status['ok'] is False and 'not importable' in status['reason']
 
@@ -1315,9 +1317,11 @@ def test_p20x_panel_uses_fresh_eval_only_held_out_integers(p20x):
 
 
 def test_p20x_single_panel_prerun(p20x, tmp_path, monkeypatch):
-    with pytest.raises(nm.Blocked, match='sub-cap would be exceeded'):     # the B/R main run needs MAIN's raise
+    assert nm.ALLOCATION_SIM_S == 1_974_720                                 # MAIN 23:27 raise (2,700,000 final-eval)
+    monkeypatch.setattr(nm, 'ALLOCATION_SIM_S', 1_026_520)                  # the pre-raise p20x allocation
+    with pytest.raises(nm.Blocked, match='sub-cap would be exceeded'):
         nm.dry_run(out=tmp_path/'small', panel=p20x)
-    monkeypatch.setattr(nm, 'ALLOCATION_SIM_S', 3_000_000)
+    monkeypatch.setattr(nm, 'ALLOCATION_SIM_S', 1_974_720)
     result = nm.dry_run(out=tmp_path/'out', panel=p20x)
     plan = json.loads((Path(result['final_root'])/nm.PRERUN_FILE).read_text())
     assert plan['setting'] == 'p20x' and plan['cap_sim_s'] == 576_000 and plan['panel_3c_sha256'] is None
