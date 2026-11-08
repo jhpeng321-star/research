@@ -13,8 +13,9 @@ Opt-in by the registered ``learnfix`` config value (absent = every path byte-ide
    - the local delay reward stays per row; advantage = return - recorded value (+ G4 terms), then a per-cell
      baseline (mean over that cell's choice rows) is subtracted and the result is normalised over choice rows;
      rows without a choice get advantage 0;
-   - ``epochs`` epochs over minibatches of ``minibatch_ticks`` decision ticks, order from a SEPARATE seeded
-     generator (the shared episode RNG is never consumed);
+   - ``epochs`` epochs over minibatches of ``minibatch_ticks`` decision ticks (more, up to ``max_epochs``, only
+     while the choice-row KL is below ``kl_floor`` - LEARNCHECK 2026-11-09: a minimum update size), order from a
+     SEPARATE seeded generator (the shared episode RNG is never consumed);
    - the KL cap (layer kl_budget, 0.045) and the reported KL are the mean over CHOICE rows; a step over the cap
      is reverted and the PPO update stops;
    - entropy weight = min(registered, entropy_frac * RMS(adv) / mean H) so the entropy term is < 10% of |adv|.
@@ -27,10 +28,10 @@ import torch
 RULE = ('c4/learnfix v3 (MAIN 2026-11-08/09, LEARNDIAG + LEARNCHECK): EV-BC act / explicit-teacher-none / unlabelled '
         'labels with equal act:none total weight (row weight <= 1); trigger PPO: acting rows get the signed paired '
         'outcome net = A_J - B_J (delay + fairness excess) minus a running per-cell baseline, non-acting rows local '
-        'reward only, per-cell '
+        'reward only, epochs >= 4 (up to max_epochs while choice KL < kl_floor), per-cell '
         'baseline + choice-row normalised advantages, epochs x minibatches of decision ticks (separate seeded '
         'order), choice-row KL cap and report, entropy weight capped at entropy_frac x RMS(adv) / mean H')
-DEFAULT = dict(epochs=4, minibatch_ticks=32, entropy_frac=0.1, row_weight_cap=1.0)
+DEFAULT = dict(epochs=4, minibatch_ticks=32, entropy_frac=0.1, row_weight_cap=1.0, max_epochs=12, kl_floor=0.01)
 
 
 def value(**overrides):
@@ -44,6 +45,8 @@ def settings(cfg):
         return None
     if (not isinstance(raw, dict) or raw.get('rule') != RULE or set(raw) != set(DEFAULT) | {'rule'}
             or type(raw['epochs']) is not int or not 1 <= raw['epochs'] <= 16
+            or type(raw['max_epochs']) is not int or not raw['epochs'] <= raw['max_epochs'] <= 32
+            or not 0 <= float(raw['kl_floor']) < 0.045
             or type(raw['minibatch_ticks']) is not int or not 1 <= raw['minibatch_ticks'] <= 4096
             or not 0 < float(raw['entropy_frac']) <= 1 or not 0 < float(raw['row_weight_cap']) <= 1):
         raise ValueError('learnfix needs the registered rule, epochs (1..16), minibatch_ticks, entropy_frac '
@@ -176,7 +179,9 @@ def trigger_ppo(policy, optimizer, ticks, *, settings, ppo, kl_budget, seed):
     params = policy.learning_parameters()
     steps, stopped = [], None
     size = settings['minibatch_ticks']
-    for epoch in range(settings['epochs']):
+    for epoch in range(settings['max_epochs']):
+        if epoch >= settings['epochs'] and (not steps or steps[-1]['choice_kl'] >= settings['kl_floor']):
+            break          # registered epochs done and the choice-row KL floor reached
         order = torch.randperm(len(ticks), generator=gen).tolist()
         for start in range(0, len(order), size):
             mb = [ticks[i] for i in order[start:start+size]]

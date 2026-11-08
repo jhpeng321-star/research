@@ -119,6 +119,8 @@ def test_train_learnfix_receipt_kl_cap_entropy_and_rng(cfg, monkeypatch, fix):
                                                          if s['accepted'])
     assert r['entropy_weight'] <= .1*r['adv_rms']/max(r['mean_entropy'], 1e-6)+1e-12
     assert r['entropy_weight'] <= cfg['trigger_ppo']['entropy_weight']
-    assert {s['epoch'] for s in r['steps']} <= set(range(4)) and all(s['ticks'] <= 4 for s in r['steps'])
+    epochs = {s['epoch'] for s in r['steps']}
+    assert epochs <= set(range(12)) and all(s['ticks'] <= 4 for s in r['steps'])
+    assert max(epochs) < 4 or all(s['choice_kl'] < .01 for s in r['steps'] if s['epoch'] < max(epochs))  # floor rule
     net = report['learnfix_net']
     assert [e['net_veh_s'] for e in net['episodes']] == [50.-10*k for k in (0, 1, 10, 11, 2, 3, 4, 5, 6, 7, 8, 9)]
