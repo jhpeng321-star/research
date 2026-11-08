@@ -283,11 +283,46 @@ C5_CELLS = ('D2800_p20', 'D3200_p20', 'D3200_p40')
 C5_PATTERN = ('D3200_p20', 'D2800_p20', 'D3200_p40')*2+('D3200_p20', 'D2800_p20')
 
 
+D2800_CELLS = ('D2800_p20',)   # owner 2026-11-08 ~23:1x: CLEAN5C5 and F8V train on D2800_p20 ONLY (8 episodes/update)
+CELL_SETS = (P20_CELLS, P20_HM_CELLS, C5_CELLS, D2800_CELLS)
+FINAL_EXTERNAL_RULE = ('MAIN 2026-11-08 ~23:1x: no in-run v2v_final phase; the final evaluation is the N6 sealed panel '
+                       '(chain coverage needs v2v_final = 0)')
+
+
 def _check_p20_cells(cells):
     got = tuple(sorted(cells))
-    if got not in (P20_CELLS, P20_HM_CELLS, C5_CELLS):
-        raise ValueError('p20 cells must be exactly '+repr(P20_CELLS)+', '+repr(P20_HM_CELLS)+' or '+repr(C5_CELLS))
+    if got not in CELL_SETS:
+        raise ValueError('p20 cells must be exactly one of '+repr(CELL_SETS))
     return got
+
+
+def cells_view(doc, cells):
+    """The guidance doc restricted to the training cells (rows, clean5c templates / verified cells); unchanged when
+    nothing lies outside; otherwise re-hashed with the parent cited (MAIN: the UNION bank, only the training-cell
+    rows are used). Fail closed when no row is left."""
+    import copy
+    from .fullpol_learn import guidance_doc
+    cells = set(cells)
+    c = doc.get('clean5c') or {}
+    if {r['regime'] for r in doc['rows']} <= cells and all(t['cell'] in cells for t in c.get('templates', ())):
+        return doc
+    rows = [copy.deepcopy(r) for r in doc['rows'] if r['regime'] in cells]
+    if not rows:
+        raise ValueError('guidance has no rows in the training cells '+repr(sorted(cells)))
+    out = guidance_doc(rows, sources=list(doc['source']['sources'])+[dict(
+        name='parent guidance (training-cell view)', sha256=doc['source']['sha256'], baseline='mappo', role='parent')],
+        provenance=doc['provenance']+' | training-cell view '+','.join(sorted(cells)), weight=doc['weight'],
+        clip=doc['clip'])
+    out['source']['rule'] = doc['source'].get('rule', out['source']['rule'])
+    for k in set(doc)-set(out):
+        out[k] = copy.deepcopy(doc[k])
+    if 'clean5c' in out:
+        out['clean5c']['templates'] = [t for t in c.get('templates', ()) if t['cell'] in cells]
+        out['clean5c']['verified_cells'] = sorted(set(c.get('verified_cells', ())) & cells)
+    if 'p20' in out:
+        out['p20']['cells'] = {k: v for k, v in out['p20']['cells'].items() if k in cells}
+    out['cells_view'] = dict(cells=sorted(cells), parent_rows_sha256=doc['source']['sha256'])
+    return out
 
 
 def cell_pattern(cells):
@@ -397,7 +432,7 @@ def check_p20_guidance(doc, cells, *, wm):
     cells = set(_check_p20_cells(cells))
     p20 = doc.get('p20') or {}
     regimes = {r['regime'] for r in doc['rows']}
-    if (p20.get('rule') != P20_PRIORITY_RULE or sorted(p20.get('cells') or ()) != sorted(cells) or not regimes <= cells
+    if (p20.get('rule') != P20_PRIORITY_RULE or not cells <= set(p20.get('cells') or ()) or not regimes <= cells
             or any(not r.get('p20_label') or r.get('fair') is not True for r in doc['rows'])):
         raise ValueError('p20 guidance must be p20-selected for the training cells (ops/p20_guidance.py)')
     if wm:
@@ -407,21 +442,23 @@ def check_p20_guidance(doc, cells, *, wm):
     elif not {r['family'] for r in doc['rows']} <= set(P20_RULE_FAMILIES) or 'clean5c' in doc:
         raise ValueError('p20 rule guidance must be the LOWCAV families '+repr(P20_RULE_FAMILIES)+' only')
     none = tuple(sorted(cells-regimes))
-    if none != tuple(c for c, v in sorted(p20['cells'].items()) if v['source'] == 'none'):
+    if none != tuple(c for c, v in sorted(p20['cells'].items()) if v['source'] == 'none' and c in cells):
         raise ValueError('p20 guidance labels disagree with its rows')
     return none
 
 
-def _p20_variant(base, cells, g4_workers, *, label, wm, doc, overrides, learnfix=True, bank_growth_control=None):
+def _p20_variant(base, cells, g4_workers, *, label, wm, doc, overrides, learnfix=True, bank_growth_control=None,
+                 final_external=False):
     none = check_p20_guidance(doc, cells, wm=wm)
-    sources = ({c: v['source'] for c, v in doc['p20']['cells'].items()} if doc.get('situational') is None else
+    sources = ({c: v['source'] for c, v in doc['p20']['cells'].items() if c in cells} if doc.get('situational') is None else
                {c: ('wm_situational' if c not in none else 'none') for c in cells})
     note = P20_NOTE+f' {label}: per-cell guidance source {sources}.'
     return dict(base, cell_keys=cells, worlds=lambda: worlds_by_update_8(cell_pattern(cells)), guidance_missing_ok=none,
                 cfg_overrides=dict(overrides, g4_workers=g4_workers,
                                    **({'learnfix': _learnfix_value()} if learnfix else {}),
                                    **({} if bank_growth_control is None else {'bank_growth': _bank_growth_value(
-                                       bank_growth_control)})),
+                                       bank_growth_control)}),
+                                   **({'final_eval_external': FINAL_EXTERNAL_RULE} if final_external else {})),
                 design=base['design']+' '+note+(' '+LEARNFIX_NOTE if learnfix else ''),
                 authority=base['authority']+'; '+note,
                 newmap_extra=dict(base['newmap_extra'], variant=label, p20_note=note, no_guidance_cells=list(none),
@@ -444,20 +481,23 @@ def _bank_growth_value(control):
 
 
 def prepare_f8_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS, learnfix=True,
-                   **kwargs):
+                   final_external=False, **kwargs):
     """Rule-guided p20 (F8 code; B = LOWCAV duo12 / wall_g_solo2 EV-BC where eligible, R = none)."""
     cells = _check_p20_cells(cells)
+    guidance_doc = cells_view(guidance_doc, cells)
     variant = _p20_variant(VARIANT_F8, cells, g4_workers, label='clean5b-F8-p20', wm=False, doc=guidance_doc,
-                           overrides=VARIANT_F8['cfg_overrides'], learnfix=learnfix)
+                           overrides=VARIANT_F8['cfg_overrides'], learnfix=learnfix, final_external=final_external)
     return c5.prepare(source, root=root, variant=variant, guidance_doc=guidance_doc, **kwargs)
 
 
 def prepare_c_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS,
-                  learn_threads_max=C_LEARN_THREADS_MAX, learnfix=True, bank_growth_control=None, **kwargs):
+                  learn_threads_max=C_LEARN_THREADS_MAX, learnfix=True, bank_growth_control=None, final_external=False,
+                  **kwargs):
     """WM-guided p20 (clean5c code; B = WMVERIFY-verified p20 WM plans, rule fallback labelled, R = none;
     B and R the same templates)."""
     cells = _check_p20_cells(cells)
+    guidance_doc = cells_view(guidance_doc, cells)
     variant = _p20_variant(VARIANT_C, cells, g4_workers, label='clean5c-p20', wm=True, doc=guidance_doc,
                            overrides=_c_overrides(g4_workers, learn_threads_max), learnfix=learnfix,
-                           bank_growth_control=bank_growth_control)
+                           bank_growth_control=bank_growth_control, final_external=final_external)
     return c5.prepare(source, root=root, variant=variant, guidance_doc=guidance_doc, **kwargs)

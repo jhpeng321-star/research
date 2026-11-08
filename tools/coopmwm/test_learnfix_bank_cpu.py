@@ -107,3 +107,47 @@ def test_settings_and_load_registration(tmp_path):
         demo_bc.load(p)
     with pytest.raises(ValueError, match='sha256'):
         demo_bc.load(p, '0'*64)
+
+
+UNION = Path('E:/research-dense/runs/active/C4-V7FT-20261017/wmverify_r3/GUIDANCE_C4SIT_priv_UNION_r3.json')
+
+
+def test_d2800_only_cells_and_training_cell_view():
+    assert c5b._check_p20_cells(['D2800_p20']) == c5b.D2800_CELLS
+    w = c5b.worlds_by_update_8(c5b.cell_pattern(c5b.D2800_CELLS))
+    assert all(len(rows) == 8 and {r['cell_key'] for r in rows} == {'D2800_p20'} for rows in w.values())
+    doc = json.loads(DOC.read_bytes())
+    assert c5b.cells_view(doc, c5b.P20_CELLS) is doc                       # nothing outside: unchanged
+    grown = dict(doc, rows=doc['rows']+[dict(doc['rows'][0], regime='D3200_p20')])
+    v = c5b.cells_view(grown, c5b.D2800_CELLS)
+    assert {r['regime'] for r in v['rows']} == {'D2800_p20'} and v['cells_view']['parent_rows_sha256'] == grown['source']['sha256']
+    assert c5b.check_p20_guidance(v, c5b.D2800_CELLS, wm=True) == ()
+    with pytest.raises(ValueError, match='no rows'):
+        c5b.cells_view(grown, ('D3200_p40',))
+
+
+@pytest.mark.skipif(not UNION.exists(), reason='UNION doc (research tree) not present')
+def test_union_bank_d2800_view_passes():
+    doc = json.loads(UNION.read_bytes())
+    v = c5b.cells_view(doc, c5b.D2800_CELLS)
+    assert sorted(r['family'] for r in v['rows']) == ['duo12_v20', 'mut_006c290e03ad3d3c', 'mut_0d50e4e18041530d',
+                                                      'mut_6c2bf382711cbc37']
+    assert c5b.check_p20_guidance(v, c5b.D2800_CELLS, wm=True) == ()
+
+
+def test_chain_coverage_episodes_and_external_final(monkeypatch):
+    import importlib
+    from .test_clean5b_restart_cpu import _chain_module
+    mod = _chain_module()
+    c4m = importlib.import_module('tools.coopmwm.clean4_restart')
+    phases = dict(v2v_train=10**9, v2v_lessons=10**9, early_probes=10**9, isolated_replicated=10**9, v2v_final=0,
+                  gate_bank_verification_ext=10**9, track2_smoke=10**9)
+    monkeypatch.setattr(c4m, 'checked', lambda cfg: dict(phases=phases, g4_cap_sim_s=230400))
+    cfg = dict(clean4_restart=dict(diagnostic_quotes=dict(probe_u002=1, probe_u004=1, replicated_u006=1,
+               replicated_u012=1, replicated_u024=1), lesson_quotes={}, gate_sim_s=1),
+               practice_weighting=dict(fraction=0.), clean2_smoke_reporting_quote=dict(complete_smoke_sim_s=1),
+               worlds_by_update={'1': [{}]*8})
+    with pytest.raises(ValueError, match='v2v_final'):
+        mod.coverage(cfg)
+    r = mod.coverage(dict(cfg, final_eval_external=c5b.FINAL_EXTERNAL_RULE))
+    assert r['need']['v2v_final'] == 0 and r['need']['v2v_train'] == 24*3*8*1200

@@ -52,9 +52,13 @@ def sequence(steps, status):
         raise
 
 
-def coverage(cfg, *, episodes_per_update=16, episode_sim_s=1200):
-    """Assert every clean4 phase covers its full u1-u24 schedule from the native manifests; refuse otherwise."""
+def coverage(cfg, *, episodes_per_update=None, episode_sim_s=1200):
+    """Assert every clean4 phase covers its full u1-u24 schedule from the native manifests; refuse otherwise.
+    c4/learnfix (MAIN): episodes per update = the registered worlds of u1 (8 in F8/clean5c, 16 in clean5b); the
+    v2v_final need is 0 when the config registers the external final evaluation (final_eval_external)."""
     from tools.coopmwm.clean4_restart import checked
+    if episodes_per_update is None:
+        episodes_per_update = len(cfg['worlds_by_update']['1'])
     phases = checked(cfg)['phases']
     r = cfg['clean4_restart']
     q, lessons = r['diagnostic_quotes'], r['lesson_quotes']
@@ -63,7 +67,7 @@ def coverage(cfg, *, episodes_per_update=16, episode_sim_s=1200):
     need = dict(v2v_train=UPDATES*per_update, v2v_lessons=sum(lessons.values()),
         early_probes=q['probe_u002']+q['probe_u004'],
         isolated_replicated=sum(q[f'replicated_u{u:03}'] for u in (6, 12, 24)),
-        v2v_final=1_020_960, gate_bank_verification_ext=r['gate_sim_s'],
+        v2v_final=0 if cfg.get('final_eval_external') else 1_020_960, gate_bank_verification_ext=r['gate_sim_s'],
         track2_smoke=cfg['clean2_smoke_reporting_quote']['complete_smoke_sim_s'],
 )
     if checked(cfg).get('g4_cap_sim_s') != 230400:
@@ -142,7 +146,7 @@ class Chain:
             # p20 (owner 2026-11-08 17:22): PREPARE_INPUTS cells (list) -> the p20 prepare of F8 / C; g4_workers for both
             if self.variant not in ('F8', 'C'):
                 raise ValueError('PREPARE_INPUTS cells needs variant F8 or C')
-            speed = dict({k: i[k] for k in ('g4_workers', 'learnfix') if k in i},
+            speed = dict({k: i[k] for k in ('g4_workers', 'learnfix', 'final_external') if k in i},
                          **({'bank_growth_control': i['bank_growth_control']} if self.variant == 'C' and i.get('bank_growth_control') else {}), cells=tuple(i['cells']),
                          **({'learn_threads_max': i['learn_threads_max']} if self.variant == 'C' and 'learn_threads_max' in i else {}))
             prepares = dict(F8=c5.prepare_f8_p20, C=c5.prepare_c_p20)
