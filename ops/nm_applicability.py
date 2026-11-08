@@ -141,7 +141,8 @@ def label(*, final_root, panels, bank_path, tag, functions=None):
     if target.exists():
         return nm.verify(nm.read(target), 'receipt_sha256', target.name)
     trained = [p.name for p in final_root.glob('WAVE_*.json') if any(
-        p.name.startswith(f'WAVE_{pre}{a}_u') for a in OUTCOME_ARMS for pre in ('', 'C3_'))]
+        p.name.startswith(f'WAVE_{pre}{a}_u') for a in OUTCOME_ARMS for pre in ('', 'C3_'))
+        or any(p.name.startswith(f'WAVE_{a}') for a in nm.BANK_ARMS)]          # amendment 27: before bank outcomes
     if trained:
         raise nm.Blocked(f'trained-run waves already exist ({trained[:3]}): labels must precede every B outcome')
     if functions is None:
@@ -191,7 +192,8 @@ def main(argv=None):
         from tools.coopmwm.nm_eval_runner import install_eval_ranges
         install_eval_ranges(map_scenarios)
     panel, panel_3c = nm.load_panel(), nm.load_panel_3c()
-    value = label(final_root=a.final_root, panels=[(panel, ''), (panel_3c, 'C3_')], bank_path=a.bank, tag=a.tag)
+    panels = [(x, pre) for x, pre in ((panel, ''), (panel_3c, 'C3_')) if x is not None]   # p20x: one panel (23b)
+    value = label(final_root=a.final_root, panels=panels, bank_path=a.bank, tag=a.tag)
     print(json.dumps(dict(receipt_sha256=value['receipt_sha256'], cells=value['cells']), indent=1))
     return 0
 
