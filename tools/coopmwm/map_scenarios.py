@@ -55,7 +55,9 @@ EXTRA_TRAIN_RANGES = ((989000, 989099),
                       (989950, 989999),
                       # c4/wmverify only - S-WMVERIFY 12-seed p20 verification (MAIN 2026-11-08 allocation from the
                       # multicrit block; MULTICRIT used 991100-991132): 991140-991199, TRAIN-type, never evaluation.
-                      (991140, 991199))
+                      (991140, 991199),
+                      # c4/wmverify only - S-WMVERIFY r4 (MAIN 2026-11-08): 991200-991299, audited unused, TRAIN-type.
+                      (991200, 991299))
 HELDOUT_RANGE = (989600, 989699)
 FORBIDDEN_RANGES = ((964000, 964199), (962000, 962999), (977000, 977999))
 EPISODE_S = 1200
