@@ -1268,17 +1268,16 @@ class ArmRuntime:
         from . import learnfix
         fix = learnfix.settings(cfg)              # c4/learnfix (opt-in; absent = unchanged)
         fair_receipt = None
-        if (fair_settings(cfg) or {}).get('reward'):
+        net_receipt = None
+        if fix is not None:
+            # learnfix v3: signed paired outcome vs A on acting rows (fairness excess included when registered)
+            targets, net_receipt, fair_receipt = self._learnfix_net(episodes, by_key, targets)
+        elif (fair_settings(cfg) or {}).get('reward'):
             # clean5b-F (opt-in, B = R): excess group-delay harm vs the frozen A arm on the same world,
             # added one-for-one (veh-s) to the episode cost; eval-only logger, never a policy input.
             from . import fullpol_fair
             harm, fair_receipt = fullpol_fair.penalties(cfg, arm, episodes, fullpol_fair.reference(cfg, self.update))
-            if fix is None:
-                targets = fullpol_fair.apply(targets, harm)
-            else:
-                # learnfix: the paired-A harm goes only to the rows where a non-none trigger action was taken
-                targets, attributed = learnfix.apply_fair_acting(targets, harm, learnfix.acting_rows(by_key))
-                fair_receipt = dict(fair_receipt, attribution='acting_rows (learnfix)', attributed=attributed)
+            targets = fullpol_fair.apply(targets, harm)
         returns, advantages = self._temporal_targets(episodes, targets)
         from .fullpol_learn import ev_credit_terms
         ev_terms, ev_receipt = ev_credit_terms(cfg, arm, episodes, eligible={
@@ -1373,6 +1372,7 @@ class ArmRuntime:
             **(dict(rsu=rsu_metrics) if rsu_metrics is not None else {}),
             **(dict(fullpol_ev_credit=ev_receipt) if ev_receipt is not None else {}),
             **(dict(learnfix=learnfix_receipt) if learnfix_receipt is not None else {}),
+            **(dict(learnfix_net=net_receipt) if net_receipt is not None else {}),
             layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
             wm_credit=dict(enabled=False), reward=dict(schema=REWARD_SCHEMA,
                 registration=deepcopy(cfg['track2_reward']),
@@ -1383,6 +1383,37 @@ class ArmRuntime:
                     trigger_advantage='return minus recorded per-CAV trigger value',
                     terminal='zero at episode end, terminal tick or CAV departure')),
             bank=bank, bank_summary=bank_summary)
+
+    def _learnfix_net(self, episodes, by_key, targets):
+        """learnfix v3: net = A_J - B_J per ordinary episode (J = team_delay_vs over the control window + the
+        registered fairness excess vs the same-world frozen A episode), attributed to acting rows with a running
+        per-cell baseline (previous update's receipt). Practice / unpaired replacements: no net term."""
+        from . import learnfix
+        from .accel_storage import read
+        from .fullpol_fair import settings as fair_settings
+        from .fullpol_learn import regime_key
+        cfg = self.cfg
+        root = _path(cfg['run_root'])
+        ident = cfg.get('job_namespace', 'clean1')+f'_warm_u{self.update:03}'
+        ordinary = [e for e in episodes if not e.get('practice') and not e.get('fair_unpaired_replacement')]
+        harm, fair_receipt = {}, None
+        if (fair_settings(cfg) or {}).get('reward'):
+            from . import fullpol_fair
+            harm, fair_receipt = fullpol_fair.penalties(cfg, self.arm, episodes, fullpol_fair.reference(cfg, self.update))
+            fair_receipt = dict(fair_receipt, attribution='inside net = A_J - B_J (learnfix v3)')
+        net = {}
+        for e in ordinary:
+            a = read(_path(root/'jobs'/f'{ident}_A_{e["world"]["seed"]}'/'RESULT.json'))
+            a_j = float(a['totals']['team_delay_vs'])
+            b_j = float(e['totals']['team_delay_vs'])+float(harm.get(e['id'], 0.))
+            net[e['id']] = a_j-b_j
+        previous = None
+        prior = root/f'{self.arm}_UPDATE_{self.update-1:03}.json'
+        if self.update > 1 and prior.exists():
+            previous = ((read(_path(prior)).get('learning') or {}).get('learnfix_net') or {}).get('running_baseline')
+        targets, receipt = learnfix.apply_net_acting(targets, net, learnfix.acting_rows(by_key),
+                                                     {e['id']: regime_key(e) for e in episodes}, previous)
+        return targets, receipt, fair_receipt
 
     def _reward_targets(self, envelope, by_key, eligible):
         from . import track2_safety_reward as safety

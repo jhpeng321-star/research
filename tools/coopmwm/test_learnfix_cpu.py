@@ -27,17 +27,20 @@ def test_balance_equal_totals_and_cap():
     assert lf.balance(['none']*50) == dict(act=0., none=0.)                  # lone none labels: never pushed
 
 
-def test_fairness_harm_lands_on_the_acting_rows_only():
-    """Example: episode e1 harmed groups by 300 veh-s vs its paired A episode; only the two rows that took a
-    non-none trigger action carry it (150 each); passive rows and the harmless episode keep their local reward."""
-    targets = {('e1', 300): [-1., -1.], ('e1', 301): [-1., -1.], ('e2', 300): [-1.]}
-    acting = {('e1', 300): [True, False], ('e1', 301): [False, True], ('e2', 300): [True]}
-    out, receipt = lf.apply_fair_acting(targets, {'e1': 300., 'e2': 0.}, acting)
-    assert out == {('e1', 300): [-151., -1.], ('e1', 301): [-1., -151.], ('e2', 300): [-1.]}
-    assert receipt == [dict(episode_id='e1', harm_veh_s=300., acting_rows=2, attributed=True),
-                       dict(episode_id='e2', harm_veh_s=0., acting_rows=1, attributed=False)]
-    out, receipt = lf.apply_fair_acting(targets, {'e1': 300.}, {k: [False]*len(v) for k, v in targets.items()})
-    assert out == targets and receipt[0]['attributed'] is False              # nobody acted: no PPO harm
+def test_net_outcome_credit_signed_on_acting_rows_with_running_baseline():
+    """Acting rows get net = A_J - B_J (delay + fairness excess) minus the running per-cell baseline; non-acting rows
+    keep their local reward. Example: e1 (acted, 300 veh-s worse than its paired A episode, e.g. harmful fairness
+    excess) is penalised on its two acting rows; e2 (acted, 100 better) is credited; e3 did not act."""
+    targets = {('e1', 300): [-1., -1.], ('e1', 301): [-1., -1.], ('e2', 300): [-1.], ('e3', 300): [-1.]}
+    acting = {('e1', 300): [True, False], ('e1', 301): [False, True], ('e2', 300): [True], ('e3', 300): [False]}
+    cells = dict(e1='D2800_p20', e2='D2800_p20', e3='D2800_p20')
+    out, r = lf.apply_net_acting(targets, {'e1': -300., 'e2': 100., 'e3': -100.}, acting, cells)
+    assert r['running_baseline'] == {'D2800_p20': -100.} and r['previous_baseline'] == {}
+    assert out[('e1', 300)] == [-1.-100., -1.] and out[('e1', 301)] == [-1., -1.-100.]   # (-300 - -100) / 2
+    assert out[('e2', 300)] == [-1.+200.] and out[('e3', 300)] == [-1.]                    # credit; non-acting
+    out, r = lf.apply_net_acting(targets, {'e2': 100.}, acting, cells, previous={'D2800_p20': -100., 'D3200_p20': 5.})
+    assert r['running_baseline'] == {'D2800_p20': 0., 'D3200_p20': 5.}                     # .5 * -100 + .5 * 100
+    assert out[('e2', 300)] == [-1.+100.]
 
 
 class _B:
@@ -79,11 +82,16 @@ def test_ev_labels_act_explicit_none_unlabelled():
 
 
 def _episodes(cfg, n):
+    import json
+    from pathlib import Path
     _, s, _ = sample(cfg)
     episodes, rows = [], []
     for k in range(n):
         episodes.append(dict(id=f'ep{k}', arm='B', world=dict(cell_key='D2800_p20', seed=k),
-                             steps=[dict(time_s=300, sample=deepcopy(s))]))
+                             totals=dict(team_delay_vs=1000.+10*k), steps=[dict(time_s=300, sample=deepcopy(s))]))
+        a = Path(cfg['run_root'])/'jobs'/f'clean1_warm_u001_A_{k}'
+        a.mkdir(parents=True, exist_ok=True)
+        (a/'RESULT.json').write_text(json.dumps(dict(totals=dict(team_delay_vs=1050.))))
         for r in reward_result(cfg, s)['rows']:
             rows.append(dict(r, episode_id=f'ep{k}'))
     return episodes, dict(reward_result(cfg, s), rows=rows)
@@ -112,3 +120,5 @@ def test_train_learnfix_receipt_kl_cap_entropy_and_rng(cfg, monkeypatch, fix):
     assert r['entropy_weight'] <= .1*r['adv_rms']/max(r['mean_entropy'], 1e-6)+1e-12
     assert r['entropy_weight'] <= cfg['trigger_ppo']['entropy_weight']
     assert {s['epoch'] for s in r['steps']} <= set(range(4)) and all(s['ticks'] <= 4 for s in r['steps'])
+    net = report['learnfix_net']
+    assert [e['net_veh_s'] for e in net['episodes']] == [50.-10*k for k in (0, 1, 10, 11, 2, 3, 4, 5, 6, 7, 8, 9)]
