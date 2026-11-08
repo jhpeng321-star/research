@@ -107,9 +107,16 @@ def test_recorded_result_no_admission_and_check():
     assert best and all('not_fairness_allowed' in p['reasons'] for p in best)
     assert not (C4SIT/'GUIDANCE_C4SIT_p20.json').exists()
     doc = dict(situational=dict(rule=fs.RULE, pairs=[dict(family='m', admitted=True)]), rows=[dict(
-        arm='B', regime='D2800_p20', family='m')], clean5c=dict(templates=[dict(cell='D2800_p20', offer_condition=dict(
+        arm='B', regime='D2800_p20', family='m', situational=dict(mode='privileged', bins=[]))], clean5c=dict(templates=[dict(cell='D2800_p20', offer_condition=dict(
             situation=dict(rule=fs.RULE, bins=[dict(cong='free', lane_diff='L2faster')])))]))
     assert c5b.check_p20_guidance(doc, c5b.P20_CELLS, wm=True) == ('D2400_p20', 'D3200_p20')
     doc['clean5c']['templates'][0]['offer_condition']['situation']['rule'] = 'v1'
     with pytest.raises(ValueError, match='CLEAN5C4'):
         fs.check(doc, c5b.P20_CELLS)
+    union = dict(doc, rows=doc['rows']+[dict(arm='B', regime='D3200_p20', family='wall_g_duo12', source='f8s_rule',
+                                              fair=True, lb95_veh_s=10.)])
+    union['clean5c']['templates'][0]['offer_condition']['situation']['rule'] = fs.RULE
+    assert fs.check(union, c5b.P20_CELLS) == ('D2400_p20',)             # union: rule rows accepted
+    with pytest.raises(ValueError, match='union'):
+        fs.check(dict(union, rows=union['rows']+[dict(arm='B', regime='D3200_p20', family='x', lb95_veh_s=1.)]),
+                 c5b.P20_CELLS)
