@@ -38,7 +38,7 @@ SCHEMA = 'coopmwm.clean4.budget.v1'
 OWNER_CAP = 12_400_000
 APPROVED = 4_000_000
 # Per-run approved envelopes on the same budget schema (runs not listed = the clean4/clean5a 4M envelope).
-APPROVED_BY_RUN = dict(clean5b=5_600_000, clean5c=5_500_000)   # MAIN 23:40 3,900,000; 03:5x 3,930,000; 06:30 3,960,000; 10:5x 4,000,000; 21:1x 4,060,000 (amendment_4); 11-08 02:0x 4,360,000 (amendment_5); 11-08 14:0x clean5b 4,650,000 (amendment_6), clean5c 3,950,000 (BUDGET_CLEAN5C amendment_1); 11-08 18:xx p20 relaunch clean5b 5,050,000 (amendment_7), clean5c 4,250,000 (amendment_2); 11-08 ~22:3x clean5c 4,700,000 (BUDGET_CLEAN5C amendment_3); clean5b 5,600,000 (amendment_8); clean5c 5,500,000 (BUDGET_CLEAN5C amendment_4)
+APPROVED_BY_RUN = dict(clean5b=5_600_000, clean5c=6_300_000)   # MAIN 23:40 3,900,000; 03:5x 3,930,000; 06:30 3,960,000; 10:5x 4,000,000; 21:1x 4,060,000 (amendment_4); 11-08 02:0x 4,360,000 (amendment_5); 11-08 14:0x clean5b 4,650,000 (amendment_6), clean5c 3,950,000 (BUDGET_CLEAN5C amendment_1); 11-08 18:xx p20 relaunch clean5b 5,050,000 (amendment_7), clean5c 4,250,000 (amendment_2); 11-08 ~22:3x clean5c 4,700,000 (BUDGET_CLEAN5C amendment_3); clean5b 5,600,000 (amendment_8); clean5c 5,500,000 (BUDGET_CLEAN5C amendment_4); clean5c 6,300,000 (amendment_5)
 CELL_KEY = 'D3200_p60'
 EVAL_PANEL_SHA256 = '3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130'
 EVAL_PANEL = dict(sha256=EVAL_PANEL_SHA256, worlds='96 worlds 989600-989695', cell=CELL_KEY, episode_s=1200,
