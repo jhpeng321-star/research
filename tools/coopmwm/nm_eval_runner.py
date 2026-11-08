@@ -341,6 +341,33 @@ def oracle_hook(ck, world, arm='ORACLE'):
     return oracle_plan.make_hook(doc, cell, plan_source=None if source == 'all' else 'wm'), loaded
 
 
+LEARNED_ARMS = ('LEARNED_TRIGGER',)            # TRIGCLF 2026-11-09 (N6 amendment 26): ORACLE_WM executor, learned admission
+
+
+def learned_trigger_hook(ck, world):
+    """LEARNED_TRIGGER: learned_trigger.make_hook on the FROZEN union bank (file sha re-verified; its WM rows, as
+    ORACLE_WM) with the frozen classifier model doc (file sha re-verified) for this world's cell_key; the executed code
+    must equal its registration (learned_trigger_digest == ck['learned_trigger_sha256']). Returns (hook, digest)."""
+    from . import learned_trigger
+    cell = world.get('cell_key')
+    if not cell or cell != ck.get('cell_key'):
+        raise ValueError('LEARNED_TRIGGER: world cell_key missing or not the bound cell_key')
+    bank = ck.get('oracle_bank') or {}
+    path = Path(bank.get('path', ''))
+    if not path.is_file() or _sha(path) != bank.get('file_sha256'):
+        raise ValueError('LEARNED_TRIGGER: bank changed after registration')
+    mdoc = ck.get('learned_trigger_model') or {}
+    mpath = Path(mdoc.get('path', ''))
+    if not mpath.is_file() or _sha(mpath) != mdoc.get('file_sha256'):
+        raise ValueError('LEARNED_TRIGGER: classifier model doc changed after registration')
+    loaded = learned_trigger.learned_trigger_digest()
+    if loaded != ck.get('learned_trigger_sha256'):
+        raise ValueError('LEARNED_TRIGGER: learned_trigger differs from its registration (learned_trigger_sha256)')
+    model = learned_trigger.load_model(mpath, mdoc['file_sha256'])
+    doc = json.loads(path.read_text(encoding='utf-8'))
+    return learned_trigger.make_hook(doc, cell, model), loaded
+
+
 def rule_hook(strategy, expected_sha256):
     import importlib
     if strategy not in RULE_STRATEGIES:
@@ -455,9 +482,9 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     ck = spec['checkpoint']
     arm, update = ck['arm'], int(ck['update'])
     executor, loaded, rule, oracle = native['checkpoint'], None, None, None
-    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED') + ORACLE_ARMS:
+    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED') + ORACLE_ARMS + LEARNED_ARMS:
         kind = dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator',
-                    ORACLE='oracle', ORACLE_WM='oracle')[spec['arm']]
+                    ORACLE='oracle', ORACLE_WM='oracle', LEARNED_TRIGGER='learned_trigger')[spec['arm']]
         if ck.get('kind') != kind or (arm, update) != ('A', 0):
             raise ValueError(f'{spec["arm"]} arm = its bound executor + the bound common u0 (zero residual)')
         # the bound zero-residual u0 (A_checkpoint_000.pt, sha re-verified), loaded by the SAME
@@ -471,6 +498,9 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
             rule = rule_hook(ck['rule'], ck['rule_sha256'])
         if spec['arm'] in ORACLE_ARMS:
             oracle = oracle_hook(ck, world, spec['arm'])
+            rule = oracle
+        if spec['arm'] in LEARNED_ARMS:
+            oracle = learned_trigger_hook(ck, world)
             rule = oracle
     else:
         path = Path(native['run_root'])/f'{arm}_checkpoint_{update:03}.pt'
@@ -508,7 +538,10 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     if loaded is not None:
         extra['executor_sha256_loaded'] = loaded
     extra['vehicle_log'] = vehicle_log
-    if oracle is not None:
+    if oracle is not None and spec['arm'] in LEARNED_ARMS:
+        extra['learned_trigger_sha256_loaded'] = oracle[1]
+        extra['learned_trigger'] = oracle[0].receipts()
+    elif oracle is not None:
         extra['oracle_sha256_loaded'] = oracle[1]
         extra['oracle'] = oracle[0].receipts()
     elif rule is not None:
@@ -1092,7 +1125,7 @@ def episode(spec, cfg, work):
         return _native_episode(spec, cfg, work)
     if spec['arm'] == 'MAPPO_LANE':
         return _mappo_lane_episode(spec, cfg, work)
-    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED') + ORACLE_ARMS:
+    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED') + ORACLE_ARMS + LEARNED_ARMS:
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
 
