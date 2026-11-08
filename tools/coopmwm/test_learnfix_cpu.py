@@ -190,3 +190,16 @@ def test_bc_guard_reverts_steps_over_the_cumulative_update_cap(cfg, monkeypatch)
     loose = fl.bc_steps(runtime.policy, [record], epochs=3, kl_budget=10., max_grad_norm=.5, guard=(ticks, start, 10.))
     assert all(p['accepted'] for p in loose['passes']) and len(loose['passes']) == 3
     assert lf.choice_kl(trig, ticks, start) == pytest.approx(loose['passes'][-1]['choice_kl'])
+
+
+def test_supervise_requires_the_update_start_reference_under_learnfix2(cfg, monkeypatch):
+    from types import SimpleNamespace
+    monkeypatch.setattr(fl, 'learn_settings', lambda c: dict(ev_bc=True, report_kl_unlabelled=False,
+                                                             report_valsplit_auc=False))
+    monkeypatch.setattr(fl, 'bank_records', lambda policy, c, arm: ([], {}))
+    monkeypatch.setattr(fl, 'ev_bc_records', lambda c, arm, episodes: ([], None))
+    monkeypatch.setattr(fl, 'active_slot', lambda c: ({}, None))
+    policy = SimpleNamespace(layer=SimpleNamespace(config=SimpleNamespace(kl_budget=.045)))
+    runtime = SimpleNamespace(cfg=dict(cfg, learnfix2=lf.value2(), imitation_epochs=5), arm='B', policy=policy)
+    with pytest.raises(ValueError, match='update-start'):
+        fl.supervise(runtime, [])
