@@ -91,7 +91,7 @@ COMPARATORS = (INCUMBENT, SOLO2)
 DEFAULTS = dict(H=300, K_screen=4, K_final=8, n_init=40, generations=3, n_elite=6, n_children=24, p_mutate=0.35,
                 n_screen_states=12, finalists=12, lam=0.5, max_roles=6, seed=20261107, fairness=True, fair_tol=0.0,
                 n_final_states=0, bound_s=GROUP_BOUND_S, bound_stat='mean', fairer_total='mean', dense=False,
-                hold_only=False, harm_cal=None)
+                hold_only=False, harm_cal=None, n_immigrants=0, role_counts=None)
 ARCHIVES = ('delay', 'bounded', 'fairer', 'fair', 'F', 'D')
 # Owner-approved calibrated re-search (REGISTRATION 2026-11-07 21:32): hold-only, densified around the gentle holds.
 DENSE = dict(v_w=[18.0, 19.0, 20.0, 21.0, 22.0], dmax=[1.0, 1.5], hold_s=[60, 90, 120, 150, 180],
@@ -274,9 +274,9 @@ def descriptor(s):
 
 
 # ------------------------------------------------------------------------------------------ sampling
-def random_strategy(rng, max_roles=6, dense=False, hold_only=False):
+def random_strategy(rng, max_roles=6, dense=False, hold_only=False, role_counts=None):
     g = grids(search=True, dense=dense)
-    n = rng.choice([x for x in (1, 1, 2, 2, 3, 3, 4, 5, 6) if x <= max_roles])
+    n = rng.choice([x for x in (role_counts or (1, 1, 2, 2, 3, 3, 4, 5, 6)) if x <= max_roles])
     trigger = 'wall' if n <= 3 and rng.random() < 0.4 else 'lanes'
     slots = [(ln, 0) for ln in (0, 1, 2)] if trigger == 'wall' else [(ln, rk) for ln in (0, 1, 2) for rk in (0, 1)]
     picks = rng.sample(slots, min(n, len(slots)))
@@ -556,7 +556,8 @@ def search_cell(wm, states, cfg=None, log=None):
     pop = [s for s in seeds() if not (hold_only and any(r['lc_target'] is not None for r in s['roles']))]
     if dense:
         pop += dense_seeds()
-    pop += [random_strategy(rng, cfg['max_roles'], dense, hold_only) for _ in range(int(cfg['n_init']))]
+    rc = tuple(cfg['role_counts']) if cfg.get('role_counts') else None
+    pop += [random_strategy(rng, cfg['max_roles'], dense, hold_only, rc) for _ in range(int(cfg['n_init']))]
     evaluated, total = {}, 0
     archives = {a: {} for a in ARCHIVES}
     comp_keys = {strategy_key(c) for c in COMPARATORS}
@@ -591,6 +592,8 @@ def search_cell(wm, states, cfg=None, log=None):
                                                    else int(cfg['n_elite']) // 2)]
         kids = [mutate(rng, rng.choice(parents), cfg['p_mutate'], dense, hold_only)
                 for _j in range(int(cfg['n_children']))]
+        kids += [random_strategy(rng, cfg['max_roles'], dense, hold_only, rc)      # random restarts (immigrants)
+                 for _j in range(int(cfg['n_immigrants']))]
         run(kids, screen, cfg['K_screen'])
     nf = int(cfg['finalists'])
     fin = {}
@@ -637,7 +640,11 @@ def search_cell(wm, states, cfg=None, log=None):
                 comparators={r['strategy']['name']: {k: r.get(k) for k in (
                     'gain_vs_base', 'gain_vs_base_lcb', 'group_inc', 'worst_group_inc', 'cvar90_inc', 'bounded')}
                     for r in final if r['comparator']},
-                archives={a: listing(a) for a in ARCHIVES})
+                archives={a: listing(a) for a in ARCHIVES},
+                screened=[dict(key=r['key'], name=r['strategy']['name'], n_roles=len(r['strategy']['roles']),
+                               trigger=r['strategy']['trigger'], feasible=r['feasible'],
+                               gain_vs_base=r['gain_vs_base'], gain_vs_inc=r['gain_vs_inc'],
+                               fair_cal=r.get('fair_cal')) for r in evaluated.values()])
 
 
 def select_for_sumo(result, k=4, archive='delay', fair=False, exclude=()):
