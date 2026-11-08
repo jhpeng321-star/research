@@ -55,5 +55,25 @@
   "V3": "total choice-row KL (PPO + EV-BC) <= 0.075",
   "V4": "report choice-row P(none) start and end (no threshold)",
   "result_rule": "PASS iff V1-V3"
+ },
+ "run_verified_only": {
+  "V1": true,
+  "V2": true,
+  "V3": true,
+  "free_expected_verified_only": [
+   0.0,
+   0.0
+  ],
+  "p_target_verified_only": [
+   0.237,
+   0.385
+  ],
+  "total_kl": 0.0258,
+  "p_none": [
+   0.652,
+   0.571
+  ],
+  "RESULT": "PASS",
+  "deploy_blocker": "the running CLEAN5C5C / F8V3 source (clean5c_src_57ca222f) has no slate_override in bank_growth: an extra CONTROL key is silently ignored there, so the override cannot apply at u5 without new code in the run source (relaunch, or a registered source change)"
  }
 }
