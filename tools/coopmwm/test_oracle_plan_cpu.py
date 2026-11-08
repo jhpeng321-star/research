@@ -13,7 +13,7 @@ from tools.coopmwm import oracle_plan as O
 
 UNION = Path('E:/research-dense/runs/active/C4-V7FT-20261017/wmverify_r3/GUIDANCE_C4SIT_priv_UNION_r3.json')
 #: oracle_digest() prefix at c4/oracle-arm; any change to an executed function / constant moves it (re-registration)
-PINNED = '0ce822edd9e4'
+PINNED = '7409a7b47656'
 
 
 def role(sumo_lane, v_w=20.0, hold_s=120, onset_s=0, rank=0, lc=None):
@@ -139,16 +139,58 @@ def test_no_feasible_group_no_activation():
     assert core.acts == [] and not core.offers
 
 
-def test_one_session_cooldown_and_priority():
-    doc = bank([('low', 10.0, DUO, None), ('high', 50.0, cond([role(1, v_w=21.0), role(2, v_w=21.0)], FREE), None)])
-    core = O.OracleCore(doc, 'D2800_p20')
+def test_per_family_cooldown_priority_and_disjoint_cavs():
+    """Amendment 25b B2: bank session rule per family (slots, own cooldown), CAVs never shared across families;
+    priority decides who gets contested CAVs."""
+    hi = cond([role(1, v_w=21.0), role(2, v_w=21.0)], FREE)                       # duo, cooldown 120
+    lo = cond([role(1), role(2)], FREE)                                            # same CAVs, lower lb95
+    solo0 = cond([role(0, hold_s=90)], FREE, trigger='lanes', cooldown=90)         # SUMO lane 0 member only
+    core = O.OracleCore(bank([('low', 10.0, lo, None), ('high', 50.0, hi, None), ('solo0', 5.0, solo0, None)]),
+                        'D2800_p20')
     for t in range(300, 560):
         rows = wm_rows()
         core.step(rows, commands(rows), t)
-        assert sum(1 for c in core.cores if c.active) <= 1             # never two sessions
-    ts = [a['t'] for a in core.acts]
-    assert core.acts[0]['family'] == 'high'                        # priority: lb95 descending
-    assert ts == [300, 420, 540]                                    # cooldown 120 s, one session at a time
+        owners = [vid for c in core.cores for vid in c.active]
+        assert len(owners) == len(set(owners))                                     # a CAV in one session only
+    by = {}
+    for a in core.acts:
+        by.setdefault(a['family'], []).append(a['t'])
+    assert by == {'high': [300, 420, 540], 'solo0': [300, 390, 480]}               # own cooldowns; 'low' never gets CAVs
+    assert core.cores[[p['family'] for p in core.plans].index('high')].next_ok == 660
+
+
+def test_unconditional_acts_in_any_bin_including_unobserved():
+    """Amendment 25b B3: unconditional rows have no bin gate (any bin, unobserved included)."""
+    unobs = wm_rows() + [dict(vid='hx', s_m=-200.0, v_mps=None, lane=1, is_cav=False)]
+    sit_only = O.OracleCore(bank([('mut_sit', 100.0, DUO, None)]), 'D2800_p20')
+    sit_only.step(unobs, commands(unobs), 300)
+    assert sit_only.acts == []
+    unc = O.OracleCore(bank([('rule_unc', 900.0, cond([role(1), role(2)], FREE), None)], unconditional=('rule_unc',)),
+                       'D2800_p20')
+    unc.step(unobs, commands(unobs), 300)
+    assert [(a['family'], a['row_class'], a['bin']) for a in unc.acts] == [('rule_unc', 'unconditional', O.UNOBSERVED)]
+    cong = O.OracleCore(bank([('rule_unc', 900.0, cond([role(1), role(2)], FREE), None)], unconditional=('rule_unc',)),
+                        'D2800_p20')
+    cong.step(wm_rows(slow_drop=True), commands(wm_rows()), 300)
+    assert cong.acts[0]['bin']['cong'] == 'congested'
+    plans, refused = O.bank_plans(bank([('rule_unc', 900.0, cond([role(1), role(2)], FREE, mode='own_sensing'), None)],
+                                       unconditional=('rule_unc',)), 'D2800_p20')
+    assert [p['row_class'] for p in plans] == ['unconditional'] and plans[0]['bins'] is None and not refused
+
+
+def test_oracle_wm_uses_only_wm_source_rows():
+    """Amendment 25b B1: ORACLE_WM = the WM-source rows of the same bank; ORACLE = all admitted rows."""
+    doc = bank([('mut_a', 100.0, DUO, None), ('rule_b', 200.0, cond([role(2)], FREE), None)])
+    allp, _ = O.bank_plans(doc, 'D2800_p20')
+    wmp, refused = O.bank_plans(doc, 'D2800_p20', plan_source='wm')
+    assert [p['family'] for p in allp] == ['rule_b', 'mut_a'] and [p['family'] for p in wmp] == ['mut_a']
+    assert refused == dict(not_wm_source=['rule_b'])
+    core = O.OracleCore(doc, 'D2800_p20', plan_source='wm')
+    core.step(wm_rows(), commands(wm_rows()), 300)
+    r = core.receipts()
+    assert r['plan_source_filter'] == 'wm' and r['activations_by_plan_source'] == {'wm': 1}
+    with pytest.raises(ValueError):
+        O.bank_plans(doc, 'D2800_p20', plan_source='rule')
 
 
 def test_never_commands_hdvs_and_deterministic():
@@ -229,7 +271,8 @@ def test_runner_oracle_hook_guards(tmp_path, monkeypatch):
     doc = bank([('duo', 100.0, DUO, None)])
     p = tmp_path/'bank.json'
     p.write_text(json.dumps(doc), encoding='utf-8')
-    ck = dict(cell_key='D2800_p20', oracle_bank=dict(path=str(p), file_sha256=R._sha(p)), oracle_sha256=O.oracle_digest())
+    ck = dict(cell_key='D2800_p20', oracle_bank=dict(path=str(p), file_sha256=R._sha(p)), oracle_sha256=O.oracle_digest(),
+              oracle_plan_source='all')
     hook, loaded = R.oracle_hook(ck, dict(cell_key='D2800_p20'))
     assert loaded == O.oracle_digest() and hook.core.plans[0]['family'] == 'duo'
     with pytest.raises(ValueError, match='cell_key'):
@@ -240,6 +283,14 @@ def test_runner_oracle_hook_guards(tmp_path, monkeypatch):
         R.oracle_hook(dict(ck, oracle_sha256='0' * 64), dict(cell_key='D2800_p20'))
     with pytest.raises(ValueError, match='bank changed'):
         R.oracle_hook(dict(ck, oracle_bank=dict(path=str(p), file_sha256='0' * 64)), dict(cell_key='D2800_p20'))
+    assert R.ORACLE_ARMS == ('ORACLE', 'ORACLE_WM')
+    with pytest.raises(ValueError, match='oracle_plan_source'):
+        R.oracle_hook(ck, dict(cell_key='D2800_p20'), 'ORACLE_WM')          # ck 'all' bound, arm needs 'wm'
+    with pytest.raises(ValueError, match='oracle_plan_source'):
+        R.oracle_hook(dict(ck, oracle_plan_source='rule'), dict(cell_key='D2800_p20'))
+    wm_hook, _ = R.oracle_hook(dict(ck, oracle_plan_source='wm'), dict(cell_key='D2800_p20'), 'ORACLE_WM')
+    assert wm_hook.core.plan_source == 'wm' and wm_hook.core.plans == [] and wm_hook.core.refused == dict(
+        not_wm_source=['duo'])
 
 
 ALL4 = [dict(cong=c, lane_diff=d) for c in ('congested', 'free') for d in ('L2faster', 'L2notfaster')]

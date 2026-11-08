@@ -14,8 +14,11 @@ the absolute pre-safety request through the plant single writer (MAPPO safety do
 Bin = fullpol_situational.onset_bin(holder row, all plant rows, 'privileged') (vendored VERBATIM from c4/p20-sit
 d70caf9f), holder = the member on SUMO lane 2, else the first member (S-MULTICRIT-ACT / ops/sit_reduce.py rule); the
 plant rows passed to controller.apply at second t are the rows the observable tape records at t (coopfree tick).
-Session: one activation at a time over all plans of the cell; after an activation every plan waits the executed
-plan's cooldown_s; candidates are tried in bank order lb95_veh_s descending (family name ties). No RNG, no clock;
+Sessions (amendment 25b B2): the bank rule per plan family (fewer than `slots` active sessions of the family
+and t >= its last start + its cooldown_s); a CAV in one family's session is never offered to another;
+families are tried each second in priority order: situational (bin-gated) rows by lb95 desc then
+strategy_key, then unconditional rows (25b B3: no bin gate, any bin incl. unobserved). ORACLE_WM (25b B1):
+only plan_source == 'wm' rows of the same bank. No RNG, no clock;
 reads only the bank doc, the plant rows and the U0 commands - never job / B / R outputs.
 """
 from __future__ import annotations
@@ -345,7 +348,8 @@ VENDORED = {
  }
 }
 SCHEMA = 'coopmwm.oracle_plan.v1'
-REFUSALS = ('strategy_key_mismatch', 'non_hold_plan', 'no_template', 'bins_not_privileged', 'gate_or_phases')
+REFUSALS = ('strategy_key_mismatch', 'non_hold_plan', 'no_template', 'bins_not_privileged', 'gate_or_phases',
+            'not_wm_source')
 
 
 class OracleRefused(ValueError):
@@ -363,22 +367,35 @@ def spec_of(family, cond):
                 start_gate=cond.get('start_gate'), phases=cond.get('phases'), roles=roles)
 
 
-def bank_plans(bank_doc, cell_key):
+def row_is_unconditional(row, cond):
+    return bool((row.get('situational') or {}).get('unconditional') or (cond.get('situation') or {}).get('unconditional'))
+
+
+def bank_plans(bank_doc, cell_key, plan_source=None):
     """[(plan dict)] admitted for ``cell_key`` in priority order, and {refusal: [family]}.
     A plan = the bank row (lb95) + its template's offer_condition, rebuilt spec (strategy_key must equal the
-    template's source.strategy_key), privileged admitted bins. Hold-only plans only (lane roles refused)."""
+    template's source.strategy_key). Situational rows: privileged admitted bins (v4 rule) required; unconditional
+    rows (amendment 25b B3): no bin gate. Hold-only plans only (lane roles refused). plan_source='wm' (ORACLE_WM,
+    amendment 25b B1): only rows tagged plan_source == 'wm' (other rows are counted under 'not_wm_source')."""
+    if plan_source not in (None, 'wm'):
+        raise ValueError("plan_source must be None (ORACLE: union) or 'wm' (ORACLE_WM)")
     rows = [r for r in bank_doc['rows'] if r.get('regime') == cell_key]
     tpls = {(t['cell'], t['family']): t for t in (bank_doc.get('clean5c') or {}).get('templates', ())}
     plans, refused = [], {k: [] for k in REFUSALS}
     for r in rows:
         fam = r['family']
+        if plan_source == 'wm' and r.get('plan_source') != 'wm':
+            refused['not_wm_source'].append(fam)
+            continue
         t = tpls.get((cell_key, fam))
         if t is None:
             refused['no_template'].append(fam)
             continue
         cond = t['offer_condition']
         sit = cond.get('situation') or {}
-        if sit.get('mode') != 'privileged' or not sit.get('bins') or sit.get('rule') != SITUATION_RULE:
+        unconditional = row_is_unconditional(r, cond)
+        if not unconditional and (sit.get('mode') != 'privileged' or not sit.get('bins')
+                                  or sit.get('rule') != SITUATION_RULE):
             refused['bins_not_privileged'].append(fam)
             continue
         spec = spec_of(fam, cond)
@@ -392,13 +409,13 @@ def bank_plans(bank_doc, cell_key):
         if spec['gate'] not in GATES or spec['start_gate'] not in START_GATES or spec['phases'] is not None:
             refused['gate_or_phases'].append(fam)
             continue
-        unconditional = bool((r.get('situational') or {}).get('unconditional') or sit.get('unconditional'))
         plans.append(dict(family=fam, lb95=float(r['lb95_veh_s']), key=key, spec=spec,
                           row_class='unconditional' if unconditional else 'situational',
-                          bins=[dict(cong=b['cong'], lane_diff=b['lane_diff']) for b in sit['bins']],
+                          bins=None if unconditional else [dict(cong=b['cong'], lane_diff=b['lane_diff'])
+                                                           for b in sit['bins']],
                           plan_source=r.get('plan_source'), template_sha256=r.get('template_sha256')))
-    # N6 2026-11-09: situational (bin-gated) rows first, lb95 descending, then strategy_key; unconditional rows (act
-    # whenever feasible, episode-level lb95 - not comparable) only when no situational row activates at that step
+    # situational (bin-gated) rows first, lb95 descending, then strategy_key; unconditional rows after them (their lb95
+    # is per episode, not comparable); amendment 25b B3: situational rows keep priority when admitted and feasible
     plans.sort(key=lambda p: (p['row_class'] != 'situational', -p['lb95'], p['key'], p['family']))
     return plans, {k: v for k, v in refused.items() if v}
 
@@ -414,91 +431,95 @@ def bin_admitted(got, bins):
 
 
 class OracleCore:
-    """Plant-independent ORACLE state machine (fake-row testable): one StrategyCore per admitted plan, one global
-    session; returns ({vid: accel}, {vid: WM lane}) like StrategyCore.step."""
+    """Plant-independent ORACLE state machine (fake-row testable): one StrategyCore per admitted plan.
+    Amendment 25b B2: the bank session rule per plan family (fullpol_bank.session_ok: fewer than `slots` sessions of
+    the family active and t >= its last start + its cooldown_s) - each StrategyCore keeps exactly that ledger;
+    feasibility (the trigger) sees every CAV as in verification, but a selection whose members include a CAV of
+    another family's session is refused (never shared). Families are tried each second in priority order
+    (situational first), so a situational plan that is admitted and feasible gets the CAVs before any unconditional
+    plan (B3). Returns ({vid: accel}, {vid: WM lane}) like StrategyCore.step."""
 
-    def __init__(self, bank_doc, cell_key, warmup_s=300):
+    def __init__(self, bank_doc, cell_key, warmup_s=300, plan_source=None):
         self.cell_key = str(cell_key)
-        self.plans, self.refused = bank_plans(bank_doc, self.cell_key)
+        self.plan_source = plan_source
+        self.plans, self.refused = bank_plans(bank_doc, self.cell_key, plan_source)
         self.cores = []
         for p in self.plans:
             core = StrategyCore(p['spec'], warmup_s)
             core.select_members = self._gate(core, p)
             self.cores.append(core)
         self.warmup = int(warmup_s)
-        self.next_ok = -1
         self.acts, self.offers = [], Counter()
         self._rows = None
         self._last = None
+        self._busy = set()
 
     def _gate(self, core, plan):
         def select(s, free, observed, phase=0):
             mem = select_members(s, free, observed, phase=phase)
             if not mem:
                 return None
+            if any(c['id'] in self._busy for c in mem):     # a member is in another family's session
+                self.offers[(plan['family'], 'member_busy')] += 1
+                return None
             hold = holder_of(mem)
             own = next((r for r in self._rows if r.get('vid') == hold['id']), None)
             got = onset_bin(own, self._rows, 'privileged')
             self.offers[(plan['family'], json.dumps(got, sort_keys=True))] += 1
-            if not bin_admitted(got, plan['bins']):
+            if plan['row_class'] != 'unconditional' and not bin_admitted(got, plan['bins']):
                 return None
-            self._last = dict(family=plan['family'], bin=got, holder=hold['id'], row_class=plan['row_class'])
+            self._last = dict(family=plan['family'], bin=got, holder=hold['id'], row_class=plan['row_class'],
+                              plan_source=plan['plan_source'])
             return mem
         return select
 
-    def active(self):
-        return next((c for c in self.cores if c.active), None)
+    def owners(self):
+        return {vid: p['family'] for c, p in zip(self.cores, self.plans) for vid in c.active}
 
     def step(self, rows, commands, t):
         self._rows = rows
         accel, lanes = {}, {}
         if t < self.warmup or not self.cores:
             return accel, lanes
-        busy = self.active()
-        if busy is not None:                        # the running session only (release / hold law)
-            busy.next_ok = 10 ** 9                  # no new activation while one runs
-            a, ln = busy.step(rows, commands, t)
-            accel.update(a)
-            lanes.update(ln)
-            if busy.active or t < self.next_ok:
-                return accel, lanes
-        if t < self.next_ok:
-            return accel, lanes
-        for core, plan in zip(self.cores, self.plans):
+        for i, (core, plan) in enumerate(zip(self.cores, self.plans)):
+            # feasibility sees every CAV (as verified: the wall/lanes trigger over all CAV rows); members must not be
+            # in another family's session
+            self._busy = {vid for j, c in enumerate(self.cores) if j != i for vid in c.active}
             n = len(core.acts)
-            core.next_ok = -1
             self._last = None
             a, ln = core.step(rows, commands, t)
-            if len(core.acts) > n:                  # this plan activated: one session, its cooldown for all
+            if len(core.acts) > n:
                 act = core.acts[-1]
-                act.update(self._last or {}, priority=self.plans.index(plan))
+                act.update(self._last or {}, priority=i)
                 self.acts.append(act)
-                self.next_ok = t + int(plan['spec']['cooldown_s'])
-                accel.update(a)
-                lanes.update(ln)
-                break
+            if (set(a) | set(ln)) & (set(accel) | set(lanes)):
+                raise RuntimeError('ORACLE: a CAV in two family sessions')
+            accel.update(a)
+            lanes.update(ln)
         return accel, lanes
 
     def receipts(self):
         fam = Counter(a['family'] for a in self.acts)
-        return dict(schema=SCHEMA, cell_key=self.cell_key, plans=[dict(family=p['family'], lb95=p['lb95'], key=p['key'],
+        return dict(schema=SCHEMA, cell_key=self.cell_key, plan_source_filter=self.plan_source,
+                    activations_by_plan_source=dict(Counter(a.get('plan_source') for a in self.acts)), plans=[dict(family=p['family'], lb95=p['lb95'], key=p['key'],
                     bins=p['bins'], plan_source=p['plan_source'], row_class=p['row_class']) for p in self.plans],
                     refused=self.refused, refused_counts={k: len(v) for k, v in self.refused.items()},
                     activations=len(self.acts), activations_by_family=dict(fam),
                     issued=sum(len(c.issued) for c in self.cores),
                     activations_by_row_class=dict(Counter(a.get('row_class') for a in self.acts)),
-                    acts=[dict(t=a['t'], family=a.get('family'), row_class=a.get('row_class'), members=a['members'],
+                    acts=[dict(t=a['t'], family=a.get('family'), row_class=a.get('row_class'),
+                               plan_source=a.get('plan_source'), members=a['members'],
                                holder=a.get('holder'), bin=a.get('bin'), release=a.get('release')) for a in self.acts],
                     offers={f'{k[0]}|{k[1]}': v for k, v in sorted(self.offers.items())})
 
 
-def make_hook(bank_doc, cell_key, warmup_s=300):
+def make_hook(bank_doc, cell_key, warmup_s=300, plan_source=None):
     """controller_hook (RULE-arm protocol): hook(controller, job, prefixes) wraps controller.apply after the U0 hook.
     ``job`` and ``prefixes`` are never read."""
 
     class OracleHook:
         def __init__(self):
-            self.core = OracleCore(bank_doc, cell_key, warmup_s)
+            self.core = OracleCore(bank_doc, cell_key, warmup_s, plan_source)
             self.controller = None
 
         def __call__(self, controller, job, prefixes):
@@ -512,9 +533,10 @@ def make_hook(bank_doc, cell_key, warmup_s=300):
                 bad = (set(accel) | set(lanes)) - cav
                 if bad:
                     raise RuntimeError(f'ORACLE: request for non-CAV rows {sorted(bad)} (HDVs never commanded)')
+                owner = self.core.owners()
                 for vid, a in accel.items():
                     desired[vid] = dict(requested_raw=a, acceleration_residual=a - commands[vid],
-                                        oracle_plan=self.core.acts[-1]['family'] if self.core.acts else None)
+                                        oracle_plan=owner.get(vid))
                 if lanes:
                     targets = dict(getattr(controller, 'g5_lane_targets', {}) or {})
                     targets.update(lanes)
@@ -531,7 +553,7 @@ def make_hook(bank_doc, cell_key, warmup_s=300):
 
 EXECUTED = ('strategy_key', '_pick_wall', 'field_speed', 'gate_open', 'behind_count', 'active_roles', 'select_members',
             'sumo_lane', 'wm_lane_of', 'to_sumo_row', 'observed_rows', 'StrategyCore', 'situation_bin', '_mean',
-            'runtime_situation', 'onset_bin', 'spec_of', 'bank_plans', 'holder_of', 'bin_admitted', 'OracleCore',
+            'runtime_situation', 'onset_bin', 'spec_of', 'row_is_unconditional', 'bank_plans', 'holder_of', 'bin_admitted', 'OracleCore',
             'make_hook')
 CONSTANTS = ('ZONES', 'GATES', 'FIELD_X', 'START_GATES', 'S_OFF', 'RELEASE_S', 'MODES', 'S_DROP', 'CONG_MPS',
              'LANE_DIFF_MPS', 'SENSOR_RANGE_M', 'UNOBSERVED', 'SITUATION_RULE')
