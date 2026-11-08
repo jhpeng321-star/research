@@ -143,6 +143,7 @@ def check(root, arm, u, bias):
         if Path(path).exists():
             synergy = json.loads(Path(path).read_text(encoding='utf-8'))
     learning = hooks['train_update'](episodes, rewards=envelope, **({} if synergy is None else dict(synergy=synergy)))
+    ppo_rows = _choice_logits(trig, ticks)
     production.bank_move_supervision(runtime)
     from tools.coopmwm.fullpol_learn import supervise
     sup = supervise(runtime, episodes)
@@ -153,10 +154,19 @@ def check(root, arm, u, bias):
         kl += float(torch.distributions.kl_divergence(torch.distributions.Categorical(logits=a),
                                                       torch.distributions.Categorical(logits=b)).sum())
         n += len(a)
+    def _kl(xs, ys):
+        num = den = 0.
+        for (a, _), (b, _) in zip(xs, ys):
+            num += float(torch.distributions.kl_divergence(torch.distributions.Categorical(logits=a),
+                                                           torch.distributions.Categorical(logits=b)).sum())
+            den += len(a)
+        return num/max(den, 1)
+    kl_ppo, kl_bc = _kl(before_rows, ppo_rows), _kl(ppo_rows, after_rows)
     after = _stats(after_rows)
     pt1 = p_target()
     res = dict(run=os.path.basename(root), arm=arm, update=u, none_bias=bias, old_code=old, u0_biased=u0, after=after,
-               choice_kl=kl/max(n, 1), p_target=dict(before=pt0, after=pt1),
+               choice_kl=kl/max(n, 1), choice_kl_ppo=kl_ppo, choice_kl_bc=kl_bc, after_ppo=_stats(ppo_rows),
+               p_target=dict(before=pt0, after=pt1), bc_fit=None if sup is None else sup.get('report_bc_kl'),
                none_bias_after=float(trig.none_bias.detach()),
                learnfix=dict((learning.get('learnfix') or {}), steps=len((learning.get('learnfix') or {}).get('steps', ()))),
                credit=(learning.get('learnfix_net') or {}).get('credit_cap'),
@@ -165,7 +175,7 @@ def check(root, arm, u, bias):
     res['criteria'] = dict(
         C1=u0['p_none'] >= 0.85, C2=res['choice_kl'] >= 0.005,
         C3=(None if pt0[0] is None else pt1[0] > pt0[0]),
-        C4=old['p_none'] <= 0.25 and old['entropy'] >= 0.9*old['log_valid'])
+        C4=old["p_none"] <= 0.25 and old["entropy"] >= 0.9*old["log_valid"], C5=after["p_none"] >= 0.75)
     print(json.dumps(res, default=str))
 
 

@@ -1295,6 +1295,13 @@ class ArmRuntime:
                 reference.append((batch, logits.detach()))
         trigger_metrics = []
         learnfix_receipt = None
+        if learnfix.settings2(cfg) is not None:
+            # learnfix2: the update-start choice-row reference for the cumulative update KL guard (EV-BC)
+            start_ticks = [dict(batch=_batch(by_key[k]['track2_trigger'])) for k in sorted(eligible)
+                           if 'track2_trigger' in by_key[k]]
+            with torch.no_grad():
+                self.learnfix2_update_start = dict(ticks=start_ticks, logits=[self.policy.trigger.distribution(
+                    t['batch'].context, t['batch'].descriptors, t['batch'].mask)[0].detach() for t in start_ticks])
         if fix is not None:
             from .fullpol_learn import regime_key
             cells = {e['id']: regime_key(e) for e in episodes}
@@ -1312,6 +1319,9 @@ class ArmRuntime:
             learnfix_receipt = learnfix.trigger_ppo(self.policy.trigger, self.policy.trigger_optimizer, ticks,
                 settings=fix, ppo=cfg['trigger_ppo'], kl_budget=self.policy.layer.config.kl_budget,
                 seed=int(cfg['training_seed'])*1000+int(self.update)*10+'BR'.index(arm))
+            if getattr(self, 'learnfix2_update_start', None) is not None:
+                self.learnfix2_update_start['ppo_kl'] = learnfix.choice_kl(
+                    self.policy.trigger, self.learnfix2_update_start['ticks'], self.learnfix2_update_start['logits'])
         for key in (sorted(eligible) if fix is None else ()):
             sample = by_key[key]
             if 'track2_trigger' not in sample:

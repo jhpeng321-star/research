@@ -9,7 +9,14 @@
   "C4": "old-code control (no none_bias) on the same contexts reproduces near-uniform behaviour: choice-row P(none) <= 0.25 and mean entropy >= 0.9 x log(mean valid slots)"
  },
  "result": "PASS iff C1-C4 all hold",
- "run": {
+ "amendment_1": {
+  "written": "2026-11-09 ~03:2x, before the re-run (MAIN after REV-SPD BLOCK on a902f5ba)",
+  "code": "EV-BC step reverted when cumulative all-choice-row KL of the update vs update-start policy > 0.06; PPO keeps 0.045",
+  "C5": "P(none) on choice rows stays >= 0.75 after one replayed update (B and R)",
+  "report": "PPO and EV-BC choice-row KL separately",
+  "result_rule": "PASS iff C1-C5 all hold"
+ },
+ "run_a902f5ba": {
   "code": "c4/learnfix2 69da6802 (check) / 87cbc0fd (registered bias)",
   "calibration": {
    "none_bias": 4.0165,
@@ -41,7 +48,7 @@
    "old_p_none": 0.169,
    "old_entropy": 1.955
   },
-  "RESULT": "PASS",
+  "RESULT": "superseded (REV-SPD BLOCK: EV-BC drift on unlabelled rows; the earlier disclosure attributing the B movement to off-policy replay was wrong - it was EV-BC)",
   "note": "replay is off-policy (recorded behaviour without the bias), so the one-update movement is larger than on-policy"
  }
 }

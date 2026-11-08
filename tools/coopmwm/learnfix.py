@@ -87,11 +87,13 @@ RUNNING_WEIGHT = 0.5      # running per-cell baseline: new = (1 - w) * previous 
 
 RULE2 = ('c4/learnfix2 (MAIN 2026-11-09 ~02:3x, LEARNDIAG u2): trigger-head none_bias (learnable scalar on the '
          'none logit only, initialised so choice-row P(none) ~ 0.90 at u0; free programs stay offered at the reduced '
-         'initial probability) + per-episode credit cap |net - baseline| <= credit_cap x median |net| of the update')
+         'initial probability) + per-episode credit cap |net - baseline| <= credit_cap x median |net| of the update + '
+         'EV-BC steps reverted when the cumulative all-choice-row KL of the update vs the update-start policy exceeds '
+         'update_kl_cap (PPO keeps its own 0.045 choice-row cap)')
 #: u0 calibration (ops/learnfix2_check.py calibrate, CLEAN5C5B u1 B+R recorded contexts, 5,118 choice rows, u0 trigger
 #: track2_000): choice-row P(none) 0.169 -> 0.900, entropy 1.955 -> 0.514 (log valid slots 1.956).
 NONE_BIAS = 4.0165
-DEFAULT2 = dict(credit_cap=2.0)
+DEFAULT2 = dict(credit_cap=2.0, update_kl_cap=0.06)
 
 
 def value2(none_bias=NONE_BIAS, **overrides):
@@ -103,7 +105,8 @@ def settings2(cfg):
     raw = (cfg or {}).get('learnfix2')
     if raw is None:
         return None
-    if (not isinstance(raw, dict) or raw.get('rule') != RULE2 or set(raw) != {'rule', 'none_bias', 'credit_cap'}
+    if (not isinstance(raw, dict) or raw.get('rule') != RULE2 or set(raw) != {'rule', 'none_bias', 'credit_cap', 'update_kl_cap'}
+            or not 0 < float(raw['update_kl_cap']) <= 0.2
             or not isinstance(raw['none_bias'], float) or not 0 <= raw['none_bias'] <= 10
             or not 0 < float(raw['credit_cap']) <= 10):
         raise ValueError('learnfix2 needs the registered rule, none_bias (float 0..10) and credit_cap')

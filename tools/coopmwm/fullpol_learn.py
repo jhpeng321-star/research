@@ -722,13 +722,18 @@ def _mean_kl(before, after, row_weights=None):
     return float(torch.cat(rows).sum()/total) if float(total) > 0 else 0.
 
 
-def bc_steps(policy, records, *, epochs, kl_budget, max_grad_norm):
+def bc_steps(policy, records, *, epochs, kl_budget, max_grad_norm, guard=None):
     """Registered rule (identical to bank_move_supervision): each step is kept only if the mean
     KL over the supervised contexts stays <= kl_budget; otherwise reverted and stop."""
     if not records:
         return dict(initial_ce=None, final_ce=None, passes=[])
     weights = _mass(records)
     reference = _logits(policy, [r['batch'] for r in records])
+    if guard is not None:
+        # c4/learnfix2 (REV-SPD / MAIN 2026-11-09): guard = (on-policy ticks, update-START logits, cap): the cumulative
+        # all-choice-row KL of the whole update (PPO + BC) vs the update-start policy stays <= cap; else revert + stop.
+        from .learnfix import choice_kl
+        guard_ticks, guard_ref, guard_cap = guard
 
     def loss():
         return torch.stack([w*_ce(policy, r) for r, w in zip(records, weights)]).sum()/sum(weights)
@@ -746,10 +751,14 @@ def bc_steps(policy, records, *, epochs, kl_budget, max_grad_norm):
         kl = _mean_kl(reference, _logits(policy, [r['batch'] for r in records]),
                       [r.get('row_weight') for r in records])
         accepted = math.isfinite(kl) and kl <= kl_budget
+        guard_kl = None
+        if guard is not None:
+            guard_kl = choice_kl(policy.trigger, guard_ticks, guard_ref)
+            accepted = accepted and math.isfinite(guard_kl) and guard_kl <= guard_cap
         if not accepted:
             policy.trigger.load_state_dict(state)
             policy.trigger_optimizer.load_state_dict(opt)
-        passes.append(dict(accepted=accepted, kl=kl))
+        passes.append(dict(accepted=accepted, kl=kl, **({} if guard is None else dict(choice_kl=guard_kl))))
         if not accepted:
             break
     policy.trigger_optimizer.zero_grad(set_to_none=True)
@@ -870,7 +879,15 @@ def supervise(runtime, episodes=()):
     clip = cfg['trigger_ppo']['max_grad_norm']
     if learn['report_valsplit_auc']:
         valsplit = valsplit_auc(policy, records, epochs=epochs, kl_budget=budget, max_grad_norm=clip)
-    fit = bc_steps(policy, records, epochs=epochs, kl_budget=budget, max_grad_norm=clip)
+    from . import learnfix
+    guard = None
+    fix2 = learnfix.settings2(cfg)
+    if fix2 is not None:
+        start = getattr(runtime, 'learnfix2_update_start', None)
+        if start is None:
+            raise ValueError('learnfix2: the update-start choice-row reference is missing (train must run first)')
+        guard = (start['ticks'], start['logits'], float(fix2['update_kl_cap']))
+    fit = bc_steps(policy, records, epochs=epochs, kl_budget=budget, max_grad_norm=clip, guard=guard)
     policy.layer._check_frozen()
     accepted = [p['kl'] for p in fit['passes'] if p['accepted']]
     out = dict(schema=SCHEMA, arm=arm, records=len(records), bank=bank, ev_bc=ev_receipt, fit=fit,
@@ -878,6 +895,11 @@ def supervise(runtime, episodes=()):
                kl_rule='registered: mean KL over the supervised contexts <= kl_budget (unchanged)',
                kl_budget=budget, epochs=epochs,
                report_bc_kl=dict(kl_supervised=accepted[-1] if accepted else 0., accepted_steps=len(accepted),
+                                 **({} if guard is None else dict(choice_kl=next((p['choice_kl'] for p in reversed(
+                                     fit['passes']) if p['accepted']), None), guard_rows='all on-policy choice rows',
+                                     kl_rule='cumulative update KL (PPO + BC) vs the update-start policy',
+                                     update_kl_cap=guard[2], ppo_choice_kl=(getattr(runtime, 'learnfix2_update_start', None)
+                                                                             or {}).get('ppo_kl'))),
                                  note='report only: cumulative KL on the supervised contexts after the update'))
     if learn['report_kl_unlabelled']:
         out['report_kl_unlabelled'] = dict(

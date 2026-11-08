@@ -129,7 +129,7 @@ def test_train_learnfix_receipt_kl_cap_entropy_and_rng(cfg, monkeypatch, fix):
 def test_learnfix2_settings_none_bias_and_credit_cap(cfg, monkeypatch):
     assert lf.settings2({}) is None
     v = lf.value2()
-    assert lf.settings2(dict(learnfix2=v)) == v and v['none_bias'] == lf.NONE_BIAS and v['credit_cap'] == 2.
+    assert lf.settings2(dict(learnfix2=v)) == v and v['none_bias'] == lf.NONE_BIAS and v['credit_cap'] == 2. and v['update_kl_cap'] == .06
     for bad in (dict(v, rule='x'), dict(v, none_bias=4), dict(v, extra=1), dict(v, credit_cap=0.)):
         with pytest.raises(ValueError, match='learnfix2'):
             lf.settings2(dict(learnfix2=bad))
