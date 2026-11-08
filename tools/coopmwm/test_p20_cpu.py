@@ -47,7 +47,7 @@ def test_p20_cell_validation():
 
 
 def test_built_guidance_docs():
-    rule, wm = _doc('GUIDANCE_P20_RULE.json'), _doc('GUIDANCE_P20_WM.json')
+    rule, wm = _doc('GUIDANCE_P20_RULE.json'), _doc('GUIDANCE_P20_WM_MC.json')
     assert sorted((r['regime'], r['family']) for r in rule['rows']) == [('D3200_p20', 'wall_g_duo12'),
                                                                         ('D3200_p20', 'wall_g_solo2')]
     assert all(r['fair'] and r['lb95_veh_s'] > 0 and r['arm'] == 'B' and r['p20_both'] for r in rule['rows'])
@@ -144,7 +144,7 @@ def _capture(monkeypatch):
 
 def test_p20_prepares_b_equals_r_code_and_g4_workers(monkeypatch):
     seen = _capture(monkeypatch)
-    rule, wm = _doc('GUIDANCE_P20_RULE.json'), _doc('GUIDANCE_P20_WM.json')
+    rule, wm = _doc('GUIDANCE_P20_RULE.json'), _doc('GUIDANCE_P20_WM_MC.json')
     c5b.prepare_f8_p20('src', root='/r/f8u', guidance_doc=rule, contexts=[])
     f8 = seen['v']
     assert set(f8) == set(c5.VARIANT) and f8['cell_keys'] == c5b.P20_CELLS
@@ -168,7 +168,7 @@ def test_p20_prepares_b_equals_r_code_and_g4_workers(monkeypatch):
 def test_p20_keys_and_check_guidance(cfg, wz):
     """The built docs pass the real keys + clean5a check_guidance at p20 (D2400/D2800_p20 = no-target cells)."""
     from .lc_families import CONFIG_KEY
-    for keys, name in ((c5b.keys_f, 'GUIDANCE_P20_RULE.json'), (c5b.keys_c, 'GUIDANCE_P20_WM.json')):
+    for keys, name in ((c5b.keys_f, 'GUIDANCE_P20_RULE.json'), (c5b.keys_c, 'GUIDANCE_P20_WM_MC.json')):
         out = dict(cfg)
         out.update(keys(desc=wz, guidance_doc=_doc(name), provenance='p20 test'))
         g = c5.check_guidance(out, ('D2400_p20', 'D2800_p20'), c5b.P20_CELLS)
@@ -204,3 +204,20 @@ def test_chain_cells_input_routes_to_p20_prepare(tmp_path, monkeypatch):
     source, control = _chain_control(tmp_path/'F', 'F', root=str(tmp_path/'F'/'root'), cells=list(c5b.P20_CELLS))
     with pytest.raises(ValueError, match='variant F8 or C'):
         mod.Chain(source, control).prepare()
+
+
+def test_wmverify_p20_doc(cfg, wz):
+    """WMVERIFY p20 (BANK_P20, FAIRX_P20, ARMS_P20_INTERIM): no WM plan passes the p20 priority (D3200/D2800
+    lb95 <= 0; D2400 picks single-CAV in every activation); g2_gap1 = a structured arm, excluded; D3200 uses
+    the labelled rule fallback; parity gate on."""
+    doc = _doc('GUIDANCE_P20_WM.json')
+    assert c5b.check_p20_guidance(doc, c5b.P20_CELLS, wm=True) == ('D2400_p20', 'D2800_p20')
+    assert [(r['regime'], r['family'], r['source']) for r in doc['rows']] == [
+        ('D3200_p20', 'wall_g_duo12', 'f8s_rule'), ('D3200_p20', 'wall_g_solo2', 'f8s_rule')]
+    cells = doc['p20']['cells']
+    assert cells['D3200_p20']['source'] == 'rule' and cells['D3200_p20']['fallback'] is True
+    assert 'g2_gap1' in doc['clean5c']['structured_excluded'] and doc['clean5c']['templates'] == []
+    assert doc['clean5c']['skipped']['D2400_p20/mut_c19711cf1ebe4332'] == 'not multi-CAV'
+    out = dict(cfg)
+    out.update(c5b.keys_c(desc=wz, guidance_doc=doc, provenance='p20 test'))
+    assert c5.check_guidance(out, ('D2400_p20', 'D2800_p20'), c5b.P20_CELLS)['regimes'] == ['D3200_p20']

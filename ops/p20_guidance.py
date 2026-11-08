@@ -43,13 +43,34 @@ def rule_doc(multicrit, *, provenance):
                           note='p20 rule guidance: MULTICRIT '+'/'.join(c5b.P20_RULE_FAMILIES))
 
 
-def wm_doc(bank, *, analysis, arms, verify, fallback, provenance):
+def structured_names(paths):
+    """Names in any 'structured' (hand-designed / rule) group of WM-C ARMS files: never WM targets."""
+    out = set()
+    for path in paths:
+        for groups in json.loads(Path(path).read_text(encoding='utf-8')).values():
+            if isinstance(groups, dict):
+                out.update(n['name'] if isinstance(n, dict) else n for n in groups.get('structured') or ())
+    return out
+
+
+def wm_doc(bank, *, analysis, arms, verify, fallback, provenance, fairx=(), structured=()):
+    excluded = structured_names(structured)
+    arms_docs = []
+    for p in arms:
+        doc = json.loads(Path(p).read_text(encoding='utf-8'))
+        for groups in doc.values():
+            if isinstance(groups, dict):
+                for g in fullpol_bank.WM_GROUPS:
+                    if groups.get(g):
+                        groups[g] = [n for n in groups[g] if (n['name'] if isinstance(n, dict) else n) not in excluded]
+        arms_docs.append(doc)
     merged = dict(families={})
     for path in verify:                    # several VERIFY files (initial + later p20 WMVERIFY): families merged
         merged['families'].update(json.loads(Path(path).read_text(encoding='utf-8')).get('families') or {})
     doc = fullpol_bank.build(bank, fallback=fallback, analysis_paths=analysis, provenance=provenance,
-                             arms=[json.loads(Path(p).read_text(encoding='utf-8')) for p in arms], verify=merged,
-                             eligible_fn=c5b.p20_eligible)
+                             arms=arms_docs, verify=merged, eligible_fn=c5b.p20_eligible, fairx_paths=fairx)
+    if excluded:
+        doc['clean5c']['structured_excluded'] = sorted(excluded)
     return c5b.p20_select(doc, c5b.P20_CELLS, note='p20 WM guidance: WMVERIFY-verified p20 multi-CAV plans, '
                           'labelled rule fallback elsewhere')
 
@@ -63,6 +84,9 @@ def main(argv=None):
     ap.add_argument('--arms', nargs='*', default=())
     ap.add_argument('--verify', nargs='*', default=())
     ap.add_argument('--fallback')
+    ap.add_argument('--fairx', nargs='*', default=(), help='WMVERIFY FAIRX files (CVaR90 vs u0 for D2400)')
+    ap.add_argument('--structured', nargs='*', default=(),
+                    help="WM-C ARMS files whose 'structured' arms are excluded from the WM targets")
     ap.add_argument('--provenance', required=True)
     ap.add_argument('--out', required=True)
     a = ap.parse_args(argv)
@@ -75,7 +99,7 @@ def main(argv=None):
         fallback = json.loads(Path(a.fallback).read_text(encoding='utf-8'))
         c5b.check_p20_guidance(fallback, c5b.P20_CELLS, wm=False)
         doc = wm_doc(a.bank, analysis=a.analysis, arms=a.arms, verify=a.verify, provenance=a.provenance,
-                     fallback=fallback)
+                     fallback=fallback, fairx=a.fairx, structured=a.structured)
     none = c5b.check_p20_guidance(doc, c5b.P20_CELLS, wm=a.kind == 'wm')
     out.write_text(json.dumps(doc, indent=1, sort_keys=True), encoding='utf-8')
     print(json.dumps(dict(out=str(out), sha256=doc['source']['sha256'], none=list(none),

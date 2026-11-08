@@ -110,7 +110,7 @@ def eligible(p, threshold_s=THRESHOLD_S):
 
 
 def build(bank_paths, *, fallback, analysis_paths=(), provenance, arm='B', arms=None, verify=None,
-          require_parity=True, eligible_fn=None):
+          require_parity=True, eligible_fn=None, fairx_paths=()):
     """Guidance doc (fullpol-regime-guidance-v1): bank targets where verified, F8S rule rows elsewhere."""
     from .fullpol_learn import guidance_doc
     rows, sources, analysis = [], [], {'cells': {}}
@@ -119,6 +119,14 @@ def build(bank_paths, *, fallback, analysis_paths=(), provenance, arm='B', arms=
         for cell, fams in json.loads(raw)['cells'].items():
             analysis['cells'].setdefault(cell, {}).update(fams)
         sources.append(dict(name=Path(path).name, sha256=hashlib.sha256(raw).hexdigest(), role='analysis'))
+    for path in fairx_paths:          # p20: WMVERIFY FAIRX (wmverify.fairx.v1) CVaR90 vs u0 -> plan cvar90_diff
+        raw = Path(path).read_bytes()
+        for cell, fams in json.loads(raw)['cells'].items():
+            for fam, v in fams.items():
+                c = (v.get('vs_u0') or {}).get('cvar90_diff')
+                if c is not None:
+                    analysis['cells'].setdefault(cell, {}).setdefault(fam, {})['cvar90_diff'] = float(c)
+        sources.append(dict(name=Path(path).name, sha256=hashlib.sha256(raw).hexdigest(), role='fairx'))
     bank = []
     for path in bank_paths:
         raw = Path(path).read_bytes()
