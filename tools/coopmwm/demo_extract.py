@@ -209,18 +209,18 @@ def work_list(acts, lookback=None):
     """{tape key: {root, job, until, ticks}} needed by build_items; tape key = <root>__<job>."""
     want = {}
 
-    def add(root, job, t):
+    def add(root, job, t, lb):
         k = f'{root}__{job}'
         w = want.setdefault(k, dict(root=root, job=job, until=0, ticks=set()))
         w['until'] = max(w['until'], int(t))
-        w['ticks'].update(window(t, lookback))
+        w['ticks'].update(window(t, lb))
     for a in acts:
         if a['diff'] < 0:
-            add(a['root'], job_name(a['cell'], a['seed'], a['family']), a['t'])
+            add(a['root'], job_name(a['cell'], a['seed'], a['family']), a['t'], a.get('lookback', lookback))
         elif a['diff'] > 0:
             for arm in a.get('ref_arms') or REFERENCE_ARMS:
                 if arm != a['family']:
-                    add(a['root'], job_name(a['cell'], a['seed'], arm), a['t'])
+                    add(a['root'], job_name(a['cell'], a['seed'], arm), a['t'], a.get('lookback', lookback))
     return {k: dict(v, ticks=sorted(v['ticks'])) for k, v in sorted(want.items())}
 
 
@@ -369,7 +369,8 @@ def build_items(acts, triggers, cfg=None, lookback=None):
             chosen = trig = None
             any_decision = False
             for k, per_seed in enumerate(slates):
-                decisions = [t for t in reversed(window(a['t'], lookback)) if per_seed.get((key, t)) is not None]
+                decisions = [t for t in reversed(window(a['t'], a.get('lookback', lookback)))
+                             if per_seed.get((key, t)) is not None]
                 any_decision |= bool(decisions)
                 for t in decisions:
                     hits = member_slots(per_seed[(key, t)], a['family'], a['members'], cfg)
@@ -380,7 +381,8 @@ def build_items(acts, triggers, cfg=None, lookback=None):
                 if chosen is not None:
                     break
             if not any_decision:
-                skipped.append(dict(meta, kind=kind, reason='no trigger decision in the onset window'))
+                skipped.append(dict(meta, kind=kind,
+                                    reason='no trigger decision offering an admitted plan in the onset window'))
                 continue
             if chosen is None:
                 skipped.append(dict(meta, kind=kind,
@@ -590,6 +592,8 @@ def cmd_plan(a):
         acts = [x for x in acts if x['cell'] in a.cells]
     if a.unconditional_bank:
         ua, us = unconditional_activations(guidance, a.unconditional_bank, a.cells)
+        for x in ua:
+            x['lookback'] = a.unconditional_lookback
         acts, skipped = acts+ua, skipped+us
     work = work_list(acts)
     reqs = {}
@@ -743,6 +747,7 @@ def main(argv=None):
     p.add_argument('--bank', nargs='+', required=True)
     p.add_argument('--unconditional-bank', nargs='*', default=[])
     p.add_argument('--cells', nargs='*', default=[])
+    p.add_argument('--unconditional-lookback', type=int, default=10)
     p.add_argument('--out', required=True)
     p = sub.add_parser('extract')
     p.add_argument('--plan', required=True)
