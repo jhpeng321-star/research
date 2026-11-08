@@ -165,8 +165,9 @@ def job_name(cell, seed, arm):
 def window(t, lookback=None):
     """The policy decision seconds that may carry an activation at onset second t: [t - lookback, t] (>= 300).
     The trigger decides every decision_interval_s (60 s) plus event seconds, so the plant's onset second is
-    usually not a decision second; the demo uses the LATEST decision second in this window whose slate offers
-    the plan to an acting member (pre-onset state: the plan has not acted yet)."""
+    usually not a decision second. The extractor makes a decision due at every second of this window
+    (featurize force_decision) and the demo uses the LATEST second whose slate offers the plan to an acting
+    member (normally the onset second itself; pre-onset state, the plan has not acted yet)."""
     lb = LOOKBACK_S if lookback is None else int(lookback)
     return list(range(max(300, int(t)-lb), int(t)+1))
 
@@ -244,10 +245,13 @@ def featurizer(cfg, base, worker_state, *, seed=0):
     return policy, ctl
 
 
-def featurize(cfg, base, worker_state, seconds, want, *, seed=0, strip=True, inputs=None):
+def featurize(cfg, base, worker_state, seconds, want, *, seed=0, strip=True, inputs=None, force_decision=()):
     """{t: track2_trigger record or None} for t in ``want``, replaying every second from 300 to max(want) exactly
     as accel_plant does: controller.apply(rows, commands, t) then observe_issued(the second's tape line).
-    ``inputs`` (parity only): {t: (rows, commands)} = the recorded training controller inputs."""
+    ``inputs`` (parity only): {t: (rows, commands)} = the recorded training controller inputs.
+    ``force_decision``: seconds at which the trigger's periodic decision clock is made due (last_decision reset),
+    so a trigger record (the full slate) exists there; only the decision PHASE changes (the trigger picks none,
+    so no session or state follows from it). Training decides every decision_interval_s from its own phase."""
     policy, ctl = featurizer(cfg, base, worker_state, seed=seed)
     out = {}
     last = max(want) if want else 299
@@ -257,6 +261,8 @@ def featurize(cfg, base, worker_state, seconds, want, *, seed=0, strip=True, inp
         rows, commands, issued = tape_inputs(seconds[t], strip=strip)
         if inputs is not None:
             rows, commands = inputs[t]
+        if t in force_decision:
+            policy.last_decision = None
         n = len(ctl.events)
         ctl.apply(rows, commands, t)
         if len(ctl.events) != n+1:
@@ -306,7 +312,11 @@ def member_slots(trigger, family, members, cfg=None):
 
 
 def build_items(acts, triggers, cfg=None, lookback=None):
-    """(items, skipped). ``triggers``: {(tape key, t): trigger record or None}."""
+    """(items, skipped). ``triggers``: {(tape key, t): trigger record or None}, or a list of such dicts = the
+    same replay under several slate draws (candidate_rng seeds; which candidates a slate offers is random in
+    training too). Per activation and tape, the first draw (in list order) with a decision second in the
+    onset window whose slate offers the plan to an acting member is used (meta slate_draw)."""
+    slates = triggers if isinstance(triggers, list) else [triggers]
     helped = [-a['diff'] for a in acts if a['diff'] < 0]
     hurt = [a['diff'] for a in acts if a['diff'] > 0]
     help_max, hurt_max = max(helped or [1.]), max(hurt or [1.])
@@ -322,21 +332,26 @@ def build_items(acts, triggers, cfg=None, lookback=None):
             job = job_name(a['cell'], a['seed'], arm)
             key = f"{a['root']}__{job}"
             meta = dict(_meta(a), job=job, tape_key=key, tape_arm=arm)
-            decisions = [t for t in reversed(window(a['t'], lookback)) if triggers.get((key, t)) is not None]
-            if not decisions:
+            chosen = trig = None
+            any_decision = False
+            for k, per_seed in enumerate(slates):
+                decisions = [t for t in reversed(window(a['t'], lookback)) if per_seed.get((key, t)) is not None]
+                any_decision |= bool(decisions)
+                for t in decisions:
+                    hits = member_slots(per_seed[(key, t)], a['family'], a['members'], cfg)
+                    if hits:
+                        chosen, trig = t, per_seed[(key, t)]
+                        meta.update(slate_draw=k)
+                        break
+                if chosen is not None:
+                    break
+            if not any_decision:
                 skipped.append(dict(meta, kind=kind, reason='no trigger decision in the onset window'))
                 continue
-            chosen = None
-            for t in decisions:
-                hits = member_slots(triggers[(key, t)], a['family'], a['members'], cfg)
-                if hits:
-                    chosen = t
-                    break
             if chosen is None:
-                skipped.append(dict(meta, kind=kind, decision_ticks=decisions,
+                skipped.append(dict(meta, kind=kind,
                                     reason='plan not offered to any member row in the onset window'))
                 continue
-            trig = triggers[(key, chosen)]
             meta.update(decision_t=chosen, onset_offset_s=chosen-a['t'])
             for row, slot, vid in hits:
                 w = base_w/len(hits)
@@ -436,36 +451,39 @@ def bank_families(cfg):
 
 
 def compare_records(got, rec, families=()):
-    """Comparison of two track2_trigger records. Exact: context (the policy observation) and row members. Per
-    row, the RNG-INDEPENDENT offered entries - slot 0 'none' and the guidance bank-template entries (``families``,
-    the demo label space) - with their descriptors, in order. The slate's other candidates (N2 group_hold /
-    lane_drop_initiate parameters, LCEXEC free_program draws) are drawn from candidate_rng; the training episode's
-    stream is not recoverable from its RESULT, so they are counted, not compared."""
+    """Comparison of two track2_trigger records. Exact: context (the policy observation), row members, and per
+    row slot 0 ('none': entry, mask, descriptor). Bank-template entries (``families``, the demo label space)
+    offered in BOTH records on the same row must be identical (entry + descriptor). WHICH candidates a slate
+    offers (N2 group_hold / lane_drop_initiate parameters, LCEXEC free_program and verified-template draws) is
+    drawn from candidate_rng, whose training stream is not recoverable from the RESULT; offered-only-on-one-side
+    counts are reported, not compared."""
     from .fullpol_learn import option_labels
     fams = set(families)
 
-    def det(r):
-        out = []
-        for i, row in enumerate(r['tables']):
-            keep = []
-            for j, e in enumerate(row):
-                if not r['mask'][i][j]:
-                    continue
-                if j == 0 or (e is not None and fams & set(option_labels(e))):
-                    keep.append((j if j == 0 else None, _j(e), _j(r['descriptors'][i][j])))
-            out.append(keep)
+    def bank(r, i):
+        out = {}
+        for j, e in enumerate(r['tables'][i]):
+            if j and r['mask'][i][j] and e is not None:
+                for f in fams & set(option_labels(e)):
+                    out.setdefault(f, (_j(e), _j(r['descriptors'][i][j])))
         return out
-
-    def n_offered(r):
-        return sum(bool(m) for row in r['mask'] for m in row)
-    dg, dr = det(got), det(rec)
     out = dict(context=_j(got['context']) == _j(rec['context']), rows=len(got['tables']) == len(rec['tables']))
-    out['rng_independent_entries'] = bool(out['rows'] and dg == dr)
-    out['n_rng_independent'] = sum(len(x) for x in dr)
-    out['n_bank_entries'] = sum(len(x) for x in dr)-len(dr)
-    out['offered_entries'] = dict(recorded=n_offered(rec), replay=n_offered(got))
-    out['full_tables'] = _j(got['tables']) == _j(rec['tables'])
-    out['ok'] = out['context'] and out['rows'] and out['rng_independent_entries']
+    slot0 = both = same = one_side = 0
+    if out['rows']:
+        for i in range(len(rec['tables'])):
+            slot0 += (_j(got['tables'][i][0]) == _j(rec['tables'][i][0]) and got['mask'][i][0] == rec['mask'][i][0]
+                      and _j(got['descriptors'][i][0]) == _j(rec['descriptors'][i][0]))
+            bg, br = bank(got, i), bank(rec, i)
+            for f in set(bg) | set(br):
+                if f in bg and f in br:
+                    both += 1
+                    same += bg[f] == br[f]
+                else:
+                    one_side += 1
+    n = len(rec['tables'])
+    out.update(slot0_equal=f'{slot0}/{n}', bank_entries_both=both, bank_entries_equal=same,
+               bank_entries_one_side_rng=one_side, full_tables=_j(got['tables']) == _j(rec['tables']))
+    out['ok'] = bool(out['context'] and out['rows'] and slot0 == n and same == both)
     return out
 
 
@@ -558,7 +576,7 @@ def _worker_init(run_root, guidance_path, threads):
 
 def _worker_tape(path, ticks, seed):
     cfg, base, state = _WORKER['rt']
-    return featurize(cfg, base, state, tape_seconds(path), set(ticks), seed=seed)
+    return featurize(cfg, base, state, tape_seconds(path), set(ticks), seed=seed, force_decision=set(ticks))
 
 
 def cmd_extract(a):
@@ -577,7 +595,7 @@ def cmd_extract(a):
             tape_receipts[key] = dict(missing=True)
             continue
         tape_receipts[key] = dict(sha256=sha256_file(path), ticks=w['ticks'])
-        cpath = cache/f'{key}.json.gz'
+        cpath = cache/f'{key}__seed{a.seed}.json.gz'
         if cpath.exists():
             c = json.loads(gzip.decompress(cpath.read_bytes()))
             if c['tape_sha256'] == tape_receipts[key]['sha256'] and c['ticks'] == w['ticks'] and c['seed'] == a.seed:
@@ -593,12 +611,23 @@ def cmd_extract(a):
             got = fut.result()
             for t, trig in got.items():
                 triggers[(key, t)] = trig
-            cpath = cache/f'{key}.json.gz'
+            cpath = cache/f'{key}__seed{a.seed}.json.gz'
             cpath.write_bytes(gzip.compress(json.dumps(dict(tape_sha256=tape_receipts[key]['sha256'], ticks=ticks,
                                                             seed=a.seed, triggers={str(t): v for t, v in got.items()}),
                                                        sort_keys=True).encode('utf-8')))
             print(json.dumps(dict(tape=key, ticks=ticks)), flush=True)
-    items, skipped = build_items(plan['activations'], triggers, cfg)
+    slates = []
+    for seed in a.draw_seeds:
+        per = {}
+        for key in plan['work']:
+            cpath = cache/f'{key}__seed{seed}.json.gz'
+            if cpath.exists():
+                for t, trig in json.loads(gzip.decompress(cpath.read_bytes()))['triggers'].items():
+                    per[(key, int(t))] = trig
+        slates.append(per)
+    if a.seed not in a.draw_seeds:
+        raise ValueError('--seed must be one of --draw-seeds')
+    items, skipped = build_items(plan['activations'], slates, cfg)
     skipped = plan['skipped']+skipped+[dict(tape_key=k, reason='tape missing') for k, r in tape_receipts.items()
                                        if r.get('missing')]
     provenance = dict(rule='DEMOX demo_extract v1 (MAIN 2026-11-08; wm+rule admitted pairs)',
@@ -607,7 +636,7 @@ def cmd_extract(a):
                       run_root=dict(path=str(a.run_root), **{n: sha256_file(Path(a.run_root)/n) for n in
                                     ('CONFIG.json', 'B_checkpoint_000.pt', 'B_track2_000.pt')}),
                       featurizer='track2_backend.episode_components(controller_class(acceleration.Controller)), '
-                                 'trigger forced none, noise_seed %d' % a.seed,
+                                 'trigger forced none, decision forced due at every window second, slate draws (noise_seed) %s' % a.draw_seeds,
                       parity=json.loads(Path(a.parity).read_bytes()) if a.parity else None)
     manifest = write_outputs(items, skipped, a.out, provenance)
     print(json.dumps(dict(json=manifest['json'], npz=manifest['npz'], **{k: manifest['summary'][k] for k in
@@ -628,7 +657,8 @@ def main(argv=None):
     p.add_argument('--plan', required=True)
     p.add_argument('--run-root', required=True)
     p.add_argument('--tapes', required=True)
-    p.add_argument('--seed', type=int, default=0)
+    p.add_argument('--seed', type=int, default=0, help='replay noise_seed computed in this call')
+    p.add_argument('--draw-seeds', type=int, nargs='+', default=[0], help='cached slate draws used, in order')
     p.add_argument('--parity')
     p.add_argument('--workers', type=int, default=8)
     p.add_argument('--threads', type=int, default=1)

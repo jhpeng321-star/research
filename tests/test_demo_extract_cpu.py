@@ -212,3 +212,17 @@ def test_host_reducer(tmp_path):
     assert sorted(seconds) == [300, 301, 302, 303, 304]
     with pytest.raises(SystemExit):
         host.main(['--request', str(req), '--out', str(tmp_path/'out')])
+
+
+def test_compare_records_rng_entries_not_compared():
+    rec = _trigger([['mut_a', 'r1'], ['r2']])
+    got = _trigger([['mut_a', 'r9'], ['mut_a']])
+    out = dx.compare_records(got, rec, ['mut_a'])
+    assert out['ok'] and out['slot0_equal'] == '2/2' and out['bank_entries_both'] == 1
+    assert out['bank_entries_one_side_rng'] == 1 and not out['full_tables']
+    bad = json.loads(json.dumps(got))
+    bad['context']['x'][0] = [1., 0.]
+    assert not dx.compare_records(bad, rec, ['mut_a'])['ok']
+    bad = json.loads(json.dumps(got))
+    bad['descriptors'][0][1] = [9., 9.]
+    assert not dx.compare_records(bad, rec, ['mut_a'])['ok']
