@@ -20,8 +20,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools.coopmwm.fullpol_learn import guidance_doc  # noqa: E402
 
-RULE = ('priority v1 (MAIN 2026-11-09): situational rows rank first by lb95; unconditional rows are fallback '
-        '(lb95/mean = scale x the smallest situational value of the cell); originals in row.ranking')
+RULE = ('priority v2 (MAIN 2026-11-09): situational rows rank first by lb95; then unconditional WM rows, then '
+        'unconditional rule rows (each tier by original lb95), all below scale x the smallest situational value of the '
+        'cell; originals in row.ranking')
 
 
 def prioritise(doc, scale=0.5):
@@ -29,16 +30,22 @@ def prioritise(doc, scale=0.5):
     uncond = lambda r: bool((r.get('situational') or {}).get('unconditional'))  # noqa: E731
     for r in rows:
         r['row_class'] = 'unconditional_fallback' if uncond(r) else 'situational'
-    for r in rows:
-        if r['row_class'] != 'unconditional_fallback':
-            continue
-        sit = [x for x in rows if x['regime'] == r['regime'] and x['row_class'] == 'situational' and x['lb95_veh_s'] > 0]
-        if not sit:
-            continue                      # no situational row in the cell: nothing to yield to
-        r['ranking'] = dict(rule=RULE, original_lb95_veh_s=r['lb95_veh_s'], original_mean_veh_s=r['mean_veh_s'],
-                            original_ub95_veh_s=r.get('ub95_veh_s'), unit='per episode (unconditional confirmation)')
-        r['lb95_veh_s'] = scale*min(x['lb95_veh_s'] for x in sit)
-        r['mean_veh_s'] = scale*min(x['mean_veh_s'] for x in sit)
+    for cell in sorted({r['regime'] for r in rows}):
+        sit = [x for x in rows if x['regime'] == cell and x['row_class'] == 'situational' and x['lb95_veh_s'] > 0]
+        unc = [x for x in rows if x['regime'] == cell and x['row_class'] == 'unconditional_fallback']
+        if not sit or not unc:
+            continue                      # nothing to yield to (or nothing to demote)
+        # v2 (MAIN 2026-11-09): unconditional WM rows rank above unconditional rule rows; within a tier by the
+        # original lb95; all of them below every situational row of the cell.
+        unc.sort(key=lambda x: (x.get('plan_source') != 'wm', -x['lb95_veh_s'], x['family']))
+        top_lb, top_mean = scale*min(x['lb95_veh_s'] for x in sit), scale*min(x['mean_veh_s'] for x in sit)
+        n = len(unc)
+        for k, r in enumerate(unc):
+            r['ranking'] = dict(rule=RULE, original_lb95_veh_s=r['lb95_veh_s'], original_mean_veh_s=r['mean_veh_s'],
+                                original_ub95_veh_s=r.get('ub95_veh_s'), unit='per episode (unconditional confirmation)',
+                                fallback_rank=k+1, fallback_tier=r.get('plan_source'))
+            r['lb95_veh_s'] = top_lb*(n-k)/n
+            r['mean_veh_s'] = top_mean*(n-k)/n
     out = guidance_doc(rows, sources=list(doc['source']['sources'])+[dict(
         name='parent guidance (priority rewrite)', sha256=doc['source']['sha256'], baseline='mappo', role='parent')],
         provenance=doc['provenance']+' | '+RULE, weight=doc['weight'], clip=doc['clip'])
