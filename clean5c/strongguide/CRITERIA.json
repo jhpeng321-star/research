@@ -46,5 +46,14 @@
   "S4": true,
   "RESULT": "FAIL",
   "why": "the run is already at choice-row P(none) 0.652 < 0.70 at u3 start, so the 0.70 floor rejects the first EV-BC step and STRONG moves less than the current config"
+ },
+ "amendment_verified_only": {
+  "written": "2026-11-09 ~06:0x, before the re-run (MAIN decision: verified-only slate alone, current 0.075 config, no STRONG preset)",
+  "how": "replay of CLEAN5C5C u3 B with the current config (update_kl_cap 0.075); slate effect measured on the recorded slates with the non-verified free-program slots masked (VERIFIED_ONLY)",
+  "V1": "expected free-program actions under the verified-only slate = 0 (after the update)",
+  "V2": "P(target) on admitted target rows under the verified-only slate rises",
+  "V3": "total choice-row KL (PPO + EV-BC) <= 0.075",
+  "V4": "report choice-row P(none) start and end (no threshold)",
+  "result_rule": "PASS iff V1-V3"
  }
 }
