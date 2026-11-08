@@ -96,6 +96,10 @@ ORACLE_SHA256 = '7409a7b4765651813c4771462b7acbc16386d626900d9a031e19d3a65a9f9d2
 LEARNED_MODEL_SHA256 = '8e0ddd3e241ce0172736909133f0b745c58b6bf795e06ca5364e5755f7e3b720'
 LEARNED_TRIGGER_SHA256 = '41fc8d1a2fb0ef547524a9d36488b7bbb4bc9f0e8c1e2d06f5fe85eb5903b54d'
 BANK_ARMS = ORACLE_ARMS+LEARNED_ARMS                  # bound to the sealed end-of-training bank; p20x primary only
+#: amendment 27 (MAIN 2026-11-09 06:08): the bank arms run NOW (before training ends) on the p20x primary panel in the
+#: evaluation root's own ledger, phase v2v_final_bank, cap 3 x 115,200 (bank-run); the bank is frozen at fd385a2b
+BANK_PHASE = 'v2v_final_bank'
+BANK_CAP_SIM_S = 3*115_200
 ORACLE_LABELS = dict(ORACLE='ORACLE: U0 + every admitted verified plan of the frozen bank (WM + rule), privileged '
                             'bins - upper bound, not deployable',
                      ORACLE_WM='ORACLE_WM: U0 + the WM-sourced admitted plans of the frozen bank only, privileged '
@@ -1782,7 +1786,7 @@ def run_waves(waves, *, root, final_root, cfg, runtime, workers, base, chunked=F
     out, sources, todo, done_before = {}, {}, [], {}
     chunked = chunked or bool(limit)
     prerun = isinstance(runtime, PrerunRuntime)
-    phase = PRERUN_PHASE if prerun else PHASE
+    phase = getattr(runtime, 'phase', PRERUN_PHASE) if prerun else PHASE
     used, rounds = _rounds_used(final_root, root), replay_rounds(final_root)
 
     def attempt(job):          # 0 = first run; n = authorised replay round n; None = interrupted, needs MAIN
@@ -3044,6 +3048,53 @@ class PrerunRuntime:
         return self.inner.run(items, cfg, workers)
 
 
+class BankRuntime(PrerunRuntime):
+    """Amendment 27: the bank arms (ORACLE, ORACLE_WM, LEARNED_TRIGGER) on the pre-run plant of this root, charged to
+    its own ledger under phase v2v_final_bank, cap BANK_CAP_SIM_S (the allocation bound still applies)."""
+    phase = BANK_PHASE
+
+    def check_capacity(self, amount):
+        rows = fe.ledger_rows(self.final_root)
+        if sum(r['sim_s'] for r in rows if r.get('phase') == BANK_PHASE)+amount > BANK_CAP_SIM_S:
+            raise Blocked(f'bank arms: {BANK_PHASE} cap {BANK_CAP_SIM_S} would be exceeded')
+        if sum(r['sim_s'] for r in rows)+amount > ALLOCATION_SIM_S:
+            raise Blocked(f'bank arms: {PHASE} allocation {ALLOCATION_SIM_S} would be exceeded')
+
+    def reserve(self, cfg, jobs):
+        try:
+            own_reserve(self.final_root, jobs, BANK_PHASE, cap=BANK_CAP_SIM_S, calls=self.calls)
+        except Blocked as error:
+            raise Blocked(f'bank arms: {error}') from None
+
+
+def bind_oracle(*, final_root, bank_path, model_path, authority, banks=None):
+    """Zero physics (amendment 27): seal ORACLE_BINDING.json once - the common bank (ORACLE_WM, LEARNED_TRIGGER and
+    the applicability labels), per-arm bank overrides (ORACLE: the union bank), the LEARNED_TRIGGER model doc and
+    the registered oracle_plan digest. Every file is hashed here; never overwritten."""
+    final_root = Path(final_root)
+    if SETTING != 'p20x':
+        raise Blocked('the bank arms are registered for the p20x root only')
+    if (final_root/ORACLE_BINDING).exists():
+        raise Blocked(f'{ORACLE_BINDING} exists; never overwrite')
+    if not str(authority or '').strip():
+        raise Blocked('authority required')
+
+    def entry(path):
+        path = Path(path).resolve()
+        return dict(path=str(path), file_sha256=file_sha(path))
+    model = entry(model_path)
+    if model['file_sha256'] != LEARNED_MODEL_SHA256:
+        raise Blocked(f'{model_path} is not the registered LEARNED_TRIGGER model {LEARNED_MODEL_SHA256[:8]}')
+    value = seal(dict(schema=SCHEMA+'.oracle_binding', created=datetime.now(timezone.utc).isoformat(),
+                      authority=str(authority), bank=entry(bank_path),
+                      banks={arm: entry(path) for arm, path in (banks or {}).items()},
+                      learned_trigger_model=model, oracle_sha256=ORACLE_SHA256,
+                      learned_trigger_sha256=LEARNED_TRIGGER_SHA256), 'receipt_sha256')
+    check_oracle_binding(value)
+    publish(final_root/ORACLE_BINDING, value)
+    return value
+
+
 def prerun_register(*, final_root, plant_config, u0_path, u0_sha256, runtime, panel, panel_3c, authority):
     """Zero physics: a NEW evaluation root with the sealed PRERUN_PLAN, a byte-for-byte content copy of the
     clean run CONFIG (unchanged: run_root/accounting_root stay the clean root, which passes the production
@@ -3101,9 +3152,13 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
         raise Blocked('PRERUN_PLAN.json missing: prerun-register first')
     if (plan['panel_sha256'], plan['panel_3c_sha256']) != (panel['panel_sha256'], panel_3c and panel_3c['panel_sha256']):
         raise Blocked('PRERUN_PLAN binds other panels')
-    if not set(arms) <= set(PRERUN_ARMS):
-        raise Blocked(f'pre-run arms are {PRERUN_ARMS}')
-    pre = runtime if isinstance(runtime, PrerunRuntime) else PrerunRuntime(runtime, final_root)
+    bank = set(arms) <= set(BANK_ARMS)
+    if not (set(arms) <= set(PRERUN_ARMS) or bank):
+        raise Blocked(f'pre-run arms are {PRERUN_ARMS}; bank-run arms are {BANK_ARMS}')
+    if bank:
+        pre = runtime if isinstance(runtime, BankRuntime) else BankRuntime(getattr(runtime, 'inner', runtime), final_root)
+    else:
+        pre = runtime if isinstance(runtime, PrerunRuntime) else PrerunRuntime(runtime, final_root)
     check_ = (final_root/'LOGCHECK.json')
     if not check_.is_file() or verify(read(check_), 'receipt_sha256', 'LOGCHECK')['verdict'] != 'PASS':
         raise Blocked('run prerun-logcheck first: a PASS of the one-episode vehicle-log check is required')
@@ -3117,12 +3172,14 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
         if pre.physics and not os.environ.get('COOPMWM_MAP_SPEC'):
             raise Blocked('set COOPMWM_MAP_SPEC to the staged wz3to2 MAP_SPEC.json (N1 process map) before physics')
         if not runner['ok'] or ('NATIVE' in arms and not runner['native']) or ('RULE' in arms and not runner.get('rule')) \
-                or ('RULE_FAIR' in arms and not runner.get('rule_fair')) or ('MAPPO_LANE' in arms and not runner.get('lane')):
+                or ('RULE_FAIR' in arms and not runner.get('rule_fair')) or ('MAPPO_LANE' in arms and not runner.get('lane')) \
+                or (set(ORACLE_ARMS) & set(arms) and not runner.get('oracle')) \
+                or (set(LEARNED_ARMS) & set(arms) and not runner.get('learned')):
             raise Blocked(f'runner cannot run the pre-run arms: {runner}')
         if pre.physics:
             map_check(bind_map_api(None), panel)
         u0 = mappo_binding(final_root, 'U0')
-        if {'U0', 'RULE', 'RULE_FAIR'} & set(arms):
+        if {'U0', 'RULE', 'RULE_FAIR'} & set(arms) or bank:
             if u0 is None:
                 raise Blocked('bind-mappo --arm U0 (frozen d9042cc5 + --residual-path <final_root>/prerun_plant/'
                               'A_checkpoint_000.pt) before the pre-run')
@@ -3130,6 +3187,11 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
                 raise Blocked('the U0 binding residual is not the pre-run u0 copy')
         waves = []
         bound = {arm: mappo_binding(final_root, arm) for arm in arms if arm in COMPARATOR_ARMS}
+        if bank:
+            oracle = oracle_binding(final_root)
+            if oracle is None:
+                raise Blocked(f'bank-run needs a sealed {ORACLE_BINDING} (bind-oracle)')
+            bound.update({arm: oracle for arm in arms})
         for arm in arms:
             if arm in bound and bound[arm] is None:
                 raise Blocked(f'{arm} pre-run needs its binding first (bind-mappo --arm {arm})')
@@ -3167,12 +3229,13 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
             status(current, 'CHUNK', dict(round=rounds, published={k: v[0] for k, v in coverage().items()}))
         cov = coverage()
         receipts = {name: published(final_root, name, specs, check_episode)[1] for name, _, specs in waves}
-        out = dict(schema=SCHEMA+'.prerun_done', status='STOPPED' if stopped else 'PASS', sealed=True,
+        out = dict(schema=SCHEMA+('.bank_done' if bank else '.prerun_done'), status='STOPPED' if stopped else 'PASS',
+                   sealed=True, arms=list(arms),
                    prerun_plan_sha256=plan['receipt_sha256'], chunk=chunk, rounds=rounds,
                    coverage={k: dict(published=v[0], registered=v[1]) for k, v in cov.items()},
                    receipts={k: v['receipt_sha256'] for k, v in receipts.items()},
                    charged_sim_s=sum(r['sim_s'] for r in fe.ledger_rows(final_root)),
-                   cap_sim_s=effective_prerun_cap(final_root, plan),
+                   cap_sim_s=BANK_CAP_SIM_S if bank else effective_prerun_cap(final_root, plan),
                    resume=None if not stopped else ('remove STOP_PRERUN (or copy the whole final root to the same '
                                                     'absolute path on the other host) and run prerun-run again'))
         status(current, out['status'], out)
@@ -3968,7 +4031,8 @@ def main(argv=None):
                                        'bind-arms', 'prerun-register', 'prerun-logcheck', 'prerun-seqcheck',
                                        'prerun-amend-cap', 'authorize-replay', 'prerun-run', 'parity', 'env-equivalence',
                                        'prerun-envparity', 'envparity-assess', 'host-identity',
-                                       'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run'))
+                                       'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run',
+                                       'bind-oracle', 'bank-run'))
     p.add_argument('--setting', choices=('p60',)+tuple(SETTINGS), default=os.environ.get('NM_SETTING', 'p60'),
                    help='evaluation setting (amendment 22): p60 = the registered default; p20 = the 20%% CAV panels')
     p.add_argument('--root', default=None)
@@ -4007,6 +4071,10 @@ def main(argv=None):
                                           'config (N7 toml) used by the F11 training-env path')
     p.add_argument('--host', help='host-identity: label of this host (e.g. cpuW)')
     p.add_argument('--reference', help='host-identity: previous host plant start receipt (default envequiv/start_plant.json)')
+    p.add_argument('--bank', help='bind-oracle: the common bank doc (ORACLE_WM, LEARNED_TRIGGER, applicability labels)')
+    p.add_argument('--oracle-bank', help='bind-oracle: the ORACLE (union) bank doc override (amendment 27)')
+    p.add_argument('--model', help='bind-oracle: the LEARNED_TRIGGER model doc (sha 8e0ddd3e)')
+    p.add_argument('--bank-arms', default=','.join(BANK_ARMS), help='bank-run: comma-separated subset of the bank arms')
     p.add_argument('--zero-sumo-only', action='store_true', help='host-identity: skip the 420 s replay')
     p.add_argument('--cap', type=int, help='prerun-amend-cap: the new pre-run sub-cap (MAIN decision)')
     p.add_argument('--chunk', type=int, help='prerun-run: episodes per dispatch (default 2 x workers); STOP_PRERUN '
@@ -4120,6 +4188,19 @@ def main(argv=None):
                         replace=True)
                 result = prerun_execute(final_root=a.final_root, runtime=Runtime(a.runner), panel=panel,
                                         panel_3c=load_panel_3c(), workers=a.workers, chunk=a.chunk)
+        elif a.command == 'bind-oracle':
+            value = bind_oracle(final_root=a.final_root, bank_path=a.bank, model_path=a.model, authority=a.authority,
+                                banks=dict(ORACLE=a.oracle_bank) if a.oracle_bank else None)
+            result = dict(receipt_sha256=value['receipt_sha256'], bank=value['bank'], banks=value['banks'])
+        elif a.command == 'bank-run':
+            import fcntl
+            arms = tuple(x for x in a.bank_arms.split(',') if x)
+            with (Path(a.final_root)/'OWNER.lock').open('a') as lock:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                publish(Path(a.final_root)/'LAUNCHER.json', dict(pid=os.getpid(), argv=sys.argv, unix=time.time()),
+                        replace=True)
+                result = prerun_execute(final_root=a.final_root, runtime=Runtime(a.runner), panel=panel,
+                                        panel_3c=None, workers=a.workers, chunk=a.chunk, arms=arms)
         elif a.command == 'bind-arms':
             result = bind_arms(final_root=a.final_root, shas=dict(A=a.a_sha, B=a.b_sha, R=a.r_sha), authority=a.authority,
                                update=a.update)

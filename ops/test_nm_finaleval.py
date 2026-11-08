@@ -1476,3 +1476,37 @@ def test_learned_trigger_arm_binds_its_pinned_model_and_validates_its_receipts(p
     native = nm.episode_specs('NATIVE', panel, f['cfg'], f['root'], 'mappo_u0')[0]
     with pytest.raises(nm.Blocked, match='outside the LEARNED_TRIGGER arm'):
         nm.check_episode(dict(nm.fake_episode(native), learned_trigger={}), native)
+
+
+def test_bank_run_amendment27_runs_the_bank_arms_in_their_own_phase(p20x, tmp_path):
+    """Amendment 27: bind-oracle seals the common bank (+ the ORACLE union override, the LEARNED model, the pinned
+    oracle digest) once; bank-run runs ORACLE / ORACLE_WM / LEARNED_TRIGGER on the pre-run plant, charged to phase
+    v2v_final_bank within its 345,600 cap; zero results opened."""
+    f = prerun_fixture(tmp_path, p20x)
+    final_root = f['final_root']
+    bank, union, model = tmp_path/'wm.json', tmp_path/'union.json', tmp_path/'model.json'
+    bank.write_text('{"wm": 1}')
+    union.write_text('{"union": 1}')
+    model.write_text('{}')
+    with pytest.raises(nm.Blocked, match='registered LEARNED_TRIGGER model'):
+        nm.bind_oracle(final_root=final_root, bank_path=bank, model_path=model, authority='MAIN 27')
+    import unittest.mock as um
+    with um.patch.object(nm, 'LEARNED_MODEL_SHA256', nm.file_sha(model)):
+        value = nm.bind_oracle(final_root=final_root, bank_path=bank, model_path=model, authority='MAIN 27',
+                               banks=dict(ORACLE=union))
+        with pytest.raises(nm.Blocked, match='never overwrite'):
+            nm.bind_oracle(final_root=final_root, bank_path=bank, model_path=model, authority='MAIN 27')
+        assert value['bank']['file_sha256'] == nm.file_sha(bank) and value['banks']['ORACLE']['file_sha256'] == nm.file_sha(union)
+        assert value['oracle_sha256'] == nm.ORACLE_SHA256 and nm.oracle_binding(final_root) == value
+        with pytest.raises(nm.Blocked, match='runner cannot run'):
+            nm.prerun_execute(final_root=final_root, runtime=nm.FakeRuntime(), panel=p20x, panel_3c=None,
+                              arms=nm.BANK_ARMS, workers=4)
+        runtime = nm.FakeRuntime(dict(oracle=True, learned=True))
+        out = nm.prerun_execute(final_root=final_root, runtime=runtime, panel=p20x, panel_3c=None, arms=nm.BANK_ARMS,
+                                workers=8, chunk=96)
+    assert out['status'] == 'PASS' and out['arms'] == list(nm.BANK_ARMS) and out['cap_sim_s'] == 345_600
+    assert {k: v['published'] for k, v in out['coverage'].items()} == {a: 96 for a in nm.BANK_ARMS}
+    rows = nm.fe.ledger_rows(final_root)
+    assert sum(r['sim_s'] for r in rows if r['phase'] == nm.BANK_PHASE) == 345_600
+    with pytest.raises(nm.Blocked, match='bank-run arms'):
+        nm.prerun_execute(final_root=final_root, runtime=runtime, panel=p20x, panel_3c=None, arms=('ORACLE', 'U0'))
