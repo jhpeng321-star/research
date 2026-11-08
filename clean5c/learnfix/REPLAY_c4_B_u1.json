@@ -1,0 +1,261 @@
+[
+ {
+  "run": "coopmwm20261108_clean5c4",
+  "arm": "B",
+  "update": 1,
+  "learnfix": false,
+  "episodes": 8,
+  "ticks": 618,
+  "before": {
+   "choice_rows": 2604,
+   "p_none_choice": 0.1734381467103958,
+   "act_rows": 2,
+   "p_target_act": 0.17190581187605858,
+   "none_rows": 9,
+   "p_none_on_none_rows": 0.11940285480684704
+  },
+  "after_ppo": {
+   "choice_rows": 2604,
+   "p_none_choice": 0.18571676313877106,
+   "act_rows": 2,
+   "p_target_act": 0.13653350621461868,
+   "none_rows": 9,
+   "p_none_on_none_rows": 0.11545918054050869
+  },
+  "after": {
+   "choice_rows": 2604,
+   "p_none_choice": 0.25779056549072266,
+   "act_rows": 2,
+   "p_target_act": 0.10766975954174995,
+   "none_rows": 9,
+   "p_none_on_none_rows": 0.13862739420599407
+  },
+  "choice_kl_ppo": 0.004938808110707735,
+  "choice_kl_total": 0.045177246979911656,
+  "ppo": {
+   "rule": "row_mean",
+   "kl_budget": 0.045,
+   "final_kl": 0.0005815619369968772,
+   "accepted": 618,
+   "rejected": 0
+  },
+  "learnfix_receipt": {},
+  "learnfix_steps": 0,
+  "ev_bc": {
+   "fit": {
+    "initial_ce": 2.0057308673858643,
+    "final_ce": 1.5463931560516357,
+    "passes": [
+     {
+      "accepted": true,
+      "kl": 0.00041010751738213
+     },
+     {
+      "accepted": true,
+      "kl": 0.0024381286930292845
+     },
+     {
+      "accepted": true,
+      "kl": 0.007119538262486458
+     },
+     {
+      "accepted": true,
+      "kl": 0.015315469354391098
+     },
+     {
+      "accepted": true,
+      "kl": 0.02777724154293537
+     },
+     {
+      "accepted": false,
+      "kl": 0.04517599940299988
+     }
+    ]
+   },
+   "rows": {
+    "teacher_admitted": 203,
+    "teacher_blocked": 841,
+    "none": 1042,
+    "no_choice": 8580,
+    "act": 2,
+    "episodes_without_regime_rows": 5
+   },
+   "learnfix": null
+  }
+ },
+ {
+  "run": "coopmwm20261108_clean5c4",
+  "arm": "B",
+  "update": 1,
+  "learnfix": true,
+  "episodes": 8,
+  "ticks": 618,
+  "before": {
+   "choice_rows": 2604,
+   "p_none_choice": 0.1734381467103958,
+   "act_rows": 2,
+   "p_target_act": 0.17190581187605858,
+   "none_rows": 9,
+   "p_none_on_none_rows": 0.11940285480684704
+  },
+  "after_ppo": {
+   "choice_rows": 2604,
+   "p_none_choice": 0.19307568669319153,
+   "act_rows": 2,
+   "p_target_act": 0.13613742217421532,
+   "none_rows": 9,
+   "p_none_on_none_rows": 0.11846098966068691
+  },
+  "after": {
+   "choice_rows": 2604,
+   "p_none_choice": 0.17398375272750854,
+   "act_rows": 2,
+   "p_target_act": 0.24853889644145966,
+   "none_rows": 9,
+   "p_none_on_none_rows": 0.1242076340648863
+  },
+  "choice_kl_ppo": 0.005972892867258227,
+  "choice_kl_total": 0.005747222660593615,
+  "ppo": {
+   "rule": "choice_row_mean (learnfix)",
+   "kl_budget": 0.045,
+   "final_kl": 0.005972893304150981,
+   "accepted": 80,
+   "rejected": 0
+  },
+  "learnfix_receipt": {
+   "rule": "c4/learnfix v1 (MAIN 2026-11-08, LEARNDIAG): EV-BC act / explicit-teacher-none / unlabelled labels with equal act:none total weight (row weight <= 1); trigger PPO with fairness harm on acting rows only, per-cell baseline + choice-row normalised advantages, epochs x minibatches of decision ticks (separate seeded order), choice-row KL cap and report, entropy weight capped at entropy_frac x RMS(adv) / mean H",
+   "ticks": 618,
+   "advantages": {
+    "choice_rows": 2604,
+    "cell_baseline": {
+     "D2800_p20": 0.054184284061193466,
+     "D3200_p20": 0.06175298988819122,
+     "D2400_p20": 0.062366459518671036
+    },
+    "std": 0.0660637766122818,
+    "raw_rms": 0.06605108827352524
+   },
+   "entropy_weight": 0.01,
+   "mean_entropy": 1.9349850416183472,
+   "adv_rms": 0.9998079538345337,
+   "accepted": 80,
+   "stopped": null,
+   "final_choice_kl": 0.005972893304150981,
+   "kl_budget": 0.045,
+   "kl_rule": "mean KL over choice rows (>= 1 non-none valid slot), all ticks of the update"
+  },
+  "learnfix_steps": 80,
+  "ev_bc": {
+   "fit": {
+    "initial_ce": 2.0969083309173584,
+    "final_ce": 1.7655470371246338,
+    "passes": [
+     {
+      "accepted": true,
+      "kl": 1.8006865502684377e-05
+     },
+     {
+      "accepted": true,
+      "kl": 0.00010406912042526528
+     },
+     {
+      "accepted": true,
+      "kl": 0.0003045006887987256
+     },
+     {
+      "accepted": true,
+      "kl": 0.0006603361107409
+     },
+     {
+      "accepted": true,
+      "kl": 0.0012060031294822693
+     },
+     {
+      "accepted": true,
+      "kl": 0.0019695451483130455
+     },
+     {
+      "accepted": true,
+      "kl": 0.002973024034872651
+     },
+     {
+      "accepted": true,
+      "kl": 0.004233760759234428
+     },
+     {
+      "accepted": true,
+      "kl": 0.005764177069067955
+     },
+     {
+      "accepted": true,
+      "kl": 0.00757421413436532
+     },
+     {
+      "accepted": true,
+      "kl": 0.009670337662100792
+     },
+     {
+      "accepted": true,
+      "kl": 0.012057552114129066
+     },
+     {
+      "accepted": true,
+      "kl": 0.01473915297538042
+     },
+     {
+      "accepted": true,
+      "kl": 0.01771746575832367
+     },
+     {
+      "accepted": true,
+      "kl": 0.02099444717168808
+     },
+     {
+      "accepted": true,
+      "kl": 0.02457110770046711
+     },
+     {
+      "accepted": true,
+      "kl": 0.028448330238461494
+     },
+     {
+      "accepted": true,
+      "kl": 0.03262602910399437
+     },
+     {
+      "accepted": true,
+      "kl": 0.037103500217199326
+     },
+     {
+      "accepted": true,
+      "kl": 0.04187927022576332
+     },
+     {
+      "accepted": false,
+      "kl": 0.04695113003253937
+     }
+    ]
+   },
+   "rows": {
+    "unlabelled": 1033,
+    "no_choice": 8703,
+    "teacher_admit": 2,
+    "teacher_reject": 9,
+    "episodes_without_regime_rows": 5,
+    "act": 2,
+    "none": 9
+   },
+   "learnfix": {
+    "rule": "c4/learnfix v1 (MAIN 2026-11-08, LEARNDIAG): EV-BC act / explicit-teacher-none / unlabelled labels with equal act:none total weight (row weight <= 1); trigger PPO with fairness harm on acting rows only, per-cell baseline + choice-row normalised advantages, epochs x minibatches of decision ticks (separate seeded order), choice-row KL cap and report, entropy weight capped at entropy_frac x RMS(adv) / mean H",
+    "row_weight": {
+     "act": 1.0,
+     "none": 0.2222222222222222
+    },
+    "act_rows": 2,
+    "none_rows": 9,
+    "weighting": "record weight = sum of its row weights (update-level act:none balance)"
+   }
+  }
+ }
+]

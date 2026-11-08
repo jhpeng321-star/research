@@ -7,8 +7,9 @@ Opt-in by the registered ``learnfix`` config value (absent = every path byte-ide
    explicitly rejects every offered situational family (bin observed, not admitted); every other row is
    UNLABELLED (no BC loss). Per update, act and none rows get equal total weight (per-row weight <= 1).
 2. Trigger PPO (track2_backend.train):
-   - fairness harm (paired same-world A episode, fullpol_fair.penalties) is attributed only to the rows where a
-     non-``none`` trigger action was taken (spread evenly over them), not to every row;
+   - acting rows (non-``none`` trigger action) get the SIGNED paired outcome vs the same-world A episode,
+     net = A_J - B_J (J = team delay + fairness excess), minus a running per-cell baseline, spread over the
+     episode's acting rows; non-acting rows keep the local reward only (no uniform episode constant);
    - the local delay reward stays per row; advantage = return - recorded value (+ G4 terms), then a per-cell
      baseline (mean over that cell's choice rows) is subtracted and the result is normalised over choice rows;
      rows without a choice get advantage 0;
@@ -23,8 +24,10 @@ from copy import deepcopy
 
 import torch
 
-RULE = ('c4/learnfix v1 (MAIN 2026-11-08, LEARNDIAG): EV-BC act / explicit-teacher-none / unlabelled labels with '
-        'equal act:none total weight (row weight <= 1); trigger PPO with fairness harm on acting rows only, per-cell '
+RULE = ('c4/learnfix v3 (MAIN 2026-11-08/09, LEARNDIAG + LEARNCHECK): EV-BC act / explicit-teacher-none / unlabelled '
+        'labels with equal act:none total weight (row weight <= 1); trigger PPO: acting rows get the signed paired '
+        'outcome net = A_J - B_J (delay + fairness excess) minus a running per-cell baseline, non-acting rows local '
+        'reward only, per-cell '
         'baseline + choice-row normalised advantages, epochs x minibatches of decision ticks (separate seeded '
         'order), choice-row KL cap and report, entropy weight capped at entropy_frac x RMS(adv) / mean H')
 DEFAULT = dict(epochs=4, minibatch_ticks=32, entropy_frac=0.1, row_weight_cap=1.0)
@@ -76,20 +79,37 @@ def acting_rows(by_key):
     return out
 
 
-def apply_fair_acting(targets, harm_by_episode, acting):
-    """Each episode's harm (veh-s, vs the paired A episode) spread evenly over the rows where a non-none action
-    was taken; an episode without such a row gets no PPO harm term (receipted). Returns (targets, receipt)."""
+RUNNING_WEIGHT = 0.5      # running per-cell baseline: new = (1 - w) * previous + w * this update's mean
+
+
+def apply_net_acting(targets, net_by_episode, acting, cell_of=None, previous=None):
+    """MAIN 2026-11-09 (LEARNCHECK FAIL fix): acting rows get the SIGNED paired episode outcome vs the frozen A
+    episode on the same world, net = A_J - B_J (J = team delay + the fairness excess term, veh-s; positive = credit),
+    minus a RUNNING per-cell baseline of net, spread evenly over the episode's acting rows (non-none trigger action).
+    Non-acting rows keep their local reward only. ``previous``: {cell: running baseline} from the previous update's
+    receipt (None -> this update's mean). Returns (targets, receipt with the new running baseline)."""
     out = {k: list(v) for k, v in targets.items()}
-    receipt = []
-    for eid, harm in sorted(harm_by_episode.items()):
+    cell_of = cell_of or {}
+    pools = {}
+    for eid, net in net_by_episode.items():
+        pools.setdefault(str(cell_of.get(eid)), []).append(float(net))
+    current = {c: sum(v)/len(v) for c, v in pools.items()}
+    previous = previous or {}
+    running = {c: (current[c] if c not in previous else (1-RUNNING_WEIGHT)*float(previous[c])+RUNNING_WEIGHT*current[c])
+               for c in current}
+    running.update({c: float(v) for c, v in previous.items() if c not in running})
+    rows_out = []
+    for eid, net in sorted(net_by_episode.items()):
+        cell = str(cell_of.get(eid))
+        centred = float(net)-running[cell]
         rows = [(k, i) for k in out if k[0] == eid for i, a in enumerate(acting.get(k, ())) if a]
-        receipt.append(dict(episode_id=eid, harm_veh_s=harm, acting_rows=len(rows),
-                            attributed=bool(harm > 0 and rows)))
-        if harm <= 0 or not rows:
-            continue
+        rows_out.append(dict(episode_id=eid, cell=cell, net_veh_s=float(net), baseline_veh_s=running[cell],
+                             centred_veh_s=centred, acting_rows=len(rows), attributed=bool(rows)))
         for k, i in rows:
-            out[k][i] -= harm/len(rows)
-    return out, receipt
+            out[k][i] += centred/len(rows)
+    return out, dict(rule='net = A_J - B_J (delay + fairness excess), running per-cell baseline, acting rows only',
+                     running_weight=RUNNING_WEIGHT, previous_baseline=previous, update_mean=current,
+                     running_baseline=running, episodes=rows_out)
 
 
 # ---------------------------------------------------------------- 3. trigger PPO
