@@ -656,3 +656,5 @@ def test_fairx_worst_group_and_cvar90_paired():
     per = sorted((d for d, _, _ in arm.values()), reverse=True)
     assert abs(r['cvar90_diff'] - (sum(per[:2]) / 2 - 28.5)) < 1e-9
     assert FX.headline(rep, 'D2400')[0].startswith('D2400_p20 x: worst origin:L2 +5.0')
+    assert r['worst_group_cvar90'] == 'origin:L2' and abs(r['worst_group_cvar90_diff'] - 5.0) < 1e-9
+    assert abs(r['group_cvar90']['origin:L0']['mean']) < 1e-9

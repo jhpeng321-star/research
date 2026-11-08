@@ -6,7 +6,8 @@ delay, N6 amendment 13) and labels from u0 by vehicle id (wmverify_fair._labels)
 - worst group: the co-primary group (origin:L0/L1/L2, class:hdv, class:cav) with the largest mean per-vehicle delay
   increase vs the reference; its value and paired 95% bootstrap CI;
 - CVaR90 = mean of the worst ceil(0.1 n) per-vehicle delays (pervehicle.cvar90), arm - reference, paired CI;
-- p90 and Gini changes (pervehicle).
+- p90 and Gini changes (pervehicle);
+- per-group within-group CVaR90 change; worst_group_cvar90 = the group with the largest mean change (paired CI).
 References: u0 and the incumbent wall_g_solo2. Convention: diff = arm - ref; positive = worse.
 
 Usage: python -m tools.wzprop.wmverify_fairx --root ROOT [ROOT ...] --out FAIRX.json [--first D2400]
@@ -28,8 +29,14 @@ REFS = ('u0', 'wall_g_solo2')
 def episode_stats(pv, labels):
     per = [d for d, _, _ in pv.values()]
     gm = WF._group_means(pv, labels)
+    members = {g: [] for g in WF.CO_PRIMARY_GROUPS}
+    for vid, (d, _, _) in pv.items():
+        for g in labels.get(vid, ()):
+            if g in members:
+                members[g].append(d)
     return dict(groups={g: gm.get(g) for g in WF.CO_PRIMARY_GROUPS}, cvar90=PV.cvar90(per), p90=PV.p90(per),
-                gini=PV.gini(per), n=len(per))
+                gini=PV.gini(per), n=len(per),
+                group_cvar90={g: (PV.cvar90(v) if v else None) for g, v in members.items()})
 
 
 def collect(roots):
@@ -78,6 +85,17 @@ def report(data, n_boot=10_000):
                 if gd:
                     wg = max(gd, key=lambda g: gd[g]['mean'])
                     r.update(worst_group=wg, worst_group_inc=gd[wg]['mean'], worst_group_ci95=gd[wg]['ci95'])
+                gc = {}
+                for g in WF.CO_PRIMARY_GROUPS:     # within-group CVaR90 (worst ceil(0.1 n_g) vehicles of group g)
+                    d = [stats[s][arm]['group_cvar90'][g] - stats[s][ref]['group_cvar90'][g] for s in ss
+                         if stats[s][arm]['group_cvar90'][g] is not None and stats[s][ref]['group_cvar90'][g] is not None]
+                    if d:
+                        gc[g] = dict(mean=sum(d) / len(d), ci95=PV.boot_ci(d, n_boot), n=len(d))
+                r['group_cvar90'] = gc
+                if gc:
+                    wc = max(gc, key=lambda g: gc[g]['mean'])
+                    r.update(worst_group_cvar90=wc, worst_group_cvar90_diff=gc[wc]['mean'],
+                             worst_group_cvar90_ci95=gc[wc]['ci95'])
                 for k in ('cvar90', 'p90', 'gini'):
                     d = [stats[s][arm][k] - stats[s][ref][k] for s in ss
                          if stats[s][arm][k] is not None and stats[s][ref][k] is not None]
