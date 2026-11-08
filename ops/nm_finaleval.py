@@ -92,6 +92,7 @@ ORACLE_BINDING = 'ORACLE_BINDING.json'
 #: replaced by the frozen CAV-observable classifier (p >= 0.378785); the insurance / deployability arm. Its model doc
 #: (path in the deployed checkout, pinned sha) is sealed in the same ORACLE_BINDING.json as the bank.
 LEARNED_ARMS = ('LEARNED_TRIGGER',)
+ORACLE_SHA256 = '7409a7b4765651813c4771462b7acbc16386d626900d9a031e19d3a65a9f9d22'   # oracle_plan digest (25b, REV-SPD)
 LEARNED_MODEL_SHA256 = '8e0ddd3e241ce0172736909133f0b745c58b6bf795e06ca5364e5755f7e3b720'
 LEARNED_TRIGGER_SHA256 = '41fc8d1a2fb0ef547524a9d36488b7bbb4bc9f0e8c1e2d06f5fe85eb5903b54d'
 BANK_ARMS = ORACLE_ARMS+LEARNED_ARMS                  # bound to the sealed end-of-training bank; p20x primary only
@@ -1087,7 +1088,19 @@ def check_oracle_binding(binding):
             or not re.fullmatch('[0-9a-f]{64}', str(binding.get('oracle_sha256')))
             or not re.fullmatch('[0-9a-f]{64}', str(binding.get('receipt_sha256')))):
         raise Blocked(f'{ORACLE_BINDING}: bank path/file_sha256, oracle_sha256 and receipt_sha256 required')
+    if binding['oracle_sha256'] != ORACLE_SHA256:
+        raise Blocked(f'{ORACLE_BINDING}: oracle_sha256 is not the registered oracle_plan digest {ORACLE_SHA256[:8]}')
+    banks = binding.get('banks') or {}            # amendment 27: per-arm bank override (ORACLE = the union bank)
+    if not set(banks) <= set(ORACLE_ARMS) or any(
+            not b.get('path') or not re.fullmatch('[0-9a-f]{64}', str(b.get('file_sha256'))) for b in banks.values()):
+        raise Blocked(f'{ORACLE_BINDING}: banks overrides only for ORACLE arms, each with path + file_sha256')
     return binding
+
+
+def arm_bank(binding, arm):
+    """The bank an arm runs on: its amendment-27 override, else the common bank (= the applicability-label bank)."""
+    bank = (binding.get('banks') or {}).get(arm) or binding['bank']
+    return dict(path=bank['path'], file_sha256=bank['file_sha256'])
 
 
 def oracle_binding(final_root):
@@ -1147,7 +1160,7 @@ def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None, update=UPD
                           executor_sha256=u0['sha256'], binding_sha256=u0['binding_sha256'],
                           binding_path=u0['binding_path'], path=u0['residual_path'], file_sha256=u0['residual_sha256'],
                           update=0, arm='A', cell_key=panel['cell']['cell_key'],
-                          oracle_bank=dict(path=binding['bank']['path'], file_sha256=binding['bank']['file_sha256']),
+                          oracle_bank=arm_bank(binding, arm),
                           oracle_binding_sha256=binding['receipt_sha256'])
         if arm in ORACLE_ARMS:
             checkpoint.update(oracle_sha256=binding['oracle_sha256'], oracle_plan_source=ORACLE_PLAN_SOURCE[arm])

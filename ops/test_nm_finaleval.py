@@ -1406,18 +1406,18 @@ def test_oracle_arms_bind_after_training_and_validate_their_receipts(panel, tmp_
     assert nm.oracle_binding(f['final_root']) is None
     with pytest.raises(nm.Blocked, match='not bound'):
         nm.episode_specs('ORACLE', panel, f['cfg'], f['root'], 'mappo_u0', None, u0)
-    binding = nm.seal(dict(bank=dict(path='/x/bank.json', file_sha256='b'*64), oracle_sha256='d'*64), 'receipt_sha256')
+    binding = nm.seal(dict(bank=dict(path='/x/bank.json', file_sha256='b'*64), oracle_sha256=nm.ORACLE_SHA256), 'receipt_sha256')
     nm.publish(f['final_root']/nm.ORACLE_BINDING, binding)
     assert nm.oracle_binding(f['final_root']) == binding
     specs = {a: nm.episode_specs(a, panel, f['cfg'], f['root'], 'mappo_u0', binding, u0) for a in nm.ORACLE_ARMS}
     ck = specs['ORACLE_WM'][0]['checkpoint']
     assert ck['kind'] == 'oracle' and (ck['arm'], ck['update']) == ('A', 0) and ck['executor_sha256'] == 'e'*64
     assert ck['oracle_plan_source'] == 'wm' and specs['ORACLE'][0]['checkpoint']['oracle_plan_source'] == 'all'
-    assert ck['oracle_bank'] == dict(path='/x/bank.json', file_sha256='b'*64) and ck['oracle_sha256'] == 'd'*64
+    assert ck['oracle_bank'] == dict(path='/x/bank.json', file_sha256='b'*64) and ck['oracle_sha256'] == nm.ORACLE_SHA256
     assert ck['cell_key'] == panel['cell']['cell_key'] and specs['ORACLE'][0]['capture'] is None
     assert nm.wave_name('ORACLE', 12) == 'ORACLE' and 'oracle_ORACLE_WM' in nm.quote('mappo_u0')['need_ceiling']
     good = nm.fake_episode(specs['ORACLE'][0])
-    assert nm.check_episode(good, specs['ORACLE'][0])['oracle_sha256_loaded'] == 'd'*64
+    assert nm.check_episode(good, specs['ORACLE'][0])['oracle_sha256_loaded'] == nm.ORACLE_SHA256
     for mutate, match in ((lambda r: r.update(oracle_sha256_loaded='0'*64), 'oracle_plan actually loaded'),
                           (lambda r: r.pop('oracle'), 'oracle receipts missing'),
                           (lambda r: r.update(executor_sha256_loaded='0'*64), 'executor actually loaded')):
@@ -1431,6 +1431,17 @@ def test_oracle_arms_bind_after_training_and_validate_their_receipts(panel, tmp_
     nm.publish(f['final_root']/'APPLICABILITY_t.json', nm.seal(dict(bank=dict(sha256='9'*64)), 'receipt_sha256'))
     with pytest.raises(nm.Blocked, match='bank'):
         nm.oracle_binding(f['final_root'])
+    bad = nm.seal(dict(bank=dict(path='/x/bank.json', file_sha256='b'*64), oracle_sha256='d'*64), 'receipt_sha256')
+    with pytest.raises(nm.Blocked, match='registered oracle_plan digest'):
+        nm.check_oracle_binding(bad)
+    union = dict(path='/x/union.json', file_sha256='a'*64)                     # amendment 27: ORACLE on the union bank
+    per_arm = nm.seal(dict(bank=dict(path='/x/bank.json', file_sha256='b'*64), oracle_sha256=nm.ORACLE_SHA256,
+                           banks=dict(ORACLE=union)), 'receipt_sha256')
+    assert nm.episode_specs('ORACLE', panel, f['cfg'], f['root'], 'mappo_u0', per_arm, u0)[0]['checkpoint']['oracle_bank'] == union
+    assert nm.episode_specs('ORACLE_WM', panel, f['cfg'], f['root'], 'mappo_u0', per_arm, u0)[0]['checkpoint'][
+        'oracle_bank'] == dict(path='/x/bank.json', file_sha256='b'*64)
+    with pytest.raises(nm.Blocked, match='banks overrides'):
+        nm.check_oracle_binding(dict(per_arm, banks=dict(LEARNED_TRIGGER=union)))
     assert set(nm.APPLICABILITY_ARMS) == {'B', 'ORACLE', 'ORACLE_WM', 'LEARNED_TRIGGER'}
     assert set(nm.BANK_ARMS) <= set(nm.CLAIM3A_ARMS) and 'oracle_LEARNED_TRIGGER' in nm.quote('mappo_u0')['need_ceiling']
 
@@ -1442,11 +1453,11 @@ def test_learned_trigger_arm_binds_its_pinned_model_and_validates_its_receipts(p
     monkeypatch.setattr(nm, 'SETTING', 'p20x')
     u0 = dict(kind='u0_transferred_d9042cc5', label='u0', path='/x/it168.pt', sha256='e'*64, binding_sha256='f'*64,
               binding_path='/x/b.json', residual_path='/x/A_checkpoint_000.pt', residual_sha256='c'*64)
-    bare = nm.seal(dict(bank=dict(path='/x/bank.json', file_sha256='b'*64), oracle_sha256='d'*64), 'receipt_sha256')
+    bare = nm.seal(dict(bank=dict(path='/x/bank.json', file_sha256='b'*64), oracle_sha256=nm.ORACLE_SHA256), 'receipt_sha256')
     with pytest.raises(nm.Blocked, match='learned_trigger_model'):
         nm.episode_specs('LEARNED_TRIGGER', panel, f['cfg'], f['root'], 'mappo_u0', bare, u0)
     model = dict(path='/x/ops/learned_trigger/LEARNED_TRIGGER_MODEL.json', file_sha256=nm.LEARNED_MODEL_SHA256)
-    binding = nm.seal(dict(bank=dict(path='/x/bank.json', file_sha256='b'*64), oracle_sha256='d'*64,
+    binding = nm.seal(dict(bank=dict(path='/x/bank.json', file_sha256='b'*64), oracle_sha256=nm.ORACLE_SHA256,
                            learned_trigger_model=model), 'receipt_sha256')
     spec = nm.episode_specs('LEARNED_TRIGGER', panel, f['cfg'], f['root'], 'mappo_u0', binding, u0)[0]
     ck = spec['checkpoint']
