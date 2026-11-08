@@ -1,0 +1,32 @@
+{
+ "amendment": "22b",
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend22.json",
+  "registration_sha256": "d2c74cbfa418da226d32a714b41db8c3df83113f0c5a93454062a0ae02ab3b9b"
+ },
+ "arms": "unchanged from amendment 22; primary = F8U B/R at u12 (one run: the two-run wiring of 22a is needed only if a WM-guided p20 run launches; its B/R then bind to the SAME p20 panels and pre-run waves iff prerun_compat passes, else its own A/U0 handling, registered before its episodes)",
+ "authority": [
+  "MAIN 2026-11-08: CLEAN5C3 stopped before launch (WM target failed the 12-seed replication); the live p20 run is F8U (rule-guided); confirm F8U CONFIG + u0 as the p20 pre-run plant reference"
+ ],
+ "plant_identity": {
+  "diff": "d27a8cb2..b5268408: p20 training cells/guidance (prepare_c_p20/prepare_f8_p20, p20_guidance, GUIDANCE_P20_*), fullpol_* / lc_families (cooperation-layer session ledger, arm label; B/R policy side, as in training), track2_backend (passes arm to lc_families), launch_training/restarts/receipts/budgets, tests; no plant file (accel_plant, v2v_runner, env, map_scenarios, map_observations, lc_runtime unchanged); amendment 20 verdict IDENTICAL to 12aee752 therefore holds for NATIVE/U0/RULE/RULE_FAIR",
+  "parity": {
+   "result": "336 passed (N6 launcher/runner/parity incl. p20 tests, test_p20_cpu, fair_vehicle_log, lc runtime)",
+   "tree": "b5268408 + overlay 1f743c40 (tmp/n6_p20_b5268408)"
+  },
+  "zero_sumo_at_register": "prerun-register re-validates the CONFIG plant view through the production loader and the u0 file sha against common_checkpoint_sha256 before any file is written"
+ },
+ "plant_reference": {
+  "config_sha256_prefix": "b22dc301",
+  "root": "cpuW /home/ubuntu/coopmwm20261108_clean5bf8u",
+  "run": "F8U",
+  "runtime_sha256_prefix": "bfbdef90",
+  "source": "c4/p20-env b5268408 (= a41d980c + APPROVED_BY_RUN budgets)",
+  "u0_sha256_prefix": "5ea22964 (A/B/R common u0)"
+ },
+ "registered_utc": "2026-11-08T11:41:07.415764+00:00",
+ "registration_sha256": "86c77b0ea4a2c97b64bb05f0bfa0396d9f0e2c62474000231a56d2fe1bd081f0",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "sim_s": 0,
+ "status": "pre-results: zero SUMO; no p20 episode exists"
+}
