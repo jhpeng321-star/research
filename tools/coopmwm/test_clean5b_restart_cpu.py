@@ -97,19 +97,19 @@ def _quote(total=3_850_000):
 
 def test_clean5b_budget_envelope_is_3_9m_and_clean5a_default_unchanged():
     q = _quote()
-    approval = dict(owner_approval='run clean5b alongside clean5a', approved_sim_s=4_360_000,
+    approval = dict(owner_approval='run clean5b alongside clean5a', approved_sim_s=4_650_000,
                     total_cap_sim_s=34_318_000, quote_sha256=q['receipt_sha256'])
     rec = c4.budget(quote_doc=q, approval=approval, prior_runtime_sim_s=0, approved=c5b.APPROVED, rule='x')
-    assert rec["approved_sim_s"] == 4_360_000 and rec["remaining_sim_s"] == 4_360_000 and rec['rule'] == 'x'
+    assert rec["approved_sim_s"] == 4_650_000 and rec["remaining_sim_s"] == 4_650_000 and rec['rule'] == 'x'
     sealed = _seal(dict({k: v for k, v in rec.items() if k != 'receipt_sha256'}, run='clean5b'), 'receipt_sha256')
-    assert c4.checked(dict(clean4_budget=sealed))["approved_sim_s"] == 4_360_000
+    assert c4.checked(dict(clean4_budget=sealed))["approved_sim_s"] == 4_650_000
     stale = _seal(dict({k: v for k, v in rec.items() if k != 'receipt_sha256'}, run='clean5b', approved_sim_s=3_900_000),
                   'receipt_sha256')
     with pytest.raises(ValueError):
         c4.checked(dict(clean4_budget=stale))                 # a superseded clean5b envelope is refused
     with pytest.raises(ValueError):                           # quote above the clean5b envelope
-        c4.budget(quote_doc=_quote(4_400_000), approval=dict(approval, approved_sim_s=4_400_000,
-                  quote_sha256=_quote(4_400_000)['receipt_sha256']), prior_runtime_sim_s=0, approved=c5b.APPROVED)
+        c4.budget(quote_doc=_quote(4_700_000), approval=dict(approval, approved_sim_s=4_700_000,
+                  quote_sha256=_quote(4_700_000)['receipt_sha256']), prior_runtime_sim_s=0, approved=c5b.APPROVED)
     d = c4.budget(quote_doc=q, approval=dict(approval, approved_sim_s=4_000_000), prior_runtime_sim_s=0)
     assert d['approved_sim_s'] == c4.APPROVED and d['rule'].startswith('owner 14:58')    # clean5a default
     assert c5.VARIANT['approval_file'] == 'BUDGET_CLEAN4.json' and c5.VARIANT['keys'] is None
@@ -276,7 +276,7 @@ def test_clean5c_keys_bank_guidance_reaches_ev_table(cfg, wz):
                                             'D3200_p20/mut_0584e488a8bf93c5': 'identical',
                                             'D3200_p60/mut_0584e488a8bf93c5': 'identical'}
     assert c5.check_guidance(k, c5b.C_NO_GUIDANCE_CELLS)['no_guidance_cells'] == ['D2400_p40']
-    assert set(c5b.VARIANT_C) == set(c5.VARIANT) and c5b.VARIANT_C['approved'] == 3_600_000
+    assert set(c5b.VARIANT_C) == set(c5.VARIANT) and c5b.VARIANT_C["approved"] == 3_950_000
     # the generator offers bank templates to B only (per-arm generator_args)
     calls = []
     slot = dict(classes=['verified'], templates=dict(B=[dict(template={'source': dict(variant='m')},
