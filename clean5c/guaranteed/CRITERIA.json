@@ -1,0 +1,12 @@
+{
+ "written": "2026-11-09 ~06:2x, before any guaranteed-offer slate regeneration (MAIN relaunch decision)",
+ "code": "c4/strongguide + guaranteed offer (fullpol_templates guaranteed_offer, feasible_proposals first slots; clean5b_restart.with_slate run config: classes [verified], structured [], guaranteed_offer)",
+ "data": "CLEAN5C5C cpuZ u3 B: the 8 recorded episodes' observable tapes, re-featurized second by second (DEMOX demo_extract.featurize, trigger forced to none) with B_track2_002 / B_checkpoint_002 under (a) the run's u3 config (U003 snapshot: WMONLY fd385a2b) and (b) the same + the verified-only guaranteed-offer slate",
+ "criteria": {
+  "G1": "regenerated decision slates offering >= 1 bank template: (b) >= 3 x (a)",
+  "G2": "expected free-program (non-verified) actions on the (b) slates = 0 (none present)",
+  "G3": "P(target) rises and total choice-row KL <= 0.075: carried from the verified-only replay on the recorded data (SC_verified_B_u3: 0.237 -> 0.385, KL 0.026); no new training replay on regenerated slates (rewards cannot be regenerated)",
+  "G4": "no privileged input in the slate decision: by construction (offer_ok own row + own sensing; privileged situation is a no-op at the slate) + unit test"
+ },
+ "result": "PASS iff G1-G4"
+}

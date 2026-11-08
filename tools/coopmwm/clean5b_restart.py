@@ -448,12 +448,15 @@ def check_p20_guidance(doc, cells, *, wm):
 
 
 def _p20_variant(base, cells, g4_workers, *, label, wm, doc, overrides, learnfix=True, bank_growth_control=None,
-                 final_external=False, learnfix2=False):
+                 final_external=False, learnfix2=False, slate=False):
     none = check_p20_guidance(doc, cells, wm=wm)
     sources = ({c: v['source'] for c, v in doc['p20']['cells'].items() if c in cells} if doc.get('situational') is None else
                {c: ('wm_situational' if c not in none else 'none') for c in cells})
     note = P20_NOTE+f' {label}: per-cell guidance source {sources}.'
+    if slate:
+        note = note+' '+SLATE_RULE
     return dict(base, cell_keys=cells, worlds=lambda: worlds_by_update_8(cell_pattern(cells)), guidance_missing_ok=none,
+                **({'keys': with_slate(base['keys'])} if slate else {}),
                 cfg_overrides=dict(overrides, g4_workers=g4_workers,
                                    **({'learnfix': _learnfix_value()} if learnfix else {}),
                                    **({'learnfix2': _learnfix2_value()} if learnfix2 else {}),
@@ -487,24 +490,43 @@ def _bank_growth_value(control):
 
 
 def prepare_f8_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS, learnfix=True,
-                   final_external=False, learnfix2=False, **kwargs):
+                   final_external=False, learnfix2=False, slate=False, **kwargs):
     """Rule-guided p20 (F8 code; B = LOWCAV duo12 / wall_g_solo2 EV-BC where eligible, R = none)."""
     cells = _check_p20_cells(cells)
     guidance_doc = cells_view(guidance_doc, cells)
     variant = _p20_variant(VARIANT_F8, cells, g4_workers, label='clean5b-F8-p20', wm=False, doc=guidance_doc,
                            overrides=VARIANT_F8['cfg_overrides'], learnfix=learnfix, final_external=final_external,
-                           learnfix2=learnfix2)
+                           learnfix2=learnfix2, slate=slate)
     return c5.prepare(source, root=root, variant=variant, guidance_doc=guidance_doc, **kwargs)
 
 
 def prepare_c_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS,
                   learn_threads_max=C_LEARN_THREADS_MAX, learnfix=True, bank_growth_control=None, final_external=False,
-                  learnfix2=False, **kwargs):
+                  learnfix2=False, slate=False, **kwargs):
     """WM-guided p20 (clean5c code; B = WMVERIFY-verified p20 WM plans, rule fallback labelled, R = none;
     B and R the same templates)."""
     cells = _check_p20_cells(cells)
     guidance_doc = cells_view(guidance_doc, cells)
     variant = _p20_variant(VARIANT_C, cells, g4_workers, label='clean5c-p20', wm=True, doc=guidance_doc,
                            overrides=_c_overrides(g4_workers, learn_threads_max), learnfix=learnfix,
-                           bank_growth_control=bank_growth_control, final_external=final_external, learnfix2=learnfix2)
+                           bank_growth_control=bank_growth_control, final_external=final_external, learnfix2=learnfix2,
+                           slate=slate)
     return c5.prepare(source, root=root, variant=variant, guidance_doc=guidance_doc, **kwargs)
+
+
+# ---------------------------------------------------------------- verified-only + guaranteed-offer slate (relaunch)
+#: MAIN 2026-11-09 ~06:1x (relaunch CLEAN5C5D / F8V4): run config, identical for B and R - the FULLPOL free-program
+#: generator offers ONLY the bank's verified templates, and every gated template (own row + own sensing, member rule,
+#: slots / cooldown) is always on the slate (first slots); the rest of the slate is unchanged.
+SLATE_RULE = 'c4/guaranteed-offer v1 (MAIN 2026-11-09): free-program classes = [verified], structured = [], guaranteed_offer'
+
+
+def with_slate(keys_fn):
+    """keys_fn wrapper: the lc_families generator args get the verified-only + guaranteed-offer slate."""
+    def keys(**kw):
+        from .lc_families import CONFIG_KEY
+        out = keys_fn(**kw)
+        args = out[CONFIG_KEY]['generator_args']
+        args.update(classes=['verified'], structured=[], guaranteed_offer=True, slate_rule=SLATE_RULE)
+        return out
+    return keys

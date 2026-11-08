@@ -161,6 +161,12 @@ def candidates(obs_state, rng, n):
         stats.update(family_checks=len(structured) if n else 0,
                      infeasible_family_checks=len(structured)-len(pools) if n else 0)
     out = []
+    if (programs is not None and n and ego in available
+            and (programs.get('generator_args') or {}).get('guaranteed_offer')):
+        # c4/guaranteed-offer (B = R): the bank templates the generator proposed for this CAV (all gated ones) take
+        # the first slots; the rest of the slate is drawn as before from the remaining families.
+        for family in [f for f in list(pools) if lc_families.is_program_family(f) and f.endswith('_initiate')]:
+            out += pools.pop(family)[:n-len(out)]
     if fp is not None and n and ego in available and fp.get('offered'):
         # Practice 'offer, don't force' (B = R rule): offered programs take the first slots.
         out += fullpol_programs.offered(fp, own, partners, rng)[:n]

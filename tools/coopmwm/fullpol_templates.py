@@ -320,6 +320,12 @@ def propose(state, own, rng):
                 own_t = own_t.get(state.get('arm')) or ()
             ts = [x['template'] if 'offer_condition' in x else x for x in own_t
                   if 'offer_condition' not in x or gate(x)]
+            if slot.get('guaranteed_offer'):
+                # c4/guaranteed-offer (MAIN 2026-11-09, B = R): EVERY gated bank template is proposed (own row + own
+                # sensing gate only; deterministic family order; no draw), so the slate can always offer it.
+                out += [_lc().FreeProgram.from_dict(x) for x in sorted(
+                    ts, key=lambda x: str((x.get('source') or {}).get('variant')))]
+                continue
             t = _lc().FreeProgram.from_dict(ts[int(rng.integers(len(ts)))]) if ts else None
         elif cls == 'structured':
             t = None
