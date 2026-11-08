@@ -60,7 +60,8 @@ STABLE_ID = 'S-WMVERIFY'
 PHASE = 'wm_verify'
 SEED_RANGES = ((989950, 989999),          # MAIN 2026-11-06 night: wm_verify 989950-989999; LSSEARCH 989900-989949
                (991140, 991199),          # MAIN 2026-11-08: 12-seed p20 verification (MULTICRIT used 991100-991132)
-               (991200, 991299))          # MAIN 2026-11-08 r4: audited unused (REGISTRATION, every PLAN, job dirs)
+               (991200, 991299),          # MAIN 2026-11-08 r4: audited unused (REGISTRATION, every PLAN, job dirs)
+               (991300, 991347))          # MAIN 2026-11-08 23:57 second look (mut_0d50e4e1): audited unused
 FORBIDDEN_SEEDS = ((989600, 989699), (962000, 962999), (964000, 964199), (977000, 977999))
 BASE_ARM = 'u0'
 INCUMBENT = 'wall_g_solo2'               # owner 2026-11-07 (REGISTRATION 04:03): gentle incumbent, RuleHook verbatim
@@ -1465,7 +1466,7 @@ def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, lane_executo
         '), coopmwm clean4 plant, wz3to2, native warmup 0-300 s, episodes 1,200 s, J = team delay over [300, 1200) s.',
         '- Seeds: ' + ', '.join(f'{lo}-{hi}' for lo, hi in SEED_RANGES) + ' only (TRAIN-type, never evaluation; MAIN '
         'allocations 2026-11-06 (989950-989999; LSSEARCH has 989900-989949) and 2026-11-08 (991140-991199; MULTICRIT '
-        'used 991100-991132) and 2026-11-08 r4 (991200-991299); verified unused in REGISTRATION.md and every PLAN). Registered in '
+        'used 991100-991132) and 2026-11-08 r4 (991200-991299) and second look (991300-991347); verified unused in REGISTRATION.md and every PLAN). Registered in '
         'map_scenarios.EXTRA_TRAIN_RANGES on c4/wmverify only.',
         '- Cells / seeds: ' + '; '.join(f'{c} {s[0]}-{s[-1]} ({len(s)})' for c, _d, _p, s in cells) + '.',
         f'- Arms per seed group (paired CRN): u0; {INCUMBENT} (gentle incumbent 22 m/s / 120 s / dmax 1.0, '
