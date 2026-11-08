@@ -1,0 +1,13 @@
+{
+ "written": "2026-11-09 ~05:4x, before any strong-guidance replay (MAIN request)",
+ "code": "c4/strongguide (learnfix.STRONG via bank-growth learnfix2_override; bank_growth.VERIFIED_ONLY slate override)",
+ "data": "CLEAN5C5C cpuZ coopmwm20261109_clean5c5c u3, arm B, from B_track2_002, with the run's own U003 bank-growth snapshot (WMONLY fd385a2b + demo 6c0d040a)",
+ "compare": "current config (learnfix2, update_kl_cap 0.075) vs STRONG preset, same start, same data",
+ "criteria": {
+  "S1": "STRONG: P(target) on offered target rows rises MORE than under the current config (after - before)",
+  "S2": "STRONG: choice-row P(none) after the update >= 0.70",
+  "S3": "STRONG: total choice-row KL (PPO + EV-BC) vs the update-start policy <= 0.10",
+  "S4": "VERIFIED_ONLY slate (recorded slates with non-verified free-program slots masked): expected count of free-program actions = 0 and P(target) on the masked slates rises over the STRONG update"
+ },
+ "result": "PASS iff S1-S4 hold"
+}

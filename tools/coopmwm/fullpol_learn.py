@@ -695,10 +695,12 @@ def _ce(policy, record):
     return (nll*w).sum()/w.sum().clamp_min(1e-12)
 
 
-def _mass(records):
-    """Equal mass per record kind (program / negative / ev_bc) and then per record."""
+def _mass(records, kind_mult=None):
+    """Equal mass per record kind (program / negative / ev_bc) and then per record; ``kind_mult`` (STRONG preset:
+    demo x2) scales a kind's mass relative to the others."""
     kinds = Counter(r['meta']['kind'] for r in records)
-    return [r['weight']/kinds[r['meta']['kind']]/len(kinds) for r in records]
+    mult = kind_mult or {}
+    return [r['weight']*mult.get(r['meta']['kind'], 1.)/kinds[r['meta']['kind']]/len(kinds) for r in records]
 
 
 @torch.no_grad()
@@ -722,12 +724,12 @@ def _mean_kl(before, after, row_weights=None):
     return float(torch.cat(rows).sum()/total) if float(total) > 0 else 0.
 
 
-def bc_steps(policy, records, *, epochs, kl_budget, max_grad_norm, guard=None):
+def bc_steps(policy, records, *, epochs, kl_budget, max_grad_norm, guard=None, kind_mult=None, p_none_floor=None):
     """Registered rule (identical to bank_move_supervision): each step is kept only if the mean
     KL over the supervised contexts stays <= kl_budget; otherwise reverted and stop."""
     if not records:
         return dict(initial_ce=None, final_ce=None, passes=[])
-    weights = _mass(records)
+    weights = _mass(records, kind_mult)
     reference = _logits(policy, [r['batch'] for r in records])
     if guard is not None:
         # c4/learnfix2 (REV-SPD / MAIN 2026-11-09): guard = (on-policy ticks, update-START logits, cap): the cumulative
@@ -755,10 +757,16 @@ def bc_steps(policy, records, *, epochs, kl_budget, max_grad_norm, guard=None):
         if guard is not None:
             guard_kl = choice_kl(policy.trigger, guard_ticks, guard_ref)
             accepted = accepted and math.isfinite(guard_kl) and guard_kl <= guard_cap
+            if p_none_floor is not None and accepted:
+                from .learnfix import choice_p_none
+                p_none = choice_p_none(policy.trigger, guard_ticks)
+                accepted = p_none >= p_none_floor        # STRONG preset: hard P(none) floor
         if not accepted:
             policy.trigger.load_state_dict(state)
             policy.trigger_optimizer.load_state_dict(opt)
-        passes.append(dict(accepted=accepted, kl=kl, **({} if guard is None else dict(choice_kl=guard_kl))))
+        passes.append(dict(accepted=accepted, kl=kl, **({} if guard is None else dict(choice_kl=guard_kl)),
+                           **({} if p_none_floor is None else dict(p_none=p_none if guard_kl is not None and
+                                                                   guard_kl <= guard_cap else None))))
         if not accepted:
             break
     policy.trigger_optimizer.zero_grad(set_to_none=True)
@@ -875,6 +883,9 @@ def supervise(runtime, episodes=()):
     slot, _ = active_slot(cfg)
     # clean5a registered EV-BC steps (MAIN ~21:1x: 60); otherwise the shared imitation_epochs
     epochs = slot.get('ev_bc_steps', cfg['imitation_epochs'])
+    from . import learnfix
+    fix2_raw = learnfix.settings2(cfg) or {}
+    epochs = int(epochs)*int(fix2_raw.get('ev_bc_mult', 1))          # STRONG preset: EV-BC steps x2
     budget = policy.layer.config.kl_budget
     clip = cfg['trigger_ppo']['max_grad_norm']
     if learn['report_valsplit_auc']:
@@ -887,7 +898,9 @@ def supervise(runtime, episodes=()):
         if start is None:
             raise ValueError('learnfix2: the update-start choice-row reference is missing (train must run first)')
         guard = (start['ticks'], start['logits'], float(fix2['update_kl_cap']))
-    fit = bc_steps(policy, records, epochs=epochs, kl_budget=budget, max_grad_norm=clip, guard=guard)
+    fit = bc_steps(policy, records, epochs=epochs, kl_budget=budget, max_grad_norm=clip, guard=guard,
+                   kind_mult=({'demo': float(fix2_raw['demo_weight'])} if fix2_raw.get('demo_weight') else None),
+                   p_none_floor=fix2_raw.get('p_none_floor'))
     policy.layer._check_frozen()
     accepted = [p['kl'] for p in fit['passes'] if p['accepted']]
     out = dict(schema=SCHEMA, arm=arm, records=len(records), bank=bank, ev_bc=ev_receipt, fit=fit,

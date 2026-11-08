@@ -19,6 +19,10 @@ import shutil
 import time
 from pathlib import Path
 
+#: MAIN 2026-11-09 ~05:3x: optional slate override - the FULLPOL free-program generator offers ONLY the bank's verified
+#: templates (no structured / random free programs), B = R; applied through the control at an update boundary.
+VERIFIED_ONLY = dict(rule='c4/strongguide verified-only slate v1 (MAIN 2026-11-09): free-program classes = [verified]',
+                     classes=['verified'], structured=[])
 RULE = 'c4/learnfix bank-growth v1 (owner 2026-11-08 22:49 (4)): update-boundary snapshots, B freezes, R reuses'
 
 
@@ -65,6 +69,15 @@ def snapshot(cfg, arm, update):
     if control.get('demo_path'):
         snap.update(demo_sha256=control['demo_sha256'],
                     demo_copy=_copy(control['demo_path'], control['demo_sha256'], folder, 'demo'))
+    if control.get('learnfix2_override') is not None:
+        from .learnfix import STRONG
+        if control['learnfix2_override'] != STRONG:
+            raise ValueError('bank growth: learnfix2_override must be exactly learnfix.STRONG')
+        snap['learnfix2_override'] = control['learnfix2_override']
+    if control.get('slate_override') is not None:
+        if control['slate_override'] != VERIFIED_ONLY:
+            raise ValueError('bank growth: slate_override must be exactly bank_growth.VERIFIED_ONLY')
+        snap['slate_override'] = control['slate_override']
     with open(path, 'x', encoding='utf-8') as fh:            # exclusive: one snapshot per update
         json.dump(snap, fh, indent=1, sort_keys=True)
     return snap
@@ -98,9 +111,21 @@ def update_view(native, arm, update, *, smoke=False):
     out = apply_guidance(native, doc)
     if snap.get('demo_copy'):
         out['learnfix_demo'] = dict(path=snap['demo_copy'], sha256=snap['demo_sha256'])
+    if snap.get('learnfix2_override') is not None:
+        from .learnfix import apply_strong
+        if out.get('learnfix2') is None:
+            raise ValueError('bank growth: learnfix2_override needs a learnfix2-registered run')
+        out['learnfix2'] = apply_strong(out['learnfix2'], snap['learnfix2_override'])
+    if snap.get('slate_override') is not None:
+        from . import lc_families
+        args = out[lc_families.CONFIG_KEY]['generator_args']
+        args['classes'], args['structured'] = list(VERIFIED_ONLY['classes']), list(VERIFIED_ONLY['structured'])
     changed = (out['clean5_ev']['regime_guidance'] != native['clean5_ev']['regime_guidance']
-               or out.get('learnfix_demo') != native.get('learnfix_demo'))
+               or out.get('learnfix_demo') != native.get('learnfix_demo')
+               or out.get('learnfix2') != native.get('learnfix2')
+               or snap.get('slate_override') is not None)
     return out, dict(rule=RULE, update=int(update), arm=arm, guidance_sha256=snap['guidance_sha256'],
                      guidance_rows_sha256=doc['source']['sha256'], demo_sha256=snap.get('demo_sha256'),
-                     changed_vs_config=bool(changed),
+                     changed_vs_config=bool(changed), learnfix2_override=snap.get('learnfix2_override'),
+                     slate_override=snap.get('slate_override'),
                      families=sorted({r['family'] for r in doc['rows']}))

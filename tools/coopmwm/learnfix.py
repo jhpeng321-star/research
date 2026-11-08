@@ -100,12 +100,34 @@ def value2(none_bias=NONE_BIAS, **overrides):
     return dict(DEFAULT2, rule=RULE2, none_bias=float(none_bias), **overrides)
 
 
+#: MAIN 2026-11-09 ~05:2x "stronger guidance" preset: applied ONLY through the bank-growth control at an update
+#: boundary (identical for CLEAN5C5C and F8V3). Cumulative update KL cap 0.10 (PPO keeps 0.045), EV-BC steps x2,
+#: demo record-kind mass x2 vs the online targets, and a hard floor: an EV-BC step is reverted when the mean
+#: choice-row P(none) would fall below 0.70.
+STRONG_RULE = 'c4/strongguide v1 (MAIN 2026-11-09): update_kl_cap 0.10, EV-BC steps x2, demo mass x2, P(none) floor 0.70'
+STRONG = dict(rule=STRONG_RULE, update_kl_cap=0.10, ev_bc_mult=2, demo_weight=2.0, p_none_floor=0.70)
+STRONG_KEYS = ('ev_bc_mult', 'demo_weight', 'p_none_floor', 'strong_rule')
+
+
+def apply_strong(learnfix2, preset):
+    """learnfix2 registration + the registered STRONG preset (exactly; anything else is refused)."""
+    if preset != STRONG:
+        raise ValueError('learnfix2 override must be exactly learnfix.STRONG')
+    return dict(learnfix2, update_kl_cap=preset['update_kl_cap'], ev_bc_mult=preset['ev_bc_mult'],
+                demo_weight=preset['demo_weight'], p_none_floor=preset['p_none_floor'], strong_rule=preset['rule'])
+
+
 def settings2(cfg):
-    """None when absent (unchanged); else the validated learnfix2 registration."""
+    """None when absent (unchanged); else the validated learnfix2 registration (optionally + the STRONG preset)."""
     raw = (cfg or {}).get('learnfix2')
     if raw is None:
         return None
-    if (not isinstance(raw, dict) or raw.get('rule') != RULE2 or set(raw) != {'rule', 'none_bias', 'credit_cap', 'update_kl_cap'}
+    base_keys = {'rule', 'none_bias', 'credit_cap', 'update_kl_cap'}
+    strong = set(raw)-base_keys
+    if strong and (strong != set(STRONG_KEYS) or raw['strong_rule'] != STRONG_RULE or raw['ev_bc_mult'] != 2
+                   or raw['demo_weight'] != 2.0 or raw['p_none_floor'] != 0.70 or raw['update_kl_cap'] != 0.10):
+        raise ValueError('learnfix2 strong-guidance keys must be exactly the registered STRONG preset')
+    if (not isinstance(raw, dict) or raw.get('rule') != RULE2 or not base_keys <= set(raw)
             or not 0 < float(raw['update_kl_cap']) <= 0.2
             or not isinstance(raw['none_bias'], float) or not 0 <= raw['none_bias'] <= 10
             or not 0 < float(raw['credit_cap']) <= 10):
@@ -259,3 +281,17 @@ def trigger_ppo(policy, optimizer, ticks, *, settings, ppo, kl_budget, seed):
                 adv_rms=rms, steps=steps, accepted=sum(s['accepted'] for s in steps),
                 stopped=stopped, final_choice_kl=choice_kl(policy, ticks, reference), kl_budget=kl_budget,
                 kl_rule='mean KL over choice rows (>= 1 non-none valid slot), all ticks of the update')
+
+
+@torch.no_grad()
+def choice_p_none(policy, ticks):
+    """Mean P(none) over the choice rows of the ticks (current policy)."""
+    num, den = 0., 0
+    for t in ticks:
+        c = choice_mask(t['batch'])
+        if not bool(c.any()):
+            continue
+        p = policy.distribution(t['batch'].context, t['batch'].descriptors, t['batch'].mask)[0][c].softmax(-1)
+        num += float(p[:, 0].sum())
+        den += int(c.sum())
+    return num/den if den else 1.

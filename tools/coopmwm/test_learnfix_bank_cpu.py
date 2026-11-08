@@ -182,3 +182,45 @@ def test_p20_prepare_registers_learnfix2_only_on_request(monkeypatch):
     assert 'learnfix2' not in seen['v']['cfg_overrides']
     c5b.prepare_c_p20('src', root='/r', guidance_doc=doc, learnfix2=True)
     assert seen['v']['cfg_overrides']['learnfix2'] == learnfix.value2()
+
+
+def test_bank_growth_strong_override_only_registered_preset(cfg, wz, tmp_path):
+    from . import learnfix
+    native, doc = _native(cfg, wz)
+    root = tmp_path/'run'
+    root.mkdir()
+    control = _control(tmp_path, DOC)
+    raw = json.loads(control.read_text())
+    native.update(run_root=str(root), bank_growth=dict(rule=bg.RULE, control=str(control)), learnfix2=learnfix.value2())
+    out1, rec1 = bg.update_view(native, 'B', 1)
+    assert out1['learnfix2'] == native['learnfix2'] and rec1['learnfix2_override'] is None
+    control.write_text(json.dumps(dict(raw, learnfix2_override=learnfix.STRONG)))
+    out2, rec2 = bg.update_view(native, 'B', 2)
+    out2r, _ = bg.update_view(native, 'R', 2)
+    assert out2['learnfix2'] == out2r['learnfix2'] == learnfix.apply_strong(native['learnfix2'], learnfix.STRONG)
+    assert rec2['changed_vs_config'] is True and rec2['learnfix2_override'] == learnfix.STRONG
+    control.write_text(json.dumps(dict(raw, learnfix2_override=dict(learnfix.STRONG, demo_weight=5.))))
+    with pytest.raises(ValueError, match='STRONG'):
+        bg.update_view(native, 'B', 3)
+
+
+def test_bank_growth_verified_only_slate_override(cfg, wz, tmp_path):
+    from .lc_families import CONFIG_KEY
+    native, doc = _native(cfg, wz)
+    root = tmp_path/'run'
+    root.mkdir()
+    control = _control(tmp_path, DOC)
+    raw = json.loads(control.read_text())
+    native.update(run_root=str(root), bank_growth=dict(rule=bg.RULE, control=str(control)))
+    control.write_text(json.dumps(dict(raw, slate_override=bg.VERIFIED_ONLY)))
+    out_b, rec = bg.update_view(native, 'B', 1)
+    out_r, _ = bg.update_view(native, 'R', 1)
+    for out in (out_b, out_r):
+        args = out[CONFIG_KEY]['generator_args']
+        assert args['classes'] == ['verified'] and args['structured'] == []
+        assert args['templates'] == native[CONFIG_KEY]['generator_args']['templates']
+    assert native[CONFIG_KEY]['generator_args'].get('classes') != ['verified']             # config untouched
+    assert rec['slate_override'] == bg.VERIFIED_ONLY and rec['changed_vs_config'] is True
+    control.write_text(json.dumps(dict(raw, slate_override=dict(bg.VERIFIED_ONLY, classes=['random_r']))))
+    with pytest.raises(ValueError, match='VERIFIED_ONLY'):
+        bg.update_view(native, 'B', 2)

@@ -203,3 +203,38 @@ def test_supervise_requires_the_update_start_reference_under_learnfix2(cfg, monk
     runtime = SimpleNamespace(cfg=dict(cfg, learnfix2=lf.value2(), imitation_epochs=5), arm='B', policy=policy)
     with pytest.raises(ValueError, match='update-start'):
         fl.supervise(runtime, [])
+
+
+def test_strong_preset_registration_and_floor(cfg, monkeypatch):
+    v = lf.apply_strong(lf.value2(), lf.STRONG)
+    assert lf.settings2(dict(learnfix2=v))['update_kl_cap'] == .10 and v['ev_bc_mult'] == 2 and v['demo_weight'] == 2.
+    with pytest.raises(ValueError, match='STRONG'):
+        lf.apply_strong(lf.value2(), dict(lf.STRONG, update_kl_cap=.2))
+    with pytest.raises(ValueError, match='STRONG'):
+        lf.settings2(dict(learnfix2=dict(v, demo_weight=3.)))
+    recs = [dict(weight=1., meta=dict(kind='ev_bc')), dict(weight=1., meta=dict(kind='demo'))]
+    assert fl._mass(recs) == [.5, .5] and fl._mass(recs, {'demo': 2.}) == [.5, 1.]
+    # P(none) floor: a BC step pushing toward an action is reverted when choice-row P(none) would fall below it
+    from .trigger_policy import TriggerBatch
+    fake_load(monkeypatch)
+    runtime = tb.build_arm_runtime(dict(cfg, learnfix2=lf.value2()), 'B')['runtime']
+    _, s, _ = sample(cfg)
+    b = tb._batch(s['track2_trigger'])
+    i = int(b.mask[:, 1:].any(1).nonzero()[0])
+    slot = int(b.mask[i, 1:].nonzero()[0])+1
+    actions = torch.zeros_like(b.actions)
+    actions[i] = slot
+    w = torch.zeros(len(actions))
+    w[i] = 1.
+    rec = dict(batch=TriggerBatch(b.context, b.tables, b.descriptors, b.mask, actions, b.logp, b.values), weight=1.,
+               equivalent=torch.nn.functional.one_hot(actions, b.mask.shape[1]).bool(), row_weight=w,
+               meta=dict(kind='ev_bc'))
+    trig = runtime.policy.trigger
+    for g in runtime.policy.trigger_optimizer.param_groups:
+        g['lr'] = .5
+    ticks = [dict(batch=b)]
+    start = [trig.distribution(b.context, b.descriptors, b.mask)[0].detach()]
+    p0 = lf.choice_p_none(trig, ticks)
+    fit = fl.bc_steps(runtime.policy, [rec], epochs=10, kl_budget=10., max_grad_norm=10., guard=(ticks, start, 10.),
+                      p_none_floor=p0-.01)
+    assert lf.choice_p_none(trig, ticks) >= p0-.01 and not fit['passes'][-1]['accepted']
