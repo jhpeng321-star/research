@@ -8,5 +8,40 @@
   "C3": "B: P(target) on offered target rows (learnfix act rows) rises over the replayed update",
   "C4": "old-code control (no none_bias) on the same contexts reproduces near-uniform behaviour: choice-row P(none) <= 0.25 and mean entropy >= 0.9 x log(mean valid slots)"
  },
- "result": "PASS iff C1-C4 all hold"
+ "result": "PASS iff C1-C4 all hold",
+ "run": {
+  "code": "c4/learnfix2 69da6802 (check) / 87cbc0fd (registered bias)",
+  "calibration": {
+   "none_bias": 4.0165,
+   "rows": 5118,
+   "p_none_before": 0.169,
+   "p_none_after": 0.9
+  },
+  "B": {
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "C4": true,
+   "u0_p_none": 0.9,
+   "choice_kl": 0.231,
+   "p_target": [
+    0.026,
+    0.101
+   ],
+   "old_p_none": 0.169,
+   "old_entropy": 1.955
+  },
+  "R": {
+   "C1": true,
+   "C2": true,
+   "C3": null,
+   "C4": true,
+   "u0_p_none": 0.9,
+   "choice_kl": 0.0426,
+   "old_p_none": 0.169,
+   "old_entropy": 1.955
+  },
+  "RESULT": "PASS",
+  "note": "replay is off-policy (recorded behaviour without the bias), so the one-update movement is larger than on-policy"
+ }
 }
