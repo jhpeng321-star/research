@@ -147,7 +147,7 @@ def label(*, final_root, panels, bank_path, tag, functions=None):
         raise nm.Blocked(f'trained-run waves already exist ({trained[:3]}): labels must precede every B outcome')
     if functions is None:
         from tools.coopmwm.fullpol_bank import offer_ok
-        from tools.coopmwm.fullpol_situational import onset_bin
+        from tools.coopmwm.oracle_plan import onset_bin     # vendored verbatim from c4/p20-sit d70caf9f (REV-SPD)
     else:
         onset_bin, offer_ok = functions
     bank = json.loads(Path(bank_path).read_text(encoding='utf-8'))
