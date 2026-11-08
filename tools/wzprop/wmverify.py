@@ -63,7 +63,8 @@ SEED_RANGES = ((989950, 989999),          # MAIN 2026-11-06 night: wm_verify 989
                (991200, 991299),          # MAIN 2026-11-08 r4: audited unused (REGISTRATION, every PLAN, job dirs)
                (991300, 991347),          # MAIN 2026-11-08 23:57 second look (mut_0d50e4e1): audited unused
                (991348, 991399),          # MAIN 991200+ allocation (r4-r6 UNC rounds): audited unused 2026-11-09
-               (991400, 991419))          # MAIN 2026-11-09 01:55 mut_cfdbafe5 confirmation: audited unused
+               (991400, 991419),          # MAIN 2026-11-09 01:55 mut_cfdbafe5 confirmation: audited unused
+               (991420, 991499))          # MAIN 2026-11-09 03:1x r6 48-seed confirmation (991420-991467) + r7: audited
 FORBIDDEN_SEEDS = ((989600, 989699), (962000, 962999), (964000, 964199), (977000, 977999))
 BASE_ARM = 'u0'
 INCUMBENT = 'wall_g_solo2'               # owner 2026-11-07 (REGISTRATION 04:03): gentle incumbent, RuleHook verbatim
