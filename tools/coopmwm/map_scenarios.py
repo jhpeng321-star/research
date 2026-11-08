@@ -65,7 +65,9 @@ EXTRA_TRAIN_RANGES = ((989000, 989099),
                       # c4/wmverify only - mut_cfdbafe5 confirmation (MAIN 2026-11-09 01:55): 991400-991419, audited unused.
                       (991400, 991419),
                       # c4/wmverify only - r6 confirmation + r7 (MAIN 2026-11-09): 991420-991499, audited unused.
-                      (991420, 991499))
+                      (991420, 991499),
+                      # c4/wmverify only - r7a/r7c (MAIN 2026-11-09 05:5x): 991500-991599, audited unused.
+                      (991500, 991599))
 HELDOUT_RANGE = (989600, 989699)
 FORBIDDEN_RANGES = ((964000, 964199), (962000, 962999), (977000, 977999))
 EPISODE_S = 1200
