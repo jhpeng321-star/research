@@ -23,9 +23,15 @@ import json
 import math
 from pathlib import Path
 
-import numpy as np
 
-RULE = 'fullpol-clean5c4-situational-v1'
+RULE = 'fullpol-clean5c4-situational-v2'      # v2: bins from the acting CAV's own sensing (MAIN 2026-11-08)
+
+
+class NoAdmission(ValueError):
+    """No (plan, bin) pair admitted: no situational WM guidance (report negative; no launch)."""
+    def __init__(self, pairs):
+        super().__init__('no admitted (plan, bin) pair: no situational WM guidance (report negative)')
+        self.pairs = pairs
 B_RESAMPLES = 4000
 SEED = 20261107
 S_DROP = 75.44                    # multicrit/act/reduce_act.py (wz3to2 drop position, WM s)
@@ -58,10 +64,13 @@ def load(paths):
 
 
 def _bins_sum(r, b0, b1):
-    return float(np.asarray(r['bins'])[b0:b1].sum())
+    return float(sum(sum(row) for row in r['bins'][b0:b1]))
 
 
-def activations(eps):
+def activations(eps, onset_bins):
+    """Per-activation effects; ``onset_bins`` {(root, cell, seed, arm, t): bin} from the host reducer
+    (ops/sit_reduce.py: onset_bin on the acting CAV's own sensing rows at onset). An activation without a
+    reducer record is an error (fail closed)."""
     rows = []
     for key, r in eps.items():
         tag, root, cell, seed, arm = key
@@ -76,15 +85,17 @@ def activations(eps):
             nxt = acts[k+1]['t'] if k+1 < len(acts) else 1200
             tend = min(nxt, t+300, 1200)
             b0, b1 = (t-300)//10, math.ceil((tend-300)/10)
-            if a.get('sit') is None:
-                continue
+            b = onset_bins.get((root, cell, seed, arm, int(t)))
+            if b is None:
+                raise ValueError(f'no own-sensing onset bin for {root}/{cell}/{seed}/{arm}/t{t}')
             rows.append(dict(cluster=(tag, root, cell, seed), cell=cell, pen=int(cell.split('_p')[1]), arm=arm, t=t,
                              members=len(a.get('members') or ()), eff=_bins_sum(r, b0, b1)-_bins_sum(u, b0, b1),
-                             bin=situation_bin(a['sit'])))
+                             bin=b))
     return rows
 
 
 def cboot(rows):
+    import numpy as np
     cl = defaultdict(list)
     for r in rows:
         cl[r['cluster']].append(r['eff'])
@@ -100,6 +111,9 @@ def cboot(rows):
 
 
 # ---------------------------------------------------------------- situation bins (offline and runtime, same rule)
+
+SENSOR_RANGE_M = 100.0            # merge_features.SENSOR_RANGE_M (track2_backend own_sensing / LCEXEC sensed rows)
+UNOBSERVED = dict(cong='unobserved', lane_diff='unobserved')
 
 def situation_bin(sit):
     ds = sit.get('drop_speed')
@@ -122,14 +136,41 @@ def runtime_situation(own, rows):
                 v_lane_ahead500={str(k): _mean([v for ln, x, v in up if ln == k and s <= x <= s+500]) for k in (0, 1, 2)})
 
 
+def onset_bin(own, rows):
+    """THE bin rule, offline (ops/sit_reduce.py on the observable tape at onset) and at runtime
+    (fullpol_bank.offer_ok): the acting CAV's own row + every vehicle within SENSOR_RANGE_M of it (the
+    track2_backend own_sensing filter); drop-area speed or lane-0 / lane-1 ahead speed not observed in that
+    view -> UNOBSERVED (its own bin; never admitted, never offered)."""
+    if own is None or own.get('v_mps') is None:
+        return dict(UNOBSERVED)
+    s = float(own['s_m'])
+    view = [r for r in rows if r.get('vid') != own.get('vid') and abs(float(r['s_m'])-s) <= SENSOR_RANGE_M]
+    if any(r.get('v_mps') is None for r in view):
+        return dict(UNOBSERVED)
+    sit = runtime_situation(own, view)
+    lanes = sit['v_lane_ahead500']
+    if sit['drop_speed'] is None or lanes['0'] is None or lanes['1'] is None:
+        return dict(UNOBSERVED)
+    return situation_bin(sit)
+
+
 def situation_ok(cond, own, rows):
     want = (cond or {}).get('situation')
     if want is None:
         return True
-    if any(o.get('v_mps') is None for o in [own]+list(rows)):
+    got = onset_bin(own, rows)
+    if got == UNOBSERVED:
         return False
-    got = situation_bin(runtime_situation(own, rows))
     return any(all(got[k] == b[k] for k in ('cong', 'lane_diff')) for b in want['bins'])
+
+
+def load_onset_bins(paths):
+    """ops/sit_reduce.py output lines -> {(root, cell, seed, arm, t): bin}."""
+    out = {}
+    for path in paths:
+        for r in _lines(path):
+            out[(r['root'], r['cell'], int(r['seed']), r['arm'], int(r['t']))] = r['bin']
+    return out
 
 
 # ---------------------------------------------------------------- admission
@@ -208,11 +249,11 @@ def templates_from_banks(bank_paths):
     return out
 
 
-def build(act_paths, analyses, bank_paths, *, cells, provenance, structured=(), allowed_scope='all'):
+def build(act_paths, analyses, bank_paths, *, cells, provenance, onset_paths, structured=(), allowed_scope='all'):
     """clean5c guidance doc (fullpol_bank schema) with situational offer conditions."""
     from .fullpol_learn import guidance_doc
     from .fullpol_bank import RULE as BANK_RULE
-    rows = activations(load(act_paths))
+    rows = activations(load(act_paths), load_onset_bins(onset_paths))
     status = plan_status(analyses, structured, allowed_scope)
     pairs = admit(rows, status)
     banks = templates_from_banks(bank_paths)
@@ -247,18 +288,22 @@ def build(act_paths, analyses, bank_paths, *, cells, provenance, structured=(), 
         t['template']['source'] = dict(t['template'].get('source') or {}, variant=t['family'], family=t['family'],
                                        cell=t['cell'])
     sources = []
-    for path in list(act_paths)+list(bank_paths)+[Path(d)/n for d in analyses for n in
+    for path in list(act_paths)+list(onset_paths)+list(bank_paths)+[Path(d)/n for d in analyses for n in
                                                  ('PLAN.json', 'VERIFY.json', 'ANALYSIS.json', 'ANALYSIS_ALLOWED.json')]:
         p = Path(path)
         sources.append(dict(name=f'{p.parent.name}/{p.name}', sha256=hashlib.sha256(p.read_bytes()).hexdigest(),
                             baseline='mappo'))
     if not g_rows:
-        raise ValueError('no admitted (plan, bin) pair: no situational WM guidance (report negative)')
+        raise NoAdmission(pairs)
     doc = guidance_doc(g_rows, sources=sources, provenance=provenance)
     doc['clean5c'] = dict(rule=BANK_RULE, provenance=provenance, threshold_s=10.0,
                           verified_cells=sorted({r['regime'] for r in g_rows}), skipped={}, rejected=rejected,
                           templates=templates)
     doc['situational'] = dict(rule=RULE, n_activations=len(rows), pairs=pairs,
+                              bin_counts={json.dumps(b, sort_keys=True): sum(r['bin'] == b for r in rows)
+                                          for b in BINS+[UNOBSERVED]},
+                              bin_rule='onset_bin: acting CAV (holder) own row + vehicles within '
+                                       f'{SENSOR_RANGE_M:.0f} m at onset (same function as offer_ok)',
                               plans={f: {k: v for k, v in s.items()} for f, s in sorted(status.items())},
                               pool_rule=f'p20 only if >= {P20_MIN_ACTIVATIONS} activations and >= {P20_MIN_CLUSTERS} '
                                         'clusters in the (plan, bin), else all penetrations (label only)')
@@ -287,6 +332,7 @@ def main(argv=None):
     ap.add_argument('--act', nargs='+', required=True, help='per-activation records (act_*.jsonl[.gz])')
     ap.add_argument('--analysis', nargs='+', required=True, help='WMVERIFY analysis dirs (PLAN/VERIFY/ANALYSIS[_ALLOWED])')
     ap.add_argument('--bank', nargs='+', required=True, help='WMVERIFY bank jsonl (templates + offer conditions)')
+    ap.add_argument('--onset', nargs='+', required=True, help='ops/sit_reduce.py outputs (own-sensing onset bins)')
     ap.add_argument('--structured', nargs='*', default=(), help="WM-C ARMS files: their 'structured' arms are not WM")
     ap.add_argument('--allowed-scope', choices=ALLOWED_SCOPES, default='all')
     ap.add_argument('--provenance', required=True)
@@ -301,8 +347,13 @@ def main(argv=None):
         for groups in json.loads(Path(path).read_text(encoding='utf-8')).values():
             if isinstance(groups, dict):
                 structured.update(n['name'] if isinstance(n, dict) else n for n in groups.get('structured') or ())
-    doc = build(a.act, a.analysis, a.bank, cells=P20_CELLS, provenance=a.provenance, structured=sorted(structured),
-                allowed_scope=a.allowed_scope)
+    try:
+        doc = build(a.act, a.analysis, a.bank, cells=P20_CELLS, provenance=a.provenance, onset_paths=a.onset,
+                    structured=sorted(structured), allowed_scope=a.allowed_scope)
+    except NoAdmission as e:
+        report = Path(str(out)+'.NO_ADMISSION.json')
+        report.write_text(json.dumps(dict(rule=RULE, pairs=e.pairs), indent=1, sort_keys=True), encoding='utf-8')
+        raise SystemExit('NO ADMISSION (report: '+str(report)+')')
     doc['situational']['structured_excluded'] = sorted(structured)
     none = check(doc, P20_CELLS)
     out.write_text(json.dumps(doc, indent=1, sort_keys=True), encoding='utf-8')

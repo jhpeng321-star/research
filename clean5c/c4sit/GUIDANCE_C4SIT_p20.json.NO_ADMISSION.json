@@ -1,0 +1,866 @@
+{
+ "pairs": [
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 2,
+    "hi": 791.9499999999997,
+    "lo": -1467.4810000000007,
+    "mean": -111.82240000000047,
+    "n": 5
+   },
+   "family": "duo12_v18",
+   "p20": {
+    "clusters": 1,
+    "hi": 791.9499999999997,
+    "lo": 791.9499999999997,
+    "mean": 791.9499999999997,
+    "n": 3
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_fairness_allowed",
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 2,
+    "hi": 1962.3029999999999,
+    "lo": 646.8269999999993,
+    "mean": 1304.5649999999996,
+    "n": 2
+   },
+   "family": "duo12_v18",
+   "p20": null,
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_fairness_allowed",
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 5,
+    "hi": 1279.9347999999995,
+    "lo": -1249.814428571429,
+    "mean": 31.097249999999633,
+    "n": 8
+   },
+   "family": "duo12_v18",
+   "p20": {
+    "clusters": 2,
+    "hi": 993.2125000000003,
+    "lo": 816.5579999999991,
+    "mean": 934.3276666666666,
+    "n": 3
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_fairness_allowed",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 4,
+    "hi": 379.61522222222317,
+    "lo": -3355.5930000000003,
+    "mean": -769.6796153846147,
+    "n": 13
+   },
+   "family": "g2_gap1",
+   "p20": {
+    "clusters": 4,
+    "hi": 379.61522222222317,
+    "lo": -3355.5930000000003,
+    "mean": -769.6796153846147,
+    "n": 13
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_wm_sourced",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 3,
+    "hi": 1661.6160000000018,
+    "lo": -2193.9449999999993,
+    "mean": -491.9226666666659,
+    "n": 3
+   },
+   "family": "g2_gap1",
+   "p20": {
+    "clusters": 3,
+    "hi": 1661.6160000000018,
+    "lo": -2193.9449999999993,
+    "mean": -491.9226666666659,
+    "n": 3
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_wm_sourced",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 3,
+    "hi": -1249.1874999999986,
+    "lo": -2802.804,
+    "mean": -2094.7883999999995,
+    "n": 5
+   },
+   "family": "g2_gap1",
+   "p20": {
+    "clusters": 3,
+    "hi": -1249.1874999999986,
+    "lo": -2802.804,
+    "mean": -2094.7883999999995,
+    "n": 5
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_wm_sourced"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 3,
+    "hi": -223.67199999999866,
+    "lo": -2145.1575,
+    "mean": -1115.5399999999993,
+    "n": 5
+   },
+   "family": "g2_gap1",
+   "p20": {
+    "clusters": 3,
+    "hi": -223.67199999999866,
+    "lo": -2145.1575,
+    "mean": -1115.5399999999993,
+    "n": 5
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_wm_sourced"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 2,
+    "hi": 2987.9969999999994,
+    "lo": 246.65449999999964,
+    "mean": 1160.435333333333,
+    "n": 3
+   },
+   "family": "mut_006c290e03ad3d3c",
+   "p20": {
+    "clusters": 1,
+    "hi": 2987.9969999999994,
+    "lo": 2987.9969999999994,
+    "mean": 2987.9969999999994,
+    "n": 1
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 2,
+    "hi": 6721.942500000004,
+    "lo": -1190.049999999992,
+    "mean": 4084.6116666666717,
+    "n": 3
+   },
+   "family": "mut_006c290e03ad3d3c",
+   "p20": {
+    "clusters": 2,
+    "hi": 6721.942500000004,
+    "lo": -1190.049999999992,
+    "mean": 4084.6116666666717,
+    "n": 3
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 2,
+    "hi": 2584.2479999999987,
+    "lo": 2206.34,
+    "mean": 2458.2786666666657,
+    "n": 3
+   },
+   "family": "mut_006c290e03ad3d3c",
+   "p20": null,
+   "pool": "all_penetrations",
+   "reasons": [
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 2,
+    "hi": -1273.768,
+    "lo": -1341.599999999995,
+    "mean": -1307.6839999999975,
+    "n": 2
+   },
+   "family": "mut_006c290e03ad3d3c",
+   "p20": null,
+   "pool": "all_penetrations",
+   "reasons": [
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 9,
+    "hi": 162.9813138888901,
+    "lo": -1546.3416795454546,
+    "mean": -746.7087999999999,
+    "n": 10
+   },
+   "family": "mut_0584e488a8bf93c5",
+   "p20": {
+    "clusters": 7,
+    "hi": 602.1490321428581,
+    "lo": -1241.520875000001,
+    "mean": -453.34387500000014,
+    "n": 8
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_fairness_allowed",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 9,
+    "hi": -1082.8695305555555,
+    "lo": -6947.297100000002,
+    "mean": -3944.313000000002,
+    "n": 10
+   },
+   "family": "mut_0584e488a8bf93c5",
+   "p20": {
+    "clusters": 7,
+    "hi": -609.4687968750009,
+    "lo": -7260.3311683035745,
+    "mean": -3768.0566250000015,
+    "n": 8
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_fairness_allowed"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 4,
+    "hi": 468.2000000000005,
+    "lo": -3130.726,
+    "mean": -1066.2092499999999,
+    "n": 4
+   },
+   "family": "mut_0584e488a8bf93c5",
+   "p20": {
+    "clusters": 2,
+    "hi": 958.5950000000012,
+    "lo": -22.195000000000164,
+    "mean": 468.2000000000005,
+    "n": 2
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_fairness_allowed",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 10,
+    "hi": 434.59011750000275,
+    "lo": -3177.654771363637,
+    "mean": -1227.9346153846159,
+    "n": 13
+   },
+   "family": "mut_0584e488a8bf93c5",
+   "p20": {
+    "clusters": 7,
+    "hi": 1444.7478571428578,
+    "lo": -4189.187883035717,
+    "mean": -1087.5672500000003,
+    "n": 8
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_fairness_allowed",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 4,
+    "hi": 3242.6585000000005,
+    "lo": -6150.444999999999,
+    "mean": -1973.8843999999995,
+    "n": 5
+   },
+   "family": "mut_267471acb8393ab5",
+   "p20": {
+    "clusters": 2,
+    "hi": 3964.040000000001,
+    "lo": -7595.731999999998,
+    "mean": -3742.474666666665,
+    "n": 3
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_n2_representable",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 1,
+    "hi": -868.4090000000015,
+    "lo": -868.4090000000015,
+    "mean": -868.4090000000015,
+    "n": 1
+   },
+   "family": "mut_267471acb8393ab5",
+   "p20": null,
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_n2_representable",
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 2,
+    "hi": -2655.0260000000026,
+    "lo": -3197.441999999992,
+    "mean": -2926.233999999997,
+    "n": 2
+   },
+   "family": "mut_267471acb8393ab5",
+   "p20": null,
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_n2_representable",
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 4,
+    "hi": 465.29700000000093,
+    "lo": -2228.2005000000036,
+    "mean": -881.4517500000013,
+    "n": 4
+   },
+   "family": "mut_267471acb8393ab5",
+   "p20": {
+    "clusters": 1,
+    "hi": -2831.142000000007,
+    "lo": -2831.142000000007,
+    "mean": -2831.142000000007,
+    "n": 1
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_n2_representable",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 2,
+    "hi": 493.4106666666691,
+    "lo": -13.2650000000001,
+    "mean": 366.7417500000018,
+    "n": 4
+   },
+   "family": "mut_af1d7d5c2eb434c6",
+   "p20": {
+    "clusters": 1,
+    "hi": -13.2650000000001,
+    "lo": -13.2650000000001,
+    "mean": -13.2650000000001,
+    "n": 1
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_n2_representable",
+    "not_fairness_allowed",
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 4,
+    "hi": 497.4705000000031,
+    "lo": -4433.179,
+    "mean": -1967.8542499999985,
+    "n": 4
+   },
+   "family": "mut_af1d7d5c2eb434c6",
+   "p20": {
+    "clusters": 2,
+    "hi": -232.26599999999235,
+    "lo": -4485.029000000002,
+    "mean": -2358.6474999999973,
+    "n": 2
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_n2_representable",
+    "not_fairness_allowed",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 2,
+    "hi": -4080.5009999999984,
+    "lo": -9248.696000000007,
+    "mean": -6664.598500000003,
+    "n": 2
+   },
+   "family": "mut_af1d7d5c2eb434c6",
+   "p20": {
+    "clusters": 1,
+    "hi": -4080.5009999999984,
+    "lo": -4080.5009999999984,
+    "mean": -4080.5009999999984,
+    "n": 1
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_n2_representable",
+    "not_fairness_allowed",
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 4,
+    "hi": 1786.96,
+    "lo": -2251.1007,
+    "mean": -677.8536666666668,
+    "n": 6
+   },
+   "family": "mut_af1d7d5c2eb434c6",
+   "p20": {
+    "clusters": 2,
+    "hi": 1742.3580000000002,
+    "lo": 443.41299999999956,
+    "mean": 1092.8854999999999,
+    "n": 2
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_n2_representable",
+    "not_fairness_allowed",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 2,
+    "hi": 0.0,
+    "lo": -185.9655000000007,
+    "mean": -123.97700000000047,
+    "n": 3
+   },
+   "family": "mut_b37b425aed7519df",
+   "p20": {
+    "clusters": 2,
+    "hi": 0.0,
+    "lo": -185.9655000000007,
+    "mean": -123.97700000000047,
+    "n": 3
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_n2_representable",
+    "not_multi_cav",
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 1,
+    "hi": 178.68800000000056,
+    "lo": 178.68800000000056,
+    "mean": 178.68800000000056,
+    "n": 1
+   },
+   "family": "mut_c19711cf1ebe4332",
+   "p20": {
+    "clusters": 1,
+    "hi": 178.68800000000056,
+    "lo": 178.68800000000056,
+    "mean": 178.68800000000056,
+    "n": 1
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_multi_cav",
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 5,
+    "hi": 2671.3166000000065,
+    "lo": -5919.468625000001,
+    "mean": -2600.2106666666646,
+    "n": 6
+   },
+   "family": "wall_g_duo12_stagger40",
+   "p20": null,
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_wm_sourced",
+    "not_n2_representable",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 1,
+    "hi": 374.6970000000001,
+    "lo": 374.6970000000001,
+    "mean": 374.6970000000001,
+    "n": 1
+   },
+   "family": "wall_g_duo12_stagger40",
+   "p20": {
+    "clusters": 1,
+    "hi": 374.6970000000001,
+    "lo": 374.6970000000001,
+    "mean": 374.6970000000001,
+    "n": 1
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_wm_sourced",
+    "not_n2_representable",
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 1,
+    "hi": -7066.778000000002,
+    "lo": -7066.778000000002,
+    "mean": -7066.778000000002,
+    "n": 1
+   },
+   "family": "wall_g_duo12_stagger40",
+   "p20": null,
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_wm_sourced",
+    "not_n2_representable",
+    "clusters<3"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 5,
+    "hi": 672.0763999999996,
+    "lo": -6066.705142857143,
+    "mean": -2746.1751428571433,
+    "n": 7
+   },
+   "family": "wall_g_duo12_stagger40",
+   "p20": {
+    "clusters": 3,
+    "hi": 1614.4889999999996,
+    "lo": -10330.039,
+    "mean": -2582.135666666667,
+    "n": 3
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_wm_sourced",
+    "not_n2_representable",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 9,
+    "hi": -500.7749651785718,
+    "lo": -3807.91684032738,
+    "mean": -2184.5447058823524,
+    "n": 17
+   },
+   "family": "wall_g_solo2",
+   "p20": {
+    "clusters": 6,
+    "hi": -231.41571428571504,
+    "lo": -2445.172555555555,
+    "mean": -1298.918,
+    "n": 9
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_wm_sourced",
+    "not_n2_representable",
+    "not_fairness_allowed",
+    "not_multi_cav"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "congested",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 5,
+    "hi": -1246.1171999999951,
+    "lo": -6097.610400000003,
+    "mean": -3391.647499999999,
+    "n": 6
+   },
+   "family": "wall_g_solo2",
+   "p20": {
+    "clusters": 5,
+    "hi": -1246.1171999999951,
+    "lo": -6097.610400000003,
+    "mean": -3391.647499999999,
+    "n": 6
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_wm_sourced",
+    "not_n2_representable",
+    "not_fairness_allowed",
+    "not_multi_cav"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2faster"
+   },
+   "effect": {
+    "clusters": 8,
+    "hi": 1732.5899718749995,
+    "lo": -3258.9841951388885,
+    "mean": -719.2068888888888,
+    "n": 9
+   },
+   "family": "wall_g_solo2",
+   "p20": {
+    "clusters": 5,
+    "hi": 1296.2778333333329,
+    "lo": -4723.616499999999,
+    "mean": -1332.6429999999998,
+    "n": 6
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_wm_sourced",
+    "not_n2_representable",
+    "not_fairness_allowed",
+    "not_multi_cav",
+    "ci_upper>=0"
+   ]
+  },
+  {
+   "admitted": false,
+   "bin": {
+    "cong": "free",
+    "lane_diff": "L2notfaster"
+   },
+   "effect": {
+    "clusters": 14,
+    "hi": 348.00562463235326,
+    "lo": -2370.236459444444,
+    "mean": -1020.5832631578946,
+    "n": 19
+   },
+   "family": "wall_g_solo2",
+   "p20": {
+    "clusters": 8,
+    "hi": 1289.5071010416668,
+    "lo": -2750.4422499999982,
+    "mean": -467.7906666666661,
+    "n": 9
+   },
+   "pool": "all_penetrations",
+   "reasons": [
+    "not_wm_sourced",
+    "not_n2_representable",
+    "not_fairness_allowed",
+    "not_multi_cav",
+    "ci_upper>=0"
+   ]
+  }
+ ],
+ "rule": "fullpol-clean5c4-situational-v2"
+}
