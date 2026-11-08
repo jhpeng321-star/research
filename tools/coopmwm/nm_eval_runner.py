@@ -84,9 +84,10 @@ LANE_TRAIN_FILES = ('tools/nm_mappo/sanity_eval.py', 'tools/nm_mappo/lane_action
                     'src/wms/control/mappo/agent.py', 'src/wms/control/mappo/rollout.py', 'tools/coopmwm/lc_runtime.py',
                     'tools/coopmwm/map_observations.py', 'tools/coopmwm/replay_bank.py')
 RULE = True
-RULE_STRATEGIES = ('wall_h_solo2', 'wall_g_solo2')
+RULE_STRATEGIES = ('wall_h_solo2', 'wall_g_solo2', 'wall_g_duo12')
 #: strategy -> the module holding its EXACT rule code (RULE: S-REGIMEU0; RULE_FAIR: S-MULTICRIT byte copy)
-RULE_MODULES = dict(wall_h_solo2='regimeu0', wall_g_solo2='regimeu0_multicrit')
+RULE_MODULES = dict(wall_h_solo2='regimeu0', wall_g_solo2='regimeu0_multicrit',
+                    wall_g_duo12='regimeu0_multicrit')   # amendment 22: the p20 RULE (S-MULTICRIT-LOWCAV rule)
 PARITY = True
 PARITY_ROLE = 'check'
 LANE_GRID = (-1, 0, 1, 2)
@@ -274,7 +275,7 @@ def rule_hook(strategy, expected_sha256):
     if strategy not in RULE_STRATEGIES:
         raise ValueError(f'unregistered RULE strategy {strategy!r}')
     module = importlib.import_module(f'{__package__}.{RULE_MODULES[strategy]}')
-    loaded = rule_digest(module) if strategy == 'wall_h_solo2' else multicrit_digest(module)
+    loaded = rule_digest(module) if RULE_MODULES[strategy] == 'regimeu0' else multicrit_digest(module)
     if loaded != expected_sha256:
         raise ValueError(f'{RULE_MODULES[strategy]} rule differs from its registration (rule_sha256)')
     return module.RuleHook(strategy), loaded

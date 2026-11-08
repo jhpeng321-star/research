@@ -1231,3 +1231,57 @@ def test_host_identity_zero_sumo_receipt_then_one_train_world_replay(panel, tmp_
     assert w['verdict'] == 'DIFFERS' and w['zero_sumo']['other_modules_changed'] == ['wms.x']
     assert w['zero_sumo']['receipt_differences'][0]['key'] == 'files.a.sumocfg' and w['replay']['status'].startswith('skipped')
     assert len([r for r in nm.fe.ledger_rows(f['final_root']) if r['phase'] == nm.HOSTID_PHASE]) == 1   # no SUMO spent
+
+
+# ---------------------------------------------------------------- amendment 22 (p20 setting)
+
+@pytest.fixture
+def p20(monkeypatch):
+    for k, v in dict(nm.SETTINGS['p20'], SETTING='p20', **nm.SETTINGS_PINS['p20']).items():
+        monkeypatch.setattr(nm, k, v)
+    return nm.load_panel()
+
+
+def test_p20_panels_are_the_registered_held_out_worlds(p20):
+    c3 = nm.load_panel_3c()
+    assert p20['cell']['cell_key'] == 'D3200_p20' and c3['cell']['cell_key'] == 'D2400_p20'
+    assert [r['world']['seed'] for r in p20['worlds']] == list(range(989600, 989696))
+    assert [r['world']['seed'] for r in c3['worlds']] == list(range(989600, 989624))
+    assert all(r['world']['penetration'] == 0.2 for r in p20['worlds']+c3['worlds'])
+    assert 'NOT independent replications' in p20['exposure']['disclosed'] and c3['sibling_panel_sha256'] == p20['panel_sha256']
+    assert {r['world_id'] for r in p20['worlds']}.isdisjoint({r['world_id'] for r in c3['worlds']})
+    p60 = json.loads(nm.SETTINGS['p20']['PANEL_FILE'].with_name('nm_eval_panel_wz3to2_v2.json').read_text())
+    assert p60['panel_sha256'] == '3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130'  # p60 unchanged
+
+
+def test_p20_rule_is_the_lowcav_duo12_rule_and_the_runner_accepts_it():
+    from tools.coopmwm import nm_eval_runner as runner
+    hook, digest = runner.rule_hook('wall_g_duo12', nm.SETTINGS['p20']['RULE_SHA256'])
+    assert digest == nm.RULE_FAIR_SHA256 and type(hook).__name__ == 'RuleHook'
+    with pytest.raises(ValueError, match='differs'):
+        runner.rule_hook('wall_g_duo12', nm.RULE_SHA256)                     # the p60 wall_h digest is refused
+
+
+def test_p20_dry_run_prerun_then_main_run(p20, tmp_path):
+    result = nm.dry_run(out=tmp_path/'out', panel=p20)
+    final_root = Path(result['final_root'])
+    plan = json.loads((final_root/nm.PRERUN_FILE).read_text())
+    assert plan['setting'] == 'p20' and plan['rule'] == dict(strategy='wall_g_duo12', rule_sha256=nm.RULE_FAIR_SHA256,
+                                                             module='tools.coopmwm.regimeu0_multicrit',
+                                                             source='c4/multicrit 4ff09522')
+    assert plan['panel_sha256'] == p20['panel_sha256'] and 'OUT OF DISTRIBUTION' in plan['mappo_lane_note']
+    t = json.loads((final_root/'CLAIM3A_TABLES_u012.json').read_text())['tables']
+    assert t['arms']['RULE']['label'].startswith('RULE: U0 + the S-MULTICRIT wall_g_duo12')
+    assert set(t['co_primary']) >= {'total_lower', 'groups', 'tail_cvar90', 'meets'}
+    c3 = json.loads((final_root/'CLAIM3C_TABLES_u012.json').read_text())['tables']
+    assert 'co_criterion_tail_3c' in c3
+    lane = json.loads((final_root/'CLAIM3B_MAPPO_LANE_TABLES_u012.json').read_text())['tables']
+    assert 'OUT OF DISTRIBUTION' in lane['arms']['MAPPO_LANE']['label']
+    specs = [json.loads(p.read_text()) for p in (final_root/'evaluation').glob('*/spec.json')]
+    rule_specs = [sp for sp in specs if sp.get('arm') == 'RULE']
+    assert not rule_specs or all(sp['checkpoint']['rule'] == 'wall_g_duo12' for sp in rule_specs)
+
+
+def test_setting_cli_requires_explicit_roots_for_p20(p20):       # p20 fixture: globals restored afterwards
+    with pytest.raises(SystemExit):
+        nm.main(['verify-panel', '--setting', 'p20'])

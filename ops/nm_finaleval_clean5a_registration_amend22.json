@@ -1,0 +1,109 @@
+{
+ "amendment": 22,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend21a.json",
+  "registration_sha256": "f353bd0df13f5c4ebea2fb6f7be0213178bb091be2e644268e930e77626e595a"
+ },
+ "arms": {
+  "MAPPO_LANE": "MAPPO_LANE (S-MAPPOWZL) was trained at D3200_p60 only: at p20 it is OUT OF DISTRIBUTION (disclosed; no retraining, no selection)",
+  "RULE": {
+   "module": "tools.coopmwm.regimeu0_multicrit (blob 4ff09522 = S-MULTICRIT-LOWCAV harness c4/multicrit d89a3c2e)",
+   "note": "p20 RULE = duo12 (MAIN); the p60 RULE wall_h_solo2 is not used at p20",
+   "rule_sha256": "a5fdf1c3bf3a9d0dc82a6c296bf09ea6ad4bfa51b288e9c378b4c1ebc9e10376",
+   "strategy": "wall_g_duo12"
+  },
+  "RULE_FAIR": {
+   "rule_sha256": "a5fdf1c3bf3a9d0dc82a6c296bf09ea6ad4bfa51b288e9c378b4c1ebc9e10376",
+   "strategy": "wall_g_solo2"
+  },
+  "U0": "frozen d9042cc5 + the common u0 of the p20 runs (bound at prerun-register; both runs must carry the same common u0 for the pre-run waves to be reused - prerun_compat)",
+  "prerun": [
+   "NATIVE",
+   "U0",
+   "RULE",
+   "RULE_FAIR",
+   "MAPPO_LANE"
+  ],
+  "primary": {
+   "A": "per run: A = U0 alias iff that run's frozen-A check holds and its plant view + common u0 equal the pre-run plan; otherwise A is simulated on the same panels (+144,000 sim-s per run)",
+   "arms": [
+    "B",
+    "R"
+   ],
+   "claims": "each run is its own claim 3a / 3c (B vs A, B vs R, vs U0/NATIVE/RULE/RULE_FAIR/MAPPO_LANE), reported separately, no selection between runs; the shared pre-run arms are identical for both",
+   "runs": [
+    "CLEAN5C3 (WM-guided, cpuW)",
+    "F8U (rule-guided, cpuZ)"
+   ],
+   "update": 12,
+   "wiring": "the two-run B/R binding (run label in waves/tables, one final root) is implemented and N5-reviewed as amendment 22a BEFORE any B/R episode; nothing in it may change the pre-run arms, panels or criteria registered here"
+  }
+ },
+ "authority": [
+  "owner 2026-11-08 17:22 (REGISTRATION): \"test 20% cav instances ... switch now and build it and restart\"",
+  "MAIN -> N6 2026-11-08: new sealed p20 eval as an amendment, registered before any outcome",
+  "MAIN -> N6 2026-11-08: seeds option A (held-out integers at the p20 cells, 3c precedent; disclose)"
+ ],
+ "budget": {
+  "allocation_sim_s": 1750000,
+  "ledger": "own p20 final root CHARGES.jsonl",
+  "quote": {
+   "A_if_simulated": 288000,
+   "checks": 3480,
+   "prerun": 720000,
+   "primary_BR": 576000,
+   "worst_case": 1587480
+  }
+ },
+ "checks": {
+  "env_equivalence": "zero SUMO",
+  "envparity": "U0 plant vs MAPPO_LANE training env on TRAIN 989598/989599 at D3200_p20 = 1,680",
+  "host_identity": "420 per host if the root moves",
+  "logcheck": "2 x 360 s TRAIN world 989598 at D3200_p20 (NATIVE, RULE duo12) = 720",
+  "seqcheck": "NATIVE -> U0 -> RULE sequence check = 1,080"
+ },
+ "criteria": "unchanged per run and per panel: co-primary total delay (B - A paired CI95 upper < 0) AND groups (L0/L1/L2/HDV/CAV mean per-vehicle increase <= 10 s vs A, U0 labels) AND tail (paired CVaR90 B - A CI95 lower <= 0, amendment 19); 3c: no-harm + tail; secondaries incl. CVaR90/p90 vs U0",
+ "panels": {
+  "claim3a": {
+   "cell": "D3200_p20",
+   "file": "ops/nm_eval_panel_wz3to2_p20.json",
+   "panel_sha256": "fe64aa3566fe156c94a03b5809f83df5f6be981e5e0fd079225aaab1abdb6ebf",
+   "seeds": [
+    989600,
+    989695
+   ],
+   "worlds": 96
+  },
+  "claim3c": {
+   "cell": "D2400_p20",
+   "file": "ops/nm_eval_panel_wz3to2_claim3c_D2400_p20.json",
+   "panel_sha256": "711d22c9ac063ba09f466f7217a45a47991b14f3f94070d751a67133cb514c29",
+   "seeds": [
+    989600,
+    989623
+   ],
+   "worlds": 24
+  },
+  "disclosure": "requests and HDV parameters are seeded by map:seed: each p20 world shares its arrival stream and HDV draws with its sealed, unopened p60 twin (989600-989695 x D3200_p60, 989600-989623 x D2400_p60); the p20 panels are NOT independent replications of p60; nothing leaks",
+  "verification": "N1 guard: TRAIN roles refuse held-out seeds, so no training/search ever ran a held-out world; N6 is the only held-out user and never ran a p20 world; REGISTRATION.md has no p20 held-out use other than MAIN's option-A note"
+ },
+ "prerun": {
+  "cap": 720000,
+  "episodes": "5 arms x (96 + 24) = 600 x 1200 s",
+  "host": "gpuA CPU only (20 real cores): --workers 18, chunk 36, nice 19, CUDA_VISIBLE_DEVICES empty, fresh final root",
+  "order": "logcheck -> seqcheck -> pre-run (canary first, one fresh pool per arm) -> envparity/env-equivalence",
+  "sim_s": 720000,
+  "wall_estimate": "~1.5-2.5 h: 600 episodes / 18 workers = 34 rounds x ~2-3 min (p60 pre-run on cpuV, 16 workers, about 2 min per episode; p20 has fewer CAVs; MAPPO_LANE fresh interpreters slower)"
+ },
+ "registered_utc": "2026-11-08T09:46:47.596283+00:00",
+ "registration_sha256": "d2c74cbfa418da226d32a714b41db8c3df83113f0c5a93454062a0ae02ab3b9b",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "sealed": "F12: no p20 wave receipt is opened, tabulated or summarised before the seal opens with the bound runs",
+ "setting": {
+  "code": "ops.nm_finaleval.SETTINGS[\"p20\"] / apply_setting; same estimator, bootstrap, horizon, reducers and co-criteria",
+  "name": "p20",
+  "selection": "launcher --setting p20 (or NM_SETTING=p20); p60 stays the default; one setting per process"
+ },
+ "status": "pre-results: no p20 episode exists; the p60 evaluation (panels, pre-run root, amendments 1-21a) is unchanged and stays sealed",
+ "tests": "test_p20_panels_are_the_registered_held_out_worlds, test_p20_rule_is_the_lowcav_duo12_rule_and_the_runner_accepts_it, test_p20_dry_run_prerun_then_main_run, test_setting_cli_requires_explicit_roots_for_p20"
+}

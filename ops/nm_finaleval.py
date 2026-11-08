@@ -98,6 +98,7 @@ PRERUN_PHASE = 'v2v_final_prerun'
 #: rule_digest() of the exact S-REGIMEU0 rule (sumo_lane, pick_wall, RuleHook, Recorder, constants);
 #: identical at c4/imitreplay 385c4b8f, 52248a4b and d02228cf (blob 2e267403 / imitreplay d5042c33)
 RULE_SHA256 = '887285923ca0b4ac1a7f728f3d687c57b49e944d3ec7abf62bddb4249d6690b4'
+RULE_MODULE, RULE_SOURCE = 'tools.coopmwm.regimeu0', 'c4/imitreplay'
 PRERUN_FILE = 'PRERUN_PLAN.json'
 #: EVALUATION-ONLY ground-truth vehicle log written by every episode (runner VehicleLog)
 VEHICLE_LOG = 'vehicles.jsonl.gz'
@@ -123,6 +124,7 @@ PRERUN_AUTHORITY = ('MAIN registration 2026-11-06 (pre-results): PRE-RUN NATIVE,
 #: separate seal, opens with 3a. clean5a's base is u0 (d9042cc5), so A = U0 (BASE alias U0).
 CLAIM3C_ARMS = ('B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'NATIVE')
 CLAIM3C_CELL = dict(demand=2400, penetration=0.6)
+CLAIM3C_KEY = 'D2400_p60'
 CLAIM3C_WORLDS = 24
 FROZEN_MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca'
 #: Comparator executors are parameters (bind-mappo: path + sha256, re-verified at load). MAPPO_SPEED =
@@ -197,6 +199,63 @@ PANEL_3C_SHA256 = 'd43510e9c75308b575cf97c4309c68da06555dfa442ffc73f3cbbec04dbef
 #: superseded panels: never valid for a clean4 CONFIG binding (see SUPERSEDED_FILE)
 SUPERSEDED = {'b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1':
               'v1 cell 2800 veh/h x 0.3 superseded by the 3200 x 0.6 clean4 cell (MAIN 2026-11-06)'}
+PANEL_AUTHORITY = 'newmap_spec.md (MAIN 2026-11-06): HELD-OUT eval 989600-989699'
+EXPOSURE_EXTRA = dict(checked=(), disclosed='')
+SETTING = 'p60'
+MAPPO_LANE_OOD = None
+
+#: amendment 22 (owner 2026-11-08 17:22 "test 20% cav instances"; MAIN A 2026-11-08): the p20 setting. A launcher
+#: profile: the same code, estimator and co-criteria; only cells, panels, the RULE strategy, the TRAIN-world check
+#: cell, the default roots and the allocation differ. p60 (the default) is unchanged and stays sealed.
+SETTINGS = dict(p20=dict(
+    CELL=dict(demand=3200, penetration=0.2), CLAIM3C_CELL=dict(demand=2400, penetration=0.2), CLAIM3C_KEY='D2400_p20',
+    PARITY_CELL=dict(demand=3200, penetration=0.2),
+    CELL_AUTHORITY=('owner 2026-11-08 17:22 (REGISTRATION): switch to the 20% CAV setting; MAIN: claim-3a-equivalent '
+                    'cell D3200_p20, claim-3c light cell D2400_p20 (N6 amendment 22)'),
+    PANEL_AUTHORITY=('N6 amendment 22 (MAIN 2026-11-08, option A): held-out integers 989600-989695 at D3200_p20 and '
+                     '989600-989623 at D2400_p20 (3c precedent)'),
+    EXPOSURE_EXTRA=dict(
+        checked=('N6 p60 panels: 989600-989695 x D3200_p60 and 989600-989623 x D2400_p60 (sealed, unopened); no p20 '
+                 'held-out world was ever run (N1 guard: TRAIN roles refuse held-out seeds; N6 is the only held-out user)',),
+        disclosed=('; p20 (amendment 22): requests and HDV parameters are seeded by map:seed, so each p20 world shares '
+                   'its arrival stream and HDV parameter draws with its sealed, unopened p60 twin; the p20 panels are '
+                   'NOT independent replications of the p60 panels; nothing leaks (no p60 outcome was opened)')),
+    PANEL_FILE=HERE/'nm_eval_panel_wz3to2_p20.json', PANEL_3C_FILE=HERE/'nm_eval_panel_wz3to2_claim3c_D2400_p20.json',
+    PANEL_SHA256=None, PANEL_3C_SHA256=None,
+    RULE_STRATEGY='wall_g_duo12', RULE_MODULE='tools.coopmwm.regimeu0_multicrit', RULE_SOURCE='c4/multicrit 4ff09522',
+    RULE_SHA256=RULE_FAIR_SHA256,
+    RULE_LABEL=('RULE: U0 + the S-MULTICRIT wall_g_duo12 rule (one lane-1 + one lane-2 CAV hold 22 m/s for 120 s, '
+                'dmax 1.0, cooldown = hold; the S-MULTICRIT-LOWCAV p20 rule; module blob 4ff09522 = the LOWCAV '
+                'harness d89a3c2e), always on'),
+    MAPPO_LANE_OOD=('MAPPO_LANE (S-MAPPOWZL) was trained at D3200_p60 only: at p20 it is OUT OF DISTRIBUTION '
+                    '(disclosed; no retraining, no selection)'),
+    ROOT=None, FINAL_ROOT=None, ALLOCATION_SIM_S=1_750_000,
+    ALLOCATION_AUTHORITY=('N6 amendment 22: p20 evaluation root allocation 1,750,000 (own ledger): pre-run 720,000 + '
+                          'checks 3,480 + 2 primary runs x B/R x 120 x 1200 = 576,000 (+ 288,000 if A is simulated) '
+                          '= 1,587,480 worst case, ~10% margin')))
+
+
+def apply_setting(name):
+    """Rebind this module's profile globals (call before anything else; p60 = the registered default)."""
+    g = globals()
+    if name in (None, 'p60'):
+        if g['SETTING'] != 'p60':
+            raise Blocked('a process cannot switch back to p60 after selecting another setting')
+        return 'p60'
+    if name not in SETTINGS:
+        raise Blocked(f'unknown setting {name!r}')
+    if g['SETTING'] not in ('p60', name):
+        raise Blocked('a process selects one setting')
+    g.update(SETTINGS[name], SETTING=name)
+    if name == 'p20':
+        pin = SETTINGS_PINS.get(name, {})
+        g.update(PANEL_SHA256=pin.get('PANEL_SHA256'), PANEL_3C_SHA256=pin.get('PANEL_3C_SHA256'))
+    return name
+
+
+#: sealed panel digests of the p20 panels (written at registration, amendment 22)
+SETTINGS_PINS = dict(p20=dict(PANEL_SHA256='fe64aa3566fe156c94a03b5809f83df5f6be981e5e0fd079225aaab1abdb6ebf',
+                               PANEL_3C_SHA256='711d22c9ac063ba09f466f7217a45a47991b14f3f94070d751a67133cb514c29'))
 MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'
 #: MAIN 2026-11-06 (N11 F4): the panel binds the staged probe network bytes (sha256 of wz3to2.net.xml)
 NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'
@@ -312,7 +371,9 @@ def quote(base='mappo_u0', a_alias=True):
 
 # ---------------------------------------------------------------- panel registration (zero physics)
 
-def build_panel(spec_path, registered_utc, *, demand=CELL['demand'], penetration=CELL['penetration']):
+def build_panel(spec_path, registered_utc, *, demand=None, penetration=None):
+    demand = CELL['demand'] if demand is None else demand
+    penetration = CELL['penetration'] if penetration is None else penetration
     """The registered evaluation panel: N1 map descriptor + N1 world registry for the clean4 cell
     (no outcome of any run is read)."""
     from tools.coopmwm import map_descriptor as md, map_scenarios as ms
@@ -382,9 +443,9 @@ def build_panel(spec_path, registered_utc, *, demand=CELL['demand'], penetration
                  chosen=N_WORLDS, reason=('largest round panel inside the registered 100-seed range; same 96-world '
                                           'shape as the clean3 registered estimator; 4 seeds reserved unused'))
     panel = dict(
-        schema=SCHEMA+'.panel', version=2, map=MAP,
+        schema=SCHEMA+'.panel', version=2 if SETTING == 'p60' else f'2_{SETTING}', map=MAP,
         role='evaluation only (registered by N6; never training, never selection)',
-        registered_utc=registered_utc, authority='newmap_spec.md (MAIN 2026-11-06): HELD-OUT eval 989600-989699',
+        registered_utc=registered_utc, authority=PANEL_AUTHORITY,
         supersedes=[dict(panel_sha256=k, reason=v) for k, v in sorted(SUPERSEDED.items())],
         seed_ranges=dict(evaluation=list(EVAL_RANGE), training=list(TRAIN_RANGE)),
         seeds_used=[seeds[0], seeds[-1]], seeds_reserved_unused=[seeds[-1]+1, EVAL_RANGE[1]],
@@ -401,10 +462,11 @@ def build_panel(spec_path, registered_utc, *, demand=CELL['demand'], penetration
                      'sample_driver("{map}:{seed}", id)'),
         exposure=dict(
             checked=['newmap_probe ledger: seeds 989000-989006 only', 'NEWMAP2: TRAIN 989200-989202 only',
-                     'tools/coopmwm, traffic_shepherd, ops code'],
+                     'tools/coopmwm, traffic_shepherd, ops code']+list(EXPOSURE_EXTRA['checked']),
             disclosed=('integers 989600-989635 are the OLD merge-map S-COOPMWM final_test worlds '
                        '(tools/coopmwm/protocol.py FINAL_START); wz3to2 worlds are map-namespaced, so no wz3to2 '
-                       'traffic realisation shares draws with them; job/world ids carry the wz3to2_ prefix')),
+                       'traffic realisation shares draws with them; job/world ids carry the wz3to2_ prefix'
+                       +EXPOSURE_EXTRA['disclosed'])),
         worlds=worlds, contract=contract, power=power)
     return seal(json.loads(json.dumps(panel)), 'panel_sha256')
 
@@ -432,7 +494,8 @@ def validate_panel(panel):
     return panel
 
 
-def load_panel(path=PANEL_FILE, *, pinned=PANEL_SHA256):
+def load_panel(path=None, *, pinned=''):
+    path, pinned = path or PANEL_FILE, PANEL_SHA256 if pinned == '' else pinned
     panel = validate_panel(read(path))
     if pinned is not None and panel['panel_sha256'] != pinned:
         raise Blocked(f'panel_sha256 {panel["panel_sha256"]} != pinned {pinned}')
@@ -447,7 +510,8 @@ def build_panel_3c(spec_path, registered_utc):
                     and c['penetration'] == CLAIM3C_CELL['penetration'])
     cell = dict(v2['cell'], demand_vph={'main': CLAIM3C_CELL['demand']}, penetration=CLAIM3C_CELL['penetration'],
                 cell=cell_row['cell'], cell_key=cell_row['cell_key'],
-                authority='MAIN registration (pre-results): claim 3c, condition-aware: no harm in light traffic')
+                authority='MAIN registration (pre-results): claim 3c, condition-aware: no harm in light traffic'
+                          +(f' ({SETTING} setting)' if SETTING != 'p60' else ''))
     seeds = list(range(EVAL_RANGE[0], EVAL_RANGE[0]+CLAIM3C_WORLDS))
     worlds = [dict(world_id=f'{MAP}_{cell_row["cell_key"]}_{s}', world=_world(s, cell)) for s in seeds]
     contract = dict({k: v2['contract'][k] for k in ('update', 'metric', 'higher_is_better', 'metric_definition',
@@ -459,7 +523,8 @@ def build_panel_3c(spec_path, registered_utc):
                                                          'the light-traffic cell; CI and per-seed harm fraction reported',
                                  note='secondary claim; opens with 3a; separate seal'),
                     decisions=dict(arms=[], worlds=[], note='no decision capture on the 3c panel'))
-    panel = dict(schema=SCHEMA+'.panel', version='claim3c', map=MAP, role='evaluation only (claim 3c)',
+    panel = dict(schema=SCHEMA+'.panel', version='claim3c' if SETTING == 'p60' else f'claim3c_{SETTING}', map=MAP,
+                 role='evaluation only (claim 3c)',
                  registered_utc=registered_utc, authority='MAIN registration 2026-11-06 (claim 3c)',
                  seed_ranges=v2['seed_ranges'], seeds_used=[seeds[0], seeds[-1]], cell=cell,
                  map_binding=v2['map_binding'], stream_rule=v2['stream_rule'], exposure=v2['exposure'],
@@ -468,7 +533,8 @@ def build_panel_3c(spec_path, registered_utc):
     return seal(json.loads(json.dumps(panel)), 'panel_sha256')
 
 
-def load_panel_3c(path=PANEL_3C_FILE, *, pinned=PANEL_3C_SHA256):
+def load_panel_3c(path=None, *, pinned=''):
+    path, pinned = path or PANEL_3C_FILE, PANEL_3C_SHA256 if pinned == '' else pinned
     panel = verify(read(path), 'panel_sha256', 'claim-3c panel seal')
     if pinned is not None and panel['panel_sha256'] != pinned:
         raise Blocked(f'claim-3c panel_sha256 {panel["panel_sha256"]} != pinned {pinned}')
@@ -476,7 +542,7 @@ def load_panel_3c(path=PANEL_3C_FILE, *, pinned=PANEL_3C_SHA256):
     if seeds != list(range(EVAL_RANGE[0], EVAL_RANGE[0]+CLAIM3C_WORLDS)) or panel['map_binding']['net_sha256'] != NET_SHA256:
         raise Blocked('claim-3c panel differs from its registration')
     for r in panel['worlds']:
-        if r['world'] != _world(r['world']['seed'], panel['cell']) or r['world']['cell_key'] != 'D2400_p60':
+        if r['world'] != _world(r['world']['seed'], panel['cell']) or r['world']['cell_key'] != CLAIM3C_KEY:
             raise Blocked('claim-3c world does not follow the registered cell')
     if panel['contract']['bootstrap'] != BOOTSTRAP or panel['contract']['horizon_s'] != HORIZON_S:
         raise Blocked('claim-3c contract differs from the launcher constants')
@@ -957,8 +1023,8 @@ def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None, update=UPD
                           binding_path=exe['binding_path'], path=u0['residual_path'], file_sha256=u0['residual_sha256'],
                           update=0, arm='A')
         if arm == 'RULE':
-            checkpoint.update(rule=RULE_STRATEGY, rule_sha256=RULE_SHA256, rule_module='tools.coopmwm.regimeu0',
-                              rule_source='c4/imitreplay')
+            checkpoint.update(rule=RULE_STRATEGY, rule_sha256=RULE_SHA256, rule_module=RULE_MODULE,
+                              rule_source=RULE_SOURCE)
         if arm == 'RULE_FAIR':
             checkpoint.update(rule=RULE_FAIR_STRATEGY, rule_sha256=RULE_FAIR_SHA256,
                               rule_module='tools.coopmwm.regimeu0_multicrit', rule_source='c4/multicrit 4ff09522')
@@ -1166,7 +1232,8 @@ class Runtime:
         return dict(ok=ok, native=ok and getattr(module, 'NATIVE', True) is not False,
                     decisions=ok and callable(getattr(module, 'decision_branch', None)),
                     lane=ok and getattr(module, 'LANE_TRAIN_PATH', False) is True,
-                    rule=ok and getattr(module, 'RULE', False) is True and importlib.util.find_spec('tools.coopmwm.regimeu0') is not None,
+                    rule=ok and getattr(module, 'RULE', False) is True and RULE_STRATEGY in getattr(module, 'RULE_STRATEGIES', ())
+                    and importlib.util.find_spec(RULE_MODULE) is not None,
                     rule_fair=ok and 'wall_g_solo2' in getattr(module, 'RULE_STRATEGIES', ())
                     and importlib.util.find_spec('tools.coopmwm.regimeu0_multicrit') is not None,
                     parity=ok and getattr(module, 'PARITY', False) is True and callable(getattr(module, 'parity', None)),
@@ -1744,6 +1811,8 @@ def analyse(*, panel, base, episodes, decisions=None, replicated=None, sources=N
                   NATIVE='native SUMO CAV driving', U0=U0_LABEL,
                   RULE=RULE_LABEL, RULE_FAIR=RULE_FAIR_LABEL,
                   **{a: mappo_label(loaded[a], a)[1] if a in loaded else f'{a} (not run)' for a in COMPARATOR_ARMS})
+    if MAPPO_LANE_OOD:                                   # amendment 22: disclosed in every table that carries the arm
+        labels['MAPPO_LANE'] += ' - '+MAPPO_LANE_OOD
     summary = {n: dict(label=labels[n]+(' = BASE' if n == base_arm else ''), n=len(worlds), mean_J_veh_s=float(J[n].mean()),
                        safety_totals={k: int(S[n][k].sum()) for k in SAFETY},
                        any_collision_or_teleport=bool(S[n]['collisions'].sum()+S[n]['teleports'].sum() > 0))
@@ -2773,12 +2842,15 @@ def prerun_register(*, final_root, plant_config, u0_path, u0_sha256, runtime, pa
     publish(plant/'CONFIG.json', cfg)
     plan = seal(dict(schema=SCHEMA+'.prerun', created=datetime.now(timezone.utc).isoformat(), authority=str(authority),
                      registration=PRERUN_AUTHORITY, arms=list(PRERUN_ARMS), phase=PRERUN_PHASE, cap_sim_s=prerun_cap(),
+                     **({} if SETTING == 'p60' else dict(setting=SETTING, cells=dict(claim3a=CELL, claim3c=CLAIM3C_CELL),
+                                                         mappo_lane_note=MAPPO_LANE_OOD)),
                      debits=f'{PHASE} (counted by this launcher against {ALLOCATION_SIM_S}; ledger = this root)',
                      panel_sha256=panel['panel_sha256'], panel_3c_sha256=panel_3c['panel_sha256'],
                      plant=dict(source=str(plant_config), source_file_sha256=file_sha(plant_config),
                                 source_sha256=digest(source), config_sha256=digest(cfg), view=view, root=str(plant)),
                      u0=dict(source=str(u0_path), sha256=u0_sha256, path=str(plant/'A_checkpoint_000.pt')),
-                     rule=dict(strategy=RULE_STRATEGY, rule_sha256=RULE_SHA256),
+                     rule=dict(strategy=RULE_STRATEGY, rule_sha256=RULE_SHA256,
+                               **({} if SETTING == 'p60' else dict(module=RULE_MODULE, source=RULE_SOURCE))),
                      sealed=('F12: pre-run WAVE receipts are not opened, tabulated or summarised by anyone until clean5a '
                              'A/B/R are bound and the claim-3a seal opens; this launcher publishes no pre-run table'),
                      reuse=('the main run reuses each pre-run wave unchanged when the clean5a plant view and common u0 '
@@ -3406,8 +3478,8 @@ def prerun_compat(final_root, cfg, runtime):
         raise Blocked(f'clean run plant differs from the pre-run plant on {differs}: the pre-run waves are not reusable')
     if cfg.get('common_checkpoint_sha256') != plan['u0']['sha256']:
         raise Blocked('clean run common u0 differs from the pre-run u0')
-    if plan['rule']['rule_sha256'] != RULE_SHA256:
-        raise Blocked('pre-run RULE digest differs from this launcher')
+    if plan['rule']['rule_sha256'] != RULE_SHA256 or plan['rule'].get('strategy', RULE_STRATEGY) != RULE_STRATEGY:
+        raise Blocked('pre-run RULE digest/strategy differs from this launcher')
     source = dict(cfg)
     return dict(status='compatible', prerun_plan_sha256=plan['receipt_sha256'], plant_keys=list(PLANT_KEYS),
                 same_config=digest(source) == plan['plant']['config_sha256'])
@@ -3661,9 +3733,11 @@ def main(argv=None):
                                        'prerun-amend-cap', 'authorize-replay', 'prerun-run', 'parity', 'env-equivalence',
                                        'prerun-envparity', 'envparity-assess', 'host-identity',
                                        'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run'))
-    p.add_argument('--root', default=ROOT)
-    p.add_argument('--final-root', default=FINAL_ROOT)
-    p.add_argument('--panel', default=str(PANEL_FILE))
+    p.add_argument('--setting', choices=('p60',)+tuple(SETTINGS), default=os.environ.get('NM_SETTING', 'p60'),
+                   help='evaluation setting (amendment 22): p60 = the registered default; p20 = the 20%% CAV panels')
+    p.add_argument('--root', default=None)
+    p.add_argument('--final-root', default=None)
+    p.add_argument('--panel', default=None)
     p.add_argument('--map-spec', help='register-panel: wz3to2 MAP_SPEC.json (default: COOPMWM_MAP_SPEC or the source tree)')
     p.add_argument('--base', choices=BASES, help='quote/register/dry-run: base controller if CONFIG lacks it')
     p.add_argument('--map-api', help='map API module with seed_ranges/descriptor/world/check_world (default: N1)')
@@ -3705,6 +3779,12 @@ def main(argv=None):
     p.add_argument('--comparator-wait', type=int, default=7*86400,
                    help='run: seconds to wait (after the u24 gate) for every comparator to be bound or declared')
     a = p.parse_args(argv)
+    apply_setting(a.setting)
+    a.root = a.root or ROOT
+    a.final_root = a.final_root or FINAL_ROOT
+    a.panel = a.panel or str(PANEL_FILE)
+    if a.root is None or a.final_root is None:
+        p.error(f'setting {a.setting}: pass --root and --final-root explicitly')
     if a.command in ('check', 'bind-arms', 'run', 'analyse') and a.update is None:
         p.error('--update 12 (PRIMARY) or 24 (SECONDARY) required')
 
