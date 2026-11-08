@@ -73,9 +73,10 @@ def snapshot(cfg, arm, update):
 def apply_guidance(native, doc):
     """The guidance-derived config fields from ``doc`` (as keys_c derives them); returns a new config."""
     from . import fullpol_bank, lc_families
-    from .clean5b_restart import check_p20_guidance, parity_receipt, unique_templates
+    from .clean5b_restart import cells_view, check_p20_guidance, parity_receipt, unique_templates
     out = deepcopy(native)
     cells = tuple(out['newmap']['cell'])
+    doc = cells_view(doc, cells)              # MAIN: the UNION bank, training-cell rows only
     check_p20_guidance(doc, cells, wm=True)
     unique = unique_templates(doc)
     out['clean5_ev']['regime_guidance'] = deepcopy(doc)
