@@ -91,11 +91,14 @@ COMPARATORS = (INCUMBENT, SOLO2)
 DEFAULTS = dict(H=300, K_screen=4, K_final=8, n_init=40, generations=3, n_elite=6, n_children=24, p_mutate=0.35,
                 n_screen_states=12, finalists=12, lam=0.5, max_roles=6, seed=20261107, fairness=True, fair_tol=0.0,
                 n_final_states=0, bound_s=GROUP_BOUND_S, bound_stat='mean', fairer_total='mean', dense=False,
-                hold_only=False, harm_cal=None, n_immigrants=0, role_counts=None)
+                hold_only=False, harm_cal=None, n_immigrants=0, role_counts=None, onset_max=None)
 ARCHIVES = ('delay', 'bounded', 'fairer', 'fair', 'F', 'D')
 # Owner-approved calibrated re-search (REGISTRATION 2026-11-07 21:32): hold-only, densified around the gentle holds.
 DENSE = dict(v_w=[18.0, 19.0, 20.0, 21.0, 22.0], dmax=[1.0, 1.5], hold_s=[60, 90, 120, 150, 180],
              onset_s=[0, 10, 20, 30, 40, 60])
+
+
+ONSET_MAX = None   # search-time cap on role onsets (s); set per run from cfg['onset_max'] (N2 window: onset <= 30 s)
 
 
 def grids(search=False, dense=False):
@@ -106,7 +109,10 @@ def grids(search=False, dense=False):
                onset_s=list(P.OFFSETS))
     if search:
         g = DENSE if dense else reg
-        return dict(g, v_w=[x for x in g['v_w'] if float(x) not in BANNED_V_W])
+        g = dict(g, v_w=[x for x in g['v_w'] if float(x) not in BANNED_V_W])
+        if ONSET_MAX is not None:
+            g['onset_s'] = [x for x in g['onset_s'] if int(x) <= int(ONSET_MAX)]
+        return g
     return {k: sorted(set(reg[k]) | set(DENSE[k])) for k in reg}
 
 
@@ -547,6 +553,8 @@ def search_cell(wm, states, cfg=None, log=None):
     'delay', 'bounded', 'fairer' (and the strict 'fair' flag) all feed parents and finals; the incumbent and the
     banned solo2 comparator are always evaluated in the finals (labelled, never selected)."""
     cfg = dict(DEFAULTS, **(cfg or {}))
+    global ONSET_MAX
+    ONSET_MAX = cfg.get('onset_max')
     rng = random.Random(cfg['seed'])
     lam, groups = float(cfg['lam']), bool(cfg['fairness'])
     sk = dict(fair_tol=float(cfg['fair_tol']), bound_s=float(cfg['bound_s']), bound_stat=cfg['bound_stat'],
@@ -556,6 +564,8 @@ def search_cell(wm, states, cfg=None, log=None):
     pop = [s for s in seeds() if not (hold_only and any(r['lc_target'] is not None for r in s['roles']))]
     if dense:
         pop += dense_seeds()
+    if ONSET_MAX is not None:      # seeds outside the onset cap are dropped (the incumbent stays a comparator)
+        pop = [s for s in pop if all(int(r['onset_s']) <= int(ONSET_MAX) for r in s['roles'])]
     rc = tuple(cfg['role_counts']) if cfg.get('role_counts') else None
     pop += [random_strategy(rng, cfg['max_roles'], dense, hold_only, rc) for _ in range(int(cfg['n_init']))]
     evaluated, total = {}, 0
