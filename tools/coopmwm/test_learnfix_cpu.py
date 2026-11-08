@@ -124,3 +124,36 @@ def test_train_learnfix_receipt_kl_cap_entropy_and_rng(cfg, monkeypatch, fix):
     assert max(epochs) < 4 or all(s['choice_kl'] < .01 for s in r['steps'] if s['epoch'] < max(epochs))  # floor rule
     net = report['learnfix_net']
     assert [e['net_veh_s'] for e in net['episodes']] == [50.-10*k for k in (0, 1, 10, 11, 2, 3, 4, 5, 6, 7, 8, 9)]
+
+
+def test_learnfix2_settings_none_bias_and_credit_cap(cfg, monkeypatch):
+    assert lf.settings2({}) is None
+    v = lf.value2()
+    assert lf.settings2(dict(learnfix2=v)) == v and v['none_bias'] == lf.NONE_BIAS and v['credit_cap'] == 2.
+    for bad in (dict(v, rule='x'), dict(v, none_bias=4), dict(v, extra=1), dict(v, credit_cap=0.)):
+        with pytest.raises(ValueError, match='learnfix2'):
+            lf.settings2(dict(learnfix2=bad))
+    # credit cap: |net - baseline| <= 2 x median |net|
+    targets = {(e, 300): [0.] for e in 'abcd'}
+    acting = {k: [True] for k in targets}
+    out, r = lf.apply_net_acting(targets, dict(a=10., b=-10., c=20., d=1000.), acting, cap_mult=2.)
+    assert r['credit_cap']['median_abs_net'] == 15. and r['credit_cap']['cap'] == 30.
+    assert all(abs(v[0]) <= 30. for v in out.values()) and out[('d', 300)] == [30.]
+    out_nocap, _ = lf.apply_net_acting(targets, dict(a=10., b=-10., c=20., d=1000.), acting)
+    assert out_nocap[('d', 300)][0] > 30.                                        # default: no cap
+
+
+def test_none_bias_shifts_only_the_none_logit(cfg, monkeypatch):
+    fake_load(monkeypatch)
+    plain = tb.build_arm_runtime(cfg, 'B')['runtime']
+    biased = tb.build_arm_runtime(dict(cfg, learnfix2=lf.value2()), 'B')['runtime']
+    assert plain.policy.trigger.none_bias is None and 'none_bias' not in plain.policy.trigger.state_dict()
+    b = biased.policy.trigger
+    assert float(b.none_bias) == pytest.approx(lf.NONE_BIAS) and any(p is b.none_bias for p in b.learning_parameters())
+    assert any(p is b.none_bias for g in biased.policy.trigger_optimizer.param_groups for p in g['params'])
+    _, s, _ = sample(cfg)
+    batch = tb._batch(s['track2_trigger'])
+    b.load_state_dict(dict(plain.policy.trigger.state_dict(), none_bias=b.none_bias.detach()))
+    l0 = plain.policy.trigger.distribution(batch.context, batch.descriptors, batch.mask)[0]
+    l1 = b.distribution(batch.context, batch.descriptors, batch.mask)[0]
+    assert torch.allclose(l1[:, 0], l0[:, 0]+lf.NONE_BIAS) and torch.equal(l1[:, 1:], l0[:, 1:])

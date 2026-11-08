@@ -448,7 +448,7 @@ def check_p20_guidance(doc, cells, *, wm):
 
 
 def _p20_variant(base, cells, g4_workers, *, label, wm, doc, overrides, learnfix=True, bank_growth_control=None,
-                 final_external=False):
+                 final_external=False, learnfix2=False):
     none = check_p20_guidance(doc, cells, wm=wm)
     sources = ({c: v['source'] for c, v in doc['p20']['cells'].items() if c in cells} if doc.get('situational') is None else
                {c: ('wm_situational' if c not in none else 'none') for c in cells})
@@ -456,6 +456,7 @@ def _p20_variant(base, cells, g4_workers, *, label, wm, doc, overrides, learnfix
     return dict(base, cell_keys=cells, worlds=lambda: worlds_by_update_8(cell_pattern(cells)), guidance_missing_ok=none,
                 cfg_overrides=dict(overrides, g4_workers=g4_workers,
                                    **({'learnfix': _learnfix_value()} if learnfix else {}),
+                                   **({'learnfix2': _learnfix2_value()} if learnfix2 else {}),
                                    **({} if bank_growth_control is None else {'bank_growth': _bank_growth_value(
                                        bank_growth_control)}),
                                    **({'final_eval_external': FINAL_EXTERNAL_RULE} if final_external else {})),
@@ -475,29 +476,35 @@ def _learnfix_value():
     return learnfix.value()
 
 
+def _learnfix2_value():
+    from . import learnfix
+    return learnfix.value2()
+
+
 def _bank_growth_value(control):
     from .bank_growth import RULE
     return dict(rule=RULE, control=str(control))
 
 
 def prepare_f8_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS, learnfix=True,
-                   final_external=False, **kwargs):
+                   final_external=False, learnfix2=False, **kwargs):
     """Rule-guided p20 (F8 code; B = LOWCAV duo12 / wall_g_solo2 EV-BC where eligible, R = none)."""
     cells = _check_p20_cells(cells)
     guidance_doc = cells_view(guidance_doc, cells)
     variant = _p20_variant(VARIANT_F8, cells, g4_workers, label='clean5b-F8-p20', wm=False, doc=guidance_doc,
-                           overrides=VARIANT_F8['cfg_overrides'], learnfix=learnfix, final_external=final_external)
+                           overrides=VARIANT_F8['cfg_overrides'], learnfix=learnfix, final_external=final_external,
+                           learnfix2=learnfix2)
     return c5.prepare(source, root=root, variant=variant, guidance_doc=guidance_doc, **kwargs)
 
 
 def prepare_c_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS,
                   learn_threads_max=C_LEARN_THREADS_MAX, learnfix=True, bank_growth_control=None, final_external=False,
-                  **kwargs):
+                  learnfix2=False, **kwargs):
     """WM-guided p20 (clean5c code; B = WMVERIFY-verified p20 WM plans, rule fallback labelled, R = none;
     B and R the same templates)."""
     cells = _check_p20_cells(cells)
     guidance_doc = cells_view(guidance_doc, cells)
     variant = _p20_variant(VARIANT_C, cells, g4_workers, label='clean5c-p20', wm=True, doc=guidance_doc,
                            overrides=_c_overrides(g4_workers, learn_threads_max), learnfix=learnfix,
-                           bank_growth_control=bank_growth_control, final_external=final_external)
+                           bank_growth_control=bank_growth_control, final_external=final_external, learnfix2=learnfix2)
     return c5.prepare(source, root=root, variant=variant, guidance_doc=guidance_doc, **kwargs)

@@ -171,3 +171,14 @@ def test_smoke_ppo_kl_receipt_validator_accepts_learnfix():
         with pytest.raises(ValueError, match='learnfix'):
             rc4.ppo_kl_receipt(on, bad, arm)
     assert rc4.ppo_kl_receipt({}, dict(fullpol_ppo_kl=dict(rule='row_mean')), 'B')['rule'] == 'row_mean'
+
+
+def test_p20_prepare_registers_learnfix2_only_on_request(monkeypatch):
+    from . import learnfix
+    seen = {}
+    monkeypatch.setattr(c5b.c5, 'prepare', lambda source, *, root, variant, guidance_doc, **kw: seen.update(v=variant))
+    doc = json.loads(DOC.read_bytes())
+    c5b.prepare_c_p20('src', root='/r', guidance_doc=doc)
+    assert 'learnfix2' not in seen['v']['cfg_overrides']
+    c5b.prepare_c_p20('src', root='/r', guidance_doc=doc, learnfix2=True)
+    assert seen['v']['cfg_overrides']['learnfix2'] == learnfix.value2()
