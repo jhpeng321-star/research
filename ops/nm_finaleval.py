@@ -125,6 +125,11 @@ PRERUN_AUTHORITY = ('MAIN registration 2026-11-06 (pre-results): PRE-RUN NATIVE,
 CLAIM3C_ARMS = ('B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'NATIVE')
 CLAIM3C_CELL = dict(demand=2400, penetration=0.6)
 CLAIM3C_KEY = 'D2400_p60'
+CLAIM3C_SEED_START = None
+PANEL_SIZE_REASON = None
+SEEDS_RESERVED = None
+#: amendment 23: an evaluation-only held-out seed range added at runtime (None = N1 HELDOUT_RANGE only)
+EVAL_EXTRA_RANGE = None
 CLAIM3C_WORLDS = 24
 FROZEN_MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca'
 #: Comparator executors are parameters (bind-mappo: path + sha256, re-verified at load). MAPPO_SPEED =
@@ -247,15 +252,47 @@ def apply_setting(name):
     if g['SETTING'] not in ('p60', name):
         raise Blocked('a process selects one setting')
     g.update(SETTINGS[name], SETTING=name)
-    if name == 'p20':
+    if name in SETTINGS_PINS:
         pin = SETTINGS_PINS.get(name, {})
         g.update(PANEL_SHA256=pin.get('PANEL_SHA256'), PANEL_3C_SHA256=pin.get('PANEL_3C_SHA256'))
     return name
 
 
+#: amendment 23 (owner 22:49/22:51 "focus on heavy and medium ... push the cav percentage higher"; MAIN): a SECOND
+#: p20-era evaluation root 'p20x' with two more PRIMARY panels on fresh held-out integers: D2800_p20 (48 worlds,
+#: 993000-993047) in the claim-3a slot and D3200_p40 (48 worlds, 993048-993095) in the claim-3c slot (C3_ wave
+#: prefix; in this root that slot is a PRIMARY panel, not the 3c light-traffic claim). Same arms, RULE duo12 /
+#: RULE_FAIR solo2 (disclosed: rules from the p20 LOWCAV/MULTICRIT work, also applied at p40), estimator and
+#: co-criteria. Its own ledger debits the SAME final-eval allocation: 1,750,000 - 723,480 (p20 root) = 1,026,520.
+SETTINGS['p20x'] = dict(SETTINGS['p20'],
+    CELL=dict(demand=2800, penetration=0.2), CLAIM3C_CELL=None, CLAIM3C_KEY=None,
+    N_WORLDS=96, CLAIM3C_WORLDS=0, EVAL_RANGE=(993000, 993099), EVAL_EXTRA_RANGE=(993000, 993099),
+    CLAIM3C_SEED_START=None, PARITY_CELL=dict(demand=2800, penetration=0.2),
+    SEEDS_RESERVED=(993096, 993099), PANEL_SIZE_REASON=('MAIN amendment 23b (owner: PRIMARY = D2800_p20 only): 96 fresh '
+                                                        'worlds; 993096-993099 reserved unused'),
+    CELL_AUTHORITY=('owner 2026-11-08 (REGISTRATION): PRIMARY eval = D2800_p20 only; MAIN: N6 amendment 23b, '
+                    'a new sealed 96-world D2800_p20 panel; D3200_p40 cancelled'),
+    PANEL_AUTHORITY=('N6 amendment 23b (MAIN 2026-11-08): fresh audited held-out integers 993000-993095 (D2800_p20); '
+                     'eval-only held-out range 993000-993099'),
+    EXPOSURE_EXTRA=dict(
+        checked=('amendment-23 audit: 993000-993099 absent from REGISTRATION.md, every c4/* branch (py/json/md/toml/sh), '
+                 'protocols/ and runs/active/C4-V7FT-20261017 (only 993592 = a merge-map GENRAND seed, outside the '
+                 'range), traffic_shepherd.c4.seeds sets, N1 TRAIN/EXTRA_TRAIN/HELDOUT ranges, WMVERIFY 989950-989999, '
+                 'MULTICRIT/LOWCAV 991xxx; remote PLAN.json/job dirs audited by IMITREPLAY before the pre-run',),
+        disclosed=('; amendment 23b: fresh integers, so no arrival stream is shared with any other panel; the range is '
+                   'registered for evaluation only at runtime by the N6 runner (N1 guard otherwise unchanged; TRAIN '
+                   'roles still refuse it)')),
+    PANEL_FILE=HERE/'nm_eval_panel_wz3to2_p20x_D2800.json', PANEL_3C_FILE=None,
+    ALLOCATION_SIM_S=1_026_520,
+    ALLOCATION_AUTHORITY=('N6 amendment 23b: the p20x root debits the same final-eval allocation 1,750,000; remainder '
+                          'after the p20 root (723,480) = 1,026,520 (own ledger)'))
+
+
 #: sealed panel digests of the p20 panels (written at registration, amendment 22)
 SETTINGS_PINS = dict(p20=dict(PANEL_SHA256='fe64aa3566fe156c94a03b5809f83df5f6be981e5e0fd079225aaab1abdb6ebf',
-                               PANEL_3C_SHA256='711d22c9ac063ba09f466f7217a45a47991b14f3f94070d751a67133cb514c29'))
+                               PANEL_3C_SHA256='711d22c9ac063ba09f466f7217a45a47991b14f3f94070d751a67133cb514c29'),
+                     p20x=dict(PANEL_SHA256='a0603e5dacf26fb076adc2a3a1831fd96522b1f1a85844a83e3d500bdbcde0aa',
+                               PANEL_3C_SHA256=None))
 MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'
 #: MAIN 2026-11-06 (N11 F4): the panel binds the staged probe network bytes (sha256 of wz3to2.net.xml)
 NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'
@@ -316,6 +353,9 @@ def a_frozen(cfg):
 def _world(seed, cell):
     """N1's registered world dict (tools.coopmwm.map_scenarios.world) for the panel cell."""
     from tools.coopmwm import map_scenarios
+    if EVAL_EXTRA_RANGE is not None:                     # amendment 23: eval-only held-out range (runner patch)
+        from tools.coopmwm.nm_eval_runner import install_eval_ranges
+        install_eval_ranges(map_scenarios)
     return map_scenarios.world(int(seed), int(cell['demand_vph']['main']), float(cell['penetration']))
 
 
@@ -440,15 +480,16 @@ def build_panel(spec_path, registered_utc, *, demand=None, penetration=None):
                                      '~ 5,520 veh-s -> MDE(96) ~ 1,580 veh-s per world-episode'),
                  decisions=('<= 8 decisions per arm -> MDE ~ 0.99 SD (~3,000 veh-s): descriptive only, sized by '
                             'the 690,000 allocation with prefix-inclusive branch cost'),
-                 chosen=N_WORLDS, reason=('largest round panel inside the registered 100-seed range; same 96-world '
-                                          'shape as the clean3 registered estimator; 4 seeds reserved unused'))
+                 chosen=N_WORLDS, reason=PANEL_SIZE_REASON or ('largest round panel inside the registered 100-seed '
+                                                              'range; same 96-world shape as the clean3 registered '
+                                                              'estimator; 4 seeds reserved unused'))
     panel = dict(
         schema=SCHEMA+'.panel', version=2 if SETTING == 'p60' else f'2_{SETTING}', map=MAP,
         role='evaluation only (registered by N6; never training, never selection)',
         registered_utc=registered_utc, authority=PANEL_AUTHORITY,
         supersedes=[dict(panel_sha256=k, reason=v) for k, v in sorted(SUPERSEDED.items())],
         seed_ranges=dict(evaluation=list(EVAL_RANGE), training=list(TRAIN_RANGE)),
-        seeds_used=[seeds[0], seeds[-1]], seeds_reserved_unused=[seeds[-1]+1, EVAL_RANGE[1]],
+        seeds_used=[seeds[0], seeds[-1]], seeds_reserved_unused=list(SEEDS_RESERVED or (seeds[-1]+1, EVAL_RANGE[1])),
         cell=cell, map_binding=dict(
             map_spec=MAP_SPEC_REL, net_file=Path(desc.network_path).name, net_sha256=net_sha,
             net_rule='sha256 of the staged probe network bytes (MAIN 2026-11-06, N11 F4)',
@@ -512,7 +553,7 @@ def build_panel_3c(spec_path, registered_utc):
                 cell=cell_row['cell'], cell_key=cell_row['cell_key'],
                 authority='MAIN registration (pre-results): claim 3c, condition-aware: no harm in light traffic'
                           +(f' ({SETTING} setting)' if SETTING != 'p60' else ''))
-    seeds = list(range(EVAL_RANGE[0], EVAL_RANGE[0]+CLAIM3C_WORLDS))
+    seeds = list(range(CLAIM3C_SEED_START or EVAL_RANGE[0], (CLAIM3C_SEED_START or EVAL_RANGE[0])+CLAIM3C_WORLDS))
     worlds = [dict(world_id=f'{MAP}_{cell_row["cell_key"]}_{s}', world=_world(s, cell)) for s in seeds]
     contract = dict({k: v2['contract'][k] for k in ('update', 'metric', 'higher_is_better', 'metric_definition',
                                                   'horizon_s', 'window', 'horizon_note', 'noise_seed', 'deterministic',
@@ -534,12 +575,15 @@ def build_panel_3c(spec_path, registered_utc):
 
 
 def load_panel_3c(path=None, *, pinned=''):
+    if path is None and PANEL_3C_FILE is None:            # amendment 23b: a single-panel root (p20x)
+        return None
     path, pinned = path or PANEL_3C_FILE, PANEL_3C_SHA256 if pinned == '' else pinned
     panel = verify(read(path), 'panel_sha256', 'claim-3c panel seal')
     if pinned is not None and panel['panel_sha256'] != pinned:
         raise Blocked(f'claim-3c panel_sha256 {panel["panel_sha256"]} != pinned {pinned}')
     seeds = [r['world']['seed'] for r in panel['worlds']]
-    if seeds != list(range(EVAL_RANGE[0], EVAL_RANGE[0]+CLAIM3C_WORLDS)) or panel['map_binding']['net_sha256'] != NET_SHA256:
+    start = CLAIM3C_SEED_START or EVAL_RANGE[0]
+    if seeds != list(range(start, start+CLAIM3C_WORLDS)) or panel['map_binding']['net_sha256'] != NET_SHA256:
         raise Blocked('claim-3c panel differs from its registration')
     for r in panel['worlds']:
         if r['world'] != _world(r['world']['seed'], panel['cell']) or r['world']['cell_key'] != CLAIM3C_KEY:
@@ -2332,6 +2376,60 @@ def tail_vs_u0(reports, worlds, bootstrap, names, reference='U0'):
     return out
 
 
+APPLICABILITY_ARMS = ('B', 'ORACLE')        # amendment 24 primary (B) and amendment 25 (ORACLE, privileged bound)
+
+
+def applicability_labels(final_root, cell_key):
+    """The ONE sealed APPLICABILITY_*.json of this root that labels ``cell_key`` (amendment 24), else None."""
+    found = []
+    for path in sorted(Path(final_root).glob('APPLICABILITY_*.json')):
+        value = verify(read(path), 'receipt_sha256', path.name)
+        if cell_key in value['cells']:
+            found.append(value)
+    if len(found) > 1:
+        raise Blocked(f'{cell_key}: more than one sealed applicability label file')
+    return found[0] if found else None
+
+
+def applicability_tables(final_root, panel, have, reports, worlds, names, bootstrap, reference='U0'):
+    """Amendment 24 (owner main claim, pre-registered): on the APPLICABLE worlds of this cell (labels sealed from
+    the U0 tapes before any B outcome), paired total delay X - U0 (PRIMARY for B: CI95 upper < 0) plus the
+    unchanged fairness co-criteria (groups <= 10 s vs U0 labels; CVaR90 X - U0 CI95 lower <= 0) on that subset;
+    reported: the applicability rate (worlds, vehicle-time), non-applicable worlds (must not be significantly
+    worse: CI95 lower <= 0), all worlds; MAPPO_LANE as secondary arm. Pooled over cells: pooled_applicability()."""
+    labels = applicability_labels(final_root, panel['cell']['cell_key']) if final_root is not None else None
+    if labels is None:
+        return dict(status='unavailable', reason='no sealed applicability labels for this cell')
+    key = panel['cell']['cell_key']
+    app = [w for w in worlds if labels['worlds'][w]['applicable']]
+    non = [w for w in worlds if not labels['worlds'][w]['applicable']]
+    out = dict(labels_receipt_sha256=labels['receipt_sha256'], bank_sha256=labels['bank']['sha256'],
+               rate=labels['cells'][key], applicable_worlds=len(app), non_applicable_worlds=len(non), arms={})
+    for arm in [a for a in APPLICABILITY_ARMS+('MAPPO_LANE',) if a in names and reference in names]:
+        row = {}
+        for subset, ws in (('applicable', app), ('non_applicable', non), ('all', worlds)):
+            if len(ws) < 2:
+                row[subset] = dict(status='unavailable', n_worlds=len(ws))
+                continue
+            x = np.array([have[arm][w]['J_veh_s'] for w in ws], float)
+            y = np.array([have[reference][w]['J_veh_s'] for w in ws], float)
+            total = fe.paired_stats(x, y, bootstrap)
+            sub = {a: {w: reports[a][w] for w in ws} for a in (arm, reference)}
+            sub['B'], sub['A'] = sub[arm], sub[reference]
+            groups = co_primary_groups(dict(sub, U0=sub[reference]), ws, bootstrap)
+            tail = tail_criterion(dict(B=sub[arm], A=sub[reference]), ws, bootstrap, 'A')
+            row[subset] = dict(n_worlds=len(ws), total_minus_U0=total, total_lower=bool(total['ci95'][1] < 0),
+                               not_worse=bool(total['ci95'][0] <= 0), groups=groups, tail_cvar90=tail)
+        a = row.get('applicable', {})
+        row['meets_primary'] = bool(a.get('total_lower') and (a.get('groups') or {}).get('all_pass') is True
+                                    and (a.get('tail_cvar90') or {}).get('passes') is True)
+        row['non_applicable_not_worse'] = (row.get('non_applicable') or {}).get('not_worse')
+        row['role'] = dict(B='PRIMARY (amendment 24)', ORACLE='privileged upper bound (amendment 25), not deployable',
+                           MAPPO_LANE='secondary')[arm]
+        out['arms'][arm] = row
+    return out
+
+
 def secondary_tables(*, final_root, panel, have, names, alias, dry_run=False):
     """SECONDARY, report-only (amendment 5): every arm vs every comparator present, per metric: paired whole-world
     bootstrap CI + per-seed fractions/quartiles; per-world values per arm (the per-seed table)."""
@@ -2374,6 +2472,7 @@ def secondary_tables(*, final_root, panel, have, names, alias, dry_run=False):
     reference = 'A' if 'A' in reports else 'U0'
     out['co_primary_tail'] = tail_criterion(reports, worlds, bootstrap, reference)
     out['tail_vs_u0'] = tail_vs_u0(reports, worlds, bootstrap, names)
+    out['applicability'] = applicability_tables(final_root, panel, have, reports, worlds, names, bootstrap)
     origins = sorted({o for n in names for w in worlds for o in reports[n][w]['delay_by_origin_s']})
     out['delay_by_origin_s'] = {o: {n: [reports[n][w]['delay_by_origin_s'].get(o) for w in worlds] for n in names}
                                 for o in origins}
@@ -2845,7 +2944,7 @@ def prerun_register(*, final_root, plant_config, u0_path, u0_sha256, runtime, pa
                      **({} if SETTING == 'p60' else dict(setting=SETTING, cells=dict(claim3a=CELL, claim3c=CLAIM3C_CELL),
                                                          mappo_lane_note=MAPPO_LANE_OOD)),
                      debits=f'{PHASE} (counted by this launcher against {ALLOCATION_SIM_S}; ledger = this root)',
-                     panel_sha256=panel['panel_sha256'], panel_3c_sha256=panel_3c['panel_sha256'],
+                     panel_sha256=panel['panel_sha256'], panel_3c_sha256=panel_3c and panel_3c['panel_sha256'],
                      plant=dict(source=str(plant_config), source_file_sha256=file_sha(plant_config),
                                 source_sha256=digest(source), config_sha256=digest(cfg), view=view, root=str(plant)),
                      u0=dict(source=str(u0_path), sha256=u0_sha256, path=str(plant/'A_checkpoint_000.pt')),
@@ -2870,7 +2969,7 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
     plan = prerun_plan(final_root)
     if plan is None:
         raise Blocked('PRERUN_PLAN.json missing: prerun-register first')
-    if (plan['panel_sha256'], plan['panel_3c_sha256']) != (panel['panel_sha256'], panel_3c['panel_sha256']):
+    if (plan['panel_sha256'], plan['panel_3c_sha256']) != (panel['panel_sha256'], panel_3c and panel_3c['panel_sha256']):
         raise Blocked('PRERUN_PLAN binds other panels')
     if not set(arms) <= set(PRERUN_ARMS):
         raise Blocked(f'pre-run arms are {PRERUN_ARMS}')
@@ -2906,7 +3005,7 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=PRE
                 raise Blocked(f'{arm} pre-run needs its binding first (bind-mappo --arm {arm})')
         for arm in arms:
             waves.append((arm, 'episode', episode_specs(arm, panel, cfg, plant, 'mappo_frozen', bound.get(arm), u0)))
-        for arm in arms:
+        for arm in arms if panel_3c is not None else ():      # amendment 23b: a root may hold one panel only
             waves.append((f'C3_{arm}', 'episode', episode_specs(arm, panel_3c, cfg, plant, 'mappo_frozen', bound.get(arm),
                                                                  u0)))
         chunk = int(chunk or 2*workers)
@@ -3785,6 +3884,10 @@ def main(argv=None):
     a.panel = a.panel or str(PANEL_FILE)
     if a.root is None or a.final_root is None:
         p.error(f'setting {a.setting}: pass --root and --final-root explicitly')
+    if EVAL_EXTRA_RANGE is not None:
+        from tools.coopmwm import map_scenarios
+        from tools.coopmwm.nm_eval_runner import install_eval_ranges
+        install_eval_ranges(map_scenarios)
     if a.command in ('check', 'bind-arms', 'run', 'analyse') and a.update is None:
         p.error('--update 12 (PRIMARY) or 24 (SECONDARY) required')
 

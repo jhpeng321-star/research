@@ -1,0 +1,87 @@
+{
+ "amendment": 23,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend22b.json",
+  "registration_sha256": "86c77b0ea4a2c97b64bb05f0bfa0396d9f0e2c62474000231a56d2fe1bd081f0"
+ },
+ "authority": [
+  "owner 2026-11-08 22:49 \"focus on heavy and medium ... evaluate on those two\"; 22:51 \"push the cav percentage higher\"",
+  "MAIN -> N6 amendment 23 (D2800_p20 48 fresh worlds) + addition (D3200_p40 48 fresh worlds; cut to 36 only if the allocation could not hold both)"
+ ],
+ "budget": {
+  "after_prerun_used": 1301280,
+  "allocation": "final-eval 1,750,000 (both roots, own ledgers); p20 root used 723,480; p20x root cap 1,026,520",
+  "needed_for_primary": {
+   "A": "U0 alias assumed (frozen-A check); else +259,200 per run",
+   "both_runs": 1036800,
+   "oracle_plan": 230400,
+   "per_trained_run_BR": "2 x (192 primary + 24 secondary) x 1200 = 518,400 (primary only 460,800)",
+   "runs": [
+    "CLEAN5C5 (WM-guided)",
+    "F8V (rule-guided)"
+   ]
+  },
+  "note": "the panels fit (no cut to 36); the B/R waves and the ORACLE-PLAN arm need an allocation raise (MAIN)",
+  "p20x_prerun": 577800,
+  "remaining": 448720,
+  "shortfall": 818480,
+  "total_needed": 2568480
+ },
+ "code": "ops/nm_finaleval.py SETTINGS[\"p20x\"]; tests test_p20x_panels_use_fresh_eval_only_held_out_integers, test_p20x_dry_run_prerun_on_both_new_primary_panels",
+ "panels": {
+  "D2800_p20": {
+   "file": "ops/nm_eval_panel_wz3to2_p20x_D2800.json",
+   "panel_sha256": "b843216ce8bb2a180551dff8969eb47605f743f6be586209d4c64cfe2a2a8010",
+   "seeds": [
+    993000,
+    993047
+   ],
+   "slot": "claim3a slot of root p20x",
+   "worlds": 48
+  },
+  "D3200_p40": {
+   "file": "ops/nm_eval_panel_wz3to2_p20x_D3200_p40.json",
+   "panel_sha256": "1fc968d51562bb7eefaaa95d01a741fdc1cbf9c1b793a7651b32bc788a8c4340",
+   "seeds": [
+    993048,
+    993095
+   ],
+   "slot": "claim3c (C3_) slot of root p20x: a PRIMARY panel",
+   "worlds": 48
+  },
+  "audit": "amendment-23 audit: 993000-993099 absent from REGISTRATION.md, every c4/* branch (py/json/md/toml/sh), protocols/ and runs/active/C4-V7FT-20261017 (only 993592 = a merge-map GENRAND seed, outside the range), traffic_shepherd.c4.seeds sets, N1 TRAIN/EXTRA_TRAIN/HELDOUT ranges, WMVERIFY 989950-989999, MULTICRIT/LOWCAV 991xxx; remote PLAN.json/job dirs audited by IMITREPLAY before the pre-run",
+  "remote_audit_gate": "before the pre-run IMITREPLAY greps every PLAN.json/job dir/ledger on gpuA, cpuW, cpuZ (and cpuV archive) for 993000-993099; any hit stops the pre-run",
+  "seed_range": "eval-only held-out range 993000-993099 registered at runtime by tools/coopmwm/nm_eval_runner.install_eval_ranges (seed_scope heldout, repeat = seed - 993000); N1 worlds unchanged; TRAIN roles refuse these seeds; physics-neutral (labels only)"
+ },
+ "prerun": {
+  "arms": [
+   "NATIVE",
+   "U0",
+   "RULE",
+   "RULE_FAIR",
+   "MAPPO_LANE"
+  ],
+  "host": "gpuA or cpuW (02:00-02:30 window), <= 18 workers gpuA / <= 40 cpuW",
+  "mappo_lane": "trained at p60: out of distribution at D2800_p20 and D3200_p40 (disclosed)",
+  "plant_reference": "F8U CONFIG b22dc301 + u0 5ea22964 (as amendment 22b)",
+  "root": "new final root, --setting p20x; logcheck (720) + seqcheck (1,080) at D2800_p20 TRAIN 989598 first",
+  "rule": "RULE wall_g_duo12 / RULE_FAIR wall_g_solo2 at both cells (p20 rules also applied at p40; disclosed)",
+  "sim_s": 576000
+ },
+ "primary_eval": {
+  "cells": [
+   "D3200_p20 (96, p20 root, panel fe64aa35)",
+   "D2800_p20 (48, p20x root)",
+   "D3200_p40 (48, p20x root)"
+  ],
+  "criteria": "the same co-criteria per cell AND pooled over the three primary cells (pooled = whole-world bootstrap over the 192 primary worlds, stratified by cell): total delay B - A CI95 upper < 0; groups L0/L1/L2/HDV/CAV mean per-vehicle increase <= 10 s; CVaR90 B - A CI95 lower <= 0",
+  "doc": "docs: the co-criteria table in this amendment supersedes the 3a/3c split for the p20-era runs",
+  "secondary": [
+   "D2400_p20 (24, p20 root, panel 711d22c9)"
+  ]
+ },
+ "registered_utc": "2026-11-08T15:06:53.585624+00:00",
+ "registration_sha256": "8492d5cc08cf986d5c883ef8adb96a25e64ced3f3b442ef21645bee7ac21013b",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: before any CLEAN5C5/F8V outcome; no episode on the new panels exists"
+}

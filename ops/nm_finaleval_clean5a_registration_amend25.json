@@ -1,0 +1,55 @@
+{
+ "amendment": "25",
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend24.json",
+  "registration_sha256": "d504afae8ed22b71939bca9bcb19ad20f33741844b1661f6efd0ea3824594719"
+ },
+ "analysis": "as amendment 24: applicable-world effect vs U0, applicability rate, fairness (groups, CVaR90)",
+ "arm": {
+  "definition": "U0 (frozen d9042cc5 + u0) plus privileged execution of the admitted verified WM plans of the frozen end-of-training bank whenever their privileged admitted bin AND a feasible CAV group (offer_ok) occur; session slots and cooldown as in the bank",
+  "disclosure": "privileged upper bound, not a deployable policy",
+  "executor": "FULLPOL OracleHook(bank_doc, cell_key) reusing the c4/p20-sit teacher gate + the WMVERIFY plan executor (single writer); module digest pinned like RULE; requested from FULLPOL",
+  "name": "ORACLE"
+ },
+ "authority": [
+  "MAIN 2026-11-08 22:59 (REGISTRATION): ORACLE-PLAN arm, privileged upper bound",
+  "MAIN -> N6 amendment 25"
+ ],
+ "budget": {
+  "A": "U0 alias assumed (frozen-A check); else +115,200 primary (+144,000 secondary) per run",
+  "final_eval_allocation": 1750000,
+  "fits_in_remaining": "one trained run primary B/R + ORACLE = 345,600 <= 448,720",
+  "full_plan": {
+   "runs": [
+    "CLEAN5C5",
+    "F8V"
+   ],
+   "shortfall": 703280,
+   "total": 2453280
+  },
+  "oracle_primary": 115200,
+  "p20_root_used": 723480,
+  "p20x_prerun": {
+   "arms": 5,
+   "logcheck": 720,
+   "seqcheck": 1080,
+   "sim_s": 576000,
+   "total": 577800,
+   "worlds": 96
+  },
+  "per_trained_run": {
+   "all": 518400,
+   "primary_D2800_BR": 230400,
+   "secondary_D3200_p20_and_D2400_p20_BR": 288000
+  },
+  "remaining": 448720,
+  "used_after_p20x_prerun": 1301280
+ },
+ "panels": "primary D2800_p20 (96); if the allocation is short, its applicable worlds only (amendment-24 labels)",
+ "registered_utc": "2026-11-08T15:14:21.730402+00:00",
+ "registration_sha256": "1d18b0b0ad90ffa9782785ba330b6dd1ef97caf018a18536240b635fa4594db6",
+ "schedule": "u12 eval after training ends: cpuZ and cpuW <= 40 workers each; per trained run 96 primary + 120 secondary worlds x 2 arms = 432 episodes (~6 rounds of 80); ORACLE 96 episodes; labels first (zero SUMO); all primary results by 2026-11-09 ~21:00 if training ends by ~19:00",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: design registered; the hook is built by FULLPOL and digest-pinned before any ORACLE episode",
+ "timing": "runs after training ends, with the frozen bank"
+}

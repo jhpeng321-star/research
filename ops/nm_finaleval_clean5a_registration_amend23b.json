@@ -1,0 +1,75 @@
+{
+ "amendment": "23b",
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend23.json",
+  "registration_sha256": "8492d5cc08cf986d5c883ef8adb96a25e64ced3f3b442ef21645bee7ac21013b"
+ },
+ "authority": [
+  "owner (REGISTRATION latest): PRIMARY eval = D2800_p20 only",
+  "MAIN -> N6: 96 fresh audited worlds, cancel D3200_p40; D3200_p20 and D2400_p20 secondary; amendments 24/25 apply with D2800_p20 primary"
+ ],
+ "budget": {
+  "A": "U0 alias assumed (frozen-A check); else +115,200 primary (+144,000 secondary) per run",
+  "final_eval_allocation": 1750000,
+  "fits_in_remaining": "one trained run primary B/R + ORACLE = 345,600 <= 448,720",
+  "full_plan": {
+   "runs": [
+    "CLEAN5C5",
+    "F8V"
+   ],
+   "shortfall": 703280,
+   "total": 2453280
+  },
+  "oracle_primary": 115200,
+  "p20_root_used": 723480,
+  "p20x_prerun": {
+   "arms": 5,
+   "logcheck": 720,
+   "seqcheck": 1080,
+   "sim_s": 576000,
+   "total": 577800,
+   "worlds": 96
+  },
+  "per_trained_run": {
+   "all": 518400,
+   "primary_D2800_BR": 230400,
+   "secondary_D3200_p20_and_D2400_p20_BR": 288000
+  },
+  "remaining": 448720,
+  "used_after_p20x_prerun": 1301280
+ },
+ "criteria": "PRIMARY on D2800_p20: amendment 24 (applicable worlds, B - U0 CI95 upper < 0, groups <= 10 s, CVaR90 lower <= 0) and the all-worlds co-criteria (B vs A: total, groups, CVaR90) reported; secondary cells: the same tables, descriptive",
+ "prerun": {
+  "arms": [
+   "NATIVE",
+   "U0",
+   "RULE",
+   "RULE_FAIR",
+   "MAPPO_LANE"
+  ],
+  "order": "logcheck + seqcheck at TRAIN 989598 D2800_p20, then the pre-run (canary first)",
+  "plant_reference": "F8U CONFIG b22dc301 + u0 5ea22964",
+  "sim_s": 576000
+ },
+ "primary": {
+  "cell": "D2800_p20",
+  "file": "ops/nm_eval_panel_wz3to2_p20x_D2800.json",
+  "panel_sha256": "a0603e5dacf26fb076adc2a3a1831fd96522b1f1a85844a83e3d500bdbcde0aa",
+  "root": "p20x (single-panel root; --setting p20x)",
+  "seeds": [
+   993000,
+   993095
+  ],
+  "worlds": 96
+ },
+ "registered_utc": "2026-11-08T15:14:21.714564+00:00",
+ "registration_sha256": "6cbb6a85e618b9f20dce44995a247013685827edec2c35ce5d6bf45117a0fd1f",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "secondary": [
+  "D3200_p20 (96, p20 root fe64aa35)",
+  "D2400_p20 (24, p20 root 711d22c9)"
+ ],
+ "seed_range": "eval-only held-out range 993000-993099 registered at runtime by nm_eval_runner.install_eval_ranges (physics-neutral; TRAIN roles refuse it); remote audit gate by IMITREPLAY before the pre-run",
+ "status": "pre-results: before any CLEAN5C5/F8V outcome; no episode on any p20x panel exists",
+ "supersedes": "amendment 23 design (D2800_p20 48 + D3200_p40 48): its two panel files were built locally, never committed, deployed or run, and are deleted; amendment 23 stays in the chain as the record"
+}

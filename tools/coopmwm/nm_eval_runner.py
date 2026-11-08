@@ -95,6 +95,48 @@ LANE_CHANGE_MODE = 513
 FROZEN_MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca'
 
 
+#: amendment 23: evaluation-only held-out range (fresh integers for the p20x panels). Registered in this process's
+#: tools.coopmwm.map_scenarios at import: seed_scope -> 'heldout', repeat = seed - 993000. Physics-neutral: the
+#: N1 world dict only carries seed/cell/repeat labels; TRAIN roles still refuse these seeds (guard).
+EVAL_HELDOUT_RANGE = (993000, 993099)
+
+
+def install_eval_ranges(ms=None):
+    """Idempotent: add EVAL_HELDOUT_RANGE to map_scenarios (seed_scope, repeat_index if present, world)."""
+    if ms is None:
+        try:
+            from . import map_scenarios as ms
+        except ImportError:
+            return False
+    if getattr(ms, '_N6_EVAL_RANGES', None) == EVAL_HELDOUT_RANGE:
+        return True
+    lo, hi = EVAL_HELDOUT_RANGE
+    scope0, world0 = ms.seed_scope, ms.world
+
+    def seed_scope(seed):
+        if type(seed) is int and lo <= seed <= hi:
+            return 'heldout'
+        return scope0(seed)
+
+    def world(seed, demand, penetration):
+        if not (type(seed) is int and lo <= seed <= hi):
+            return world0(seed, demand, penetration)
+        cell = next((c for c in ms.cells() if c['demand'] == demand and c['penetration'] == penetration), None)
+        if cell is None or type(demand) is not int:
+            raise ValueError(f'({demand!r}, {penetration!r}) is not a registered {ms.MAP} cell')
+        return dict(seed=seed, cell=cell['cell'], repeat=seed-lo, penetration=penetration, demand=demand,
+                    map=ms.MAP, cell_key=cell['cell_key'])
+    ms.seed_scope, ms.world = seed_scope, world
+    if hasattr(ms, 'repeat_index'):
+        rep0 = ms.repeat_index
+        ms.repeat_index = lambda seed: seed-lo if type(seed) is int and lo <= seed <= hi else rep0(seed)
+    ms._N6_EVAL_RANGES = EVAL_HELDOUT_RANGE
+    return True
+
+
+install_eval_ranges()
+
+
 def _sha(path):
     h = hashlib.sha256()
     with open(path, 'rb') as f:

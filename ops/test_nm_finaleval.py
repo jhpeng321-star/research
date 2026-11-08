@@ -1285,3 +1285,105 @@ def test_p20_dry_run_prerun_then_main_run(p20, tmp_path):
 def test_setting_cli_requires_explicit_roots_for_p20(p20):       # p20 fixture: globals restored afterwards
     with pytest.raises(SystemExit):
         nm.main(['verify-panel', '--setting', 'p20'])
+
+
+
+# ---------------------------------------------------------------- amendment 23/23b (p20x: D2800_p20, 96 fresh worlds)
+
+@pytest.fixture
+def p20x(monkeypatch):
+    for k, v in dict(nm.SETTINGS['p20x'], SETTING='p20x', **nm.SETTINGS_PINS['p20x']).items():
+        monkeypatch.setattr(nm, k, v)
+    return nm.load_panel()
+
+
+def test_p20x_panel_uses_fresh_eval_only_held_out_integers(p20x):
+    from tools.coopmwm import map_scenarios as ms, nm_eval_runner as runner
+    assert nm.load_panel_3c() is None                                         # D3200_p40 cancelled (23b)
+    assert p20x['cell']['cell_key'] == 'D2800_p20' and len(p20x['worlds']) == 96
+    assert [r['world']['seed'] for r in p20x['worlds']] == list(range(993000, 993096))
+    assert p20x['seeds_reserved_unused'] == [993096, 993099] and 'fresh integers' in p20x['exposure']['disclosed']
+    runner.install_eval_ranges(ms)
+    assert ms.seed_scope(993010) == 'heldout' and ms.world(993010, 2800, 0.2)['repeat'] == 10
+    assert ms.guard(ms.world(993010, 2800, 0.2), 'final_test')['seed'] == 993010
+    with pytest.raises(ValueError):
+        ms.guard(ms.world(993010, 2800, 0.2), 'train')                       # TRAIN roles still refuse them
+    assert ms.seed_scope(989600) == 'heldout' and ms.seed_scope(993100) is None and ms.seed_scope(989300) == 'train'
+    assert ms.world(989600, 3200, 0.2)['repeat'] == 0                         # N1 worlds unchanged
+    used = set(range(989000, 989100)) | set(range(989200, 989700)) | set(range(989700, 990000)) | set(range(991000, 992000))
+    assert not used & set(range(993000, 993100))
+
+
+def test_p20x_single_panel_prerun(p20x, tmp_path, monkeypatch):
+    with pytest.raises(nm.Blocked, match='sub-cap would be exceeded'):     # the B/R main run needs MAIN's raise
+        nm.dry_run(out=tmp_path/'small', panel=p20x)
+    monkeypatch.setattr(nm, 'ALLOCATION_SIM_S', 3_000_000)
+    result = nm.dry_run(out=tmp_path/'out', panel=p20x)
+    plan = json.loads((Path(result['final_root'])/nm.PRERUN_FILE).read_text())
+    assert plan['setting'] == 'p20x' and plan['cap_sim_s'] == 576_000 and plan['panel_3c_sha256'] is None
+    assert plan['cells'] == dict(claim3a=dict(demand=2800, penetration=0.2), claim3c=None)
+    assert result['fake_prerun_sim_s'] == 576_000 and plan['rule']['strategy'] == 'wall_g_duo12'
+    assert set(result['analyses']) >= {'claim3a'} and 'claim3c' not in result['analyses']
+
+
+# ---------------------------------------------------------------- amendment 24 (applicability labels)
+
+def test_applicability_labels_read_only_u0_logs_and_the_bank(panel, tmp_path, monkeypatch):
+    import builtins
+    import gzip
+    import nm_applicability as ap
+    f = prerun_fixture(tmp_path, panel)
+    run_prerun(f, arms=('U0', 'NATIVE'))
+    bank = tmp_path/'bank.json'
+    bank.write_text(json.dumps(dict(clean5c=dict(templates=[dict(cell='D3200_p60', family='mut_x', template={}, offer_condition=dict(
+        trigger='lanes', own_wm_lanes=[0, 1, 2], zone_s=[-5000, 5000], spread_m=1e6,
+        roles=[dict(wm_lane=0)], situation=dict(mode='privileged', bins=[dict(cong='free', lane_diff='L2notfaster')])))]))))
+    seen = []
+    real_open, real_gz = builtins.open, gzip.open
+    monkeypatch.setattr(builtins, 'open', lambda p, *a, **k: seen.append(str(p)) or real_open(p, *a, **k))
+    monkeypatch.setattr(gzip, 'open', lambda p, *a, **k: seen.append(str(p)) or real_gz(p, *a, **k))
+    calls = []
+
+    def onset_bin(own, rows, mode):
+        calls.append(mode)
+        return dict(cong='free', lane_diff='L2notfaster')
+    value = ap.label(final_root=f['final_root'], panels=[(panel, '')], bank_path=bank, tag='t',
+                     functions=(onset_bin, lambda cond, own, rows: own['s_m'] > -1e9))
+    monkeypatch.undo()
+    assert set(calls) == {'privileged'} and value['cells']['D3200_p60']['worlds'] == 96
+    assert 0 <= value['cells']['D3200_p60']['rate_worlds'] <= 1 and value['bank']['sha256'] == nm.file_sha(bank)
+    reads = [Path(p).name for p in seen]
+    assert all(n in (nm.VEHICLE_LOG, 'bank.json') or n.startswith('WAVE_U0') or n.startswith('APPLICABILITY_')
+               for n in reads), sorted(set(reads))
+    assert not [p for p in seen if 'nmpre_native' in p.lower() or 'WAVE_NATIVE' in p]
+    for w in value['worlds'].values():
+        assert set(w) == {'cell', 'log_sha256', 'applicable', 'first_t', 'applicable_seconds', 'vehicle_seconds',
+                          'applicable_vehicle_seconds', 'families'}                 # no delay / J / safety field
+    (f['final_root']/'WAVE_B_u012.json').write_text('{}')
+    with pytest.raises(nm.Blocked, match='must precede'):
+        ap.label(final_root=f['final_root'], panels=[(panel, '')], bank_path=bank, tag='t2',
+                 functions=(onset_bin, lambda *a: True))
+
+
+def test_applicability_conditional_analysis_on_applicable_worlds(tmp_path):
+    boot = dict(reps=300, seed=1, level=.95, method='paired_percentile')
+    worlds = [f'w{i}' for i in range(10)]
+    applicable = {w: i < 6 for i, w in enumerate(worlds)}
+    labels = nm.seal(dict(schema='x', cells={'D2800_p20': dict(worlds=10, applicable_worlds=6, rate_worlds=.6)},
+                          bank=dict(sha256='b'), worlds={w: dict(applicable=a) for w, a in applicable.items()}),
+                     'receipt_sha256')
+    nm.publish(tmp_path/'APPLICABILITY_t.json', labels)
+
+    def rep(shift):
+        return dict(per_vehicle={f'v{j}': (float(j+shift), ('L0', 'L1', 'L2')[j % 3], j % 2 == 0) for j in range(30)})
+    have = {a: {w: dict(J_veh_s=1000.-(50. if a == 'B' and applicable[w] else 0.)+i) for i, w in enumerate(worlds)}
+            for a in ('B', 'U0')}
+    reports = {'B': {w: rep(-1. if applicable[w] else 0.) for w in worlds}, 'U0': {w: rep(0.) for w in worlds}}
+    out = nm.applicability_tables(tmp_path, dict(cell=dict(cell_key='D2800_p20')), have, reports, worlds,
+                                  ['B', 'U0'], boot)
+    b = out['arms']['B']
+    assert out['applicable_worlds'] == 6 and b['applicable']['total_minus_U0']['diff'] == pytest.approx(-50.)
+    assert b['applicable']['total_lower'] and b['meets_primary'] and b['non_applicable_not_worse']
+    assert b['non_applicable']['total_minus_U0']['diff'] == pytest.approx(0.)
+    assert nm.applicability_tables(tmp_path, dict(cell=dict(cell_key='D3200_p20')), have, reports, worlds,
+                                   ['B', 'U0'], boot)['status'] == 'unavailable'
