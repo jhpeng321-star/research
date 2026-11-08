@@ -112,7 +112,7 @@ class TriggerPolicy(nn.Module):
     zero-initialised on top of the unchanged default initialisation.
     """
     def __init__(self, base_policy, *, v2v_dim, n_candidates, partner_slots,
-                 freeze_base=True, moves_api=None, extension=None, w2=None):
+                 freeze_base=True, moves_api=None, extension=None, w2=None, none_bias=None):
         super().__init__()
         if (type(v2v_dim) is not int or v2v_dim < 1 or type(n_candidates) is not int
                 or n_candidates < 1 or type(partner_slots) is not int or partner_slots < 1):
@@ -160,6 +160,9 @@ class TriggerPolicy(nn.Module):
         self.w2_pressure_dim = 0
         self.w2_descriptor_dim = 0
         self.w2_head = None
+        # c4/learnfix2 (default None -> no parameter, identical bytes): a learnable scalar added to the 'none'
+        # slot's logit only, initialised at the registered bias (P(none) ~ 0.9 on choice rows at u0).
+        self.none_bias = None if none_bias is None else nn.Parameter(torch.tensor(float(none_bias)))
         if w2.get('pressure'):
             from .wall_pressure import PRESSURE_DIM
             self.w2_pressure_dim = PRESSURE_DIM
@@ -289,6 +292,8 @@ class TriggerPolicy(nn.Module):
                         else descriptors.new_zeros((len(hidden), 0)))
             extra = torch.cat((pressure[:, None, :].expand(-1, count, -1), descriptors), -1)
             logits = logits+self.w2_head(extra).squeeze(-1)
+        if self.none_bias is not None:
+            logits = torch.cat((logits[:, :1]+self.none_bias, logits[:, 1:]), 1)
         logits = logits.masked_fill(~mask, -torch.inf)
         return logits, self.trigger_value(hidden).squeeze(-1)
 
@@ -359,6 +364,8 @@ class TriggerPolicy(nn.Module):
 
     def learning_parameters(self):
         parameters = list(self.trigger_head.parameters())+list(self.trigger_value.parameters())
+        if self.none_bias is not None:
+            parameters.append(self.none_bias)
         if self.w2_head is not None:
             parameters += list(self.w2_head.parameters())
         if not self.freeze_base:

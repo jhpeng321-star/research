@@ -402,13 +402,15 @@ class EpisodePolicy(torch.nn.Module):
         if self.fullpol is not None:
             self.fp_state = fullpol_programs.runtime_state(self.fullpol, arm)
             self.fp_offered, self.free_program_runtime = [], None
+        from . import learnfix
         self.trigger = TriggerPolicy(self.layer.base, v2v_dim=cfg['v2v_dim'],
             n_candidates=cfg['trigger_candidates'], partner_slots=cfg['trigger_partner_slots'],
             freeze_base=True, moves_api=MoveAPI(cfg),
             extension=fullpol_head.extension(
                 cfg, base=nm_families.compose(lane_drop.extension(cfg), nm_families.extension(cfg),
                                               lc_families.extension(cfg))),
-            w2=w2 if any(w2.values()) else None)
+            w2=w2 if any(w2.values()) else None,
+            none_bias=(learnfix.settings2(cfg) or {}).get('none_bias'))
         self.wall_ends, self.pressure_blocks = {}, {}
         self.trigger_optimizer = self.trigger.optimizer(lr=cfg['trigger_lr'])
         if self.rsu is not None:
@@ -1412,7 +1414,8 @@ class ArmRuntime:
         if self.update > 1 and prior.exists():
             previous = ((read(_path(prior)).get('learning') or {}).get('learnfix_net') or {}).get('running_baseline')
         targets, receipt = learnfix.apply_net_acting(targets, net, learnfix.acting_rows(by_key),
-                                                     {e['id']: regime_key(e) for e in episodes}, previous)
+                                                     {e['id']: regime_key(e) for e in episodes}, previous,
+                                                     cap_mult=(learnfix.settings2(cfg) or {}).get('credit_cap'))
         return targets, receipt, fair_receipt
 
     def _reward_targets(self, envelope, by_key, eligible):

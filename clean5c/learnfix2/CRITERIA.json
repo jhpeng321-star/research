@@ -1,0 +1,12 @@
+{
+ "written": "2026-11-09 02:4x, before any learnfix2 replay (MAIN request)",
+ "code": "c4/learnfix2 (none_bias init + per-episode credit cap 2x median |net|)",
+ "data": "CLEAN5C5B cpuZ coopmwm20261109_clean5c5b: u1 (and u2) B and R recorded episodes; u0 = B/R_track2_000 + checkpoint 000",
+ "criteria": {
+  "C1": "at u0 (with the registered none_bias), mean choice-row P(none) >= 0.85 on the u1 recorded contexts, B and R",
+  "C2": "one replayed update (new code) moves the choice-row KL(before||after) >= 0.005 (B and R)",
+  "C3": "B: P(target) on offered target rows (learnfix act rows) rises over the replayed update",
+  "C4": "old-code control (no none_bias) on the same contexts reproduces near-uniform behaviour: choice-row P(none) <= 0.25 and mean entropy >= 0.9 x log(mean valid slots)"
+ },
+ "result": "PASS iff C1-C4 all hold"
+}

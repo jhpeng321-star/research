@@ -85,7 +85,30 @@ def acting_rows(by_key):
 RUNNING_WEIGHT = 0.5      # running per-cell baseline: new = (1 - w) * previous + w * this update's mean
 
 
-def apply_net_acting(targets, net_by_episode, acting, cell_of=None, previous=None):
+RULE2 = ('c4/learnfix2 (MAIN 2026-11-09 ~02:3x, LEARNDIAG u2): trigger-head none_bias (learnable scalar on the '
+         'none logit only, initialised so choice-row P(none) ~ 0.90 at u0; free programs stay offered at the reduced '
+         'initial probability) + per-episode credit cap |net - baseline| <= credit_cap x median |net| of the update')
+NONE_BIAS = None          # registered value (set below from the u0 calibration)
+DEFAULT2 = dict(credit_cap=2.0)
+
+
+def value2(none_bias, **overrides):
+    return dict(DEFAULT2, rule=RULE2, none_bias=float(none_bias), **overrides)
+
+
+def settings2(cfg):
+    """None when absent (unchanged); else the validated learnfix2 registration."""
+    raw = (cfg or {}).get('learnfix2')
+    if raw is None:
+        return None
+    if (not isinstance(raw, dict) or raw.get('rule') != RULE2 or set(raw) != {'rule', 'none_bias', 'credit_cap'}
+            or not isinstance(raw['none_bias'], float) or not 0 <= raw['none_bias'] <= 10
+            or not 0 < float(raw['credit_cap']) <= 10):
+        raise ValueError('learnfix2 needs the registered rule, none_bias (float 0..10) and credit_cap')
+    return dict(raw)
+
+
+def apply_net_acting(targets, net_by_episode, acting, cell_of=None, previous=None, cap_mult=None):
     """MAIN 2026-11-09 (LEARNCHECK FAIL fix): acting rows get the SIGNED paired episode outcome vs the frozen A
     episode on the same world, net = A_J - B_J (J = team delay + the fairness excess term, veh-s; positive = credit),
     minus a RUNNING per-cell baseline of net, spread evenly over the episode's acting rows (non-none trigger action).
@@ -102,15 +125,21 @@ def apply_net_acting(targets, net_by_episode, acting, cell_of=None, previous=Non
                for c in current}
     running.update({c: float(v) for c, v in previous.items() if c not in running})
     rows_out = []
+    nets = sorted(abs(float(v)) for v in net_by_episode.values())
+    median = (nets[len(nets)//2] if len(nets) % 2 else .5*(nets[len(nets)//2-1]+nets[len(nets)//2])) if nets else 0.
+    cap = None if cap_mult is None else float(cap_mult)*median
     for eid, net in sorted(net_by_episode.items()):
         cell = str(cell_of.get(eid))
         centred = float(net)-running[cell]
+        if cap is not None:
+            centred = max(-cap, min(cap, centred))      # learnfix2: per-episode credit cap
         rows = [(k, i) for k in out if k[0] == eid for i, a in enumerate(acting.get(k, ())) if a]
         rows_out.append(dict(episode_id=eid, cell=cell, net_veh_s=float(net), baseline_veh_s=running[cell],
                              centred_veh_s=centred, acting_rows=len(rows), attributed=bool(rows)))
         for k, i in rows:
             out[k][i] += centred/len(rows)
     return out, dict(rule='net = A_J - B_J (delay + fairness excess), running per-cell baseline, acting rows only',
+                     credit_cap=None if cap is None else dict(mult=float(cap_mult), median_abs_net=median, cap=cap),
                      running_weight=RUNNING_WEIGHT, previous_baseline=previous, update_mean=current,
                      running_baseline=running, episodes=rows_out)
 
