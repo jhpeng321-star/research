@@ -158,6 +158,39 @@ def plan_activations(guidance, onsets, effects, members):
     return acts, skipped
 
 
+def unconditional_activations(guidance, bank_paths, cells=None):
+    """(activations, skipped) of the doc's UNCONDITIONAL rows (situational.unconditional '<cell>/<family>'):
+    every executed activation of that plan in the given BANK files (any onset bin), paired effect = the seed's
+    episode-level diff_vs_u0 (the unconditional confirmation is vs u0), reference tape for none rows = u0."""
+    unc = {tuple(k.split('/', 1)) for k in (guidance['situational'].get('unconditional') or {})}
+    tags = plan_sources(guidance)
+    acts, skipped, effects = [], [], {}
+    rows = []
+    for f in bank_paths:
+        with open(guard_path(f), encoding='utf-8') as fh:
+            rows += [json.loads(line) for line in fh]
+    for r in rows:
+        if (r['cell'], r['family']) in unc and r.get('diff_vs_u0') is not None:
+            key = (root_name(r['root']), r['cell'], int(r['seed']), r['family'])
+            d = float(r['diff_vs_u0'])
+            if key in effects and abs(effects[key]-d) > 1e-6:
+                raise ValueError(f'inconsistent per-seed effect for {key}')
+            effects[key] = d
+    for r in sorted(rows, key=lambda r: (r['root'], r['cell'], int(r['seed']), r['family'], int(r['t']))):
+        if (r['cell'], r['family']) not in unc or (cells and r['cell'] not in cells):
+            continue
+        key = (root_name(r['root']), r['cell'], int(r['seed']), r['family'])
+        base = dict(root=key[0], cell=r['cell'], seed=key[2], family=r['family'], t=int(r['t']),
+                    source=tags.get(r['family'], source_tag(r['family'])), bin='unconditional',
+                    holder=(r.get('members') or [None])[0], admission='unconditional', ref_arms=['u0'])
+        if key not in effects:
+            skipped.append(dict(base, reason='no per-seed u0 effect'))
+            continue
+        acts.append(dict(base, diff=effects[key], members=list(r.get('members') or [])))
+    assert_verification_seeds({a['seed'] for a in acts})
+    return acts, skipped
+
+
 def job_name(cell, seed, arm):
     return f'{cell}_s{int(seed)}_{arm}'
 
@@ -185,7 +218,7 @@ def work_list(acts, lookback=None):
         if a['diff'] < 0:
             add(a['root'], job_name(a['cell'], a['seed'], a['family']), a['t'])
         elif a['diff'] > 0:
-            for arm in REFERENCE_ARMS:
+            for arm in a.get('ref_arms') or REFERENCE_ARMS:
                 if arm != a['family']:
                     add(a['root'], job_name(a['cell'], a['seed'], arm), a['t'])
     return {k: dict(v, ticks=sorted(v['ticks'])) for k, v in sorted(want.items())}
@@ -326,7 +359,8 @@ def build_items(acts, triggers, cfg=None, lookback=None):
             skipped.append(dict(_meta(a), reason='zero paired effect'))
             continue
         kind = 'act' if a['diff'] < 0 else 'none'
-        arms = [a['family']] if kind == 'act' else [x for x in REFERENCE_ARMS if x != a['family']]
+        arms = ([a['family']] if kind == 'act' else
+                [x for x in (a.get('ref_arms') or REFERENCE_ARMS) if x != a['family']])
         base_w = (-a['diff']/help_max) if kind == 'act' else (a['diff']/hurt_max)/len(arms)
         for arm in arms:
             job = job_name(a['cell'], a['seed'], arm)
@@ -365,8 +399,11 @@ def build_items(acts, triggers, cfg=None, lookback=None):
 
 
 def _meta(a):
+    unc = a.get('admission') == 'unconditional'
     return dict(root=a['root'], cell=a['cell'], seed=a['seed'], t=a['t'], family=a['family'], source=a['source'],
-                bin=a['bin'], diff_vs_incumbent=a['diff'], members=list(a['members']))
+                bin=a['bin'], admission=a.get('admission', 'situational'),
+                effect_reference='u0' if unc else INCUMBENT,
+                **{('diff_vs_u0' if unc else 'diff_vs_incumbent'): a['diff']}, members=list(a['members']))
 
 
 def summary(items):
@@ -526,6 +563,7 @@ HOST_ROOTS = {  # WMVERIFY root name -> (host, job root); REGISTRATION.md WMVERI
     'wmv_mc': ('cpuW', '/home/ubuntu/wmverify_mc_tapes/wmv_mc'),
     'wmv_rep': ('cpuW', '/home/ubuntu/wmverify_mc_tapes/wmv_rep'),
     'wmv_p20': ('cpuW', '/home/ubuntu/wmverify_p20/wmv_p20'),
+    'wmv_unc': ('cpuW', '/home/ubuntu/wmverify_mc_tapes/wmv_unc'),
 }
 
 
@@ -545,6 +583,14 @@ def cmd_plan(a):
     guidance = json.loads(Path(guard_path(a.guidance)).read_bytes())
     effects, members = read_bank(a.bank)
     acts, skipped = plan_activations(guidance, read_onsets(a.ponset), effects, members)
+    for x in acts:
+        x['admission'] = 'situational'
+    if a.cells:
+        skipped += [dict(x, reason='cell not selected') for x in acts if x['cell'] not in a.cells]
+        acts = [x for x in acts if x['cell'] in a.cells]
+    if a.unconditional_bank:
+        ua, us = unconditional_activations(guidance, a.unconditional_bank, a.cells)
+        acts, skipped = acts+ua, skipped+us
     work = work_list(acts)
     reqs = {}
     for key, w in work.items():
@@ -554,7 +600,8 @@ def cmd_plan(a):
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     plan = dict(schema=SCHEMA_NPZ+'.plan', guidance=dict(path=a.guidance, sha256=sha256_file(a.guidance)),
-                ponset=_inputs_receipt(a.ponset), bank=_inputs_receipt(a.bank), activations=acts,
+                ponset=_inputs_receipt(a.ponset), bank=_inputs_receipt(a.bank),
+                unconditional_bank=_inputs_receipt(a.unconditional_bank or ()), cells=a.cells, activations=acts,
                 skipped=skipped, work=work, requests={h: len(r) for h, r in reqs.items()})
     (out/'PLAN.json').write_bytes((json.dumps(plan, indent=1, sort_keys=True)+'\n').encode('utf-8'))
     for host, jobs in reqs.items():
@@ -579,6 +626,45 @@ def _worker_tape(path, ticks, seed):
     return featurize(cfg, base, state, tape_seconds(path), set(ticks), seed=seed, force_decision=set(ticks))
 
 
+def slim_cache(path, families, cfg=None):
+    """{t: trigger} of a cached draw, only the records offering one of ``families`` on some row."""
+    from .fullpol_learn import option_labels
+    families, keep = set(families), {}
+    if Path(path).exists():
+        for t, trig in json.loads(gzip.decompress(Path(path).read_bytes()))['triggers'].items():
+            if trig is not None and any(e is not None and families & set(option_labels(e, cfg))
+                                        for row in trig['tables'] for e in row):
+                keep[int(t)] = trig
+    return keep
+
+
+def _worker_slim(path, families):
+    return slim_cache(path, families, _WORKER['rt'][0])
+
+
+class LazySlates:
+    """{(tape key, t): trigger} view of one draw's trigger cache. Each tape file is read once and only the
+    records whose slate offers one of ``families`` on some row are kept (all others can never give an item)."""
+
+    def __init__(self, cache, seed, families, cfg=None):
+        self.cache, self.seed, self.families, self.cfg, self.data = Path(cache), int(seed), set(families), cfg, {}
+
+    def _load(self, key):
+        self.data[key] = slim_cache(self.cache/f'{key}__seed{self.seed}.json.gz', self.families, self.cfg)
+
+    def get(self, k, default=None):
+        key, t = k
+        if key not in self.data:
+            self._load(key)
+        return self.data[key].get(int(t), default)
+
+    def __getitem__(self, k):
+        v = self.get(k)
+        if v is None:
+            raise KeyError(k)
+        return v
+
+
 def cmd_extract(a):
     from concurrent.futures import ProcessPoolExecutor
     plan = json.loads(Path(a.plan).read_bytes())
@@ -586,9 +672,9 @@ def cmd_extract(a):
     if sha256_file(plan['guidance']['path']) != plan['guidance']['sha256']:
         raise ValueError('guidance changed since PLAN')
     cfg = runtime(a.run_root, guidance)[0]
-    cache = Path(a.out)/'triggers'
+    cache = Path(a.cache) if a.cache else Path(a.out)/'triggers'
     cache.mkdir(parents=True, exist_ok=True)
-    triggers, tape_receipts, todo = {}, {}, []
+    tape_receipts, todo = {}, []
     for key, w in sorted(plan['work'].items()):
         path = Path(a.tapes)/f'{key}.jsonl.gz'
         if not path.exists():
@@ -596,37 +682,40 @@ def cmd_extract(a):
             continue
         tape_receipts[key] = dict(sha256=sha256_file(path), ticks=w['ticks'])
         cpath = cache/f'{key}__seed{a.seed}.json.gz'
+        if a.build_only:
+            continue
         if cpath.exists():
             c = json.loads(gzip.decompress(cpath.read_bytes()))
-            if c['tape_sha256'] == tape_receipts[key]['sha256'] and c['ticks'] == w['ticks'] and c['seed'] == a.seed:
-                for t, trig in c['triggers'].items():
-                    triggers[(key, int(t))] = trig
+            ok = c['tape_sha256'] == tape_receipts[key]['sha256'] and c['ticks'] == w['ticks'] and c['seed'] == a.seed
+            del c
+            if ok:
                 continue
         todo.append((key, str(path), w['ticks']))
     with ProcessPoolExecutor(max_workers=a.workers, initializer=_worker_init,
                              initargs=(a.run_root, plan['guidance']['path'], a.threads)) as pool:
         futs = {pool.submit(_worker_tape, path, ticks, a.seed): (key, ticks) for key, path, ticks in todo}
-        for fut in futs:
-            key, ticks = futs[fut]
+        for fut in list(futs):
+            key, ticks = futs.pop(fut)
             got = fut.result()
-            for t, trig in got.items():
-                triggers[(key, t)] = trig
             cpath = cache/f'{key}__seed{a.seed}.json.gz'
             cpath.write_bytes(gzip.compress(json.dumps(dict(tape_sha256=tape_receipts[key]['sha256'], ticks=ticks,
                                                             seed=a.seed, triggers={str(t): v for t, v in got.items()}),
                                                        sort_keys=True).encode('utf-8')))
-            print(json.dumps(dict(tape=key, ticks=ticks)), flush=True)
-    slates = []
-    for seed in a.draw_seeds:
-        per = {}
-        for key in plan['work']:
-            cpath = cache/f'{key}__seed{seed}.json.gz'
-            if cpath.exists():
-                for t, trig in json.loads(gzip.decompress(cpath.read_bytes()))['triggers'].items():
-                    per[(key, int(t))] = trig
-        slates.append(per)
+            print(json.dumps(dict(tape=key, ticks=len(ticks))), flush=True)
+            del got, fut
+    if a.no_build:
+        return
     if a.seed not in a.draw_seeds:
         raise ValueError('--seed must be one of --draw-seeds')
+    fams = sorted({x['family'] for x in plan['activations']})
+    slates = [LazySlates(cache, seed, fams, cfg) for seed in a.draw_seeds]
+    with ProcessPoolExecutor(max_workers=a.workers, initializer=_worker_init,
+                             initargs=(a.run_root, plan['guidance']['path'], a.threads)) as pool:
+        futs = {pool.submit(_worker_slim, str(cache/f'{key}__seed{sl.seed}.json.gz'), fams): (sl, key)
+                for sl in slates for key in plan['work']}
+        for fut in list(futs):
+            sl, key = futs.pop(fut)
+            sl.data[key] = fut.result()
     items, skipped = build_items(plan['activations'], slates, cfg)
     skipped = plan['skipped']+skipped+[dict(tape_key=k, reason='tape missing') for k, r in tape_receipts.items()
                                        if r.get('missing')]
@@ -652,6 +741,8 @@ def main(argv=None):
     p.add_argument('--guidance', required=True)
     p.add_argument('--ponset', nargs='+', required=True)
     p.add_argument('--bank', nargs='+', required=True)
+    p.add_argument('--unconditional-bank', nargs='*', default=[])
+    p.add_argument('--cells', nargs='*', default=[])
     p.add_argument('--out', required=True)
     p = sub.add_parser('extract')
     p.add_argument('--plan', required=True)
@@ -660,6 +751,9 @@ def main(argv=None):
     p.add_argument('--seed', type=int, default=0, help='replay noise_seed computed in this call')
     p.add_argument('--draw-seeds', type=int, nargs='+', default=[0], help='cached slate draws used, in order')
     p.add_argument('--parity')
+    p.add_argument('--no-build', action='store_true', help='featurize + cache only')
+    p.add_argument('--cache', help='trigger cache dir (default <out>/triggers)')
+    p.add_argument('--build-only', action='store_true', help='no featurization; build from the cached draws')
     p.add_argument('--workers', type=int, default=8)
     p.add_argument('--threads', type=int, default=1)
     p.add_argument('--out', required=True)
