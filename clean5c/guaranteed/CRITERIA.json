@@ -8,5 +8,29 @@
   "G3": "P(target) rises and total choice-row KL <= 0.075: carried from the verified-only replay on the recorded data (SC_verified_B_u3: 0.237 -> 0.385, KL 0.026); no new training replay on regenerated slates (rewards cannot be regenerated)",
   "G4": "no privileged input in the slate decision: by construction (offer_ok own row + own sensing; privileged situation is a no-op at the slate) + unit test"
  },
- "result": "PASS iff G1-G4"
+ "result": "PASS iff G1-G4",
+ "run_ae019fa5": {
+  "a": {
+   "decision_slates": 381,
+   "slates_offering_bank": 27,
+   "rows": 12857,
+   "rows_offering_bank": 50,
+   "nonverified_free_program_options": 12518
+  },
+  "b": {
+   "decision_slates": 381,
+   "slates_offering_bank": 34,
+   "rows": 12857,
+   "rows_offering_bank": 113,
+   "nonverified_free_program_options": 0
+  },
+  "G1": false,
+  "G1_ratio_slates": 1.26,
+  "rows_ratio": 2.26,
+  "G2": true,
+  "G3": "carried (PASS)",
+  "G4": "PASS (unit test)",
+  "RESULT": "FAIL (G1)",
+  "why": "the bank offer condition (own-sensing member rule) holds on only 113 of 12,857 decision rows; guaranteed offer can only add slots where the gate holds, so slates offering a bank plan rise 1.26x (rows 2.26x), not 3x"
+ }
 }
