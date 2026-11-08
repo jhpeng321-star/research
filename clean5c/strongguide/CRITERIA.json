@@ -9,5 +9,42 @@
   "S3": "STRONG: total choice-row KL (PPO + EV-BC) vs the update-start policy <= 0.10",
   "S4": "VERIFIED_ONLY slate (recorded slates with non-verified free-program slots masked): expected count of free-program actions = 0 and P(target) on the masked slates rises over the STRONG update"
  },
- "result": "PASS iff S1-S4 hold"
+ "result": "PASS iff S1-S4 hold",
+ "run_f91497bc": {
+  "start_p_none": 0.652,
+  "current": {
+   "total_kl": 0.0258,
+   "ppo_kl": 0.006,
+   "bc_passes": 14,
+   "p_target": [
+    0.226,
+    0.36
+   ],
+   "p_none_after": 0.571,
+   "free_expected": [
+    1012.6,
+    1271.3
+   ]
+  },
+  "strong": {
+   "total_kl": 0.006,
+   "ppo_kl": 0.006,
+   "bc_passes": 1,
+   "p_target": [
+    0.226,
+    0.245
+   ],
+   "p_none_after": 0.647,
+   "free_expected": [
+    1012.6,
+    1024.6
+   ]
+  },
+  "S1": false,
+  "S2": false,
+  "S3": true,
+  "S4": true,
+  "RESULT": "FAIL",
+  "why": "the run is already at choice-row P(none) 0.652 < 0.70 at u3 start, so the 0.70 floor rejects the first EV-BC step and STRONG moves less than the current config"
+ }
 }

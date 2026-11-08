@@ -93,7 +93,7 @@ def main(root, arm, u, mode):
         path = g4._envelope_path(native, u)
         if Path(path).exists():
             synergy = json.loads(Path(path).read_text(encoding='utf-8'))
-    learning = hooks['train_update'](episodes, rewards=envelope, **({} if synergy is None else dict(synergy=synergy)))
+    hooks['train_update'](episodes, rewards=envelope, **({} if synergy is None else dict(synergy=synergy)))
     production.bank_move_supervision(runtime)
     sup = fl.supervise(runtime, episodes)
     after = measure()
