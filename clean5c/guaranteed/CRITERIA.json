@@ -32,5 +32,9 @@
   "G4": "PASS (unit test)",
   "RESULT": "FAIL (G1)",
   "why": "the bank offer condition (own-sensing member rule) holds on only 113 of 12,857 decision rows; guaranteed offer can only add slots where the gate holds, so slates offering a bank plan rise 1.26x (rows 2.26x), not 3x"
+ },
+ "decision": {
+  "by": "MAIN 2026-11-09 ~06:4x option (a)",
+  "disclosure": "pre-registered G1 (>= 3x slates offering a bank template) MISSED: 1.26x slates (27 -> 34 of 381), 2.26x rows (50 -> 113 of 12,857); the bank offer condition (own-sensing member rule) is the binding constraint at p20. Relaunch proceeds with verified-only + guaranteed offer (G2-G4 pass)."
  }
 }
