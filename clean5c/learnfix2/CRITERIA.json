@@ -50,5 +50,37 @@
   },
   "RESULT": "superseded (REV-SPD BLOCK: EV-BC drift on unlabelled rows; the earlier disclosure attributing the B movement to off-policy replay was wrong - it was EV-BC)",
   "note": "replay is off-policy (recorded behaviour without the bias), so the one-update movement is larger than on-policy"
+ },
+ "run_57f38c9a": {
+  "B": {
+   "C1": true,
+   "C2": true,
+   "C3": true,
+   "C4": true,
+   "C5": true,
+   "u0_p_none": 0.9,
+   "after_ppo_p_none": 0.804,
+   "after_p_none": 0.786,
+   "choice_kl_total": 0.056,
+   "choice_kl_ppo": 0.042,
+   "choice_kl_bc": 0.0012,
+   "bc_accepted_steps": 3,
+   "p_target": [
+    0.026,
+    0.046
+   ]
+  },
+  "R": {
+   "C1": true,
+   "C2": true,
+   "C3": null,
+   "C4": true,
+   "C5": true,
+   "u0_p_none": 0.9,
+   "after_p_none": 0.803,
+   "choice_kl_ppo": 0.0426
+  },
+  "RESULT": "PASS",
+  "disclosure": "replay is off-policy (recorded behaviour had no bias); most of the one-update movement is PPO (0.042, at its 0.045 cap); EV-BC is bounded by the 0.06 cumulative update cap and adds 0.001-0.014"
  }
 }
