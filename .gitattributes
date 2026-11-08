@@ -39,3 +39,7 @@ scripts/genrand/*.sh text eol=lf
 # N1 (2026-11-06): the wz3to2 map files are bound by raw-byte SHA256 (net b6277898...);
 # never convert their line endings on any checkout.
 assets/research/newmap_candidates/wz3to2/* -text
+
+# TRIGCLF LEARNED_TRIGGER: the model doc is pinned by its raw file sha256 (runner + tests); keep LF on checkout.
+ops/learned_trigger/*.json -text
+tools/coopmwm/fixtures/learned_trigger_parity.json -text
