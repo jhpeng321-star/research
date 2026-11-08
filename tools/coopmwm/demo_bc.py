@@ -1,7 +1,8 @@
 """c4/learnfix verified-seed demonstration BC (MAIN 2026-11-08 22:45; owner: "running in the preverified seeds and
 asking it to perform like the plan").
 
-Extraction (host, CPU, zero SUMO, read-only): for each ADMITTED (WM mut_* plan, onset bin) pair of the guidance doc
+Extraction is DEMOX's (c4/demox: tools/coopmwm/demo_extract.py); this module is the training side. Design (MAIN):
+for each ADMITTED (WM mut_* plan, onset bin) pair of the guidance doc
 and each verified activation of that plan in an admitted bin (privileged onset bin, ops/sit_reduce output), replay
 the recorded observable tape second by second through the SAME training featurizer (track2_backend.EpisodePolicy
 behind the worker's controller wrapper, episode_components) and keep the trigger record at the onset second:
@@ -16,8 +17,6 @@ Training: the fixed demo set is added to B's EV-BC every update as its own recor
 gives each kind equal mass (balanced against the online targets); act and none demo totals are balanced; the same
 KL cap applies. R never gets demos. Featurizer parity with training observations: tests + ops/demo_extract.py parity.
 """
-from copy import deepcopy
-import gzip
 import hashlib
 import json
 from pathlib import Path
@@ -33,58 +32,6 @@ def assert_seeds_disjoint(seeds):
     if bad:
         raise ValueError(f'demo seeds overlap the held-out panel {HELDOUT_RANGE}: {bad}')
     return True
-
-
-def tape_seconds(path):
-    """{second: (rows, commands)} from a recorded observable tape (rows = the observation row keys only;
-    commands = the MAPPO raw command per CAV from the tape's audit when present, else 0)."""
-    out = {}
-    with gzip.open(path, 'rt') as fh:
-        for line in fh:
-            d = json.loads(line)
-            t = int(round(d['time_s']))
-            rows = [{k: r[k] for k in ('vid', 's_m', 'v_mps', 'lane', 'is_cav', 'length_m') if k in r}
-                    for r in d['vehicles']]
-            audit = {a['vid']: a.get('mappo_raw') for a in d.get('actions') or () if 'vid' in a}
-            out[t] = (rows, {r['vid']: float(audit.get(r['vid']) or 0.) for r in rows if r['is_cav']})
-    return out
-
-
-def featurizer(cfg, base, worker_state, *, seed=0, prefer_none=True):
-    """The training worker's controller (episode_components over the v2v Controller), deterministic; with
-    prefer_none the trigger always samples 'none' (no protocol session starts; recorded logits are not used)."""
-    import torch
-    from .acceleration import Controller
-    from .track2_backend import episode_components
-    from .v2v_runtime import controller_class
-    job = dict(track2_backend=True, track2_config=cfg, arm='B', track2_state=worker_state, noise_seed=int(seed))
-    policy, ctype = episode_components(job, base, controller_class(Controller))
-    if prefer_none:
-        trig = policy.trigger
-        real = trig.distribution
-
-        def distribution(context, descriptors, mask):
-            logits, values = real(context, descriptors, mask)
-            return logits.clone().index_add_(1, torch.tensor([0]), torch.full((len(logits), 1), 1e4)), values
-        trig.distribution = distribution
-    ctl = ctype(policy, torch.Generator().manual_seed(int(seed)), True, guide=None, beta=1., replay=None, branch=None)
-    return policy, ctl
-
-
-def featurize(cfg, base, worker_state, seconds, want, *, seed=0, prefer_none=True):
-    """{t: track2_trigger record} for t in ``want``, replaying every recorded second from 300 to max(want)."""
-    policy, ctl = featurizer(cfg, base, worker_state, seed=seed, prefer_none=prefer_none)
-    out = {}
-    last = max(want) if want else 299
-    for t in range(300, last+1):
-        if t not in seconds:
-            raise ValueError(f'tape second {t} missing')
-        rows, commands = seconds[t]
-        ctl.apply(rows, commands, t)
-        if t in want:
-            sample = ctl.events[-1]['sample']
-            out[t] = deepcopy(sample.get('track2_trigger'))
-    return out
 
 
 def plan_slot(trigger, family, members=None):
