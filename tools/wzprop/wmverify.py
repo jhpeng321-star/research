@@ -58,7 +58,8 @@ from . import wmverify_n2 as N2
 SCHEMA = 'wmverify.v1'
 STABLE_ID = 'S-WMVERIFY'
 PHASE = 'wm_verify'
-SEED_RANGE = (989950, 989999)            # MAIN 2026-11-06 night: wm_verify 989950-989999; LSSEARCH 989900-989949
+SEED_RANGES = ((989950, 989999),          # MAIN 2026-11-06 night: wm_verify 989950-989999; LSSEARCH 989900-989949
+               (991140, 991199))          # MAIN 2026-11-08: 12-seed p20 verification (MULTICRIT used 991100-991132)
 FORBIDDEN_SEEDS = ((989600, 989699), (962000, 962999), (964000, 964199), (977000, 977999))
 BASE_ARM = 'u0'
 INCUMBENT = 'wall_g_solo2'               # owner 2026-11-07 (REGISTRATION 04:03): gentle incumbent, RuleHook verbatim
@@ -141,8 +142,8 @@ def check_seed(seed):
     s = int(seed)
     if any(lo <= s <= hi for lo, hi in FORBIDDEN_SEEDS):
         raise ValueError(f'held-out / evaluation seed {s} refused')
-    if not SEED_RANGE[0] <= s <= SEED_RANGE[1]:
-        raise ValueError(f'seed {s} outside the wm_verify range {SEED_RANGE[0]}-{SEED_RANGE[1]}')
+    if not any(lo <= s <= hi for lo, hi in SEED_RANGES):
+        raise ValueError(f'seed {s} outside the wm_verify ranges {SEED_RANGES}')
     return s
 
 
@@ -585,7 +586,7 @@ def plan(root, *, regimeu0_root, arms_path, cells, cap, registration_md=None, gr
     families = family_records(specs, lane_executor=lane_executor, hold_executor=hold_executor)
     reg = dict(schema=SCHEMA, stable_id=STABLE_ID, phase=PHASE, cap_sim_s=int(cap), dry_run=bool(dry_run),
                seeds=sorted(s for *_x, seeds in cells for s in seeds), cells=[c[0] for c in cells],
-               seed_range=list(SEED_RANGE), registration_md_sha256=reg_sha, module_sha256=shas, unix=time.time())
+               seed_range=[list(r) for r in SEED_RANGES], registration_md_sha256=reg_sha, module_sha256=shas, unix=time.time())
     _write_new(root / 'REGISTRATION.json', reg)
     body = dict(schema=SCHEMA + '.plan', stable_id=STABLE_ID, phase=PHASE, cap_sim_s=int(cap), dry_run=bool(dry_run),
                 inputs=files, groups=gr, families=families, incumbent=INCUMBENT, parity_arm=PARITY_ARM,
@@ -1461,9 +1462,10 @@ def registration_text(*, cells, specs_by_cell, cap, parity_seeds=2, lane_executo
         'programs executed by the LCEXEC policy executor, incumbent in every seed group, executor-parity control.',
         f'- Base: MAPPO u0 d9042cc5 = the S-REGIMEU0 inputs u0.pt (sha256 {regimeu0_u0_sha256 or "<from regimeu0 PLAN>"}'
         '), coopmwm clean4 plant, wz3to2, native warmup 0-300 s, episodes 1,200 s, J = team delay over [300, 1200) s.',
-        f'- Seeds: {SEED_RANGE[0]}-{SEED_RANGE[1]} only (TRAIN-type, never evaluation; MAIN allocation 2026-11-06; '
-        'LSSEARCH has 989900-989949; 989900-989999 found unused in all 921 local branches, worktrees and run '
-        'registries on 2026-11-06). Registered in map_scenarios.EXTRA_TRAIN_RANGES on c4/wmverify only.',
+        '- Seeds: ' + ', '.join(f'{lo}-{hi}' for lo, hi in SEED_RANGES) + ' only (TRAIN-type, never evaluation; MAIN '
+        'allocations 2026-11-06 (989950-989999; LSSEARCH has 989900-989949) and 2026-11-08 (991140-991199; MULTICRIT '
+        'used 991100-991132); verified unused in REGISTRATION.md and every PLAN). Registered in '
+        'map_scenarios.EXTRA_TRAIN_RANGES on c4/wmverify only.',
         '- Cells / seeds: ' + '; '.join(f'{c} {s[0]}-{s[-1]} ({len(s)})' for c, _d, _p, s in cells) + '.',
         f'- Arms per seed group (paired CRN): u0; {INCUMBENT} (gentle incumbent 22 m/s / 120 s / dmax 1.0, '
         f'regimeu0.RuleHook verbatim); {PARITY_ARM} (the same rule via strategy_hook.StrategyCore on the plant path, '

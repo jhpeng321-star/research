@@ -96,6 +96,11 @@ def test_seed_range_and_cells():
             V.parse_cells(bad)
     from tools.coopmwm import map_scenarios as ms
     assert ms.seed_scope(989950) == 'train' and ms.seed_scope(989999) == 'train'
+    assert ms.seed_scope(991140) == 'train' and ms.seed_scope(991199) == 'train'
+    assert len(V.parse_cells(['D3200_p20:991140-991151'])[0][3]) == 12
+    for bad in (['D3200_p20:991139-991140'], ['D3200_p20:991199-991200'], ['D3200_p20:991100-991101']):
+        with pytest.raises(ValueError):
+            V.parse_cells(bad)
     assert ms.seed_scope(989900) is None and ms.seed_scope(989949) is None
 
 
