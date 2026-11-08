@@ -142,7 +142,7 @@ class Chain:
             # p20 (owner 2026-11-08 17:22): PREPARE_INPUTS cells (list) -> the p20 prepare of F8 / C; g4_workers for both
             if self.variant not in ('F8', 'C'):
                 raise ValueError('PREPARE_INPUTS cells needs variant F8 or C')
-            speed = dict({k: i[k] for k in ('g4_workers',) if k in i}, cells=tuple(i['cells']),
+            speed = dict({k: i[k] for k in ('g4_workers', 'learnfix') if k in i}, cells=tuple(i['cells']),
                          **({'learn_threads_max': i['learn_threads_max']} if self.variant == 'C' and 'learn_threads_max' in i else {}))
             prepares = dict(F8=c5.prepare_f8_p20, C=c5.prepare_c_p20)
         prepares.get(self.variant, c5.prepare)(self.source, contexts=read(i['contexts_path']), guidance_doc=read(i['guidance_path']),

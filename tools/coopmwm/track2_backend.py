@@ -1265,13 +1265,20 @@ class ArmRuntime:
             rewards = reward_update(cfg, arm, self.update, episodes)
         targets = self._reward_targets(rewards, by_key, set(by_key))
         from .fullpol_fair import settings as fair_settings
+        from . import learnfix
+        fix = learnfix.settings(cfg)              # c4/learnfix (opt-in; absent = unchanged)
         fair_receipt = None
         if (fair_settings(cfg) or {}).get('reward'):
             # clean5b-F (opt-in, B = R): excess group-delay harm vs the frozen A arm on the same world,
             # added one-for-one (veh-s) to the episode cost; eval-only logger, never a policy input.
             from . import fullpol_fair
             harm, fair_receipt = fullpol_fair.penalties(cfg, arm, episodes, fullpol_fair.reference(cfg, self.update))
-            targets = fullpol_fair.apply(targets, harm)
+            if fix is None:
+                targets = fullpol_fair.apply(targets, harm)
+            else:
+                # learnfix: the paired-A harm goes only to the rows where a non-none trigger action was taken
+                targets, attributed = learnfix.apply_fair_acting(targets, harm, learnfix.acting_rows(by_key))
+                fair_receipt = dict(fair_receipt, attribution='acting_rows (learnfix)', attributed=attributed)
         returns, advantages = self._temporal_targets(episodes, targets)
         from .fullpol_learn import ev_credit_terms
         ev_terms, ev_receipt = ev_credit_terms(cfg, arm, episodes, eligible={
@@ -1286,7 +1293,25 @@ class ArmRuntime:
                     logits = self.policy.trigger.distribution(batch.context, batch.descriptors, batch.mask)[0]
                 reference.append((batch, logits.detach()))
         trigger_metrics = []
-        for key in sorted(eligible):
+        learnfix_receipt = None
+        if fix is not None:
+            from .fullpol_learn import regime_key
+            cells = {e['id']: regime_key(e) for e in episodes}
+            ticks = []
+            for key in sorted(eligible):
+                sample = by_key[key]
+                if 'track2_trigger' not in sample:
+                    continue
+                adv = list(advantages[key])
+                if synergy_receipt is not None:
+                    adv = [a+synergy_terms.get((*key, vid), 0.) for vid, a in zip(sample['context']['members'], adv)]
+                if ev_terms:
+                    adv = [a+ev_terms.get((*key, vid), 0.) for vid, a in zip(sample['context']['members'], adv)]
+                ticks.append(dict(batch=_batch(sample['track2_trigger']), adv=adv, ret=returns[key], cell=cells[key[0]]))
+            learnfix_receipt = learnfix.trigger_ppo(self.policy.trigger, self.policy.trigger_optimizer, ticks,
+                settings=fix, ppo=cfg['trigger_ppo'], kl_budget=self.policy.layer.config.kl_budget,
+                seed=int(cfg['training_seed'])*1000+int(self.update)*10+'BR'.index(arm))
+        for key in (sorted(eligible) if fix is None else ()):
             sample = by_key[key]
             if 'track2_trigger' not in sample:
                 continue
@@ -1310,7 +1335,11 @@ class ArmRuntime:
                 self.policy.trigger_optimizer.load_state_dict(optimizer)
             trigger_metrics.append(dict(metrics, exact_kl=kl, accepted=accepted))
         ppo_kl_report = None
-        if self._kl_rows():
+        if learnfix_receipt is not None:
+            ppo_kl_report = dict(rule='choice_row_mean (learnfix)', kl_budget=self.policy.layer.config.kl_budget,
+                                 final_kl=learnfix_receipt['final_choice_kl'], accepted=learnfix_receipt['accepted'],
+                                 rejected=int(learnfix_receipt['stopped'] is not None))
+        elif self._kl_rows():
             # clean5a (report only): the KL actually used by trigger PPO this update (per-row mean).
             ppo_kl_report = dict(rule='row_mean', kl_budget=self.policy.layer.config.kl_budget,
                                  final_kl=self._trigger_kl(reference) if reference else 0.,
@@ -1343,6 +1372,7 @@ class ArmRuntime:
             **(dict(fullpol_fair=fair_receipt) if fair_receipt is not None else {}),
             **(dict(rsu=rsu_metrics) if rsu_metrics is not None else {}),
             **(dict(fullpol_ev_credit=ev_receipt) if ev_receipt is not None else {}),
+            **(dict(learnfix=learnfix_receipt) if learnfix_receipt is not None else {}),
             layer=layer, trigger=trigger_metrics, dense=dict(enabled=False),
             wm_credit=dict(enabled=False), reward=dict(schema=REWARD_SCHEMA,
                 registration=deepcopy(cfg['track2_reward']),

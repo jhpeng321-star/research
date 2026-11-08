@@ -149,13 +149,13 @@ def test_p20_prepares_b_equals_r_code_and_g4_workers(monkeypatch):
     f8 = seen['v']
     assert set(f8) == set(c5.VARIANT) and f8['cell_keys'] == c5b.P20_CELLS
     assert f8['guidance_missing_ok'] == ('D2400_p20', 'D2800_p20')
-    assert f8['cfg_overrides'] == dict(c5b.VARIANT_F8['cfg_overrides'], g4_workers=6) and seen['kw'] == dict(contexts=[])
+    assert f8['cfg_overrides'] == dict(c5b.VARIANT_F8['cfg_overrides'], g4_workers=6, learnfix=c5b._learnfix_value()) and seen['kw'] == dict(contexts=[])
     assert f8['keys'] is c5b.keys_f and f8['run'] == 'clean5b'
     assert {w['cell_key'] for rows in f8['worlds']().values() for w in rows} == set(c5b.P20_CELLS)
     c5b.prepare_c_p20('src', root='/r/c3', guidance_doc=wm, g4_workers=5)
     c = seen['v']
     assert c['cell_keys'] == c5b.P20_CELLS and c['keys'] is c5b.keys_c and c['run'] == 'clean5c'
-    assert c['cfg_overrides'] == c5b._c_overrides(5) and 'learn_threads' not in c['cfg_overrides']
+    assert c['cfg_overrides'] == dict(c5b._c_overrides(5), learnfix=c5b._learnfix_value()) and 'learn_threads' not in c['cfg_overrides']
     assert c['worlds']() == f8['worlds']()                                  # both runs: the same worlds
     for k in ('wave_workers', 'mem_available_min_gb', 'g4_mem_available_min_gb', 'arm_update_process', 'load_max'):
         assert c['cfg_overrides'][k] == f8['cfg_overrides'][k]

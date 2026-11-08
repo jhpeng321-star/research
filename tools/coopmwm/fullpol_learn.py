@@ -247,6 +247,109 @@ def ev_targets(cfg, trigger, rows, admit=None):
     return out
 
 
+def _learnfix_targets(cfg, trigger, rows, verdict):
+    """learnfix labels per decision row: (target slot, equivalent mask, kind) with kind 'act' / 'none' /
+    'unlabelled' (see learnfix module doc), or None (no choice). ``verdict(row, i)`` -> teacher verdict."""
+    order = qualifying(rows)
+    out = []
+    for i in range(len(trigger['context']['members'])):
+        table, mask = trigger['tables'][i], trigger['mask'][i]
+        if not any(mask[1:]):
+            out.append(None)
+            continue
+        found, rejected = None, False
+        for family in order:
+            slots = [j for j, entry in enumerate(table) if j and mask[j] and family in option_labels(entry, cfg)]
+            if not slots:
+                continue
+            v = 'n/a' if verdict is None else verdict(rows[family], i)
+            if v in ('n/a', 'admit'):
+                found = slots
+                break
+            rejected = rejected or v == 'reject'
+        if found:
+            out.append((found[0], [j in found for j in range(len(table))], 'act'))
+        elif rejected:
+            out.append((0, [j == 0 for j in range(len(table))], 'none'))
+        else:
+            out.append((0, [j == 0 for j in range(len(table))], 'unlabelled'))
+    return out
+
+
+def _learnfix_teacher(cfg, episode, rows, counts):
+    """Per-step verdict function (None without a privileged situational row)."""
+    if not any((r.get('situational') or {}).get('mode') == 'privileged' for r in rows.values()):
+        return None
+    from pathlib import Path
+    from .fullpol_situational import TapeTeacher, teacher_verdict
+    tape = Path(cfg['run_root'])/'jobs'/episode['id']/'observable.jsonl.gz'
+    if not tape.exists():
+        raise ValueError(f'CLEAN5C4 teacher tape missing for episode {episode["id"]}: {tape}')
+    teacher = TapeTeacher(tape)
+
+    def per_step(trigger, time_s):
+        members = trigger['context']['members']
+
+        def verdict(row, i):
+            v = teacher_verdict(row, teacher, members[i], time_s)
+            counts['teacher_'+v] += 1
+            return v
+        return verdict
+    return per_step
+
+
+def _learnfix_records(cfg, arm, episodes, table, receipt, fix):
+    from .track2_backend import _batch
+    from .trigger_policy import TriggerBatch
+    from . import learnfix
+    pending, counts, families = [], Counter(), Counter()
+    for episode in episodes:
+        if episode.get('practice'):
+            continue
+        rows = table.get(regime_key(episode), {})
+        if not rows:
+            counts['episodes_without_regime_rows'] += 1
+            continue
+        per_step = _learnfix_teacher(cfg, episode, rows, counts)
+        for step in episode['steps']:
+            trigger = step['sample'].get('track2_trigger')
+            if trigger is None:
+                continue
+            targets = _learnfix_targets(cfg, trigger, rows, None if per_step is None else per_step(trigger, step['time_s']))
+            if all(t is None or t[2] == 'unlabelled' for t in targets):
+                counts['unlabelled'] += sum(t is not None for t in targets)
+                counts['no_choice'] += sum(t is None for t in targets)
+                continue
+            pending.append((episode, step, trigger, targets))
+    kinds = [t[2] for _, _, _, ts in pending for t in ts if t is not None and t[2] != 'unlabelled']
+    w = learnfix.balance(kinds, fix['row_weight_cap'])
+    records = []
+    for episode, step, trigger, targets in pending:
+        batch = _batch(trigger)
+        width = batch.mask.shape[1]
+        actions = torch.tensor([0 if t is None else t[0] for t in targets])
+        same = torch.tensor([[j == 0 for j in range(width)] if t is None else t[1] for t in targets])
+        weight = torch.tensor([0. if t is None or t[2] == 'unlabelled' else w[t[2]] for t in targets])
+        for t, table_row in zip(targets, trigger['tables']):
+            counts['no_choice' if t is None else t[2]] += 1
+            if t is not None and t[2] == 'act':
+                labels = option_labels(table_row[t[0]], cfg)
+                families[next((f for f in labels if f in table.get(regime_key(episode), {})), labels[0])] += 1
+        total = float(weight.sum())
+        if total <= 0:
+            continue
+        records.append(dict(batch=TriggerBatch(batch.context, batch.tables, batch.descriptors, batch.mask,
+                                               actions, batch.logp, batch.values),
+                            weight=total, equivalent=same, row_weight=weight,
+                            meta=dict(kind='ev_bc', episode_id=episode['id'], time_s=step['time_s'],
+                                      seed=episode['world']['seed'], regime=regime_key(episode))))
+    receipt.update(records=len(records), rows=dict(counts), target_families=dict(families),
+                   learnfix=dict(rule=learnfix.RULE, row_weight=w, act_rows=kinds.count('act'),
+                                 none_rows=kinds.count('none'),
+                                 weighting='record weight = sum of its row weights (update-level act:none balance)'))
+    return records, receipt
+
+
 def ev_bc_records(cfg, arm, episodes):
     """EV-BC records on RECORDED slates (slates never depend on the regime label): one record
     per decision step (all CAV rows at once), per-row targets, equivalent-slot sets, row weights."""
@@ -256,6 +359,10 @@ def ev_bc_records(cfg, arm, episodes):
     table, receipt = ev_table(cfg, arm)
     if table is None:
         return [], None
+    from . import learnfix
+    fix = learnfix.settings(cfg)
+    if fix is not None:
+        return _learnfix_records(cfg, arm, episodes, table, receipt, fix)
     from .track2_backend import _batch
     from .trigger_policy import TriggerBatch
     records, counts, families = [], Counter(), Counter()

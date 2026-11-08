@@ -288,6 +288,18 @@ class TapeTeacher:
         return onset_bin(own, rows, 'privileged')
 
 
+def teacher_verdict(row, teacher, vid, time_s):
+    """'n/a' (no privileged block), 'admit', 'reject' (bin observed, not admitted) or 'unknown' (tape / vehicle /
+    feature missing)."""
+    sit = row.get('situational')
+    if not sit or sit.get('mode') != 'privileged':
+        return 'n/a'
+    got = None if teacher is None else teacher.bin(vid, time_s)
+    if got is None or got == UNOBSERVED:
+        return 'unknown'
+    return 'admit' if any(all(got[k] == b[k] for k in ('cong', 'lane_diff')) for b in sit['bins']) else 'reject'
+
+
 def teacher_admit(row, teacher, vid, time_s):
     """May the guidance ``row``'s family be B's EV-BC target for ``vid`` at ``time_s``? Rows without a privileged
     situational block: always. Else the privileged bin at that second must be one of the row's admitted bins

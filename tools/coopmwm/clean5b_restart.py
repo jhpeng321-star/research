@@ -399,32 +399,44 @@ def check_p20_guidance(doc, cells, *, wm):
     return none
 
 
-def _p20_variant(base, cells, g4_workers, *, label, wm, doc, overrides):
+def _p20_variant(base, cells, g4_workers, *, label, wm, doc, overrides, learnfix=True):
     none = check_p20_guidance(doc, cells, wm=wm)
     sources = ({c: v['source'] for c, v in doc['p20']['cells'].items()} if doc.get('situational') is None else
                {c: ('wm_situational' if c not in none else 'none') for c in cells})
     note = P20_NOTE+f' {label}: per-cell guidance source {sources}.'
     return dict(base, cell_keys=cells, worlds=lambda: worlds_by_update_8(cells), guidance_missing_ok=none,
-                cfg_overrides=dict(overrides, g4_workers=g4_workers), design=base['design']+' '+note,
+                cfg_overrides=dict(overrides, g4_workers=g4_workers,
+                                   **({'learnfix': _learnfix_value()} if learnfix else {})),
+                design=base['design']+' '+note+(' '+LEARNFIX_NOTE if learnfix else ''),
                 authority=base['authority']+'; '+note,
                 newmap_extra=dict(base['newmap_extra'], variant=label, p20_note=note, no_guidance_cells=list(none),
                                   training_cells=list(cells), p20_guidance_sources=sources,
                                   p20_priority=dict(P20_PRIORITY)))
 
 
-def prepare_f8_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS, **kwargs):
+LEARNFIX_NOTE = ('c4/learnfix (MAIN 2026-11-08 ~22:3x, LEARNDIAG): action-level trigger learning signal '
+                 '(tools/coopmwm/learnfix.py RULE), B = R code; plant unchanged.')
+
+
+def _learnfix_value():
+    from . import learnfix
+    return learnfix.value()
+
+
+def prepare_f8_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS, learnfix=True,
+                   **kwargs):
     """Rule-guided p20 (F8 code; B = LOWCAV duo12 / wall_g_solo2 EV-BC where eligible, R = none)."""
     cells = _check_p20_cells(cells)
     variant = _p20_variant(VARIANT_F8, cells, g4_workers, label='clean5b-F8-p20', wm=False, doc=guidance_doc,
-                           overrides=VARIANT_F8['cfg_overrides'])
+                           overrides=VARIANT_F8['cfg_overrides'], learnfix=learnfix)
     return c5.prepare(source, root=root, variant=variant, guidance_doc=guidance_doc, **kwargs)
 
 
 def prepare_c_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS,
-                  learn_threads_max=C_LEARN_THREADS_MAX, **kwargs):
+                  learn_threads_max=C_LEARN_THREADS_MAX, learnfix=True, **kwargs):
     """WM-guided p20 (clean5c code; B = WMVERIFY-verified p20 WM plans, rule fallback labelled, R = none;
     B and R the same templates)."""
     cells = _check_p20_cells(cells)
     variant = _p20_variant(VARIANT_C, cells, g4_workers, label='clean5c-p20', wm=True, doc=guidance_doc,
-                           overrides=_c_overrides(g4_workers, learn_threads_max))
+                           overrides=_c_overrides(g4_workers, learn_threads_max), learnfix=learnfix)
     return c5.prepare(source, root=root, variant=variant, guidance_doc=guidance_doc, **kwargs)
