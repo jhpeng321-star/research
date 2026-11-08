@@ -161,6 +161,8 @@ def test_only_b_ev_bc_target_labels_differ(tmp_path, cfg):
         labels[a['ponset_bin']['cong']] = (priv[0][0], plain[0][0], dict(counts))
     assert labels['free'] == (1, 1, {'teacher_admitted': 1})                    # admitted bin: same target
     assert labels['congested'] == (0, 1, {'teacher_blocked': 1})                # other bin: no target (B only)
+    with pytest.raises(ValueError, match='teacher tape missing'):
+        fl._teacher(run, dict(id='no_such_episode', world=dict(cell_key='D2800_p20')), rows_doc, Counter())
 
 
 def test_r_gets_no_targets_and_b_r_share_the_slate(cfg, wz):

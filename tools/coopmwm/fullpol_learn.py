@@ -303,7 +303,10 @@ def _teacher(cfg, episode, rows, counts):
         return None
     from pathlib import Path
     from .fullpol_situational import TapeTeacher, teacher_admit
-    teacher = TapeTeacher(Path(cfg['run_root'])/'jobs'/episode['id']/'observable.jsonl.gz')
+    tape = Path(cfg['run_root'])/'jobs'/episode['id']/'observable.jsonl.gz'
+    if not tape.exists():               # REV-SPD: never block every B target silently
+        raise ValueError(f'CLEAN5C4 teacher tape missing for episode {episode["id"]}: {tape}')
+    teacher = TapeTeacher(tape)
 
     def per_step(trigger, time_s):
         members = trigger['context']['members']
