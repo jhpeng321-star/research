@@ -38,7 +38,7 @@ def episode(root,ident,with_ttc=False,cache=None):
     out=dict(seed=e['world']['seed'],world=e['world'],id=ident,
         collisions=float(m['collisions']),teleports=float(m['teleports']),hard_brake=float(m['hard_brake']))
     if with_ttc:
-        from .replay_bank import ttc_events
+        from .post_collect import ttc_events_cached as ttc_events  # SPD2: memo of the identical value, else serial
         marker=hashlib.sha256((p/'RESULT.json').read_bytes()).hexdigest()
         saved=Path(cache)/(ident+'_'+marker+'.json')
         if saved.exists():ttc=read(saved)['ttc_below_1p5_events']
@@ -48,6 +48,19 @@ def episode(root,ident,with_ttc=False,cache=None):
                 code='replay_bank.ttc_events/closing_ttc/threshold1.5/inherited1s trace cadence'))
         out.update(ttc_below_1p5_events=ttc,critical_total=out['hard_brake']+ttc)
     return out
+
+
+def prefetch_ttc(root,idents,cache):
+    """SPD2: compute, in parallel, the TTC counts episode(...,True,cache) would compute (no disk cache yet)."""
+    from . import post_collect
+    if post_collect.workers()<=1:return
+    todo=[]
+    for ident in idents:
+        p=Path(root)/'jobs'/ident
+        if not (p/'RESULT.json').exists() or not (p/'observable.jsonl.gz').exists():continue
+        marker=hashlib.sha256((p/'RESULT.json').read_bytes()).hexdigest()
+        if not (Path(cache)/(ident+'_'+marker+'.json')).exists():todo.append(p/'observable.jsonl.gz')
+    post_collect.prefetch(todo,300,1200)
 
 
 def paired(root,arm,u,cache,with_ttc=True):

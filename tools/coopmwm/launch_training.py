@@ -157,10 +157,13 @@ def update(cfg, arm, u, *, smoke=False):
     if resume is not None:
         _resume_fair_check(resume, arm, fair_log, episodes)
     # Actual TTC events use the same public observable tape reader as prior runs.
-    from .replay_bank import ttc_events
-    for episode in episodes:
-        trace = artifacts/'jobs'/episode['id']/'observable.jsonl.gz'
-        episode['ttc_events'] = int(ttc_events(trace, 300, 1200))
+    # SPD2: the per-episode trace counts run in parallel (exact same function/values/order); the composite
+    # safety guard below reuses the memoized values for the same trace files.
+    from . import post_collect
+    post_collect.configure(cfg.get('post_collect_workers', post_collect.DEFAULT_WORKERS))
+    traces = [artifacts/'jobs'/episode['id']/'observable.jsonl.gz' for episode in episodes]
+    for episode, value in zip(episodes, post_collect.prefetch(traces, 300, 1200)):
+        episode['ttc_events'] = int(value)
     if resume is None:
         safety = hooks['safety'](episodes)  # unchanged paired A composite BEFORE optimization
     else:

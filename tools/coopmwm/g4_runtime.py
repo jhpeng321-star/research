@@ -438,7 +438,9 @@ def paired_envelope(cfg, arm, update, episodes, *, wait):
         elif read(path) != value:        # the original rule (also the resume fallback when the bytes differ)
             raise ValueError('G4 published collection changed')
     else:
-        publish(path, value)
+        # SPD2: identical bytes to publish(path, value); per-episode JSON encoding in workers (1 = serial).
+        from . import post_collect
+        post_collect.publish_episodes(path, value, post_collect.publish_workers(cfg.get('post_collect_publish_workers')))
     if arm == 'B':
         other = wait(input_path(cfg, 'R', update))
         if any(other[k] != value[k] for k in ('binding', 'update')) or other['arm'] != 'R':

@@ -122,6 +122,8 @@ def braking(root,arm,u,episodes,a_records,pause,pairs=None):
     common=[e for e in episodes if ref(e) is not None]
     if len(common)<2:return True  # inherited guard has no estimable paired CI in this case
     cache=root/'safety_diagnosis_0957/ttc_cache';cache.mkdir(parents=True,exist_ok=True)
+    from .safety_diagnosis import prefetch_ttc
+    prefetch_ttc(root,[x for e in common for x in (ref(e)['id'],e['id'])],cache)  # SPD2: parallel, same values
     rows=[]
     for e in common:
         A=episode(root,ref(e)['id'],True,cache);B=episode(root,e['id'],True,cache)
