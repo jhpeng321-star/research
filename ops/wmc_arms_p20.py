@@ -33,7 +33,19 @@ def cal(r, hc):
     return ci, all(v <= SS.GROUP_BOUND_S for v in ci.values())
 
 
+def is_both(r):
+    """'both' archive (owner 2026-11-08): predicted delay gain vs u0 with LCB > 0 AND fairer than u0 (WM worst-group
+    per-vehicle increase <= 0 and CVaR90 change <= 0) AND calibrated every-group increase <= 10 s/veh."""
+    return bool(r['gain_vs_base_lcb'] > 0 and (r.get('worst_group_inc') is not None and r['worst_group_inc'] <= 0)
+                and (r.get('cvar90_inc') is not None and r['cvar90_inc'] <= 0) and r['_fair'])
+
+
 def order(rows, mode):
+    if mode == 'both':
+        return sorted((r for r in rows if is_both(r)), key=lambda r: -r['score'])
+    if mode == 'fairness':           # D2400: fairness first, delay not worse (point estimate gain vs u0 >= 0)
+        return sorted((r for r in rows if r['gain_vs_base'] >= 0),
+                      key=lambda r: (r['worst_group_inc'], r['cvar90_inc'], -r['score']))
     if mode == 'delay':
         return sorted(rows, key=lambda r: (not r['gain_vs_inc'] > 0, not r['gain_vs_base_lcb'] > 0,
                                            -r['score_vs_inc']))
@@ -42,6 +54,8 @@ def order(rows, mode):
 
 
 def label(r, mode):
+    if is_both(r):
+        mode = 'both (delay AND fairness)'
     a = ('beats incumbent' if r['gain_vs_inc'] > 0 else 'beats u0 only (not the incumbent)')
     b = 'LCB>0 vs u0' if r['gain_vs_base_lcb'] > 0 else 'LCB<=0 vs u0'
     return f"{mode}-priority; {a}; {b}; {'calibrated fair' if r['_fair'] else 'NOT calibrated fair'}"
@@ -53,7 +67,14 @@ def pick(res, hc, mode):
         r['_ci'], r['_fair'] = cal(r, hc)
     ranked = order(rows, mode)
     out = []
+    both = order(rows, 'both')
+    for r in both[:2]:                # owner priority: up to two 'both' plans first
+        r['_band'] = 'both'
+        out.append(r)
+    ranked = [r for r in ranked if r not in out]
     for band, sizes in BANDS:
+        if any(len(r['strategy']['roles']) in sizes for r in out):
+            continue
         b = [r for r in ranked if len(r['strategy']['roles']) in sizes]
         if b:
             b[0]['_band'] = band
@@ -63,7 +84,6 @@ def pick(res, hc, mode):
         out.append(ranked[0])
     elif ranked:
         ranked[0]['_band'] += '+best-overall'
-    out.sort(key=ranked.index)
     reserve = [r for r in ranked if r not in out][:N_RESERVE]
     return out, reserve
 
@@ -89,7 +109,7 @@ def main(out, hc_path, *cells):
     for arg in cells:
         demand, path = arg.split('=', 1)
         res = json.loads(Path(path).read_text())
-        mode = 'delay' if demand == 'D3200' else 'fair'
+        mode = {'D3200': 'delay', 'D2800': 'fair', 'D2400': 'fairness'}[demand]
         picks, reserve = pick(res, hc, mode)
         pred = {r['strategy']['name']: dict(
             band=r.get('_band', 'reserve'), label=label(r, mode), roles=len(r['strategy']['roles']),
@@ -98,12 +118,13 @@ def main(out, hc_path, *cells):
             phases=r['strategy'].get('phases'), feasible=r.get('feasible'),
             gain_vs_base=r['gain_vs_base'], gain_vs_base_lcb=r['gain_vs_base_lcb'], gain_vs_inc=r['gain_vs_inc'],
             gain_vs_inc_lcb=r.get('gain_vs_inc_lcb'), group_inc_raw=r.get('group_inc'), group_inc_cal=r['_ci'],
-            calibrated_fair=r['_fair']) for r in picks + reserve}
+            worst_group_inc=r.get('worst_group_inc'), cvar90_inc=r.get('cvar90_inc'),
+            calibrated_fair=r['_fair'], both=is_both(r)) for r in picks + reserve}
         inc = next((r for r in res['final'] if r['strategy']['name'] == SS.INCUMBENT['name']), None)
         meta = dict(source=str(path), source_sha256=hashlib.sha256(Path(path).read_bytes()).hexdigest(),
                     search_states='p20 native TRAIN tapes (regime_STATES_p20.json sha 9dc83319)',
-                    selection=f'{mode} priority; one pick per group-size band 1/2/3/4-6 + best overall',
-                    n_run=len(picks), evaluated=res['evaluated'], wm_rollouts=res['wm_rollouts'],
+                    selection=f"up to 2 'both' plans, then {mode} priority; one pick per group-size band 1/2/3/4-6 + best overall",
+                    n_run=len(picks), n_both_in_finals=sum(is_both(r) for r in res['final'] if eligible(r)), evaluated=res['evaluated'], wm_rollouts=res['wm_rollouts'],
                     n_states=res['n_states'], n_final_states=res['n_final_states'],
                     feasibility_by_group_size=feasibility(res), harm_cal=str(hc_path),
                     harm_cal_note='fitted on S-WMVERIFY D3200_p60 hold-only families (LOO 12/16); applied at p20 as is',
