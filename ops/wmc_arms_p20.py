@@ -5,7 +5,7 @@ feasible plan is predicted to beat u0, plus the best overall. D3200 = delay prio
 D2800 = fairness priority (calibrated every-group increase <= 10 s/veh first). Also reports the WM feasibility
 rate (share of start states where the plan's members exist) per group size over every screened plan.
 
-    python ops/wmc_arms_p20.py OUT.json HARM_CAL.json D3200=SEARCH_D3200_p20.json D2800=SEARCH_D2800_p20.json
+    python ops/wmc_arms_p20.py OUT.json HARM_CAL.json [n2=N2.json] D3200=SEARCH_D3200_p20.json D2800=SEARCH_D2800_p20.json
 """
 import hashlib
 import json
@@ -18,12 +18,14 @@ from tools.wzprop import strategy_search as SS  # noqa: E402
 
 BANDS = (('1', (1,)), ('2', (2,)), ('3', (3,)), ('4-6', (4, 5, 6)))
 N_RESERVE = 2
+N2 = None          # {name: {'verdict': ...}} from ops/wmc_n2_finals.py; when set, only 'identical' picks are eligible
 
 
 def eligible(r):
     s = r['strategy']
     return (not r.get('comparator') and not r.get('banned') and not SS.banned(s)
-            and (r.get('feasible') or 0) > 0 and r['gain_vs_base'] > 0)
+            and (r.get('feasible') or 0) > 0 and r['gain_vs_base'] > 0
+            and (N2 is None or (N2.get(s['name']) or {}).get('verdict') == 'identical'))
 
 
 def cal(r, hc):
@@ -104,6 +106,10 @@ def feasibility(res):
 
 
 def main(out, hc_path, *cells):
+    global N2
+    if cells and cells[0].startswith('n2='):
+        N2 = json.loads(Path(cells[0][3:]).read_text())
+        cells = cells[1:]
     hc = json.loads(Path(hc_path).read_text())['harm_cal']
     doc = {}
     for arg in cells:
@@ -124,6 +130,7 @@ def main(out, hc_path, *cells):
         meta = dict(source=str(path), source_sha256=hashlib.sha256(Path(path).read_bytes()).hexdigest(),
                     search_states='p20 native TRAIN tapes (regime_STATES_p20.json sha 9dc83319)',
                     selection=f"up to 2 'both' plans, then {mode} priority; one pick per group-size band 1/2/3/4-6 + best overall",
+                    n2_parity='only N2-representable picks (verdict identical)' if N2 is not None else 'not checked',
                     n_run=len(picks), n_both_in_finals=sum(is_both(r) for r in res['final'] if eligible(r)), evaluated=res['evaluated'], wm_rollouts=res['wm_rollouts'],
                     n_states=res['n_states'], n_final_states=res['n_final_states'],
                     feasibility_by_group_size=feasibility(res), harm_cal=str(hc_path),
