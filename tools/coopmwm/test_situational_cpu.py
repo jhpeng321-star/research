@@ -100,9 +100,9 @@ def test_plan_status_scope(tmp_path):
 
 
 def test_recorded_result_no_admission_and_check():
-    """The registered run (wmv_mc + wmv_p20 + wmv_rep, own-sensing bins, ALLOWED scope p20) admits nothing."""
+    """The recorded own-sensing run (v2: wmv_mc + wmv_p20 + wmv_rep, ALLOWED scope p20) admitted nothing."""
     rep = json.loads((C4SIT/'GUIDANCE_C4SIT_p20.json.NO_ADMISSION.json').read_text(encoding='utf-8'))
-    assert rep['rule'] == fs.RULE and not any(p['admitted'] for p in rep['pairs'])
+    assert rep['rule'] == 'fullpol-clean5c4-situational-v2' and not any(p['admitted'] for p in rep['pairs'])   # own-sensing record
     best = [p for p in rep['pairs'] if p['family'] == 'mut_0584e488a8bf93c5' and p['effect']['hi'] < 0]
     assert best and all('not_fairness_allowed' in p['reasons'] for p in best)
     assert not (C4SIT/'GUIDANCE_C4SIT_p20.json').exists()

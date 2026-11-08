@@ -24,7 +24,13 @@ import math
 from pathlib import Path
 
 
-RULE = 'fullpol-clean5c4-situational-v2'      # v2: bins from the acting CAV's own sensing (MAIN 2026-11-08)
+RULE = 'fullpol-clean5c4-situational-v3'      # v3: privileged (teacher) or own-sensing bins (MAIN 2026-11-08)
+MODES = ('privileged', 'own_sensing')
+#: MAIN 2026-11-08 ~20:1x: the offer gate is a TRAIN-TIME teacher signal and may read privileged plant state (the
+#: full observable table the backend receives each tick). The policy observation and deployment are unchanged
+#: (the table never enters the observation; asymmetric guidance, disclosed).
+TEACHER_NOTE = ('privileged teacher gate: offered-template filter reads the full plant table at train time; the '
+                'policy observation tensor and deployment are unchanged (asymmetric guidance, disclosed)')
 
 
 class NoAdmission(ValueError):
@@ -136,13 +142,21 @@ def runtime_situation(own, rows):
                 v_lane_ahead500={str(k): _mean([v for ln, x, v in up if ln == k and s <= x <= s+500]) for k in (0, 1, 2)})
 
 
-def onset_bin(own, rows):
+def onset_bin(own, rows, mode='own_sensing'):
     """THE bin rule, offline (ops/sit_reduce.py on the observable tape at onset) and at runtime
     (fullpol_bank.offer_ok): the acting CAV's own row + every vehicle within SENSOR_RANGE_M of it (the
     track2_backend own_sensing filter); drop-area speed or lane-0 / lane-1 ahead speed not observed in that
     view -> UNOBSERVED (its own bin; never admitted, never offered)."""
+    if mode not in MODES:
+        raise ValueError('onset_bin mode must be one of '+repr(MODES))
     if own is None or own.get('v_mps') is None:
         return dict(UNOBSERVED)
+    if mode == 'privileged':
+        # the full-tape S-MULTICRIT-ACT features (reduce_act.situation, verbatim): every vehicle, no range
+        view = [r for r in rows if r.get('vid') != own.get('vid')]
+        if any(r.get('v_mps') is None for r in view):
+            return dict(UNOBSERVED)
+        return situation_bin(runtime_situation(own, view))
     s = float(own['s_m'])
     view = [r for r in rows if r.get('vid') != own.get('vid') and abs(float(r['s_m'])-s) <= SENSOR_RANGE_M]
     if any(r.get('v_mps') is None for r in view):
@@ -154,21 +168,31 @@ def onset_bin(own, rows):
     return situation_bin(sit)
 
 
-def situation_ok(cond, own, rows):
+def situation_ok(cond, own, rows, teacher_rows=None):
+    """Offer gate. mode 'privileged': the full plant table (``teacher_rows``; absent -> closed); else own sensing."""
     want = (cond or {}).get('situation')
     if want is None:
         return True
-    got = onset_bin(own, rows)
+    mode = want.get('mode', 'own_sensing')
+    if mode == 'privileged':
+        if teacher_rows is None:
+            return False
+        own_full = next((r for r in teacher_rows if r.get('vid') == own.get('vid')), own)
+        got = onset_bin(own_full, teacher_rows, mode='privileged')
+    else:
+        got = onset_bin(own, rows)
     if got == UNOBSERVED:
         return False
     return any(all(got[k] == b[k] for k in ('cong', 'lane_diff')) for b in want['bins'])
 
 
-def load_onset_bins(paths):
-    """ops/sit_reduce.py output lines -> {(root, cell, seed, arm, t): bin}."""
+def load_onset_bins(paths, mode=None):
+    """ops/sit_reduce.py output lines -> {(root, cell, seed, arm, t): bin}; every line's mode must equal ``mode``."""
     out = {}
     for path in paths:
         for r in _lines(path):
+            if mode is not None and r.get('mode', 'own_sensing') != mode:
+                raise ValueError(f'onset file {path} has mode {r.get("mode", "own_sensing")!r}, need {mode!r}')
             out[(r['root'], r['cell'], int(r['seed']), r['arm'], int(r['t']))] = r['bin']
     return out
 
@@ -249,11 +273,21 @@ def templates_from_banks(bank_paths):
     return out
 
 
-def build(act_paths, analyses, bank_paths, *, cells, provenance, onset_paths, structured=(), allowed_scope='all'):
+def needs_teacher(generator_args):
+    """True iff any of the arm templates carries a privileged situation gate (the backend then passes the
+    full plant table to the LCEXEC protocol each tick; otherwise nothing changes)."""
+    t = (generator_args or {}).get('templates') or ()
+    items = [x for v in t.values() for x in v] if isinstance(t, dict) else list(t)
+    return any(((x.get('offer_condition') or {}).get('situation') or {}).get('mode') == 'privileged'
+               for x in items if isinstance(x, dict))
+
+
+def build(act_paths, analyses, bank_paths, *, cells, provenance, onset_paths, structured=(), allowed_scope='all',
+          mode='own_sensing'):
     """clean5c guidance doc (fullpol_bank schema) with situational offer conditions."""
     from .fullpol_learn import guidance_doc
     from .fullpol_bank import RULE as BANK_RULE
-    rows = activations(load(act_paths), load_onset_bins(onset_paths))
+    rows = activations(load(act_paths), load_onset_bins(onset_paths, mode))
     status = plan_status(analyses, structured, allowed_scope)
     pairs = admit(rows, status)
     banks = templates_from_banks(bank_paths)
@@ -273,7 +307,7 @@ def build(act_paths, analyses, bank_paths, *, cells, provenance, onset_paths, st
             continue
         demands = {c['cell'].split('_')[0] for c in status[fam]['cells']}
         best = min(ps, key=lambda p: p['effect']['hi'])
-        situation = dict(rule=RULE, bins=[p['bin'] for p in ps])
+        situation = dict(rule=RULE, mode=mode, bins=[p['bin'] for p in ps])
         for cell in cells:
             if cell.split('_')[0] not in demands:
                 continue
@@ -302,8 +336,11 @@ def build(act_paths, analyses, bank_paths, *, cells, provenance, onset_paths, st
     doc['situational'] = dict(rule=RULE, n_activations=len(rows), pairs=pairs,
                               bin_counts={json.dumps(b, sort_keys=True): sum(r['bin'] == b for r in rows)
                                           for b in BINS+[UNOBSERVED]},
-                              bin_rule='onset_bin: acting CAV (holder) own row + vehicles within '
-                                       f'{SENSOR_RANGE_M:.0f} m at onset (same function as offer_ok)',
+                              mode=mode, teacher_note=TEACHER_NOTE if mode == 'privileged' else None,
+                              bin_rule=(f'onset_bin({mode!r}): acting CAV (holder) own row + '
+                                        + ('every vehicle of the plant table' if mode == 'privileged' else
+                                           f'vehicles within {SENSOR_RANGE_M:.0f} m')
+                                        + ' at onset (same function as offer_ok)'),
                               plans={f: {k: v for k, v in s.items()} for f, s in sorted(status.items())},
                               pool_rule=f'p20 only if >= {P20_MIN_ACTIVATIONS} activations and >= {P20_MIN_CLUSTERS} '
                                         'clusters in the (plan, bin), else all penetrations (label only)')
@@ -335,6 +372,7 @@ def main(argv=None):
     ap.add_argument('--onset', nargs='+', required=True, help='ops/sit_reduce.py outputs (own-sensing onset bins)')
     ap.add_argument('--structured', nargs='*', default=(), help="WM-C ARMS files: their 'structured' arms are not WM")
     ap.add_argument('--allowed-scope', choices=ALLOWED_SCOPES, default='all')
+    ap.add_argument('--mode', choices=MODES, default='own_sensing', help='onset_bin mode (ONSET files must match)')
     ap.add_argument('--provenance', required=True)
     ap.add_argument('--out', required=True)
     a = ap.parse_args(argv)
@@ -349,7 +387,7 @@ def main(argv=None):
                 structured.update(n['name'] if isinstance(n, dict) else n for n in groups.get('structured') or ())
     try:
         doc = build(a.act, a.analysis, a.bank, cells=P20_CELLS, provenance=a.provenance, onset_paths=a.onset,
-                    structured=sorted(structured), allowed_scope=a.allowed_scope)
+                    structured=sorted(structured), allowed_scope=a.allowed_scope, mode=a.mode)
     except NoAdmission as e:
         report = Path(str(out)+'.NO_ADMISSION.json')
         report.write_text(json.dumps(dict(rule=RULE, pairs=e.pairs), indent=1, sort_keys=True), encoding='utf-8')

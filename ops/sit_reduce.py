@@ -5,7 +5,7 @@ else the first member; S-MULTICRIT-ACT reduce_act rule) and the observable tape 
 tools.coopmwm.fullpol_situational.onset_bin(own, rows) - the SAME function fullpol_bank.offer_ok calls at
 runtime (own row + vehicles within SENSOR_RANGE_M; unobserved -> its own bin).
 
-Usage: python3 ops/sit_reduce.py <tree> <root_dir> [<root_dir> ...] > ONSET_<tag>.jsonl
+Usage: python3 ops/sit_reduce.py <tree> <mode: privileged or own_sensing> <root_dir> [...] > ONSET_<tag>.jsonl
   <tree>: a directory holding tools/coopmwm/fullpol_situational.py (the reviewed commit)
 """
 import gzip
@@ -29,7 +29,7 @@ def tape_rows(path, times):
     return out
 
 
-def main(tree, roots):
+def main(tree, mode, roots):
     sys.path.insert(0, tree)
     from tools.coopmwm.fullpol_situational import onset_bin
     for root in roots:
@@ -52,9 +52,9 @@ def main(tree, roots):
                 own = next((r for r in at if r['vid'] == hold), None)
                 sys.stdout.write(json.dumps(dict(root=name, cell=cell, seed=seed, arm=arm, t=t, holder=hold,
                                                  own_found=own is not None, n_rows=len(at),
-                                                 bin=onset_bin(own, at)), separators=(',', ':'))+'\n')
+                                                 mode=mode, bin=onset_bin(own, at, mode)), separators=(',', ':'))+'\n')
             sys.stdout.flush()
 
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2:])
+    main(sys.argv[1], sys.argv[2], sys.argv[3:])

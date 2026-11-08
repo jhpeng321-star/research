@@ -437,6 +437,8 @@ def _propose(state, own, rng):
     view = dict(now=state['now'], map=state['map'], frame=state['frame'], cap=state['cap'],
                 range_m=state['range_m'], sensed=sensed, rows=sensed, registry=lp.REGISTRY,
                 generator_args=args, fullpol=args, ledger=state.get('ledger'), arm=state.get('arm'))
+    if state.get('teacher_rows') is not None:
+        view['teacher_rows'] = state['teacher_rows']
     if 'length_m' in own:
         own_row = _row(own)
     else:
@@ -618,11 +620,14 @@ class Protocol:
                     del self.membership[vid]
             self.expired.append(dict(session_id=sid, end_s=now, receipts=receipts))
 
-    def receive(self, now, own_rows, own_sensing, previous_reports):
-        """Offers from intents published at now-1 (radio range of ANY broadcaster), own rows/sensing."""
+    def receive(self, now, own_rows, own_sensing, previous_reports, privileged_rows=None):
+        """Offers from intents published at now-1 (radio range of ANY broadcaster), own rows/sensing.
+        ``privileged_rows`` (CLEAN5C4 train-time teacher gate only): the full plant table, handed ONLY to the
+        verified-template offer gate; never to an observation."""
         now = _second(now)
         self._expire(now)
         self.now = now
+        self.teacher_rows = None if privileged_rows is None else tuple(_row(r) for r in privileged_rows)
         self.rows = {v: _row(r) for v, r in own_rows.items() if r.get('is_cav') is True}
         self.sensed = {}
         for vid, own in self.rows.items():
@@ -679,11 +684,14 @@ class Protocol:
 
     def state(self, vid, now):
         """Local view attached to the CAV's candidate state (own row/sensing + received offers)."""
-        return dict(now=_second(now), families=PROGRAM_FAMILIES, offers=self.offers.get(vid, ()),
-                    cap=self.cap, range_m=self.range_m, map=self.frame.name, frame=self.frame,
-                    n_lanes=self.n_lanes, sensed=tuple(self.sensed.get(vid, ())), propose=self.propose,
-                    generator_args=self.settings.get('generator_args') or {}, ledger=self.ledger(),
-                    arm=self.settings.get('arm'))
+        out = dict(now=_second(now), families=PROGRAM_FAMILIES, offers=self.offers.get(vid, ()),
+                   cap=self.cap, range_m=self.range_m, map=self.frame.name, frame=self.frame,
+                   n_lanes=self.n_lanes, sensed=tuple(self.sensed.get(vid, ())), propose=self.propose,
+                   generator_args=self.settings.get('generator_args') or {}, ledger=self.ledger(),
+                   arm=self.settings.get('arm'))
+        if getattr(self, 'teacher_rows', None) is not None:
+            out['teacher_rows'] = self.teacher_rows
+        return out
 
     def ledger(self):
         """{template source variant: (active sessions, last start s)} for the generator's slots/cooldown gate."""

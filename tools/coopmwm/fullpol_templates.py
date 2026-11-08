@@ -313,8 +313,10 @@ def propose(state, own, rng):
             def gate(x):
                 fam = x['template'].get('source', {}).get('variant')
                 entry = False if ledger is None else ledger.get(fam)
+                teacher = state.get('teacher_rows')     # CLEAN5C4 privileged teacher gate only (else absent)
                 return (fb.session_ok(x['offer_condition'], entry, state.get('now'))
-                        and fb.offer_ok(x['offer_condition'], own, rows))
+                        and fb.offer_ok(x['offer_condition'], own, rows,
+                                        **({} if teacher is None else dict(teacher_rows=teacher))))
             own_t = slot.get('templates') or ()
             if isinstance(own_t, dict):          # clean5c per-arm {B: [...], R: []}: unknown arm -> none
                 own_t = own_t.get(state.get('arm')) or ()

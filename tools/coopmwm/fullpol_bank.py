@@ -219,7 +219,7 @@ def wm_families(arms_docs):
     return out
 
 
-def offer_ok(cond, own, rows):
+def offer_ok(cond, own, rows, teacher_rows=None):
     """Verified trigger/offer condition at this step from the acting CAV's own row + own sensing (WM frame).
 
     Same member rule the bank verified: own WM lane in own_wm_lanes; trigger 'wall' = one CAV in every WM lane
@@ -230,7 +230,7 @@ def offer_ok(cond, own, rows):
         return False
     if cond.get('situation') is not None:          # CLEAN5C4: offered only in the plan's admitted onset bins
         from .fullpol_situational import situation_ok
-        if not situation_ok(cond, own, rows):
+        if not situation_ok(cond, own, rows, teacher_rows):
             return False
     lane, s = int(own['lane']), float(own['s_m'])
     if lane not in [int(x) for x in cond.get('own_wm_lanes') or ()]:
