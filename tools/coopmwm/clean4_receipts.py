@@ -196,6 +196,25 @@ CLEAN5A_ALLOWED = ('abreast_wall', 'group_hold', 'lane_drop_initiate', 'lane_dro
 CLEAN5B_PROGRAMS = ('free_program_initiate', 'free_program_join')      # LCEXEC per-CAV program options (clean5b)
 
 
+LEARNFIX_PPO_KL_RULE = 'choice_row_mean (learnfix)'
+
+
+def ppo_kl_receipt(cfg, learning, arm):
+    """The trigger-PPO KL receipt of one arm update: 'row_mean' (registered pace), or with c4/learnfix registered
+    the choice-row receipt plus the learnfix PPO receipt (same KL budget, final KL within it)."""
+    from . import learnfix
+    receipt = learning.get('fullpol_ppo_kl') or {}
+    if learnfix.settings(cfg) is None:
+        if receipt.get('rule') != 'row_mean':
+            raise ValueError('trigger-PPO row-mean KL receipt required: '+arm)
+        return receipt
+    lf = learning.get('learnfix') or {}
+    if (receipt.get('rule') != LEARNFIX_PPO_KL_RULE or lf.get('rule') != learnfix.RULE
+            or receipt.get('kl_budget') != lf.get('kl_budget') or not 0 <= float(receipt.get('final_kl', -1)) <= lf['kl_budget']):
+        raise ValueError('trigger-PPO learnfix choice-row KL receipt required: '+arm)
+    return receipt
+
+
 def validate_clean5a(cfg, updates, fixes=None):
     """clean5a smoke receipts (registered before the clean5a smoke): map/base binding, safety rule, G2, G4 + G4LD
     extension, N2-only FULLPOL slate (solo/pair hold + abreast wall offered in B and R, no legacy/W1/N9 option),
@@ -319,10 +338,8 @@ def validate_clean5a(cfg, updates, fixes=None):
         raise ValueError('clean5a registered pace: clean5_ev.ev_bc_steps 60 and ppo_kl row_mean')
     out['pace'] = dict(ev_bc_steps=ev['ev_bc_steps'], ppo_kl=ev['ppo_kl'])
     for arm in ('B', 'R'):
-        receipt = arms[arm]['learning'].get('fullpol_ppo_kl') or {}
-        if receipt.get('rule') != 'row_mean':
-            raise ValueError('trigger-PPO row-mean KL receipt required: '+arm)
-        out['pace'][arm] = {k: receipt.get(k) for k in ('final_kl', 'accepted', 'rejected')}
+        receipt = ppo_kl_receipt(cfg, arms[arm]['learning'], arm)
+        out['pace'][arm] = {k: receipt.get(k) for k in ('final_kl', 'accepted', 'rejected', 'rule')}
     for arm in ('B', 'R'):   # ONE trust region: legacy bank imitation is off (0 contexts, 0 steps)
         learning = arms[arm]['learning']
         if (learning['bank'].get('pairs_total', 0) or learning['bank'].get('optimizer_steps', 0)

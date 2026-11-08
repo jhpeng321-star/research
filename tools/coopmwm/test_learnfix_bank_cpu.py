@@ -151,3 +151,23 @@ def test_chain_coverage_episodes_and_external_final(monkeypatch):
         mod.coverage(cfg)
     r = mod.coverage(dict(cfg, final_eval_external=c5b.FINAL_EXTERNAL_RULE))
     assert r['need']['v2v_final'] == 0 and r['need']['v2v_train'] == 24*3*8*1200
+
+
+SMOKE = Path(__file__).resolve().parents[2]/'clean5c'/'learnfix'
+
+
+def test_smoke_ppo_kl_receipt_validator_accepts_learnfix():
+    """CLEAN5C5 smoke 2026-11-09 failed 'trigger-PPO row-mean KL receipt required: B': under learnfix the recorded
+    B/R smoke receipts carry the choice-row rule; the validator accepts them only with learnfix registered."""
+    from . import clean4_receipts as rc4, learnfix
+    on = dict(learnfix=learnfix.value())
+    for arm in ('B', 'R'):
+        learning = json.loads((SMOKE/f'SMOKE_C5C5_{arm}_UPDATE_001.json').read_text(encoding='utf-8'))['learning']
+        assert rc4.ppo_kl_receipt(on, learning, arm)['rule'] == rc4.LEARNFIX_PPO_KL_RULE
+        with pytest.raises(ValueError, match='row-mean'):
+            rc4.ppo_kl_receipt({}, learning, arm)                               # inherited runs: unchanged
+        bad = json.loads(json.dumps(learning))
+        bad['fullpol_ppo_kl']['final_kl'] = 0.05
+        with pytest.raises(ValueError, match='learnfix'):
+            rc4.ppo_kl_receipt(on, bad, arm)
+    assert rc4.ppo_kl_receipt({}, dict(fullpol_ppo_kl=dict(rule='row_mean')), 'B')['rule'] == 'row_mean'
