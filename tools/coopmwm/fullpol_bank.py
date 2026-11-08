@@ -228,6 +228,10 @@ def offer_ok(cond, own, rows):
     this view: fail closed (never offered). Slots / cooldown: session_ok."""
     if not cond or cond.get('gate') or cond.get('start_gate'):
         return False
+    if cond.get('situation') is not None:          # CLEAN5C4: offered only in the plan's admitted onset bins
+        from .fullpol_situational import situation_ok
+        if not situation_ok(cond, own, rows):
+            return False
     lane, s = int(own['lane']), float(own['s_m'])
     if lane not in [int(x) for x in cond.get('own_wm_lanes') or ()]:
         return False

@@ -376,6 +376,11 @@ def p20_select(doc, cells, *, families=None, note):
 def check_p20_guidance(doc, cells, *, wm):
     """Prepare-time (zero physics): a p20-selected doc; every row, template and verified cell in the training
     cells; the rule doc carries only the registered LOWCAV families; returns the 'none' cells (no target)."""
+    if doc.get('situational') is not None:         # CLEAN5C4 situational WM doc (fullpol_situational.check)
+        from .fullpol_situational import check
+        if not wm:
+            raise ValueError('p20 rule guidance must be the LOWCAV families '+repr(P20_RULE_FAMILIES)+' only')
+        return check(doc, _check_p20_cells(cells))
     cells = set(_check_p20_cells(cells))
     p20 = doc.get('p20') or {}
     regimes = {r['regime'] for r in doc['rows']}
@@ -396,7 +401,8 @@ def check_p20_guidance(doc, cells, *, wm):
 
 def _p20_variant(base, cells, g4_workers, *, label, wm, doc, overrides):
     none = check_p20_guidance(doc, cells, wm=wm)
-    sources = {c: v['source'] for c, v in doc['p20']['cells'].items()}
+    sources = ({c: v['source'] for c, v in doc['p20']['cells'].items()} if doc.get('situational') is None else
+               {c: ('wm_situational' if c not in none else 'none') for c in cells})
     note = P20_NOTE+f' {label}: per-cell guidance source {sources}.'
     return dict(base, cell_keys=cells, worlds=lambda: worlds_by_update_8(cells), guidance_missing_ok=none,
                 cfg_overrides=dict(overrides, g4_workers=g4_workers), design=base['design']+' '+note,
