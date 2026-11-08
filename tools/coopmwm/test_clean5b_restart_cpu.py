@@ -276,7 +276,7 @@ def test_clean5c_keys_bank_guidance_reaches_ev_table(cfg, wz):
                                             'D3200_p20/mut_0584e488a8bf93c5': 'identical',
                                             'D3200_p60/mut_0584e488a8bf93c5': 'identical'}
     assert c5.check_guidance(k, c5b.C_NO_GUIDANCE_CELLS)['no_guidance_cells'] == ['D2400_p40']
-    assert set(c5b.VARIANT_C) == set(c5.VARIANT) and c5b.VARIANT_C["approved"] == 4_700_000
+    assert set(c5b.VARIANT_C) == set(c5.VARIANT) and c5b.VARIANT_C["approved"] == 5_500_000
     # the generator offers bank templates to B only (per-arm generator_args)
     calls = []
     slot = dict(classes=['verified'], templates=dict(B=[dict(template={'source': dict(variant='m')},
