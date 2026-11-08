@@ -566,6 +566,11 @@ HOST_ROOTS = {  # WMVERIFY root name -> (host, job root); REGISTRATION.md WMVERI
     'wmv_rep': ('cpuW', '/home/ubuntu/wmverify_mc_tapes/wmv_rep'),
     'wmv_p20': ('cpuW', '/home/ubuntu/wmverify_p20/wmv_p20'),
     'wmv_unc': ('cpuW', '/home/ubuntu/wmverify_mc_tapes/wmv_unc'),
+    'wmv_r5': ('cpuW', '/home/ubuntu/wmverify_p20/wmv_r5'),
+    'wmv_r6': ('cpuW', '/home/ubuntu/wmverify_p20/wmv_r6'),
+    'wmv_sl': ('cpuW', '/home/ubuntu/wmverify_p20/wmv_sl'),
+    'wmv_cfd': ('cpuW', '/home/ubuntu/wmverify_p20/wmv_cfd'),
+    'wmv_r6c': ('gpuA', '/root/autodl-fs/wmverify_20261108/wmv_r6c'),
 }
 
 
@@ -587,11 +592,21 @@ def cmd_plan(a):
     acts, skipped = plan_activations(guidance, read_onsets(a.ponset), effects, members)
     for x in acts:
         x['admission'] = 'situational'
+        x['lookback'] = a.lookback
     if a.cells:
         skipped += [dict(x, reason='cell not selected') for x in acts if x['cell'] not in a.cells]
         acts = [x for x in acts if x['cell'] in a.cells]
+    if a.sources:
+        skipped += [dict(x, reason='plan source not selected') for x in acts if x['source'] not in a.sources]
+        acts = [x for x in acts if x['source'] in a.sources]
     if a.unconditional_bank:
         ua, us = unconditional_activations(guidance, a.unconditional_bank, a.cells)
+        if a.sources:
+            ua = [x for x in ua if x['source'] in a.sources]
+        if a.unconditional_families:
+            skipped += [dict(x, reason='unconditional family not selected') for x in ua
+                        if x['family'] not in a.unconditional_families]
+            ua = [x for x in ua if x['family'] in a.unconditional_families]
         for x in ua:
             x['lookback'] = a.unconditional_lookback
         acts, skipped = acts+ua, skipped+us
@@ -748,6 +763,9 @@ def main(argv=None):
     p.add_argument('--unconditional-bank', nargs='*', default=[])
     p.add_argument('--cells', nargs='*', default=[])
     p.add_argument('--unconditional-lookback', type=int, default=10)
+    p.add_argument('--sources', nargs='*', default=[], help='keep only these plan sources (wm, rule)')
+    p.add_argument('--unconditional-families', nargs='*', default=[])
+    p.add_argument('--lookback', type=int, default=LOOKBACK_S, help='situational onset window (s)')
     p.add_argument('--out', required=True)
     p = sub.add_parser('extract')
     p.add_argument('--plan', required=True)
