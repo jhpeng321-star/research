@@ -1,21 +1,33 @@
-"""CLEAN5C4 privileged teacher gate (MAIN 2026-11-08): the offer gate may read the full plant table at train time.
-(1) offline/runtime parity of onset_bin('privileged') on a recorded tape slice (wmv_p20) via the host reducer
-read path and via the LCEXEC protocol path into offer_ok; (2) the policy observation / sample is byte-identical
-with the teacher gate on and off; (3) the registered privileged admission result."""
+"""CLEAN5C4 privileged teacher bin (MAIN 2026-11-08; REV-SPD B1 fix): the privileged bin is used ONLY where B's
+EV-BC target is chosen (offline, recorded tape, no RNG). Slate candidacy uses only the non-privileged conditions.
+(1) offline reducer / training-time teacher parity on a recorded tape slice; (2) with the gate OPEN, the slate,
+samples, observations and action RNG draws are identical with privileged mode on and off; (3) only B's EV-BC
+target labels differ; (4) the registered doc and its LF file sha."""
 # ruff: noqa: F811 (imported pytest fixtures are test parameters)
+from collections import Counter
+from copy import deepcopy
 import gzip
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
 
 import numpy as np
+import pytest
 
-from . import clean5b_restart as c5b, fullpol_bank as fb, fullpol_situational as fs, lc_families as lf
+from . import clean5b_restart as c5b, fullpol_learn as fl, fullpol_situational as fs, lc_families as lf
 from .test_lc_families_cpu import (Capture, Prefer, canon, controller, e2e_rows, lc_cfg, make, step,  # noqa: F401
                                    wz)
 from .test_track2_backend_cpu import cfg, cpu_threads  # noqa: F401
 
 C4SIT = Path(__file__).resolve().parents[2]/'clean5c'/'c4sit'
+DOC = C4SIT/'GUIDANCE_C4SIT_priv.json'
+FAM = 'mut_006c290e03ad3d3c'
+OPEN = dict(cong='free', lane_diff='L2notfaster')
+
+
+def _doc():
+    return json.loads(DOC.read_bytes())
 
 
 def _reducer():
@@ -33,106 +45,146 @@ def _slice():
     return tapes, json.loads((C4SIT/'fixture'/'c4sit_acts.json').read_text(encoding='utf-8'))
 
 
-def test_privileged_parity_offline_runtime_on_recorded_tape(tmp_path, cfg, wz):
+def _tape(path, t, vehicles):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with gzip.open(path, 'wt') as fh:
+        fh.write(json.dumps(dict(time_s=float(t), vehicles=vehicles))+'\n')
+    return path
+
+
+def test_privileged_parity_reducer_vs_training_teacher_on_recorded_tape(tmp_path):
     tapes, acts = _slice()
     red = _reducer()
     assert {a['ponset_bin']['cong'] for a in acts} == {'free', 'congested'}
     for a in acts:
-        # offline: the host reducer's tape read + onset_bin('privileged') == the recorded reducer output ==
-        # the original S-MULTICRIT-ACT bin of the same activation (full-tape features, verbatim)
-        path = tmp_path/f"{a['job']}.jsonl.gz"
-        with gzip.open(path, 'wt') as fh:
-            fh.write(json.dumps(dict(time_s=a['t'], vehicles=tapes[(a['job'], a['t'])]))+'\n')
+        path = _tape(tmp_path/a['job']/'observable.jsonl.gz', a['t'], tapes[(a['job'], a['t'])])
         rows = red.tape_rows(path, [a['t']])[a['t']]
         own = next(r for r in rows if r['vid'] == a['holder'])
-        offline = fs.onset_bin(own, rows, 'privileged')
-        assert offline == a['ponset_bin'] == fs.situation_bin(a['sit'])
-        # runtime: the same tape rows as the backend table -> LCEXEC protocol (privileged_rows) -> state ->
-        # generator view -> offer_ok(teacher_rows) -> the same function
-        table = {r['vid']: r for r in tapes[(a['job'], a['t'])]}
-        cavs = {v: r for v, r in table.items() if r['is_cav']}
-        proto = lf.Protocol(lf.settings(lc_cfg(cfg, cap=3)))
-        sensing = {v: [r for r in table.values() if abs(r['s_m']-cavs[v]['s_m']) <= fs.SENSOR_RANGE_M] for v in cavs}
-        proto.receive(a['t'], cavs, sensing, {}, privileged_rows=list(table.values()))
-        state = proto.state(a['holder'], a['t'])
-        teacher = state['teacher_rows']
-        assert [dict(r) for r in teacher] == [lf._row(r) for r in table.values()]
-        sensed = [r for r in state['sensed'] if r['vid'] != a['holder']]
-        cond = lambda b: dict(situation=dict(rule=fs.RULE, mode='privileged', bins=[b]))  # noqa: E731
-        own_rt = next(r for r in state['sensed'] if r['vid'] == a['holder'])
-        assert fs.situation_ok(cond(offline), own_rt, sensed, teacher) is True
+        offline = fs.onset_bin(own, rows, 'privileged')                        # host reducer path
+        assert offline == a['ponset_bin'] == fs.situation_bin(a['sit'])       # == the S-MULTICRIT-ACT bin
+        teacher = fs.TapeTeacher(path)                                         # training-time path (same tape)
+        assert teacher.bin(a['holder'], a['t']) == offline
+        row = dict(family=FAM, situational=dict(mode='privileged', bins=[offline]))
+        assert fs.teacher_admit(row, teacher, a['holder'], a['t']) is True
         other = dict(offline, cong='congested' if offline['cong'] == 'free' else 'free')
-        assert fs.situation_ok(cond(other), own_rt, sensed, teacher) is False
-        assert fs.situation_ok(cond(offline), own_rt, sensed, None) is False          # no table: closed
-        # without the table the protocol state carries no teacher rows (default path unchanged)
-        proto.receive(a['t'], cavs, sensing, {})
-        assert 'teacher_rows' not in proto.state(a['holder'], a['t'])
+        assert fs.teacher_admit(dict(row, situational=dict(mode='privileged', bins=[other])), teacher,
+                                a['holder'], a['t']) is False
+        assert fs.teacher_admit(row, teacher, a['holder'], a['t']+1) is False         # second not recorded
+        assert fs.teacher_admit(row, fs.TapeTeacher(tmp_path/'missing.gz'), a['holder'], a['t']) is False
+        assert fs.teacher_admit(dict(family=FAM), None, a['holder'], a['t']) is True  # no block: unchanged
 
 
-def test_offer_ok_threads_teacher_rows_only_when_present(monkeypatch):
-    from . import fullpol_templates as ft
-    seen = []
-    real = fb.offer_ok
-    monkeypatch.setattr(fb, 'offer_ok', lambda c, o, rows, **kw: seen.append(kw) or real(c, o, rows, **kw))
-    fp_cls = type('FP', (), {'from_dict': staticmethod(lambda d: d)})
-    monkeypatch.setattr(ft, '_lc', lambda: type('LC', (), {'FreeProgram': fp_cls}))
-    monkeypatch.setattr(ft, '_view', lambda frame: None)
-    cond = dict(trigger='lanes', own_wm_lanes=[0], zone_s=[-1800., -400.], spread_m=300.,
-                roles=[dict(wm_lane=0), dict(wm_lane=1)], gate=None, start_gate=None, slots=1, cooldown_s=120,
-                situation=dict(rule=fs.RULE, mode='privileged', bins=[dict(cong='free', lane_diff='L2notfaster')]))
-    tpl = {'x': 1, 'source': dict(variant='wm_x')}
-    slot = dict(classes=['verified'], templates=[dict(template=tpl, offer_condition=cond)])
-    r = lambda v, s, ln: dict(vid=v, s_m=float(s), lane=ln, v_mps=25., is_cav=True)  # noqa: E731
-    own, pair = r('e', -1000, 0), [r('e', -1000, 0), r('p', -1100, 1)]
-    state = dict(frame=None, rows=pair, fullpol=slot, now=500, ledger={})
-    rng = np.random.default_rng(0)
-    assert ft.propose(state, own, rng) == [] and seen[-1] == {}                         # privileged, no table
-    full = pair+[r('q', -200, 1)]
-    assert ft.propose(dict(state, teacher_rows=full), own, rng) == [tpl] and seen[-1] == dict(teacher_rows=full)
+def _wall_rows():
+    """Acting CAV on WM lane 1 with one CAV on every WM lane 0/1/2 inside 200 m, all in the trigger zone."""
+    def r(vid, lane, s, cav=True, v=25.):
+        return dict(vid=vid, s_m=float(s), v_mps=float(v), lane=lane, is_cav=cav, length_m=5.)
+    return [r('e', 1, -1000.), r('p0', 0, -1050.), r('p2', 2, -950.), r('h', 1, -1080., cav=False)]
 
 
-def test_policy_observation_byte_identical_gate_on_off(cfg, wz):
-    """Same episode with the teacher gate on (privileged templates -> the backend hands the full table to the
-    protocol) vs off: identical samples (incl. every observation tensor) and requests; the table never enters
-    a sample."""
+def _settings(cfg, cond):
+    tpl = _doc()['clean5c']['templates'][0]
+    entry = dict(template=deepcopy(tpl['template']), offer_condition=cond, family=FAM, cells=['D2800_p20'])
+    raw = lc_cfg(cfg, cap=3, generator=None)
+    from .fullpol_ev import GENERATOR
+    raw['lc_families'].update(generator=GENERATOR,
+                              generator_args=dict(classes=['verified'], structured=[], templates=dict(B=[entry], R=[entry])))
+    return lf.settings(raw)
+
+
+@pytest.mark.parametrize('bins', [[OPEN], [dict(cong='congested', lane_diff='L2faster')]])
+def test_slate_and_rng_identical_privileged_on_off(cfg, wz, bins):
+    """The real admitted template on the real LCEXEC slate path: the ProgramOption slate and the generator RNG
+    stream are identical whether the template carries the privileged situation (open or closed) or none."""
+    cond = deepcopy(_doc()['clean5c']['templates'][0]['offer_condition'])
+    plain = {k: v for k, v in cond.items() if k != 'situation'}
+    priv = dict(plain, situation=dict(cond['situation'], bins=bins))
+    out = {}
+    for name, c in (('plain', plain), ('priv', priv)):
+        proto = lf.Protocol(dict(_settings(cfg, c), arm='B'))
+        rows = _wall_rows()
+        table = {r['vid']: r for r in rows}
+        cavs = {v: r for v, r in table.items() if r['is_cav']}
+        proto.receive(500, cavs, {v: [r for r in rows if abs(r['s_m']-cavs[v]['s_m']) <= 100.] for v in cavs}, {})
+        rng = np.random.default_rng(3)
+        options = lf.pool('free_program_initiate', proto.state('e', 500), table['e'], rng)
+        out[name] = (len(options), canon([repr(o) for o in options]), json.dumps(rng.bit_generator.state))
+    assert out['plain'] == out['priv']
+    assert out['plain'][0] >= 1                                           # the template IS on the slate (open)
+
+
+def test_episode_samples_identical_with_privileged_templates(cfg, wz):
+    """A controlled episode (samples incl. every observation tensor, requests, env ticks) is identical with the
+    privileged-situation templates (gate open) and with the same templates without a situation block."""
+    cond = deepcopy(_doc()['clean5c']['templates'][0]['offer_condition'])
     outs = {}
-    for mode in ('privileged', 'own_sensing'):
+    for name, c in (('plain', {k: v for k, v in cond.items() if k != 'situation'}), ('priv', cond)):
         raw = lc_cfg(cfg, cap=3)
-        raw['lc_families']['generator_args'] = dict(templates=dict(B=[dict(template={}, offer_condition=dict(
-            situation=dict(rule=fs.RULE, mode=mode, bins=[])))], R=[]))
+        entry = dict(template=deepcopy(_doc()['clean5c']['templates'][0]['template']), offer_condition=c)
+        raw['lc_families']['generator_args'] = dict(templates=dict(B=[entry], R=[entry]))
         p = make(raw)
-        assert p.teacher_gate is (mode == 'privileged')
         p.trigger.trigger_head = Prefer(p.trigger)
-        c = controller(p)
+        ctl = controller(p)
         events = []
         for t in range(300, 306):
             env = Capture()
-            s, req = step(p, c, e2e_rows(t), t, env)
+            s, req = step(p, ctl, e2e_rows(t), t, env)
             events.append([s, req, env.ticks])
-            assert (p.lc_families.teacher_rows is not None) is (mode == 'privileged')
-        outs[mode] = canon(events)
-    assert outs['privileged'] == outs['own_sensing'] and 'teacher' not in outs['privileged']
+        outs[name] = canon(events)
+    assert outs['plain'] == outs['priv'] and 'privileged' not in outs['priv']
 
 
-def test_needs_teacher():
-    t = lambda mode: dict(offer_condition=dict(situation=dict(mode=mode)))  # noqa: E731
-    assert fs.needs_teacher(dict(templates=dict(B=[t('privileged')], R=[t('privileged')])))
-    assert not fs.needs_teacher(dict(templates=[t('own_sensing')])) and not fs.needs_teacher({})
-    assert not fs.needs_teacher(None)
+def _trigger(vid):
+    tpl = _doc()['clean5c']['templates'][0]['template']
+    entry = dict(family='free_program_initiate', template=tpl)
+    return dict(context=dict(members=[vid]), tables=[[None, entry]], mask=[[True, True]])
 
 
-def test_registered_privileged_admission_doc(cfg, wz):
+def test_only_b_ev_bc_target_labels_differ(tmp_path, cfg):
+    """B's EV-BC target on the same recorded slate: the family where the teacher bin is admitted, none where it is
+    not; without the privileged block the family is targeted regardless. No RNG is used."""
+    tapes, acts = _slice()
+    rows_doc = {r['family']: r for r in _doc()['rows']}
+    assert rows_doc[FAM]['situational']['mode'] == 'privileged' and rows_doc[FAM]['situational']['bins'] == [OPEN]
+    plain_rows = {FAM: {k: v for k, v in rows_doc[FAM].items() if k != 'situational'}}
+    labels = {}
+    run = dict(cfg, run_root=str(tmp_path))
+    for a in acts:
+        ep = dict(id=f"ep_{a['job']}", world=dict(cell_key='D2800_p20'))
+        _tape(tmp_path/'jobs'/ep['id']/'observable.jsonl.gz', a['t'], tapes[(a['job'], a['t'])])
+        counts = Counter()
+        admit = fl._teacher(run, ep, rows_doc, counts)
+        before = np.random.get_state()[1].copy()
+        priv = fl.ev_targets(run, _trigger(a['holder']), rows_doc, admit(_trigger(a['holder']), a['t']))
+        plain = fl.ev_targets(run, _trigger(a['holder']), plain_rows)
+        assert fl._teacher(run, ep, plain_rows, Counter()) is None                       # no block: no teacher
+        assert (np.random.get_state()[1] == before).all()
+        labels[a['ponset_bin']['cong']] = (priv[0][0], plain[0][0], dict(counts))
+    assert labels['free'] == (1, 1, {'teacher_admitted': 1})                    # admitted bin: same target
+    assert labels['congested'] == (0, 1, {'teacher_blocked': 1})                # other bin: no target (B only)
+
+
+def test_r_gets_no_targets_and_b_r_share_the_slate(cfg, wz):
     from .lc_families import CONFIG_KEY
-    doc = json.loads((C4SIT/'GUIDANCE_C4SIT_priv.json').read_text(encoding='utf-8'))
-    adm = [p for p in doc['situational']['pairs'] if p['admitted']]
-    assert [(p['family'], p['bin'], p['effect']['n'], p['effect']['clusters']) for p in adm] == [
-        ('mut_006c290e03ad3d3c', dict(cong='free', lane_diff='L2notfaster'), 15, 9)]
-    assert adm[0]['effect']['hi'] < 0 and doc['situational']['mode'] == 'privileged'
-    assert [(r['regime'], r['family'], r['arm']) for r in doc['rows']] == [('D2800_p20', 'mut_006c290e03ad3d3c', 'B')]
-    assert c5b.check_p20_guidance(doc, c5b.P20_CELLS, wm=True) == ('D2400_p20', 'D3200_p20')
+    doc = _doc()
+    assert all(r['arm'] == 'B' for r in doc['rows'])
     out = dict(cfg)
     out.update(c5b.keys_c(desc=wz, guidance_doc=doc, provenance='c4sit test'))
     tpl = out[CONFIG_KEY]['generator_args']['templates']
     assert tpl['B'] == tpl['R'] and len(tpl['B']) == 1
-    assert tpl['B'][0]['offer_condition']['situation']['mode'] == 'privileged'
-    assert fs.needs_teacher(out[CONFIG_KEY]['generator_args'])
+    table_b, _ = fl.ev_table(out, 'B')
+    table_r, receipt_r = fl.ev_table(out, 'R')
+    assert list(table_b) == ['D2800_p20'] and list(table_b['D2800_p20']) == [FAM]
+    assert table_r == {} and receipt_r['r_without_matched_sweep']
+
+
+def test_registered_doc_and_file_sha():
+    data = DOC.read_bytes()
+    assert b'\r' not in data
+    sha = hashlib.sha256(data).hexdigest()
+    assert (C4SIT/'GUIDANCE_C4SIT_priv.json.sha256').read_text(encoding='utf-8').split()[0] == sha
+    doc = json.loads(data)
+    adm = [p for p in doc['situational']['pairs'] if p['admitted']]
+    assert [(p['family'], p['bin'], p['effect']['n'], p['effect']['clusters']) for p in adm] == [(FAM, OPEN, 15, 9)]
+    assert adm[0]['effect']['hi'] < 0 and doc['situational']['mode'] == 'privileged'
+    assert doc['source']['rule'].startswith(fs.RULE)
+    assert c5b.check_p20_guidance(doc, c5b.P20_CELLS, wm=True) == ('D2400_p20', 'D3200_p20')

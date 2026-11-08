@@ -220,12 +220,14 @@ def ev_credit_terms(cfg, arm, episodes, *, eligible):
     return terms, receipt
 
 
-def ev_targets(cfg, trigger, rows):
+def ev_targets(cfg, trigger, rows, admit=None):
     """Per decision row: (target slot, equivalent-slot mask) or None (the CAV had no choice).
 
     Target = the highest-lb95 qualifying (lb95 > 0, parity-passed) family OFFERED in this
     recorded slate; ``none`` when no qualifying family is offered. Equivalent slots = every
-    masked slot carrying that family label (choosing any of them executes that strategy)."""
+    masked slot carrying that family label (choosing any of them executes that strategy).
+    ``admit(row, i)`` (CLEAN5C4 privileged teacher, B only): a family whose row it rejects for decision row i
+    is skipped (default None: unchanged). Deterministic; no RNG."""
     order = qualifying(rows)
     out = []
     for i in range(len(trigger['context']['members'])):
@@ -235,6 +237,8 @@ def ev_targets(cfg, trigger, rows):
             continue
         target, same = 0, [j == 0 for j in range(len(table))]
         for family in order:
+            if admit is not None and not admit(rows[family], i):
+                continue
             slots = [j for j, entry in enumerate(table) if j and mask[j] and family in option_labels(entry, cfg)]
             if slots:
                 target, same = slots[0], [j in slots for j in range(len(table))]
@@ -262,11 +266,12 @@ def ev_bc_records(cfg, arm, episodes):
         if not rows:
             counts['episodes_without_regime_rows'] += 1
             continue
+        admit_step = _teacher(cfg, episode, rows, counts)
         for step in episode['steps']:
             trigger = step['sample'].get('track2_trigger')
             if trigger is None:
                 continue
-            targets = ev_targets(cfg, trigger, rows)
+            targets = ev_targets(cfg, trigger, rows, None if admit_step is None else admit_step(trigger, step['time_s']))
             if all(t is None for t in targets):
                 continue
             batch = _batch(trigger)
@@ -289,6 +294,27 @@ def ev_bc_records(cfg, arm, episodes):
                                           seed=episode['world']['seed'], regime=regime_key(episode))))
     receipt.update(records=len(records), rows=dict(counts), target_families=dict(families))
     return records, receipt
+
+
+def _teacher(cfg, episode, rows, counts):
+    """CLEAN5C4: when a guidance row carries a privileged situational block, the episode's recorded observable
+    tape (run_root/jobs/<id>/observable.jsonl.gz) gives the teacher bin at each decision second. None otherwise."""
+    if not any((r.get('situational') or {}).get('mode') == 'privileged' for r in rows.values()):
+        return None
+    from pathlib import Path
+    from .fullpol_situational import TapeTeacher, teacher_admit
+    teacher = TapeTeacher(Path(cfg['run_root'])/'jobs'/episode['id']/'observable.jsonl.gz')
+
+    def per_step(trigger, time_s):
+        members = trigger['context']['members']
+
+        def admit(row, i):
+            ok = teacher_admit(row, teacher, members[i], time_s)
+            if (row.get('situational') or {}).get('mode') == 'privileged':
+                counts['teacher_admitted' if ok else 'teacher_blocked'] += 1
+            return ok
+        return admit
+    return per_step
 
 
 GUIDANCE_RULE = ('S-REGIME registered analysis (rg_analyze.py cell_stats): per strategy x cell paired seed '

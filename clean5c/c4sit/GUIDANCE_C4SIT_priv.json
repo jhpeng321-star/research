@@ -1,6 +1,6 @@
 {
  "clean5c": {
-  "provenance": "owner REGISTRATION 2026-11-08 19:31 + MAIN amendments (ALLOWED scope p20; privileged train-time teacher gate): CLEAN5C4 situational WM admission v3",
+  "provenance": "owner REGISTRATION 2026-11-08 19:31 + MAIN amendments (ALLOWED scope p20; privileged train-time teacher bin for B's EV-BC target only): CLEAN5C4 situational WM admission v4",
   "rejected": {},
   "rule": "fullpol-clean5c-bank-guidance-v1",
   "skipped": {},
@@ -55,7 +55,7 @@
        }
       ],
       "mode": "privileged",
-      "rule": "fullpol-clean5c4-situational-v3"
+      "rule": "fullpol-clean5c4-situational-v4"
      },
      "slots": 1,
      "spread_m": 200.0,
@@ -192,7 +192,7 @@
   ]
  },
  "clip": 1.0,
- "provenance": "owner REGISTRATION 2026-11-08 19:31 + MAIN amendments (ALLOWED scope p20; privileged train-time teacher gate): CLEAN5C4 situational WM admission v3",
+ "provenance": "owner REGISTRATION 2026-11-08 19:31 + MAIN amendments (ALLOWED scope p20; privileged train-time teacher bin for B's EV-BC target only): CLEAN5C4 situational WM admission v4",
  "regime_rule": "cell",
  "rows": [
   {
@@ -212,7 +212,9 @@
       "lane_diff": "L2notfaster"
      }
     ],
+    "mode": "privileged",
     "pool": "all_penetrations",
+    "rule": "fullpol-clean5c4-situational-v4",
     "unit": "veh-s per activation window (pooled per-activation effect, best admitted bin)"
    },
    "source": "wm_bank",
@@ -1636,7 +1638,7 @@
    }
   },
   "pool_rule": "p20 only if >= 30 activations and >= 8 clusters in the (plan, bin), else all penetrations (label only)",
-  "rule": "fullpol-clean5c4-situational-v3",
+  "rule": "fullpol-clean5c4-situational-v4",
   "structured_excluded": [
    "g2_gap1",
    "g2_gapopen12",
@@ -1647,11 +1649,11 @@
    "wall_g_relay12",
    "wall_g_relay21"
   ],
-  "teacher_note": "privileged teacher gate: offered-template filter reads the full plant table at train time; the policy observation tensor and deployment are unchanged (asymmetric guidance, disclosed)"
+  "teacher_note": "privileged teacher bin: used only to choose B's EV-BC target label (offline, recorded tape at the decision second); the slate / observation / action RNG never see it (asymmetric guidance, disclosed)"
  },
  "source": {
-  "rule": "S-REGIME registered analysis (rg_analyze.py cell_stats): per strategy x cell paired seed differences of episode team delay J_total, seed bootstrap 10,000 resamples RNG 20261106, 2.5/97.5% quantiles",
-  "sha256": "c30001ac5bf914eaa7417e41274667bc66cab2f9a9e75eb25a7d49c7c4392805",
+  "rule": "fullpol-clean5c4-situational-v4: per-activation effect vs the paired u0 window (S-MULTICRIT-ACT, verbatim), pooled per (plan, onset bin), cluster bootstrap over (source, root, cell, seed), 4,000 resamples RNG 20261107; lb95/mean/ub95 = gain of the best admitted bin (veh-s/window)",
+  "sha256": "76c872ac5cddaa6d0e438b100a638dc122736610a9474be3d8ecbddd2c1268bc",
   "sign": "gain = J(base) - J(strategy) in veh-s per episode (positive = lower team delay); S-REGIME rg_analyze reports difference = strategy - base, so gain mean = -mean_diff and lb95(gain) = -ub95(difference)",
   "sources": [
    {

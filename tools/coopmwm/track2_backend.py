@@ -380,8 +380,6 @@ class EpisodePolicy(torch.nn.Module):
         # LCEXEC free_program (default off): V2V program protocol + per-member executors.
         program_settings = lc_families.settings(cfg)
         self.lc_families = None if program_settings is None else lc_families.Protocol(dict(program_settings, arm=arm))
-        from .fullpol_situational import needs_teacher
-        self.teacher_gate = program_settings is not None and needs_teacher(program_settings.get('generator_args'))
         self.layer.actuation_receipts = 'clean2_budget' in cfg or 'clean3_budget' in cfg or 'clean4_budget' in cfg
         # Retain the legacy slot/optimizer layout for existing sidecars. It is
         # unused by ProductionLayer, gets no gradient and cannot gate actuation.
@@ -514,9 +512,7 @@ class EpisodePolicy(torch.nn.Module):
                 states[vid]['nm_families'] = self.nm_families.state(vid, now)
         if self.lc_families is not None:
             # LCEXEC: own row/sensing at t, intents published at t-1, teammates' own t-1 packets.
-            # CLEAN5C4 privileged teacher gate (opt-in by the templates): the full table reaches ONLY the offer gate
-            self.lc_families.receive(now, {vid: table[vid] for vid in cavs}, own_sensing, self.reports,
-                                     **({'privileged_rows': list(table.values())} if self.teacher_gate else {}))
+            self.lc_families.receive(now, {vid: table[vid] for vid in cavs}, own_sensing, self.reports)
             for vid in cavs:
                 states[vid]['lc_families'] = self.lc_families.state(vid, now)
         if getattr(self, 'clean5_ev', None) is not None:

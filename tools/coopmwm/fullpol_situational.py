@@ -24,13 +24,14 @@ import math
 from pathlib import Path
 
 
-RULE = 'fullpol-clean5c4-situational-v3'      # v3: privileged (teacher) or own-sensing bins (MAIN 2026-11-08)
+RULE = 'fullpol-clean5c4-situational-v4'      # v4: privileged bin = B's EV-BC target only (REV-SPD B1)
 MODES = ('privileged', 'own_sensing')
-#: MAIN 2026-11-08 ~20:1x: the offer gate is a TRAIN-TIME teacher signal and may read privileged plant state (the
-#: full observable table the backend receives each tick). The policy observation and deployment are unchanged
-#: (the table never enters the observation; asymmetric guidance, disclosed).
-TEACHER_NOTE = ('privileged teacher gate: offered-template filter reads the full plant table at train time; the '
-                'policy observation tensor and deployment are unchanged (asymmetric guidance, disclosed)')
+#: MAIN 2026-11-08 (REV-SPD B1 fix): the privileged bin is a TRAIN-TIME teacher signal used ONLY where B's EV-BC
+#: target is chosen (fullpol_learn.ev_bc_records, offline, from the episode's recorded observable tape; no RNG).
+#: Slate candidacy ignores it (offer_ok: identical in B and R, train and deploy), so the slate, samples,
+#: observations and action RNG draws do not depend on privileged state (asymmetric guidance, disclosed).
+TEACHER_NOTE = ('privileged teacher bin: used only to choose B\'s EV-BC target label (offline, recorded tape at the '
+                'decision second); the slate / observation / action RNG never see it (asymmetric guidance, disclosed)')
 
 
 class NoAdmission(ValueError):
@@ -168,19 +169,14 @@ def onset_bin(own, rows, mode='own_sensing'):
     return situation_bin(sit)
 
 
-def situation_ok(cond, own, rows, teacher_rows=None):
-    """Offer gate. mode 'privileged': the full plant table (``teacher_rows``; absent -> closed); else own sensing."""
+def situation_ok(cond, own, rows):
+    """Slate offer gate. mode 'privileged': NOT a slate condition (always True: candidacy uses only the
+    non-privileged conditions, identical in B and R); the bin acts on B's EV-BC target only (teacher_admit).
+    mode 'own_sensing': the acting CAV's own sensing bin (a slate condition)."""
     want = (cond or {}).get('situation')
-    if want is None:
+    if want is None or want.get('mode', 'own_sensing') == 'privileged':
         return True
-    mode = want.get('mode', 'own_sensing')
-    if mode == 'privileged':
-        if teacher_rows is None:
-            return False
-        own_full = next((r for r in teacher_rows if r.get('vid') == own.get('vid')), own)
-        got = onset_bin(own_full, teacher_rows, mode='privileged')
-    else:
-        got = onset_bin(own, rows)
+    got = onset_bin(own, rows)
     if got == UNOBSERVED:
         return False
     return any(all(got[k] == b[k] for k in ('cong', 'lane_diff')) for b in want['bins'])
@@ -273,13 +269,35 @@ def templates_from_banks(bank_paths):
     return out
 
 
-def needs_teacher(generator_args):
-    """True iff any of the arm templates carries a privileged situation gate (the backend then passes the
-    full plant table to the LCEXEC protocol each tick; otherwise nothing changes)."""
-    t = (generator_args or {}).get('templates') or ()
-    items = [x for v in t.values() for x in v] if isinstance(t, dict) else list(t)
-    return any(((x.get('offer_condition') or {}).get('situation') or {}).get('mode') == 'privileged'
-               for x in items if isinstance(x, dict))
+class TapeTeacher:
+    """Privileged bins of one recorded episode (observable tape rows at the decision second; read lazily once)."""
+
+    def __init__(self, path):
+        self.path, self.rows = Path(path), None
+
+    def bin(self, vid, time_s):
+        if self.rows is None:
+            self.rows = {}
+            if self.path.exists():
+                for d in _lines(self.path):
+                    self.rows[int(round(d['time_s']))] = d['vehicles']
+        rows = self.rows.get(int(round(time_s)))
+        if rows is None:
+            return None
+        own = next((r for r in rows if r.get('vid') == vid), None)
+        return onset_bin(own, rows, 'privileged')
+
+
+def teacher_admit(row, teacher, vid, time_s):
+    """May the guidance ``row``'s family be B's EV-BC target for ``vid`` at ``time_s``? Rows without a privileged
+    situational block: always. Else the privileged bin at that second must be one of the row's admitted bins
+    (tape or vehicle missing -> no)."""
+    sit = row.get('situational')
+    if not sit or sit.get('mode') != 'privileged':
+        return True
+    got = None if teacher is None else teacher.bin(vid, time_s)
+    return got is not None and got != UNOBSERVED and any(
+        all(got[k] == b[k] for k in ('cong', 'lane_diff')) for b in sit['bins'])
 
 
 def build(act_paths, analyses, bank_paths, *, cells, provenance, onset_paths, structured=(), allowed_scope='all',
@@ -314,7 +332,8 @@ def build(act_paths, analyses, bank_paths, *, cells, provenance, onset_paths, st
             g_rows.append(dict(arm='B', regime=cell, family=fam, baseline='mappo', n=best['effect']['n'],
                                mean_veh_s=-best['effect']['mean'], lb95_veh_s=-best['effect']['hi'],
                                ub95_veh_s=-best['effect']['lo'], fair=True, source='wm_bank', n2_parity=PARITY_PASS,
-                               template_sha256=sha, situational=dict(bins=situation['bins'], pool=best['pool'],
+                               template_sha256=sha, situational=dict(bins=situation['bins'], mode=mode, rule=RULE,
+                               pool=best['pool'],
                                unit='veh-s per activation window (pooled per-activation effect, best admitted bin)')))
             templates.append(dict(cell=cell, family=fam, template=json.loads(json.dumps(tpl)),
                                   offer_condition=dict(cond, situation=situation)))
@@ -330,6 +349,9 @@ def build(act_paths, analyses, bank_paths, *, cells, provenance, onset_paths, st
     if not g_rows:
         raise NoAdmission(pairs)
     doc = guidance_doc(g_rows, sources=sources, provenance=provenance)
+    doc['source']['rule'] = (RULE+': per-activation effect vs the paired u0 window (S-MULTICRIT-ACT, verbatim), '
+                             'pooled per (plan, onset bin), cluster bootstrap over (source, root, cell, seed), 4,000 '
+                             'resamples RNG 20261107; lb95/mean/ub95 = gain of the best admitted bin (veh-s/window)')
     doc['clean5c'] = dict(rule=BANK_RULE, provenance=provenance, threshold_s=10.0,
                           verified_cells=sorted({r['regime'] for r in g_rows}), skipped={}, rejected=rejected,
                           templates=templates)
@@ -390,12 +412,15 @@ def main(argv=None):
                     structured=sorted(structured), allowed_scope=a.allowed_scope, mode=a.mode)
     except NoAdmission as e:
         report = Path(str(out)+'.NO_ADMISSION.json')
-        report.write_text(json.dumps(dict(rule=RULE, pairs=e.pairs), indent=1, sort_keys=True), encoding='utf-8')
+        report.write_bytes((json.dumps(dict(rule=RULE, pairs=e.pairs), indent=1, sort_keys=True)+chr(10)).encode('utf-8'))
         raise SystemExit('NO ADMISSION (report: '+str(report)+')')
     doc['situational']['structured_excluded'] = sorted(structured)
     none = check(doc, P20_CELLS)
-    out.write_text(json.dumps(doc, indent=1, sort_keys=True), encoding='utf-8')
-    print(json.dumps(dict(out=str(out), sha256=doc['source']['sha256'], none=list(none),
+    data = (json.dumps(doc, indent=1, sort_keys=True)+chr(10)).encode('utf-8')     # LF bytes on every OS
+    out.write_bytes(data)
+    file_sha = hashlib.sha256(data).hexdigest()
+    Path(str(out)+'.sha256').write_bytes((f'{file_sha}  {out.name}'+chr(10)).encode('utf-8'))
+    print(json.dumps(dict(out=str(out), file_sha256=file_sha, rows_sha256=doc['source']['sha256'], none=list(none),
                           admitted=[(p['family'], p['bin'], p['pool'], p['effect']) for p in doc['situational']['pairs']
                                     if p['admitted']])))
 
