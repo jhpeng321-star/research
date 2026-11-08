@@ -222,13 +222,30 @@ def parity_receipt(doc):
 
 
 C_NO_GUIDANCE_CELLS = ('D2400_p40',)
+C_G4_WORKERS = 8        # c4/speed (owner 2026-11-08): G4 one-job pool of 8 (configurable); memory proof
+                        # clean5c/MEMORY_PROOF_SPEED.md: both parents 141 GB + 8 x 2.6 GB measured = 161.8 <= 165
+# learn-step threads: OFF by default (1). Measured (c4/speed micro benchmark, real track2 train step, hidden 64): the
+# per-record learning loop runs SLOWER with intra-op threads (1 thr 18.8 s, 4 thr 25.5 s, 8 thr 30.9 s, 16 thr 42.8 s
+# on 22 cores), so the opt-in mechanism exists but is not enabled; pass learn_threads_max > 1 to turn it on.
+C_LEARN_THREADS_MAX = 1
+
+
+def _c_overrides(g4_workers=C_G4_WORKERS, learn_threads_max=C_LEARN_THREADS_MAX):
+    from .launch_training import LEARN_THREADS_RULE
+    out = dict(VARIANT_F8['cfg_overrides'], g4_workers=g4_workers)
+    if learn_threads_max > 1:
+        out['learn_threads'] = dict(rule=LEARN_THREADS_RULE, max=learn_threads_max,
+                                    reserve=VARIANT_F8['cfg_overrides']['wave_workers'])
+    return out
 VARIANT_C = dict(VARIANT_F8, run=C_RUN, quote_file=C_QUOTE_FILE, approval_file=C_APPROVAL_FILE, budget_file=C_BUDGET_FILE,
                  approved=c4.APPROVED_BY_RUN[C_RUN], keys=keys_c, guidance_missing_ok=C_NO_GUIDANCE_CELLS,
+                 cfg_overrides=None,
                  design=VARIANT_F8['design']+' '+C_NOTE, authority=VARIANT_F8['authority']+'; MAIN 2026-11-08 clean5c '
                  '(L5C) 3,600,000 sim-s; '+C_NOTE,
                  newmap_extra=dict(VARIANT_F8['newmap_extra'], variant='clean5c', clean5c_note=C_NOTE,
                                    program_targets='B: WM-verified bank templates (EV-BC on their strategy labels); R: none'))
 
 
-def prepare_c(source, *, root=C_ROOT, **kwargs):
-    return c5.prepare(source, root=root, variant=VARIANT_C, **kwargs)
+def prepare_c(source, *, root=C_ROOT, g4_workers=C_G4_WORKERS, learn_threads_max=C_LEARN_THREADS_MAX, **kwargs):
+    variant = dict(VARIANT_C, cfg_overrides=_c_overrides(g4_workers, learn_threads_max))
+    return c5.prepare(source, root=root, variant=variant, **kwargs)

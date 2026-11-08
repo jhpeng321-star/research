@@ -136,7 +136,9 @@ class Chain:
     def prepare(self):
         from tools.coopmwm import clean5b_restart as c5
         i = self.inputs
+        speed = {k: i[k] for k in ('g4_workers', 'learn_threads_max') if k in i} if self.variant == 'C' else {}
         dict(F=c5.prepare_f, F8=c5.prepare_f8, C=c5.prepare_c).get(self.variant, c5.prepare)(self.source, contexts=read(i['contexts_path']), guidance_doc=read(i['guidance_path']),
+                   **speed,
                    quote_doc=read(self.control/self.quote_file), approval=read(self.control/self.approval_file),
                    prior_runtime_sim_s=i['prior_runtime_sim_s'], host=i['host'], provenance=i['provenance'],
                    root=self.root)

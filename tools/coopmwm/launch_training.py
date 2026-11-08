@@ -125,6 +125,41 @@ def augmentation_receipt(cfg):
     return receipt
 
 
+LEARN_THREADS_RULE = ('c4/speed (owner 2026-11-08): the B/R learning step (train_update: EV-BC / trigger PPO / '
+                      'fairness reward, bank + FULLPOL supervision) runs with torch threads = min(max, cores - reserve) '
+                      'and returns to 1 thread afterwards; collection, safety, reward building and G4 stay single-'
+                      'threaded. Same math, float-tolerance equivalent (intra-op reductions only); B = R.')
+
+
+def learn_threads(cfg):
+    """Opt-in torch thread count for the learning step (absent = None: unchanged 1-thread path)."""
+    value = cfg.get('learn_threads')
+    if value is None:
+        return None
+    if (not isinstance(value, dict) or set(value) != {'rule', 'max', 'reserve'} or value['rule'] != LEARN_THREADS_RULE
+            or type(value['max']) is not int or not 1 <= value['max'] <= 64
+            or type(value['reserve']) is not int or not 0 <= value['reserve'] <= 256):
+        raise ValueError('learn_threads needs the registered rule, max (1..64) and reserve (>= 0)')
+    return max(1, min(value['max'], (os.cpu_count() or 1)-value['reserve']))
+
+
+class _threads:
+    """Context: torch intra-op threads = n for the block, restored afterwards (n None = no change)."""
+    def __init__(self, n):
+        self.n, self.previous = n, None
+
+    def __enter__(self):
+        if self.n is not None:
+            self.previous = torch.get_num_threads()
+            torch.set_num_threads(self.n)
+        return self
+
+    def __exit__(self, *exc):
+        if self.n is not None:
+            torch.set_num_threads(self.previous)
+        return False
+
+
 def update(cfg, arm, u, *, smoke=False):
     root = Path(cfg['run_root'])
     augmentation = augmentation_receipt(cfg)
@@ -172,20 +207,21 @@ def update(cfg, arm, u, *, smoke=False):
                           replacement_receipts=resume['receipts'])
     health(root)
     envelope = p2.reward_update(native, arm, u, episodes) if arm != 'A' else None
-    if paired_credit:
-        synergy = g4.paired_envelope(native, arm, u, episodes,
-            wait=lambda path: wait_for(path, root))
-        learning = hooks['train_update'](episodes, rewards=envelope, synergy=synergy)
-    else:
-        learning = hooks['train_update'](episodes, rewards=envelope)
-    if arm != 'A':
-        bank = production.bank_move_supervision(hooks['runtime'])
-        learning.update(bank_move_ce=bank['final_ce'], bank_trigger=bank)
-        # FULLPOL (opt-in): exact free_program BC / regime EV-BC + report-only receipts.
-        from .fullpol_learn import supervise as fullpol_supervise
-        fullpol = fullpol_supervise(hooks['runtime'], episodes)
-        if fullpol is not None:
-            learning['fullpol'] = fullpol
+    synergy = (g4.paired_envelope(native, arm, u, episodes, wait=lambda path: wait_for(path, root))
+               if paired_credit else None)
+    with _threads(learn_threads(cfg) if arm != 'A' else None):     # c4/speed (opt-in): learning step only
+        if paired_credit:
+            learning = hooks['train_update'](episodes, rewards=envelope, synergy=synergy)
+        else:
+            learning = hooks['train_update'](episodes, rewards=envelope)
+        if arm != 'A':
+            bank = production.bank_move_supervision(hooks['runtime'])
+            learning.update(bank_move_ce=bank['final_ce'], bank_trigger=bank)
+            # FULLPOL (opt-in): exact free_program BC / regime EV-BC + report-only receipts.
+            from .fullpol_learn import supervise as fullpol_supervise
+            fullpol = fullpol_supervise(hooks['runtime'], episodes)
+            if fullpol is not None:
+                learning['fullpol'] = fullpol
     checkpoint = hooks['save_checkpoint']()
     from .practice_starts import update_report
     metrics = production.update_metrics(arm, episodes, learning, envelope,
