@@ -59,7 +59,9 @@ EXTRA_TRAIN_RANGES = ((989000, 989099),
                       # c4/wmverify only - S-WMVERIFY r4 (MAIN 2026-11-08): 991200-991299, audited unused, TRAIN-type.
                       (991200, 991299),
                       # c4/wmverify only - S-WMVERIFY second look (MAIN 2026-11-08 23:57): 991300-991347, audited unused.
-                      (991300, 991347))
+                      (991300, 991347),
+                      # c4/wmverify only - S-WMVERIFY r4-r6 (MAIN 991200+ allocation): 991348-991399, audited unused.
+                      (991348, 991399))
 HELDOUT_RANGE = (989600, 989699)
 FORBIDDEN_RANGES = ((964000, 964199), (962000, 962999), (977000, 977999))
 EPISODE_S = 1200

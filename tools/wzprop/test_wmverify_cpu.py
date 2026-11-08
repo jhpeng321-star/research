@@ -99,10 +99,12 @@ def test_seed_range_and_cells():
     assert ms.seed_scope(991140) == 'train' and ms.seed_scope(991199) == 'train'
     assert len(V.parse_cells(['D3200_p20:991140-991151'])[0][3]) == 12
     assert ms.seed_scope(991200) == 'train' and ms.seed_scope(991299) == 'train'
-    assert ms.seed_scope(991300) == 'train' and ms.seed_scope(991347) == 'train' and ms.seed_scope(991348) is None
+    assert ms.seed_scope(991300) == 'train' and ms.seed_scope(991347) == 'train'
+    assert ms.seed_scope(991348) == 'train' and ms.seed_scope(991399) == 'train' and ms.seed_scope(991400) is None
+    assert len(V.parse_cells(['D2800_p20:991348-991371'])[0][3]) == 24
     assert len(V.parse_cells(['D2800_p20:991300-991347'])[0][3]) == 48
     assert len(V.parse_cells(['D3200_p20:991188-991211'])[0][3]) == 24
-    for bad in (['D3200_p20:991139-991140'], ['D3200_p20:991347-991348'], ['D3200_p20:991100-991101']):
+    for bad in (['D3200_p20:991139-991140'], ['D3200_p20:991399-991400'], ['D3200_p20:991100-991101']):
         with pytest.raises(ValueError):
             V.parse_cells(bad)
     assert ms.seed_scope(989900) is None and ms.seed_scope(989949) is None
