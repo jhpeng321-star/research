@@ -13,7 +13,7 @@ from tools.coopmwm import oracle_plan as O
 
 UNION = Path('E:/research-dense/runs/active/C4-V7FT-20261017/wmverify_r3/GUIDANCE_C4SIT_priv_UNION_r3.json')
 #: oracle_digest() prefix at c4/oracle-arm; any change to an executed function / constant moves it (re-registration)
-PINNED = '7058d2ac7d58'
+PINNED = '0ce822edd9e4'
 
 
 def role(sumo_lane, v_w=20.0, hold_s=120, onset_s=0, rank=0, lc=None):
@@ -27,13 +27,16 @@ def cond(roles, bins, trigger='wall', cooldown=120, mode='privileged', gate=None
                 situation=dict(bins=bins, mode=mode, rule=O.SITUATION_RULE))
 
 
-def bank(entries, cell='D2800_p20'):
-    """entries: [(family, lb95, cond, key or None -> correct key)]"""
+def bank(entries, cell='D2800_p20', unconditional=()):
+    """entries: [(family, lb95, cond, key or None -> correct key)]; unconditional: families with an unconditional row"""
     rows, tpls = [], []
     for fam, lb, c, key in entries:
         k = O.strategy_key(O.spec_of(fam, c)) if key is None else key
+        sit = dict(bins=c['situation']['bins'])
+        if fam in unconditional:
+            sit['unconditional'] = dict(unconditional=True)
         rows.append(dict(arm='B', regime=cell, family=fam, lb95_veh_s=lb, plan_source='wm' if fam.startswith('mut_')
-                         else 'rule', template_sha256='t'+fam, situational=dict(bins=c['situation']['bins'])))
+                         else 'rule', template_sha256='t'+fam, situational=sit))
         tpls.append(dict(cell=cell, family=fam, template=dict(source=dict(strategy_key=k)), offer_condition=c))
     return dict(rows=rows, clean5c=dict(templates=tpls))
 
@@ -237,3 +240,23 @@ def test_runner_oracle_hook_guards(tmp_path, monkeypatch):
         R.oracle_hook(dict(ck, oracle_sha256='0' * 64), dict(cell_key='D2800_p20'))
     with pytest.raises(ValueError, match='bank changed'):
         R.oracle_hook(dict(ck, oracle_bank=dict(path=str(p), file_sha256='0' * 64)), dict(cell_key='D2800_p20'))
+
+
+ALL4 = [dict(cong=c, lane_diff=d) for c in ('congested', 'free') for d in ('L2faster', 'L2notfaster')]
+
+
+def test_unconditional_never_preempts_admitted_feasible_situational():
+    """N6: situational (bin-gated) rows first; an unconditional row (higher, per-episode lb95) acts only when no
+    situational row is admitted AND feasible at that step."""
+    doc = bank([('rule_unc', 900.0, cond([role(1, v_w=21.0), role(2, v_w=21.0)], ALL4), None),
+                ('mut_sit', 100.0, DUO, None)], unconditional=('rule_unc',))
+    plans, _ = O.bank_plans(doc, 'D2800_p20')
+    assert [(p['family'], p['row_class']) for p in plans] == [('mut_sit', 'situational'), ('rule_unc', 'unconditional')]
+    core = O.OracleCore(doc, 'D2800_p20')
+    core.step(wm_rows(), commands(wm_rows()), 300)                  # free/L2notfaster: situational admitted + feasible
+    assert [(a['family'], a['row_class']) for a in core.acts] == [('mut_sit', 'situational')]
+    core2 = O.OracleCore(doc, 'D2800_p20')
+    core2.step(wm_rows(slow_drop=True), commands(wm_rows()), 300)   # congested: situational not admitted -> fallback
+    assert [(a['family'], a['row_class']) for a in core2.acts] == [('rule_unc', 'unconditional')]
+    r = core2.receipts()
+    assert r['activations_by_row_class'] == {'unconditional': 1} and r['acts'][0]['row_class'] == 'unconditional'

@@ -392,10 +392,14 @@ def bank_plans(bank_doc, cell_key):
         if spec['gate'] not in GATES or spec['start_gate'] not in START_GATES or spec['phases'] is not None:
             refused['gate_or_phases'].append(fam)
             continue
+        unconditional = bool((r.get('situational') or {}).get('unconditional') or sit.get('unconditional'))
         plans.append(dict(family=fam, lb95=float(r['lb95_veh_s']), key=key, spec=spec,
+                          row_class='unconditional' if unconditional else 'situational',
                           bins=[dict(cong=b['cong'], lane_diff=b['lane_diff']) for b in sit['bins']],
                           plan_source=r.get('plan_source'), template_sha256=r.get('template_sha256')))
-    plans.sort(key=lambda p: (-p['lb95'], p['key'], p['family']))      # deterministic priority (N6 (a))
+    # N6 2026-11-09: situational (bin-gated) rows first, lb95 descending, then strategy_key; unconditional rows (act
+    # whenever feasible, episode-level lb95 - not comparable) only when no situational row activates at that step
+    plans.sort(key=lambda p: (p['row_class'] != 'situational', -p['lb95'], p['key'], p['family']))
     return plans, {k: v for k, v in refused.items() if v}
 
 
@@ -438,7 +442,7 @@ class OracleCore:
             self.offers[(plan['family'], json.dumps(got, sort_keys=True))] += 1
             if not bin_admitted(got, plan['bins']):
                 return None
-            self._last = dict(family=plan['family'], bin=got, holder=hold['id'])
+            self._last = dict(family=plan['family'], bin=got, holder=hold['id'], row_class=plan['row_class'])
             return mem
         return select
 
@@ -478,12 +482,13 @@ class OracleCore:
     def receipts(self):
         fam = Counter(a['family'] for a in self.acts)
         return dict(schema=SCHEMA, cell_key=self.cell_key, plans=[dict(family=p['family'], lb95=p['lb95'], key=p['key'],
-                    bins=p['bins'], plan_source=p['plan_source']) for p in self.plans],
+                    bins=p['bins'], plan_source=p['plan_source'], row_class=p['row_class']) for p in self.plans],
                     refused=self.refused, refused_counts={k: len(v) for k, v in self.refused.items()},
                     activations=len(self.acts), activations_by_family=dict(fam),
                     issued=sum(len(c.issued) for c in self.cores),
-                    acts=[dict(t=a['t'], family=a.get('family'), members=a['members'], holder=a.get('holder'),
-                               bin=a.get('bin'), release=a.get('release')) for a in self.acts],
+                    activations_by_row_class=dict(Counter(a.get('row_class') for a in self.acts)),
+                    acts=[dict(t=a['t'], family=a.get('family'), row_class=a.get('row_class'), members=a['members'],
+                               holder=a.get('holder'), bin=a.get('bin'), release=a.get('release')) for a in self.acts],
                     offers={f'{k[0]}|{k[1]}': v for k, v in sorted(self.offers.items())})
 
 
