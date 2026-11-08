@@ -25,8 +25,9 @@ RULE = ('priority v2 (MAIN 2026-11-09): situational rows rank first by lb95; the
         'cell; originals in row.ranking')
 
 
-def prioritise(doc, scale=0.5):
-    rows = copy.deepcopy(doc['rows'])
+def prioritise(doc, scale=0.5, exclude=()):
+    excl = set(exclude)
+    rows = [r for r in copy.deepcopy(doc['rows']) if r['family'] not in excl]
     uncond = lambda r: bool((r.get('situational') or {}).get('unconditional'))  # noqa: E731
     for r in rows:
         r['row_class'] = 'unconditional_fallback' if uncond(r) else 'situational'
@@ -52,7 +53,13 @@ def prioritise(doc, scale=0.5):
     out['source']['rule'] = doc['source'].get('rule', out['source']['rule'])
     for k in set(doc)-set(out):
         out[k] = copy.deepcopy(doc[k])
-    out['priority'] = dict(rule=RULE, scale=scale, parent_rows_sha256=doc['source']['sha256'])
+    if excl:
+        if 'clean5c' in out:
+            out['clean5c']['templates'] = [t for t in out['clean5c']['templates'] if t['family'] not in excl]
+        if 'situational' in out:
+            out['situational']['pairs'] = [q for q in out['situational']['pairs'] if q['family'] not in excl]
+    out['priority'] = dict(rule=RULE, scale=scale, parent_rows_sha256=doc['source']['sha256'],
+                           excluded=sorted(excl))
     return out
 
 
@@ -61,11 +68,12 @@ if __name__ == '__main__':
     ap.add_argument('--doc', required=True)
     ap.add_argument('--out', required=True)
     ap.add_argument('--scale', type=float, default=0.5)
+    ap.add_argument('--exclude', nargs='*', default=(), help='families dropped (rows, templates, pairs)')
     a = ap.parse_args()
     out = Path(a.out)
     if out.exists():
         raise SystemExit('refusing to overwrite '+str(out))
-    doc = prioritise(json.loads(Path(a.doc).read_bytes()), a.scale)
+    doc = prioritise(json.loads(Path(a.doc).read_bytes()), a.scale, a.exclude)
     data = (json.dumps(doc, indent=1, sort_keys=True)+'\n').encode('utf-8')
     out.write_bytes(data)
     sha = hashlib.sha256(data).hexdigest()

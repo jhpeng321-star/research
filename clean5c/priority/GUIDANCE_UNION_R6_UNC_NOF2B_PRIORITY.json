@@ -1,0 +1,5029 @@
+{
+ "clean5c": {
+  "provenance": "CLEAN5C5 situational admission UNION (privileged teacher bins, ALLOWED per guidance-cell penetration; WM mut_* + verified rule plans, plan_source wm|rule) over MC, P20, REP, R3 D2400/D2400C/D2800/D3200, R5 D2800 congested | UNC: duo12_v20 D2800_p20 unconditional (act whenever feasible) per MAIN 23:42 confirmation PASS; base UNION_r5 (adds R5 congested) | R6 UNC: mut_b66c4207, mut_f2b812b1 unconditional at D2800_p20 (UNC rule PASS)",
+  "rejected": {},
+  "rule": "fullpol-clean5c-bank-guidance-v1",
+  "skipped": {},
+  "templates": [
+   {
+    "cell": "D2800_p20",
+    "family": "duo12_v20",
+    "offer_condition": {
+     "cooldown_s": 120,
+     "decision": "every whole second t >= 300 s once t >= next_ok (= last activation + cooldown) and fewer than `slots` activations run",
+     "edge": "up",
+     "gate": null,
+     "member_rule": "wall: one CAV per SUMO up lane 0/1/2 in the zone, spread <= 200 m, key (spread, -max x); roles take the member of their lane",
+     "own_wm_lanes": [
+      0,
+      1
+     ],
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 0,
+       "phase": 0,
+       "rank": 0,
+       "slot": 0,
+       "sumo_lane": 1,
+       "v_w": 20.0,
+       "wm_lane": 1
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 0,
+       "phase": 0,
+       "rank": 0,
+       "slot": 1,
+       "sumo_lane": 2,
+       "v_w": 20.0,
+       "wm_lane": 0
+      }
+     ],
+     "situation": {
+      "bins": [
+       {
+        "cong": "congested",
+        "lane_diff": "L2faster"
+       },
+       {
+        "cong": "congested",
+        "lane_diff": "L2notfaster"
+       },
+       {
+        "cong": "free",
+        "lane_diff": "L2faster"
+       },
+       {
+        "cong": "free",
+        "lane_diff": "L2notfaster"
+       }
+      ],
+      "mode": "privileged",
+      "rule": "fullpol-clean5c4-situational-v4",
+      "unconditional": true
+     },
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "wall",
+     "zone": "full",
+     "zone_s": [
+      -1724.56,
+      -324.56
+     ],
+     "zone_upstream_m": [
+      400.0,
+      1800.0
+     ],
+     "zone_x": [
+      896.0,
+      2296.0
+     ]
+    },
+    "plan_source": "rule",
+    "template": {
+     "duration_s": 120,
+     "join_el": [
+      0,
+      0
+     ],
+     "join_rules": [
+      null,
+      {
+       "ds": [
+        -200.0,
+        200.0
+       ],
+       "lane": 0
+      }
+     ],
+     "map": "wz3to2",
+     "members": [
+      "@0",
+      "@1"
+     ],
+     "programs": [
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 120,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.0,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 20.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 0,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      },
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 120,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.0,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 20.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 0,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      }
+     ],
+     "rule": "lcexec-free-program-v1",
+     "schema": "lcexec-free-program-v1",
+     "source": {
+      "cell": "D2800_p20",
+      "family": "duo12_v20",
+      "phase": 0,
+      "strategy": "duo12_v20",
+      "strategy_key": "750a55c9439a2efc",
+      "study": "S-WMVERIFY",
+      "t0": null,
+      "template_of": "strategy",
+      "variant": "duo12_v20"
+     }
+    }
+   },
+   {
+    "cell": "D3200_p20",
+    "family": "g2_gap1",
+    "offer_condition": {
+     "cooldown_s": 120,
+     "decision": "every whole second t >= 300 s once t >= next_ok (= last activation + cooldown) and fewer than `slots` activations run",
+     "edge": "up",
+     "gate": null,
+     "member_rule": "lanes: per role the rank-th most downstream zone CAV of its SUMO lane (ties by id), members distinct, spread <= 300 m",
+     "own_wm_lanes": [
+      0,
+      1
+     ],
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 0,
+       "phase": 0,
+       "rank": 0,
+       "slot": 0,
+       "sumo_lane": 2,
+       "v_w": 22.0,
+       "wm_lane": 0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 90,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 20,
+       "phase": 0,
+       "rank": 0,
+       "slot": 1,
+       "sumo_lane": 1,
+       "v_w": 18.0,
+       "wm_lane": 1
+      }
+     ],
+     "situation": {
+      "bins": [
+       {
+        "cong": "free",
+        "lane_diff": "L2notfaster"
+       }
+      ],
+      "mode": "privileged",
+      "rule": "fullpol-clean5c4-situational-v4"
+     },
+     "slots": 1,
+     "spread_m": 300.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "full",
+     "zone_s": [
+      -1724.56,
+      -324.56
+     ],
+     "zone_upstream_m": [
+      400.0,
+      1800.0
+     ],
+     "zone_x": [
+      896.0,
+      2296.0
+     ]
+    },
+    "plan_source": "rule",
+    "template": {
+     "duration_s": 120,
+     "join_el": [
+      0,
+      0
+     ],
+     "join_rules": [
+      null,
+      {
+       "ds": [
+        -300.0,
+        300.0
+       ],
+       "lane": 1
+      }
+     ],
+     "map": "wz3to2",
+     "members": [
+      "@0",
+      "@1"
+     ],
+     "programs": [
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 120,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.0,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 22.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 0,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      },
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 90,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.0,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 18.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 20,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      }
+     ],
+     "rule": "lcexec-free-program-v1",
+     "schema": "lcexec-free-program-v1",
+     "source": {
+      "cell": "D3200_p20",
+      "family": "g2_gap1",
+      "phase": 0,
+      "strategy": "g2_gap1",
+      "strategy_key": "3da551e8da79676f",
+      "study": "S-WMVERIFY",
+      "t0": null,
+      "template_of": "strategy",
+      "variant": "g2_gap1"
+     }
+    }
+   },
+   {
+    "cell": "D2800_p20",
+    "family": "mut_006c290e03ad3d3c",
+    "offer_condition": {
+     "cooldown_s": 200,
+     "decision": "every whole second t >= 300 s once t >= next_ok (= last activation + cooldown) and fewer than `slots` activations run",
+     "edge": "up",
+     "gate": null,
+     "member_rule": "wall: one CAV per SUMO up lane 0/1/2 in the zone, spread <= 200 m, key (spread, -max x); roles take the member of their lane",
+     "own_wm_lanes": [
+      0,
+      1
+     ],
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 0,
+       "phase": 0,
+       "rank": 0,
+       "slot": 0,
+       "sumo_lane": 1,
+       "v_w": 18.0,
+       "wm_lane": 1
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 20,
+       "phase": 0,
+       "rank": 0,
+       "slot": 1,
+       "sumo_lane": 2,
+       "v_w": 22.0,
+       "wm_lane": 0
+      }
+     ],
+     "situation": {
+      "bins": [
+       {
+        "cong": "free",
+        "lane_diff": "L2notfaster"
+       }
+      ],
+      "mode": "privileged",
+      "rule": "fullpol-clean5c4-situational-v4"
+     },
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "wall",
+     "zone": "full",
+     "zone_s": [
+      -1724.56,
+      -324.56
+     ],
+     "zone_upstream_m": [
+      400.0,
+      1800.0
+     ],
+     "zone_x": [
+      896.0,
+      2296.0
+     ]
+    },
+    "plan_source": "wm",
+    "template": {
+     "duration_s": 200,
+     "join_el": [
+      0,
+      0
+     ],
+     "join_rules": [
+      null,
+      {
+       "ds": [
+        -200.0,
+        200.0
+       ],
+       "lane": 0
+      }
+     ],
+     "map": "wz3to2",
+     "members": [
+      "@0",
+      "@1"
+     ],
+     "programs": [
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 120,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.0,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 18.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 0,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      },
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 180,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.0,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 22.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 20,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      }
+     ],
+     "rule": "lcexec-free-program-v1",
+     "schema": "lcexec-free-program-v1",
+     "source": {
+      "cell": "D2800_p20",
+      "family": "mut_006c290e03ad3d3c",
+      "phase": 0,
+      "strategy": "mut_006c290e03ad3d3c",
+      "strategy_key": "006c290e03ad3d3c",
+      "study": "S-WMVERIFY",
+      "t0": null,
+      "template_of": "strategy",
+      "variant": "mut_006c290e03ad3d3c"
+     }
+    }
+   },
+   {
+    "cell": "D2800_p20",
+    "family": "mut_0d50e4e18041530d",
+    "offer_condition": {
+     "cooldown_s": 120,
+     "decision": "every whole second t >= 300 s once t >= next_ok (= last activation + cooldown) and fewer than `slots` activations run",
+     "edge": "up",
+     "gate": null,
+     "member_rule": "wall: one CAV per SUMO up lane 0/1/2 in the zone, spread <= 200 m, key (spread, -max x); roles take the member of their lane",
+     "own_wm_lanes": [
+      0,
+      1
+     ],
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 0,
+       "phase": 0,
+       "rank": 0,
+       "slot": 0,
+       "sumo_lane": 1,
+       "v_w": 20.0,
+       "wm_lane": 1
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 0,
+       "phase": 0,
+       "rank": 0,
+       "slot": 1,
+       "sumo_lane": 2,
+       "v_w": 19.0,
+       "wm_lane": 0
+      }
+     ],
+     "situation": {
+      "bins": [
+       {
+        "cong": "free",
+        "lane_diff": "L2faster"
+       },
+       {
+        "cong": "free",
+        "lane_diff": "L2notfaster"
+       }
+      ],
+      "mode": "privileged",
+      "rule": "fullpol-clean5c4-situational-v4"
+     },
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "wall",
+     "zone": "near",
+     "zone_s": [
+      -1124.56,
+      -324.56
+     ],
+     "zone_upstream_m": [
+      400.0,
+      1200.0
+     ],
+     "zone_x": [
+      1496.0,
+      2296.0
+     ]
+    },
+    "plan_source": "wm",
+    "template": {
+     "duration_s": 120,
+     "join_el": [
+      0,
+      0
+     ],
+     "join_rules": [
+      null,
+      {
+       "ds": [
+        -200.0,
+        200.0
+       ],
+       "lane": 0
+      }
+     ],
+     "map": "wz3to2",
+     "members": [
+      "@0",
+      "@1"
+     ],
+     "programs": [
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 120,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.0,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 20.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 0,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      },
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 120,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.0,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 19.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 0,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      }
+     ],
+     "rule": "lcexec-free-program-v1",
+     "schema": "lcexec-free-program-v1",
+     "source": {
+      "cell": "D2800_p20",
+      "family": "mut_0d50e4e18041530d",
+      "phase": 0,
+      "strategy": "mut_0d50e4e18041530d",
+      "strategy_key": "0d50e4e18041530d",
+      "study": "S-WMVERIFY",
+      "t0": null,
+      "template_of": "strategy",
+      "variant": "mut_0d50e4e18041530d"
+     }
+    }
+   },
+   {
+    "cell": "D2800_p20",
+    "family": "mut_6c2bf382711cbc37",
+    "offer_condition": {
+     "cooldown_s": 120,
+     "decision": "every whole second t >= 300 s once t >= next_ok (= last activation + cooldown) and fewer than `slots` activations run",
+     "edge": "up",
+     "gate": null,
+     "member_rule": "wall: one CAV per SUMO up lane 0/1/2 in the zone, spread <= 200 m, key (spread, -max x); roles take the member of their lane",
+     "own_wm_lanes": [
+      0,
+      1
+     ],
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 0,
+       "phase": 0,
+       "rank": 0,
+       "slot": 0,
+       "sumo_lane": 1,
+       "v_w": 20.0,
+       "wm_lane": 1
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 90,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 0,
+       "phase": 0,
+       "rank": 0,
+       "slot": 1,
+       "sumo_lane": 2,
+       "v_w": 18.0,
+       "wm_lane": 0
+      }
+     ],
+     "situation": {
+      "bins": [
+       {
+        "cong": "congested",
+        "lane_diff": "L2notfaster"
+       },
+       {
+        "cong": "free",
+        "lane_diff": "L2faster"
+       }
+      ],
+      "mode": "privileged",
+      "rule": "fullpol-clean5c4-situational-v4"
+     },
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "wall",
+     "zone": "full",
+     "zone_s": [
+      -1724.56,
+      -324.56
+     ],
+     "zone_upstream_m": [
+      400.0,
+      1800.0
+     ],
+     "zone_x": [
+      896.0,
+      2296.0
+     ]
+    },
+    "plan_source": "wm",
+    "template": {
+     "duration_s": 120,
+     "join_el": [
+      0,
+      0
+     ],
+     "join_rules": [
+      null,
+      {
+       "ds": [
+        -200.0,
+        200.0
+       ],
+       "lane": 0
+      }
+     ],
+     "map": "wz3to2",
+     "members": [
+      "@0",
+      "@1"
+     ],
+     "programs": [
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 120,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.5,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 20.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 0,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      },
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 90,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.5,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 18.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 0,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      }
+     ],
+     "rule": "lcexec-free-program-v1",
+     "schema": "lcexec-free-program-v1",
+     "source": {
+      "cell": "D2800_p20",
+      "family": "mut_6c2bf382711cbc37",
+      "phase": 0,
+      "strategy": "mut_6c2bf382711cbc37",
+      "strategy_key": "6c2bf382711cbc37",
+      "study": "S-WMVERIFY",
+      "t0": null,
+      "template_of": "strategy",
+      "variant": "mut_6c2bf382711cbc37"
+     }
+    }
+   },
+   {
+    "cell": "D2800_p20",
+    "family": "mut_cfdbafe5f3316f1a",
+    "offer_condition": {
+     "cooldown_s": 120,
+     "decision": "every whole second t >= 300 s once t >= next_ok (= last activation + cooldown) and fewer than `slots` activations run",
+     "edge": "up",
+     "gate": null,
+     "member_rule": "wall: one CAV per SUMO up lane 0/1/2 in the zone, spread <= 200 m, key (spread, -max x); roles take the member of their lane",
+     "own_wm_lanes": [
+      0,
+      1
+     ],
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 0,
+       "phase": 0,
+       "rank": 0,
+       "slot": 0,
+       "sumo_lane": 1,
+       "v_w": 19.0,
+       "wm_lane": 1
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 0,
+       "phase": 0,
+       "rank": 0,
+       "slot": 1,
+       "sumo_lane": 2,
+       "v_w": 21.0,
+       "wm_lane": 0
+      }
+     ],
+     "situation": {
+      "bins": [
+       {
+        "cong": "congested",
+        "lane_diff": "L2faster"
+       },
+       {
+        "cong": "free",
+        "lane_diff": "L2notfaster"
+       }
+      ],
+      "mode": "privileged",
+      "rule": "fullpol-clean5c4-situational-v4"
+     },
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "wall",
+     "zone": "full",
+     "zone_s": [
+      -1724.56,
+      -324.56
+     ],
+     "zone_upstream_m": [
+      400.0,
+      1800.0
+     ],
+     "zone_x": [
+      896.0,
+      2296.0
+     ]
+    },
+    "plan_source": "wm",
+    "template": {
+     "duration_s": 120,
+     "join_el": [
+      0,
+      0
+     ],
+     "join_rules": [
+      null,
+      {
+       "ds": [
+        -200.0,
+        200.0
+       ],
+       "lane": 0
+      }
+     ],
+     "map": "wz3to2",
+     "members": [
+      "@0",
+      "@1"
+     ],
+     "programs": [
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 120,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.0,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 19.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 0,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      },
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 120,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.5,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 21.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 0,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      }
+     ],
+     "rule": "lcexec-free-program-v1",
+     "schema": "lcexec-free-program-v1",
+     "source": {
+      "cell": "D2800_p20",
+      "family": "mut_cfdbafe5f3316f1a",
+      "phase": 0,
+      "strategy": "mut_cfdbafe5f3316f1a",
+      "strategy_key": "cfdbafe5f3316f1a",
+      "study": "S-WMVERIFY",
+      "t0": null,
+      "template_of": "strategy",
+      "variant": "mut_cfdbafe5f3316f1a"
+     }
+    }
+   },
+   {
+    "cell": "D2800_p20",
+    "family": "mut_b66c4207002b5a15",
+    "offer_condition": {
+     "cooldown_s": 140,
+     "decision": "every whole second t >= 300 s once t >= next_ok (= last activation + cooldown) and fewer than `slots` activations run",
+     "edge": "up",
+     "gate": null,
+     "member_rule": "wall: one CAV per SUMO up lane 0/1/2 in the zone, spread <= 200 m, key (spread, -max x); roles take the member of their lane",
+     "own_wm_lanes": [
+      0,
+      1
+     ],
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 20,
+       "phase": 0,
+       "rank": 0,
+       "slot": 0,
+       "sumo_lane": 1,
+       "v_w": 20.0,
+       "wm_lane": 1
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 90,
+       "lc_target_sumo": null,
+       "lc_target_wm": null,
+       "onset_s": 0,
+       "phase": 0,
+       "rank": 0,
+       "slot": 1,
+       "sumo_lane": 2,
+       "v_w": 18.0,
+       "wm_lane": 0
+      }
+     ],
+     "situation": {
+      "bins": [
+       {
+        "cong": "congested",
+        "lane_diff": "L2faster"
+       },
+       {
+        "cong": "congested",
+        "lane_diff": "L2notfaster"
+       },
+       {
+        "cong": "free",
+        "lane_diff": "L2faster"
+       },
+       {
+        "cong": "free",
+        "lane_diff": "L2notfaster"
+       }
+      ],
+      "mode": "privileged",
+      "rule": "fullpol-clean5c4-situational-v4",
+      "unconditional": true
+     },
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "wall",
+     "zone": "near",
+     "zone_s": [
+      -1124.56,
+      -324.56
+     ],
+     "zone_upstream_m": [
+      400.0,
+      1200.0
+     ],
+     "zone_x": [
+      1496.0,
+      2296.0
+     ]
+    },
+    "template": {
+     "duration_s": 140,
+     "join_el": [
+      0,
+      0
+     ],
+     "join_rules": [
+      null,
+      {
+       "ds": [
+        -200.0,
+        200.0
+       ],
+       "lane": 0
+      }
+     ],
+     "map": "wz3to2",
+     "members": [
+      "@0",
+      "@1"
+     ],
+     "programs": [
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 120,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.0,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 20.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 20,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      },
+      {
+       "anchor": null,
+       "anchor_release_s": null,
+       "fallback_s": null,
+       "hold_s": 90,
+       "lane": null,
+       "lc_mode": 513,
+       "lon": {
+        "a": null,
+        "amax": 1.0,
+        "dmax": 1.5,
+        "from_el": 0,
+        "kind": "speed",
+        "kp": 0.15,
+        "kv": 0.6,
+        "off": 0.0,
+        "refs": [],
+        "settle_gap": null,
+        "v_w": 18.0
+       },
+       "merger_lane": null,
+       "mode_logged": false,
+       "mode_on": "first_active",
+       "partner": null,
+       "partner_lane": null,
+       "release_s": 75.44000000000005,
+       "releases": [
+        "hold_end",
+        "release_s"
+       ],
+       "role": "hold",
+       "start_el": 0,
+       "tau": null,
+       "tau_from_el": null,
+       "zone": null
+      }
+     ],
+     "rule": "lcexec-free-program-v1",
+     "schema": "lcexec-free-program-v1",
+     "source": {
+      "cell": "D2800_p20",
+      "family": "mut_b66c4207002b5a15",
+      "phase": 0,
+      "strategy": "mut_b66c4207002b5a15",
+      "strategy_key": "b66c4207002b5a15",
+      "study": "S-WMVERIFY",
+      "t0": null,
+      "template_of": "strategy",
+      "variant": "mut_b66c4207002b5a15"
+     }
+    }
+   }
+  ],
+  "threshold_s": 10.0,
+  "verified_cells": [
+   "D2800_p20",
+   "D3200_p20"
+  ]
+ },
+ "clip": 1.0,
+ "priority": {
+  "excluded": [
+   "mut_f2b812b12a6a7499"
+  ],
+  "parent_rows_sha256": "a6c9c6cb949cf111cd4777db869fcf4a2ccd69a29b4f4251ee64973c0f7ca0f0",
+  "rule": "priority v2 (MAIN 2026-11-09): situational rows rank first by lb95; then unconditional WM rows, then unconditional rule rows (each tier by original lb95), all below scale x the smallest situational value of the cell; originals in row.ranking",
+  "scale": 0.5
+ },
+ "provenance": "CLEAN5C5 situational admission UNION (privileged teacher bins, ALLOWED per guidance-cell penetration; WM mut_* + verified rule plans, plan_source wm|rule) over MC, P20, REP, R3 D2400/D2400C/D2800/D3200, R5 D2800 congested | UNC: duo12_v20 D2800_p20 unconditional (act whenever feasible) per MAIN 23:42 confirmation PASS; base UNION_r5 (adds R5 congested) | R6 UNC: mut_b66c4207, mut_f2b812b1 unconditional at D2800_p20 (UNC rule PASS) | priority v2 (MAIN 2026-11-09): situational rows rank first by lb95; then unconditional WM rows, then unconditional rule rows (each tier by original lb95), all below scale x the smallest situational value of the cell; originals in row.ranking",
+ "regime_rule": "cell",
+ "rows": [
+  {
+   "arm": "B",
+   "baseline": "mappo",
+   "fair": true,
+   "family": "duo12_v20",
+   "lb95_veh_s": 37.81922211745678,
+   "mean_veh_s": 168.28531249999997,
+   "n": 24,
+   "n2_parity": "identical",
+   "plan_source": "rule",
+   "ranking": {
+    "fallback_rank": 2,
+    "fallback_tier": "rule",
+    "original_lb95_veh_s": 927.1327698891305,
+    "original_mean_veh_s": 5322.560294048689,
+    "original_ub95_veh_s": 9868.605754312017,
+    "rule": "priority v2 (MAIN 2026-11-09): situational rows rank first by lb95; then unconditional WM rows, then unconditional rule rows (each tier by original lb95), all below scale x the smallest situational value of the cell; originals in row.ranking",
+    "unit": "per episode (unconditional confirmation)"
+   },
+   "regime": "D2800_p20",
+   "row_class": "unconditional_fallback",
+   "situational": {
+    "bins": [
+     {
+      "cong": "congested",
+      "lane_diff": "L2faster"
+     },
+     {
+      "cong": "congested",
+      "lane_diff": "L2notfaster"
+     },
+     {
+      "cong": "free",
+      "lane_diff": "L2faster"
+     },
+     {
+      "cong": "free",
+      "lane_diff": "L2notfaster"
+     }
+    ],
+    "mode": "privileged",
+    "pool": "all_penetrations",
+    "rule": "fullpol-clean5c4-situational-v4",
+    "unconditional": {
+     "benefit_rate": 0.6666666666666666,
+     "ci95_veh_s_per_episode": [
+      927.1327698891305,
+      9868.605754312017
+     ],
+     "cvar90_diff": -51.697084285897944,
+     "groups_vs_u0": {
+      "class:cav": -4.14,
+      "class:hdv": -7.26,
+      "origin:L0": -12.29,
+      "origin:L1": -10.93,
+      "origin:L2": 2.75
+     },
+     "mean_veh_s_per_episode": 5322.560294048689,
+     "rule": "MAIN 2026-11-08 23:42 pre-registration: episode-level act-whenever-feasible confirmation (24 fresh seeds 991230-991253, (pick - u0) CI95 upper < 0 AND ALLOWED vs u0)",
+     "unconditional": true,
+     "verdict": "UNC_VERDICT.json"
+    },
+    "unit": "veh-s per episode (episode-level unconditional confirmation; bins = all: act whenever feasible)"
+   },
+   "source": "wm_bank",
+   "template_sha256": "7b94b5aedd2b932f7679f4847ee23e76b0284591e7c1d9daca55ddeeb53ce176",
+   "ub95_veh_s": 9868.605754312017
+  },
+  {
+   "arm": "B",
+   "baseline": "mappo",
+   "fair": true,
+   "family": "g2_gap1",
+   "lb95_veh_s": 444.5249999999999,
+   "mean_veh_s": 498.60059999999993,
+   "n": 5,
+   "n2_parity": "identical",
+   "plan_source": "rule",
+   "regime": "D3200_p20",
+   "row_class": "situational",
+   "situational": {
+    "bins": [
+     {
+      "cong": "free",
+      "lane_diff": "L2notfaster"
+     }
+    ],
+    "mode": "privileged",
+    "pool": "all_penetrations",
+    "rule": "fullpol-clean5c4-situational-v4",
+    "unit": "veh-s per activation window (pooled per-activation effect, best admitted bin)"
+   },
+   "source": "wm_bank",
+   "template_sha256": "ca6491654a7da379c8a79ab3d2cc486b8b402f34cc075616365cab7c1db790fb",
+   "ub95_veh_s": 608.2679999999991
+  },
+  {
+   "arm": "B",
+   "baseline": "mappo",
+   "fair": true,
+   "family": "mut_006c290e03ad3d3c",
+   "lb95_veh_s": 294.2423132142848,
+   "mean_veh_s": 1591.2418000000005,
+   "n": 15,
+   "n2_parity": "identical",
+   "plan_source": "wm",
+   "regime": "D2800_p20",
+   "row_class": "situational",
+   "situational": {
+    "bins": [
+     {
+      "cong": "free",
+      "lane_diff": "L2notfaster"
+     }
+    ],
+    "mode": "privileged",
+    "pool": "all_penetrations",
+    "rule": "fullpol-clean5c4-situational-v4",
+    "unit": "veh-s per activation window (pooled per-activation effect, best admitted bin)"
+   },
+   "source": "wm_bank",
+   "template_sha256": "5ccebcb17792dc90a59d94dfe45c09216b562e974edb99cb488a9148db473cab",
+   "ub95_veh_s": 3084.3507330065363
+  },
+  {
+   "arm": "B",
+   "baseline": "mappo",
+   "fair": true,
+   "family": "mut_0d50e4e18041530d",
+   "lb95_veh_s": 1161.7892000000033,
+   "mean_veh_s": 1473.0311666666676,
+   "n": 6,
+   "n2_parity": "identical",
+   "plan_source": "wm",
+   "regime": "D2800_p20",
+   "row_class": "situational",
+   "situational": {
+    "bins": [
+     {
+      "cong": "free",
+      "lane_diff": "L2faster"
+     },
+     {
+      "cong": "free",
+      "lane_diff": "L2notfaster"
+     }
+    ],
+    "mode": "privileged",
+    "pool": "all_penetrations",
+    "rule": "fullpol-clean5c4-situational-v4",
+    "unit": "veh-s per activation window (pooled per-activation effect, best admitted bin)"
+   },
+   "source": "wm_bank",
+   "template_sha256": "fdd298108ec54c4d0a9031b89a8c82b4fa0ddc8528bb889c397b645da92f8749",
+   "ub95_veh_s": 1778.235
+  },
+  {
+   "arm": "B",
+   "baseline": "mappo",
+   "fair": true,
+   "family": "mut_6c2bf382711cbc37",
+   "lb95_veh_s": 345.31899999999905,
+   "mean_veh_s": 673.1412499999999,
+   "n": 4,
+   "n2_parity": "identical",
+   "plan_source": "wm",
+   "regime": "D2800_p20",
+   "row_class": "situational",
+   "situational": {
+    "bins": [
+     {
+      "cong": "congested",
+      "lane_diff": "L2notfaster"
+     },
+     {
+      "cong": "free",
+      "lane_diff": "L2faster"
+     }
+    ],
+    "mode": "privileged",
+    "pool": "all_penetrations",
+    "rule": "fullpol-clean5c4-situational-v4",
+    "unit": "veh-s per activation window (pooled per-activation effect, best admitted bin)"
+   },
+   "source": "wm_bank",
+   "template_sha256": "3a5e919ec7730f7e3b146d3eb6332a400fb91b7fb48b3d6703f6edce01d200a3",
+   "ub95_veh_s": 1099.2567500000014
+  },
+  {
+   "arm": "B",
+   "baseline": "mappo",
+   "fair": true,
+   "family": "mut_cfdbafe5f3316f1a",
+   "lb95_veh_s": 151.27688846982713,
+   "mean_veh_s": 1963.2786785714286,
+   "n": 28,
+   "n2_parity": "identical",
+   "plan_source": "wm",
+   "regime": "D2800_p20",
+   "row_class": "situational",
+   "situational": {
+    "bins": [
+     {
+      "cong": "congested",
+      "lane_diff": "L2faster"
+     },
+     {
+      "cong": "free",
+      "lane_diff": "L2notfaster"
+     }
+    ],
+    "mode": "privileged",
+    "pool": "all_penetrations",
+    "rule": "fullpol-clean5c4-situational-v4",
+    "unit": "veh-s per activation window (pooled per-activation effect, best admitted bin)"
+   },
+   "source": "wm_bank",
+   "template_sha256": "e0cba1188a28c945b64294982d88e9fd77edbc69d2f24c94219c6ad47a9d3211",
+   "ub95_veh_s": 4646.787524074074
+  },
+  {
+   "arm": "B",
+   "baseline": "mappo",
+   "fair": true,
+   "family": "mut_b66c4207002b5a15",
+   "lb95_veh_s": 75.63844423491356,
+   "mean_veh_s": 336.57062499999995,
+   "n": 24,
+   "n2_parity": "identical",
+   "plan_source": "wm",
+   "ranking": {
+    "fallback_rank": 1,
+    "fallback_tier": "wm",
+    "original_lb95_veh_s": 1244.7142118605877,
+    "original_mean_veh_s": 5588.161099418326,
+    "original_ub95_veh_s": 10233.374557826764,
+    "rule": "priority v2 (MAIN 2026-11-09): situational rows rank first by lb95; then unconditional WM rows, then unconditional rule rows (each tier by original lb95), all below scale x the smallest situational value of the cell; originals in row.ranking",
+    "unit": "per episode (unconditional confirmation)"
+   },
+   "regime": "D2800_p20",
+   "row_class": "unconditional_fallback",
+   "situational": {
+    "bins": [
+     {
+      "cong": "congested",
+      "lane_diff": "L2faster"
+     },
+     {
+      "cong": "congested",
+      "lane_diff": "L2notfaster"
+     },
+     {
+      "cong": "free",
+      "lane_diff": "L2faster"
+     },
+     {
+      "cong": "free",
+      "lane_diff": "L2notfaster"
+     }
+    ],
+    "mode": "privileged",
+    "pool": "all_penetrations",
+    "rule": "fullpol-clean5c4-situational-v4",
+    "unconditional": {
+     "benefit_rate": 0.6666666666666666,
+     "ci95_veh_s_per_episode": [
+      1244.7142118605877,
+      10233.374557826764
+     ],
+     "cvar90_ci95": [
+      -77.06646317017602,
+      -22.894714649472217
+     ],
+     "cvar90_diff": -49.60737140958016,
+     "mean_veh_s_per_episode": 5588.161099418326,
+     "rule": "MAIN 2026-11-09 00:20 UNC rule (r6 v2, 24 fresh seeds 991348-991371): (pick - u0) CI95 upper < 0 AND ALLOWED",
+     "unconditional": true,
+     "verdict": "wmverify_r6/ANALYSIS_R6/R6_VERDICT.json",
+     "worst_group": "origin:L2",
+     "worst_group_inc": 3.033647074594184
+    },
+    "unit": "veh-s per episode (episode-level unconditional confirmation; bins = all: act whenever feasible)"
+   },
+   "source": "wm_bank",
+   "template_sha256": "b25d5cb67f00814fab9215d4975c63d62cb2ef4aae320f25a5acaa5992208fc5",
+   "ub95_veh_s": 10233.374557826764
+  }
+ ],
+ "schema": "fullpol-regime-guidance-v1",
+ "situational": {
+  "bin_counts": {
+   "{\"cong\": \"congested\", \"lane_diff\": \"L2faster\"}": 371,
+   "{\"cong\": \"congested\", \"lane_diff\": \"L2notfaster\"}": 901,
+   "{\"cong\": \"free\", \"lane_diff\": \"L2faster\"}": 29,
+   "{\"cong\": \"free\", \"lane_diff\": \"L2notfaster\"}": 674,
+   "{\"cong\": \"unobserved\", \"lane_diff\": \"unobserved\"}": 0
+  },
+  "bin_rule": "onset_bin('privileged'): acting CAV (holder) own row + every vehicle of the plant table at onset (same function as offer_ok)",
+  "mode": "privileged",
+  "n_activations": 1975,
+  "pairs": [
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 12,
+     "hi": 2345.897126946607,
+     "lo": -2115.615836842106,
+     "mean": 158.67033333333245,
+     "n": 27
+    },
+    "family": "duo12_v18",
+    "p20": {
+     "clusters": 10,
+     "hi": 2922.1262949999996,
+     "lo": -2701.6363333333343,
+     "mean": 429.4810476190469,
+     "n": 21
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_fairness_allowed",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 14,
+     "hi": 161.12046460997422,
+     "lo": -2819.429990416667,
+     "mean": -1272.3047592592595,
+     "n": 54
+    },
+    "family": "duo12_v18",
+    "p20": {
+     "clusters": 14,
+     "hi": 161.12046460997422,
+     "lo": -2819.429990416667,
+     "mean": -1272.3047592592595,
+     "n": 54
+    },
+    "plan_source": "rule",
+    "pool": "p20",
+    "reasons": [
+     "not_fairness_allowed",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 4,
+     "hi": 1566.6472500000027,
+     "lo": -4493.238,
+     "mean": -1083.3117499999992,
+     "n": 4
+    },
+    "family": "duo12_v18",
+    "p20": {
+     "clusters": 3,
+     "hi": 2330.8890000000038,
+     "lo": -6017.447,
+     "mean": -1470.8786666666656,
+     "n": 3
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_fairness_allowed",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 12,
+     "hi": 633.6291046874998,
+     "lo": -1087.5396296296294,
+     "mean": -314.76628571428563,
+     "n": 21
+    },
+    "family": "duo12_v18",
+    "p20": {
+     "clusters": 8,
+     "hi": 772.3583704545454,
+     "lo": -454.9175000000001,
+     "mean": 172.3059166666665,
+     "n": 12
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_fairness_allowed",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 5,
+     "hi": 336.2233999999994,
+     "lo": -3279.6503750000006,
+     "mean": -1729.2940000000006,
+     "n": 8
+    },
+    "family": "duo12_v20",
+    "p20": {
+     "clusters": 5,
+     "hi": 336.2233999999994,
+     "lo": -3279.6503750000006,
+     "mean": -1729.2940000000006,
+     "n": 8
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 11,
+     "hi": 375.0675807449498,
+     "lo": -2253.1404780000003,
+     "mean": -759.9441562500002,
+     "n": 32
+    },
+    "family": "duo12_v20",
+    "p20": {
+     "clusters": 11,
+     "hi": 375.0675807449498,
+     "lo": -2253.1404780000003,
+     "mean": -759.9441562500002,
+     "n": 32
+    },
+    "plan_source": "rule",
+    "pool": "p20",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 1,
+     "hi": 1020.1500000000005,
+     "lo": 1020.1500000000005,
+     "mean": 1020.1500000000005,
+     "n": 1
+    },
+    "family": "duo12_v20",
+    "p20": {
+     "clusters": 1,
+     "hi": 1020.1500000000005,
+     "lo": 1020.1500000000005,
+     "mean": 1020.1500000000005,
+     "n": 1
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "clusters<3"
+    ]
+   },
+   {
+    "admitted": true,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 11,
+     "hi": -249.3553149999997,
+     "lo": -1059.0353195217388,
+     "mean": -698.5131666666665,
+     "n": 24
+    },
+    "family": "duo12_v20",
+    "p20": {
+     "clusters": 11,
+     "hi": -249.3553149999997,
+     "lo": -1059.0353195217388,
+     "mean": -698.5131666666665,
+     "n": 24
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": []
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 2,
+     "hi": 2383.1560000000004,
+     "lo": 1161.9299999999994,
+     "mean": 1772.543,
+     "n": 4
+    },
+    "family": "duo12_v21",
+    "p20": {
+     "clusters": 2,
+     "hi": 2383.1560000000004,
+     "lo": 1161.9299999999994,
+     "mean": 1772.543,
+     "n": 4
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "clusters<3"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 8,
+     "hi": 2009.6139954761904,
+     "lo": -107.69669230769222,
+     "mean": 1142.4401333333333,
+     "n": 15
+    },
+    "family": "duo12_v21",
+    "p20": {
+     "clusters": 8,
+     "hi": 2009.6139954761904,
+     "lo": -107.69669230769222,
+     "mean": 1142.4401333333333,
+     "n": 15
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 1,
+     "hi": 1736.4680000000008,
+     "lo": 1736.4680000000008,
+     "mean": 1736.4680000000008,
+     "n": 1
+    },
+    "family": "duo12_v21",
+    "p20": {
+     "clusters": 1,
+     "hi": 1736.4680000000008,
+     "lo": 1736.4680000000008,
+     "mean": 1736.4680000000008,
+     "n": 1
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "clusters<3"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 11,
+     "hi": 374.3531583333332,
+     "lo": -474.2132502403845,
+     "mean": -70.94558620689654,
+     "n": 29
+    },
+    "family": "duo12_v21",
+    "p20": {
+     "clusters": 11,
+     "hi": 374.3531583333332,
+     "lo": -474.2132502403845,
+     "mean": -70.94558620689654,
+     "n": 29
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 4,
+     "hi": 210.90933333333442,
+     "lo": -3256.6167,
+     "mean": -1365.2388636363632,
+     "n": 22
+    },
+    "family": "g2_gap1",
+    "p20": {
+     "clusters": 4,
+     "hi": 210.90933333333442,
+     "lo": -3256.6167,
+     "mean": -1365.2388636363632,
+     "n": 22
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 3,
+     "hi": 698.3370000000014,
+     "lo": -2193.9449999999993,
+     "mean": -435.1774999999992,
+     "n": 4
+    },
+    "family": "g2_gap1",
+    "p20": {
+     "clusters": 3,
+     "hi": 698.3370000000014,
+     "lo": -2193.9449999999993,
+     "mean": -435.1774999999992,
+     "n": 4
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 1,
+     "hi": -73.8400000000006,
+     "lo": -73.8400000000006,
+     "mean": -73.8400000000006,
+     "n": 1
+    },
+    "family": "g2_gap1",
+    "p20": {
+     "clusters": 1,
+     "hi": -73.8400000000006,
+     "lo": -73.8400000000006,
+     "mean": -73.8400000000006,
+     "n": 1
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "clusters<3"
+    ]
+   },
+   {
+    "admitted": true,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 3,
+     "hi": -444.5249999999999,
+     "lo": -608.2679999999991,
+     "mean": -498.60059999999993,
+     "n": 5
+    },
+    "family": "g2_gap1",
+    "p20": {
+     "clusters": 3,
+     "hi": -444.5249999999999,
+     "lo": -608.2679999999991,
+     "mean": -498.60059999999993,
+     "n": 5
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": []
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 6,
+     "hi": 4590.323624583336,
+     "lo": -1144.9794444444449,
+     "mean": 2056.6472727272735,
+     "n": 11
+    },
+    "family": "mut_006c290e03ad3d3c",
+    "p20": {
+     "clusters": 2,
+     "hi": 6567.6263333333345,
+     "lo": -5486.643,
+     "mean": 3554.059000000001,
+     "n": 4
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 11,
+     "hi": 321.2739287500002,
+     "lo": -2953.1082392045455,
+     "mean": -1348.3353333333332,
+     "n": 24
+    },
+    "family": "mut_006c290e03ad3d3c",
+    "p20": {
+     "clusters": 6,
+     "hi": 109.12771428571543,
+     "lo": -3150.981888888889,
+     "mean": -1180.5101538461531,
+     "n": 13
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": true,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 9,
+     "hi": -294.2423132142848,
+     "lo": -3084.3507330065363,
+     "mean": -1591.2418000000005,
+     "n": 15
+    },
+    "family": "mut_006c290e03ad3d3c",
+    "p20": {
+     "clusters": 5,
+     "hi": -166.85399999999967,
+     "lo": -4243.193000000001,
+     "mean": -2065.7191250000005,
+     "n": 8
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": []
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 14,
+     "hi": 143.65742091346152,
+     "lo": -1820.362627272726,
+     "mean": -744.4961764705877,
+     "n": 34
+    },
+    "family": "mut_0584e488a8bf93c5",
+    "p20": {
+     "clusters": 14,
+     "hi": 143.65742091346152,
+     "lo": -1820.362627272726,
+     "mean": -744.4961764705877,
+     "n": 34
+    },
+    "plan_source": "wm",
+    "pool": "p20",
+    "reasons": [
+     "not_fairness_allowed",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 22,
+     "hi": -435.07858522727224,
+     "lo": -2865.4206704397084,
+     "mean": -1630.262114285714,
+     "n": 70
+    },
+    "family": "mut_0584e488a8bf93c5",
+    "p20": {
+     "clusters": 22,
+     "hi": -435.07858522727224,
+     "lo": -2865.4206704397084,
+     "mean": -1630.262114285714,
+     "n": 70
+    },
+    "plan_source": "wm",
+    "pool": "p20",
+    "reasons": [
+     "not_fairness_allowed"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 1,
+     "hi": -4392.793000000001,
+     "lo": -4392.793000000001,
+     "mean": -4392.793000000001,
+     "n": 1
+    },
+    "family": "mut_0584e488a8bf93c5",
+    "p20": null,
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_fairness_allowed",
+     "clusters<3"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 19,
+     "hi": -143.57740232497372,
+     "lo": -1336.4841661628736,
+     "mean": -794.5691142857141,
+     "n": 35
+    },
+    "family": "mut_0584e488a8bf93c5",
+    "p20": {
+     "clusters": 15,
+     "hi": 70.1853364130441,
+     "lo": -1453.8240497465433,
+     "mean": -745.0935384615382,
+     "n": 26
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_fairness_allowed"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 11,
+     "hi": 3670.905937037038,
+     "lo": -3388.526894504643,
+     "mean": 422.7364999999999,
+     "n": 22
+    },
+    "family": "mut_0d1deed54cf85a43",
+    "p20": {
+     "clusters": 11,
+     "hi": 3670.905937037038,
+     "lo": -3388.526894504643,
+     "mean": 422.7364999999999,
+     "n": 22
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_fairness_allowed",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 11,
+     "hi": -37.274909131877244,
+     "lo": -3663.1146789705886,
+     "mean": -1781.079868421053,
+     "n": 38
+    },
+    "family": "mut_0d1deed54cf85a43",
+    "p20": {
+     "clusters": 11,
+     "hi": -37.274909131877244,
+     "lo": -3663.1146789705886,
+     "mean": -1781.079868421053,
+     "n": 38
+    },
+    "plan_source": "wm",
+    "pool": "p20",
+    "reasons": [
+     "not_fairness_allowed"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 5,
+     "hi": 2597.593,
+     "lo": -342.44320000000016,
+     "mean": 693.1348571428565,
+     "n": 7
+    },
+    "family": "mut_0d1deed54cf85a43",
+    "p20": {
+     "clusters": 5,
+     "hi": 2597.593,
+     "lo": -342.44320000000016,
+     "mean": 693.1348571428565,
+     "n": 7
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_fairness_allowed",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 12,
+     "hi": 2584.2924500000013,
+     "lo": -2391.913801176469,
+     "mean": 473.9731052631585,
+     "n": 19
+    },
+    "family": "mut_0d50e4e18041530d",
+    "p20": {
+     "clusters": 12,
+     "hi": 2584.2924500000013,
+     "lo": -2391.913801176469,
+     "mean": 473.9731052631585,
+     "n": 19
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 23,
+     "hi": 157.65447499999965,
+     "lo": -3487.4258164295397,
+     "mean": -1783.6694358974364,
+     "n": 39
+    },
+    "family": "mut_0d50e4e18041530d",
+    "p20": {
+     "clusters": 23,
+     "hi": 157.65447499999965,
+     "lo": -3487.4258164295397,
+     "mean": -1783.6694358974364,
+     "n": 39
+    },
+    "plan_source": "wm",
+    "pool": "p20",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": true,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 5,
+     "hi": -1161.7892000000033,
+     "lo": -1778.235,
+     "mean": -1473.0311666666676,
+     "n": 6
+    },
+    "family": "mut_0d50e4e18041530d",
+    "p20": {
+     "clusters": 5,
+     "hi": -1161.7892000000033,
+     "lo": -1778.235,
+     "mean": -1473.0311666666676,
+     "n": 6
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": []
+   },
+   {
+    "admitted": true,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 18,
+     "hi": -124.59744318181785,
+     "lo": -2404.669227694236,
+     "mean": -1226.3983777777778,
+     "n": 45
+    },
+    "family": "mut_0d50e4e18041530d",
+    "p20": {
+     "clusters": 18,
+     "hi": -124.59744318181785,
+     "lo": -2404.669227694236,
+     "mean": -1226.3983777777778,
+     "n": 45
+    },
+    "plan_source": "wm",
+    "pool": "p20",
+    "reasons": []
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 9,
+     "hi": 1476.0821075000017,
+     "lo": -4380.722657272721,
+     "mean": -1652.6898181818162,
+     "n": 11
+    },
+    "family": "mut_267471acb8393ab5",
+    "p20": {
+     "clusters": 5,
+     "hi": 3649.4780000000005,
+     "lo": -6488.138857142852,
+     "mean": -2264.1318333333306,
+     "n": 6
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 10,
+     "hi": 2388.5884390625,
+     "lo": -3342.962872500001,
+     "mean": -462.50011764705926,
+     "n": 17
+    },
+    "family": "mut_267471acb8393ab5",
+    "p20": {
+     "clusters": 6,
+     "hi": 3030.124875000002,
+     "lo": -5629.563142857144,
+     "mean": -610.4353750000002,
+     "n": 8
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 9,
+     "hi": -235.88522222222127,
+     "lo": -4145.47330106952,
+     "mean": -2364.5040000000004,
+     "n": 12
+    },
+    "family": "mut_267471acb8393ab5",
+    "p20": {
+     "clusters": 5,
+     "hi": 1136.0526000000011,
+     "lo": -3274.6736249999994,
+     "mean": -1526.6066666666663,
+     "n": 6
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 7,
+     "hi": 2287.833231071432,
+     "lo": -2835.7218559523817,
+     "mean": -447.92441176470663,
+     "n": 17
+    },
+    "family": "mut_5ac1a9085a4922cc",
+    "p20": {
+     "clusters": 2,
+     "hi": 3132.334999999999,
+     "lo": -1174.6990000000023,
+     "mean": 978.8179999999984,
+     "n": 4
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 7,
+     "hi": 353.5980916666668,
+     "lo": -1014.075857142858,
+     "mean": -374.76162500000015,
+     "n": 8
+    },
+    "family": "mut_5ac1a9085a4922cc",
+    "p20": {
+     "clusters": 2,
+     "hi": 1723.6139999999996,
+     "lo": -434.42399999999907,
+     "mean": 644.5950000000003,
+     "n": 2
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 11,
+     "hi": 1342.292475357142,
+     "lo": -1970.062295,
+     "mean": -165.0237058823527,
+     "n": 17
+    },
+    "family": "mut_6c2bf382711cbc37",
+    "p20": {
+     "clusters": 11,
+     "hi": 1342.292475357142,
+     "lo": -1970.062295,
+     "mean": -165.0237058823527,
+     "n": 17
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": true,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 23,
+     "hi": -86.20606870723377,
+     "lo": -2576.651829160232,
+     "mean": -1301.4721159420292,
+     "n": 69
+    },
+    "family": "mut_6c2bf382711cbc37",
+    "p20": {
+     "clusters": 23,
+     "hi": -86.20606870723377,
+     "lo": -2576.651829160232,
+     "mean": -1301.4721159420292,
+     "n": 69
+    },
+    "plan_source": "wm",
+    "pool": "p20",
+    "reasons": []
+   },
+   {
+    "admitted": true,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 4,
+     "hi": -345.31899999999905,
+     "lo": -1099.2567500000014,
+     "mean": -673.1412499999999,
+     "n": 4
+    },
+    "family": "mut_6c2bf382711cbc37",
+    "p20": {
+     "clusters": 4,
+     "hi": -345.31899999999905,
+     "lo": -1099.2567500000014,
+     "mean": -673.1412499999999,
+     "n": 4
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": []
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 21,
+     "hi": 471.7186790697673,
+     "lo": -1263.298742371404,
+     "mean": -260.3253333333333,
+     "n": 39
+    },
+    "family": "mut_6c2bf382711cbc37",
+    "p20": {
+     "clusters": 21,
+     "hi": 471.7186790697673,
+     "lo": -1263.298742371404,
+     "mean": -260.3253333333333,
+     "n": 39
+    },
+    "plan_source": "wm",
+    "pool": "p20",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 13,
+     "hi": 1550.0587677499998,
+     "lo": -1530.0723882413804,
+     "mean": 221.79633333333285,
+     "n": 24
+    },
+    "family": "mut_a857168d4aae7b79",
+    "p20": {
+     "clusters": 13,
+     "hi": 1550.0587677499998,
+     "lo": -1530.0723882413804,
+     "mean": 221.79633333333285,
+     "n": 24
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 23,
+     "hi": 135.92400296405307,
+     "lo": -319.11957694859046,
+     "mean": -89.56158904109583,
+     "n": 73
+    },
+    "family": "mut_a857168d4aae7b79",
+    "p20": {
+     "clusters": 23,
+     "hi": 135.92400296405307,
+     "lo": -319.11957694859046,
+     "mean": -89.56158904109583,
+     "n": 73
+    },
+    "plan_source": "wm",
+    "pool": "p20",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 9,
+     "hi": 2977.538498928572,
+     "lo": -4238.0153935661765,
+     "mean": -154.956578947368,
+     "n": 19
+    },
+    "family": "mut_ad6205c9d248ab0f",
+    "p20": {
+     "clusters": 9,
+     "hi": 2977.538498928572,
+     "lo": -4238.0153935661765,
+     "mean": -154.956578947368,
+     "n": 19
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_fairness_allowed",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 11,
+     "hi": -241.2089434835277,
+     "lo": -4073.211967613636,
+     "mean": -1962.44229787234,
+     "n": 47
+    },
+    "family": "mut_ad6205c9d248ab0f",
+    "p20": {
+     "clusters": 11,
+     "hi": -241.2089434835277,
+     "lo": -4073.211967613636,
+     "mean": -1962.44229787234,
+     "n": 47
+    },
+    "plan_source": "wm",
+    "pool": "p20",
+    "reasons": [
+     "not_fairness_allowed"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 2,
+     "hi": 2716.7890000000016,
+     "lo": 41.443999999999505,
+     "mean": 1379.1165000000005,
+     "n": 2
+    },
+    "family": "mut_ad6205c9d248ab0f",
+    "p20": {
+     "clusters": 2,
+     "hi": 2716.7890000000016,
+     "lo": 41.443999999999505,
+     "mean": 1379.1165000000005,
+     "n": 2
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_fairness_allowed",
+     "clusters<3"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 6,
+     "hi": 1164.4871666666659,
+     "lo": 33.47764361111096,
+     "mean": 508.49357142857104,
+     "n": 7
+    },
+    "family": "mut_ad6205c9d248ab0f",
+    "p20": {
+     "clusters": 6,
+     "hi": 1164.4871666666659,
+     "lo": 33.47764361111096,
+     "mean": 508.49357142857104,
+     "n": 7
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_fairness_allowed",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 9,
+     "hi": 92.74631985294226,
+     "lo": -4283.7582,
+     "mean": -1596.8687999999993,
+     "n": 15
+    },
+    "family": "mut_af1d7d5c2eb434c6",
+    "p20": {
+     "clusters": 4,
+     "hi": 541.4222500000021,
+     "lo": -6341.414999999999,
+     "mean": -1715.4349999999984,
+     "n": 6
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "not_fairness_allowed",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 12,
+     "hi": -488.3443047499975,
+     "lo": -3803.341201576575,
+     "mean": -2272.5685454545446,
+     "n": 33
+    },
+    "family": "mut_af1d7d5c2eb434c6",
+    "p20": {
+     "clusters": 6,
+     "hi": 515.0886363636419,
+     "lo": -3971.9325499999986,
+     "mean": -1854.5400588235282,
+     "n": 17
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "not_fairness_allowed"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 9,
+     "hi": 775.9472647222223,
+     "lo": -905.2944607142856,
+     "mean": -113.97700000000016,
+     "n": 12
+    },
+    "family": "mut_af1d7d5c2eb434c6",
+    "p20": {
+     "clusters": 5,
+     "hi": 1073.2428,
+     "lo": -464.54690000000073,
+     "mean": 201.4744285714282,
+     "n": 7
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "not_fairness_allowed",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 15,
+     "hi": 1723.6160680555554,
+     "lo": -1104.776138544892,
+     "mean": 311.17494117647016,
+     "n": 17
+    },
+    "family": "mut_b2603fffb7e93023",
+    "p20": {
+     "clusters": 15,
+     "hi": 1723.6160680555554,
+     "lo": -1104.776138544892,
+     "mean": 311.17494117647016,
+     "n": 17
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 19,
+     "hi": 403.4003962121215,
+     "lo": -617.6826558333337,
+     "mean": -97.34302941176473,
+     "n": 34
+    },
+    "family": "mut_b2603fffb7e93023",
+    "p20": {
+     "clusters": 19,
+     "hi": 403.4003962121215,
+     "lo": -617.6826558333337,
+     "mean": -97.34302941176473,
+     "n": 34
+    },
+    "plan_source": "wm",
+    "pool": "p20",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 3,
+     "hi": -28.17600000000016,
+     "lo": -582.6070000000009,
+     "mean": -282.5578000000004,
+     "n": 5
+    },
+    "family": "mut_b37b425aed7519df",
+    "p20": {
+     "clusters": 3,
+     "hi": -28.17600000000016,
+     "lo": -582.6070000000009,
+     "mean": -282.5578000000004,
+     "n": 5
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "not_multi_cav"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 1,
+     "hi": 178.77400000000034,
+     "lo": 178.77400000000034,
+     "mean": 178.77400000000034,
+     "n": 1
+    },
+    "family": "mut_b37b425aed7519df",
+    "p20": {
+     "clusters": 1,
+     "hi": 178.77400000000034,
+     "lo": 178.77400000000034,
+     "mean": 178.77400000000034,
+     "n": 1
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "not_multi_cav",
+     "clusters<3"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 3,
+     "hi": 0.0,
+     "lo": -202.55349999999999,
+     "mean": -81.0214,
+     "n": 5
+    },
+    "family": "mut_b37b425aed7519df",
+    "p20": {
+     "clusters": 3,
+     "hi": 0.0,
+     "lo": -202.55349999999999,
+     "mean": -81.0214,
+     "n": 5
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "not_multi_cav",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 3,
+     "hi": 178.68800000000056,
+     "lo": -1897.5689999999977,
+     "mean": -580.6286666666656,
+     "n": 3
+    },
+    "family": "mut_c19711cf1ebe4332",
+    "p20": {
+     "clusters": 3,
+     "hi": 178.68800000000056,
+     "lo": -1897.5689999999977,
+     "mean": -580.6286666666656,
+     "n": 3
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_multi_cav",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 2,
+     "hi": 49.414999999999054,
+     "lo": -2223.0560000000005,
+     "mean": -1086.8205000000007,
+     "n": 2
+    },
+    "family": "mut_c19711cf1ebe4332",
+    "p20": {
+     "clusters": 2,
+     "hi": 49.414999999999054,
+     "lo": -2223.0560000000005,
+     "mean": -1086.8205000000007,
+     "n": 2
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_multi_cav",
+     "clusters<3"
+    ]
+   },
+   {
+    "admitted": true,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 3,
+     "hi": -84.2309999999975,
+     "lo": -3166.3559999999984,
+     "mean": -1354.4372499999981,
+     "n": 4
+    },
+    "family": "mut_cfdbafe5f3316f1a",
+    "p20": {
+     "clusters": 3,
+     "hi": -84.2309999999975,
+     "lo": -3166.3559999999984,
+     "mean": -1354.4372499999981,
+     "n": 4
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": []
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 12,
+     "hi": 795.4560199999997,
+     "lo": -3555.563779687501,
+     "mean": -1508.8944827586213,
+     "n": 29
+    },
+    "family": "mut_cfdbafe5f3316f1a",
+    "p20": {
+     "clusters": 12,
+     "hi": 795.4560199999997,
+     "lo": -3555.563779687501,
+     "mean": -1508.8944827586213,
+     "n": 29
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 1,
+     "hi": -99.57899999999972,
+     "lo": -99.57899999999972,
+     "mean": -99.57899999999972,
+     "n": 1
+    },
+    "family": "mut_cfdbafe5f3316f1a",
+    "p20": {
+     "clusters": 1,
+     "hi": -99.57899999999972,
+     "lo": -99.57899999999972,
+     "mean": -99.57899999999972,
+     "n": 1
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "clusters<3"
+    ]
+   },
+   {
+    "admitted": true,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 11,
+     "hi": -151.27688846982713,
+     "lo": -4646.787524074074,
+     "mean": -1963.2786785714286,
+     "n": 28
+    },
+    "family": "mut_cfdbafe5f3316f1a",
+    "p20": {
+     "clusters": 11,
+     "hi": -151.27688846982713,
+     "lo": -4646.787524074074,
+     "mean": -1963.2786785714286,
+     "n": 28
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": []
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 11,
+     "hi": 123.92060192307827,
+     "lo": -3315.151619246034,
+     "mean": -1609.0865384615392,
+     "n": 26
+    },
+    "family": "mut_dbbc6092d339e630",
+    "p20": {
+     "clusters": 6,
+     "hi": -1195.902222222222,
+     "lo": -5032.647454545456,
+     "mean": -3418.334363636366,
+     "n": 11
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 11,
+     "hi": -696.8823188186813,
+     "lo": -2035.0581087499997,
+     "mean": -1408.6745999999998,
+     "n": 15
+    },
+    "family": "mut_dbbc6092d339e630",
+    "p20": {
+     "clusters": 6,
+     "hi": -741.0136666666673,
+     "lo": -2768.804625,
+     "mean": -1878.74925,
+     "n": 8
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 10,
+     "hi": 2652.0551115789467,
+     "lo": -1768.8774538651326,
+     "mean": 269.1965238095237,
+     "n": 21
+    },
+    "family": "mut_ed21f451c77f2878",
+    "p20": {
+     "clusters": 10,
+     "hi": 2652.0551115789467,
+     "lo": -1768.8774538651326,
+     "mean": 269.1965238095237,
+     "n": 21
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 12,
+     "hi": 678.8409413419911,
+     "lo": -3803.3673470779236,
+     "mean": -1604.762703703704,
+     "n": 27
+    },
+    "family": "mut_ed21f451c77f2878",
+    "p20": {
+     "clusters": 12,
+     "hi": 678.8409413419911,
+     "lo": -3803.3673470779236,
+     "mean": -1604.762703703704,
+     "n": 27
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 5,
+     "hi": 2668.606199999999,
+     "lo": -469.2226000000006,
+     "mean": 942.8615999999995,
+     "n": 5
+    },
+    "family": "mut_ed21f451c77f2878",
+    "p20": {
+     "clusters": 5,
+     "hi": 2668.606199999999,
+     "lo": -469.2226000000006,
+     "mean": 942.8615999999995,
+     "n": 5
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 1,
+     "hi": 8146.735000000001,
+     "lo": 8146.735000000001,
+     "mean": 8146.735000000001,
+     "n": 1
+    },
+    "family": "mut_fd73f0eab0e4fc39",
+    "p20": {
+     "clusters": 1,
+     "hi": 8146.735000000001,
+     "lo": 8146.735000000001,
+     "mean": 8146.735000000001,
+     "n": 1
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "clusters<3"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 6,
+     "hi": 2377.375,
+     "lo": 48.56537500000067,
+     "mean": 1414.9237000000005,
+     "n": 10
+    },
+    "family": "mut_fd73f0eab0e4fc39",
+    "p20": {
+     "clusters": 6,
+     "hi": 2377.375,
+     "lo": 48.56537500000067,
+     "mean": 1414.9237000000005,
+     "n": 10
+    },
+    "plan_source": "wm",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 11,
+     "hi": 256.62597812807905,
+     "lo": -937.1761952651519,
+     "mean": -272.5284687500001,
+     "n": 32
+    },
+    "family": "mut_fd73f0eab0e4fc39",
+    "p20": {
+     "clusters": 11,
+     "hi": 256.62597812807905,
+     "lo": -937.1761952651519,
+     "mean": -272.5284687500001,
+     "n": 32
+    },
+    "plan_source": "wm",
+    "pool": "p20",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 2,
+     "hi": 1829.5859999999993,
+     "lo": 2.6820000000006985,
+     "mean": 916.134,
+     "n": 2
+    },
+    "family": "rand_5977af6c8169243b",
+    "p20": {
+     "clusters": 2,
+     "hi": 1829.5859999999993,
+     "lo": 2.6820000000006985,
+     "mean": 916.134,
+     "n": 2
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "clusters<3"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 3,
+     "hi": 2349.537000000004,
+     "lo": -11.915999999997439,
+     "mean": 778.5346666666688,
+     "n": 3
+    },
+    "family": "rand_5977af6c8169243b",
+    "p20": {
+     "clusters": 3,
+     "hi": 2349.537000000004,
+     "lo": -11.915999999997439,
+     "mean": 778.5346666666688,
+     "n": 3
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 1,
+     "hi": -93.47800000000007,
+     "lo": -93.47800000000007,
+     "mean": -93.47800000000007,
+     "n": 1
+    },
+    "family": "wall_g_alt21_gate0",
+    "p20": {
+     "clusters": 1,
+     "hi": -93.47800000000007,
+     "lo": -93.47800000000007,
+     "mean": -93.47800000000007,
+     "n": 1
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_multi_cav",
+     "clusters<3"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 3,
+     "hi": 271.6209999999992,
+     "lo": -1508.2089999999998,
+     "mean": -400.3602857142857,
+     "n": 7
+    },
+    "family": "wall_g_alt21_gate0",
+    "p20": {
+     "clusters": 3,
+     "hi": 271.6209999999992,
+     "lo": -1508.2089999999998,
+     "mean": -400.3602857142857,
+     "n": 7
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_multi_cav",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 8,
+     "hi": 550.9941757142881,
+     "lo": -4413.71638888889,
+     "mean": -1802.6210500000002,
+     "n": 20
+    },
+    "family": "wall_g_duo12_stagger40",
+    "p20": {
+     "clusters": 3,
+     "hi": 244.72350000000006,
+     "lo": -266.7573333333373,
+     "mean": 4.180624999998599,
+     "n": 8
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 12,
+     "hi": 159.74265990259642,
+     "lo": -4846.1721612500005,
+     "mean": -1996.2433333333338,
+     "n": 21
+    },
+    "family": "wall_g_duo12_stagger40",
+    "p20": {
+     "clusters": 6,
+     "hi": 1506.642999999999,
+     "lo": -6372.662624999999,
+     "mean": -1139.677416666667,
+     "n": 12
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 9,
+     "hi": -311.8144757894737,
+     "lo": -3050.3853012499994,
+     "mean": -1782.773789473684,
+     "n": 19
+    },
+    "family": "wall_g_duo12_stagger40",
+    "p20": {
+     "clusters": 5,
+     "hi": 543.1048333333331,
+     "lo": -3926.904714285713,
+     "mean": -2311.2309090909084,
+     "n": 11
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_n2_representable"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 40,
+     "hi": 22.559456025681193,
+     "lo": -2141.7881821370065,
+     "mean": -1063.593355555555,
+     "n": 90
+    },
+    "family": "wall_g_solo2",
+    "p20": {
+     "clusters": 40,
+     "hi": 22.559456025681193,
+     "lo": -2141.7881821370065,
+     "mean": -1063.593355555555,
+     "n": 90
+    },
+    "plan_source": "rule",
+    "pool": "p20",
+    "reasons": [
+     "not_wm_sourced",
+     "not_n2_representable",
+     "not_fairness_allowed",
+     "not_multi_cav",
+     "ci_upper>=0"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "congested",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 74,
+     "hi": -342.82152159203963,
+     "lo": -1619.8683898546801,
+     "mean": -957.9090555555556,
+     "n": 198
+    },
+    "family": "wall_g_solo2",
+    "p20": {
+     "clusters": 74,
+     "hi": -342.82152159203963,
+     "lo": -1619.8683898546801,
+     "mean": -957.9090555555556,
+     "n": 198
+    },
+    "plan_source": "rule",
+    "pool": "p20",
+    "reasons": [
+     "not_wm_sourced",
+     "not_n2_representable",
+     "not_fairness_allowed",
+     "not_multi_cav"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2faster"
+    },
+    "effect": {
+     "clusters": 7,
+     "hi": -308.4193785714279,
+     "lo": -4112.495428571428,
+     "mean": -1932.5550000000003,
+     "n": 7
+    },
+    "family": "wall_g_solo2",
+    "p20": {
+     "clusters": 4,
+     "hi": 82.83550000000128,
+     "lo": -1175.4050000000004,
+     "mean": -546.2847499999996,
+     "n": 4
+    },
+    "plan_source": "rule",
+    "pool": "all_penetrations",
+    "reasons": [
+     "not_wm_sourced",
+     "not_n2_representable",
+     "not_fairness_allowed",
+     "not_multi_cav"
+    ]
+   },
+   {
+    "admitted": false,
+    "bin": {
+     "cong": "free",
+     "lane_diff": "L2notfaster"
+    },
+    "effect": {
+     "clusters": 72,
+     "hi": -306.7709936106831,
+     "lo": -1046.1115121261055,
+     "mean": -646.4012267441859,
+     "n": 172
+    },
+    "family": "wall_g_solo2",
+    "p20": {
+     "clusters": 72,
+     "hi": -306.7709936106831,
+     "lo": -1046.1115121261055,
+     "mean": -646.4012267441859,
+     "n": 172
+    },
+    "plan_source": "rule",
+    "pool": "p20",
+    "reasons": [
+     "not_wm_sourced",
+     "not_n2_representable",
+     "not_fairness_allowed",
+     "not_multi_cav"
+    ]
+   },
+   {
+    "admitted": true,
+    "bin": "unconditional",
+    "effect": {
+     "n": 24,
+     "unit": "episode"
+    },
+    "family": "mut_b66c4207002b5a15",
+    "plan_source": "wm",
+    "reasons": []
+   }
+  ],
+  "plans": {
+   "duo12_v18": {
+    "allowed": false,
+    "allowed_pens": [],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": false,
+      "cell": "D3200_p10",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": false,
+      "cell": "D3200_p20",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": false,
+      "cell": "D3200_p40",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": false,
+      "cell": "D3200_p60",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": false,
+      "cell": "D3200_p20",
+      "source": "wmverify_r3"
+     }
+    ],
+    "plan_source": "rule",
+    "representable": true,
+    "verdicts": [
+     "identical",
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "duo12_v20": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_r3"
+     }
+    ],
+    "plan_source": "rule",
+    "representable": true,
+    "verdicts": [
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "duo12_v21": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2400_p20",
+      "source": "wmverify_r3"
+     }
+    ],
+    "plan_source": "rule",
+    "representable": true,
+    "verdicts": [
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "g2_gap1": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D3200_p20",
+      "source": "wmverify_p20"
+     }
+    ],
+    "plan_source": "rule",
+    "representable": true,
+    "verdicts": [
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_006c290e03ad3d3c": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20",
+     "p40"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": false,
+      "cell": "D2800_p10",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p40",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p60",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_p20"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "verdicts": [
+     "identical",
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_0584e488a8bf93c5": {
+    "allowed": false,
+    "allowed_pens": [],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": false,
+      "cell": "D3200_p10",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D3200_p20",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": false,
+      "cell": "D3200_p40",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D3200_p60",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_p20"
+     },
+     {
+      "allowed": true,
+      "cell": "D3200_p20",
+      "source": "wmverify_p20"
+     },
+     {
+      "allowed": false,
+      "cell": "D3200_p20",
+      "source": "wmverify_rep"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "verdicts": [
+     "identical",
+     "identical",
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_0d1deed54cf85a43": {
+    "allowed": false,
+    "allowed_pens": [],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": false,
+      "cell": "D3200_p20",
+      "source": "wmverify_r3"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "verdicts": [
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_0d50e4e18041530d": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_r3"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_r5"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "verdicts": [
+     "identical",
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_267471acb8393ab5": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20",
+     "p40"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2800_p10",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p40",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p60",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_p20"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": false,
+    "verdicts": [
+     "not_representable",
+     "not_representable"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_5ac1a9085a4922cc": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20",
+     "p40"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2800_p10",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p40",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p60",
+      "source": "wmverify_mc"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": false,
+    "verdicts": [
+     "not_representable"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_6c2bf382711cbc37": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_r3"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_r5"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "verdicts": [
+     "identical",
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_a857168d4aae7b79": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2400_p20",
+      "source": "wmverify_r3"
+     },
+     {
+      "allowed": true,
+      "cell": "D2400_p20",
+      "source": "wmverify_r3"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "verdicts": [
+     "identical",
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_ad6205c9d248ab0f": {
+    "allowed": false,
+    "allowed_pens": [],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": false,
+      "cell": "D3200_p20",
+      "source": "wmverify_r3"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "verdicts": [
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_af1d7d5c2eb434c6": {
+    "allowed": false,
+    "allowed_pens": [],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": false,
+      "cell": "D3200_p10",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": false,
+      "cell": "D3200_p20",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": false,
+      "cell": "D3200_p40",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": false,
+      "cell": "D3200_p60",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": false,
+      "cell": "D3200_p20",
+      "source": "wmverify_p20"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": false,
+    "verdicts": [
+     "not_representable",
+     "not_representable"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_b2603fffb7e93023": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2400_p20",
+      "source": "wmverify_r3"
+     },
+     {
+      "allowed": true,
+      "cell": "D2400_p20",
+      "source": "wmverify_r3"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "verdicts": [
+     "identical",
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_b37b425aed7519df": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2400_p20",
+      "source": "wmverify_p20"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": false,
+    "verdicts": [
+     "not_representable"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_b66c4207002b5a15": {
+    "allowed": true,
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_r6"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "wm": true
+   },
+   "mut_c19711cf1ebe4332": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2400_p20",
+      "source": "wmverify_p20"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "verdicts": [
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_cfdbafe5f3316f1a": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_r5"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "verdicts": [
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_dbbc6092d339e630": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20",
+     "p40"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": false,
+      "cell": "D2800_p10",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p40",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p60",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_p20"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": false,
+    "verdicts": [
+     "not_representable",
+     "not_representable"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_ed21f451c77f2878": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D3200_p20",
+      "source": "wmverify_r3"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "verdicts": [
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "mut_f2b812b12a6a7499": {
+    "allowed": true,
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_r6"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "wm": true
+   },
+   "mut_fd73f0eab0e4fc39": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2400_p20",
+      "source": "wmverify_r3"
+     }
+    ],
+    "plan_source": "wm",
+    "representable": true,
+    "verdicts": [
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "rand_5977af6c8169243b": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2800_p20",
+      "source": "wmverify_r3"
+     }
+    ],
+    "plan_source": "rule",
+    "representable": true,
+    "verdicts": [
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "wall_g_alt21_gate0": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D2400_p20",
+      "source": "wmverify_p20"
+     }
+    ],
+    "plan_source": "rule",
+    "representable": true,
+    "verdicts": [
+     "identical"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   },
+   "wall_g_duo12_stagger40": {
+    "allowed": true,
+    "allowed_pens": [
+     "p20",
+     "p40"
+    ],
+    "allowed_scope": "per guidance-cell penetration (union)",
+    "cells": [
+     {
+      "allowed": true,
+      "cell": "D3200_p10",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D3200_p20",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D3200_p40",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": false,
+      "cell": "D3200_p60",
+      "source": "wmverify_mc"
+     },
+     {
+      "allowed": true,
+      "cell": "D3200_p20",
+      "source": "wmverify_p20"
+     }
+    ],
+    "plan_source": "rule",
+    "representable": false,
+    "verdicts": [
+     "not_representable",
+     "not_representable"
+    ],
+    "wm": true,
+    "wm_group_member": true
+   }
+  },
+  "pool_rule": "p20 only if >= 30 activations and >= 8 clusters in the (plan, bin), else all penetrations (label only)",
+  "rule": "fullpol-clean5c4-situational-v4",
+  "structured_excluded": [
+   "duo12_v18",
+   "duo12_v20",
+   "duo12_v21",
+   "g2_gap1",
+   "g2_gapopen12",
+   "g2_lc01",
+   "g2_stagger40",
+   "wall_g_alt21",
+   "wall_g_alt21_gate0",
+   "wall_g_duo12_stagger40",
+   "wall_g_relay12",
+   "wall_g_relay21"
+  ],
+  "teacher_note": "privileged teacher bin: used only to choose B's EV-BC target label (offline, recorded tape at the decision second); the slate / observation / action RNG never see it (asymmetric guidance, disclosed)",
+  "unconditional": {
+   "D2800_p20/duo12_v20": {
+    "benefit_rate": 0.6666666666666666,
+    "ci95_veh_s_per_episode": [
+     927.1327698891305,
+     9868.605754312017
+    ],
+    "cvar90_diff": -51.697084285897944,
+    "groups_vs_u0": {
+     "class:cav": -4.14,
+     "class:hdv": -7.26,
+     "origin:L0": -12.29,
+     "origin:L1": -10.93,
+     "origin:L2": 2.75
+    },
+    "mean_veh_s_per_episode": 5322.560294048689,
+    "rule": "MAIN 2026-11-08 23:42 pre-registration: episode-level act-whenever-feasible confirmation (24 fresh seeds 991230-991253, (pick - u0) CI95 upper < 0 AND ALLOWED vs u0)",
+    "unconditional": true,
+    "verdict": "UNC_VERDICT.json"
+   },
+   "D2800_p20/mut_b66c4207002b5a15": {
+    "benefit_rate": 0.6666666666666666,
+    "ci95_veh_s_per_episode": [
+     1244.7142118605877,
+     10233.374557826764
+    ],
+    "cvar90_ci95": [
+     -77.06646317017602,
+     -22.894714649472217
+    ],
+    "cvar90_diff": -49.60737140958016,
+    "mean_veh_s_per_episode": 5588.161099418326,
+    "rule": "MAIN 2026-11-09 00:20 UNC rule (r6 v2, 24 fresh seeds 991348-991371): (pick - u0) CI95 upper < 0 AND ALLOWED",
+    "unconditional": true,
+    "verdict": "wmverify_r6/ANALYSIS_R6/R6_VERDICT.json",
+    "worst_group": "origin:L2",
+    "worst_group_inc": 3.033647074594184
+   },
+   "D2800_p20/mut_f2b812b12a6a7499": {
+    "benefit_rate": 0.7083333333333334,
+    "ci95_veh_s_per_episode": [
+     1421.141186914223,
+     7877.682778472255
+    ],
+    "cvar90_ci95": [
+     -67.11641137228732,
+     -25.779764647232582
+    ],
+    "cvar90_diff": -45.68534873046053,
+    "mean_veh_s_per_episode": 4537.89125440536,
+    "rule": "MAIN 2026-11-09 00:20 UNC rule (r6 v2, 24 fresh seeds 991348-991371): (pick - u0) CI95 upper < 0 AND ALLOWED",
+    "unconditional": true,
+    "verdict": "wmverify_r6/ANALYSIS_R6/R6_VERDICT.json",
+    "worst_group": "origin:L2",
+    "worst_group_inc": 2.6104793766705328
+   }
+  },
+  "union": {
+   "allowed_pens": {
+    "duo12_v18": [],
+    "duo12_v20": [
+     "p20"
+    ],
+    "duo12_v21": [
+     "p20"
+    ],
+    "g2_gap1": [
+     "p20"
+    ],
+    "mut_006c290e03ad3d3c": [
+     "p20",
+     "p40"
+    ],
+    "mut_0584e488a8bf93c5": [],
+    "mut_0d1deed54cf85a43": [],
+    "mut_0d50e4e18041530d": [
+     "p20"
+    ],
+    "mut_267471acb8393ab5": [
+     "p20",
+     "p40"
+    ],
+    "mut_5ac1a9085a4922cc": [
+     "p20",
+     "p40"
+    ],
+    "mut_6c2bf382711cbc37": [
+     "p20"
+    ],
+    "mut_a857168d4aae7b79": [
+     "p20"
+    ],
+    "mut_ad6205c9d248ab0f": [],
+    "mut_af1d7d5c2eb434c6": [],
+    "mut_b2603fffb7e93023": [
+     "p20"
+    ],
+    "mut_b37b425aed7519df": [
+     "p20"
+    ],
+    "mut_c19711cf1ebe4332": [
+     "p20"
+    ],
+    "mut_cfdbafe5f3316f1a": [
+     "p20"
+    ],
+    "mut_dbbc6092d339e630": [
+     "p20",
+     "p40"
+    ],
+    "mut_ed21f451c77f2878": [
+     "p20"
+    ],
+    "mut_fd73f0eab0e4fc39": [
+     "p20"
+    ],
+    "rand_5977af6c8169243b": [
+     "p20"
+    ],
+    "wall_g_alt21_gate0": [
+     "p20"
+    ],
+    "wall_g_duo12_stagger40": [
+     "p20",
+     "p40"
+    ]
+   },
+   "by_source": {
+    "rule": [
+     "duo12_v20",
+     "g2_gap1"
+    ],
+    "wm": [
+     "mut_006c290e03ad3d3c",
+     "mut_0d50e4e18041530d",
+     "mut_6c2bf382711cbc37",
+     "mut_b66c4207002b5a15",
+     "mut_cfdbafe5f3316f1a",
+     "mut_f2b812b12a6a7499"
+    ]
+   },
+   "cells": [
+    "D2400_p20",
+    "D2800_p20",
+    "D3200_p20",
+    "D3200_p40"
+   ],
+   "fairness_scope": "a row for cell D_pXX needs the plan ALLOWED in every verification cell at pXX (at least one)",
+   "rule": "UNION (MAIN 2026-11-08 23:03): admitted WM mut_* plans + admitted verified rule plans; same situational rule except the WM-source gate; plan_source wm|rule on every row, template and pair; source stays wm_bank (bank-derived verified row) for template selection downstream"
+  }
+ },
+ "source": {
+  "rule": "S-REGIME registered analysis (rg_analyze.py cell_stats): per strategy x cell paired seed differences of episode team delay J_total, seed bootstrap 10,000 resamples RNG 20261106, 2.5/97.5% quantiles",
+  "sha256": "074737ffad44dd168308811d0e6f0dc881cf6f9a95dd81abbee43dce6a8917bf",
+  "sign": "gain = J(base) - J(strategy) in veh-s per episode (positive = lower team delay); S-REGIME rg_analyze reports difference = strategy - base, so gain mean = -mean_diff and lb95(gain) = -ub95(difference)",
+  "sources": [
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_MC/act_wmv_mc.jsonl",
+    "sha256": "f1076460c25a53092dd0d5b170814ed1e3b17e1e33ab9720cc8c51c7d3c36ae2"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_P20/act_wmv_p20.jsonl",
+    "sha256": "5b0bb3cac856387b3c5ac0bd55c057832e5519eef5c60cb06154df1f0bd23239"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_REP/act_wmv_rep.jsonl.gz",
+    "sha256": "b28c2953d848a3da5986349cb1f71738c94c246afcba0f8ef3b458b12d0c106a"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2400/act_wmv_r3_D2400.jsonl.gz",
+    "sha256": "f4ff8cae708c0ff61a600e916aecbdbf5c207b1f14605038aff94c43e3ba0472"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2400C/act_wmv_r3_D2400C.jsonl.gz",
+    "sha256": "5a8df8244f5c991b2e3d1e16f5a56318725cd272bcf37dc796d7673087691386"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2800/act_wmv_r3_D2800.jsonl.gz",
+    "sha256": "8095e5b6e538b6d1f6ce7aa4526a159830df2a188aaf3f5582b43ea065710be1"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D3200/act_wmv_r3_D3200.jsonl.gz",
+    "sha256": "c98adb38c0742d6efd20efb8ebbfd39b47f5335f444d5a662600db07a468286e"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R5/act_wmv_r5.jsonl.gz",
+    "sha256": "f79c91adc6d82175677469417d5ab6774e39d5cf0e2a1fad9e1845d104a30ab1"
+   },
+   {
+    "baseline": "mappo",
+    "name": "onset_priv/PONSET_wmv_mc.jsonl",
+    "sha256": "a2a7b0c1b49973592b1414d59b85f5825069b8c0019d229b0dfc4d5216072f82"
+   },
+   {
+    "baseline": "mappo",
+    "name": "onset_priv/PONSET_wmv_p20.jsonl",
+    "sha256": "b02c5c89b1e7d40094e46679b6baa9c50855022a2d2e3f31c523756ea0cf7a9d"
+   },
+   {
+    "baseline": "mappo",
+    "name": "onset_priv/PONSET_wmv_rep.jsonl",
+    "sha256": "8daf5329ee6e031ec4009d10bab4c1a403118347295493960a4fbd3407af7339"
+   },
+   {
+    "baseline": "mappo",
+    "name": "onset_priv/PONSET_r3_D2400.jsonl",
+    "sha256": "e3614ed16b05778f65331e5d0778c5e4450c01f0ef4f5c594ef800b5b620155e"
+   },
+   {
+    "baseline": "mappo",
+    "name": "onset_priv/PONSET_r3_D2400C.jsonl",
+    "sha256": "2b9f628c19495cfb3996c1773ca736889b4a4d251c22c569384ded9c1afdc88b"
+   },
+   {
+    "baseline": "mappo",
+    "name": "onset_priv/PONSET_r3_D2800.jsonl",
+    "sha256": "c54e40f5c69866ce3fcad8266f8a050f02b6bf3f592785c6ea14446293255774"
+   },
+   {
+    "baseline": "mappo",
+    "name": "onset_priv/PONSET_r3_D3200.jsonl",
+    "sha256": "c1fdff88f6bc888c50f2ce6cf7523e01ea2c6f7687ac0862b35ac7627b859ed8"
+   },
+   {
+    "baseline": "mappo",
+    "name": "onset_priv/PONSET_r5.jsonl",
+    "sha256": "6039021c1d5f79196c047931775c760b6156b118310d48baab3ba6c69210e4c8"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_MC/BANK_MC.jsonl",
+    "sha256": "edfe622d36c877c60133bb9cd9695490bed6a2686c3820fb629b19ef9758e886"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_P20/BANK_P20.jsonl",
+    "sha256": "ef781a8ede5ae660487f31d1ad72494358736d6d23e6a61a1fcc03e7365f65a9"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2400/BANK_R3_D2400.jsonl",
+    "sha256": "1f541cee7765fd80c564671392b001b12bb55d01d0eee63f416530827cf19154"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2400C/BANK_R3_D2400C.jsonl",
+    "sha256": "9f5793064eb0b499d6a84dc401f778d549cc320d3e9150a584490024344aaf38"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2800/BANK_R3_D2800.jsonl",
+    "sha256": "b7de6c9b428d6c409194275b0986854d24a036b374b3d11919e4b9fe092b2ebb"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D3200/BANK_R3_D3200.jsonl",
+    "sha256": "3f6ad0a2e4e8d1ee2173907c99787330e47381b453e17572d07706fcc58c1310"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R5/BANK_R5.jsonl",
+    "sha256": "a569435bb1e80556aea33a3a8963926f9b98269c616e623bafb54dce31fe7d99"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_MC/PLAN.json",
+    "sha256": "5f03d87046c9339474c62f3309e689693460207270c8431896e81b19cd8a8dec"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_MC/VERIFY.json",
+    "sha256": "bcaa6fb74aba78aa8651147ed4171e394ce26b61ada7b9038316f4dc7c59d3a7"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_MC/ANALYSIS.json",
+    "sha256": "76e9ec681cc8ca0fd1970d2b1d3bd9661a412d0109807c126947874487d0a055"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_MC/ANALYSIS_ALLOWED.json",
+    "sha256": "44013881894178057e05c4a06b6b7658423a5804d726bf1f6e14ceea4032c389"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_P20/PLAN.json",
+    "sha256": "0c42bdf81a5b1ce281605de67a8952a8e261e53094212719d302be48fb343685"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_P20/VERIFY.json",
+    "sha256": "e716079ba89b8b493dc59c06c12f6fb154834d29b91d7191a94bd0693c718880"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_P20/ANALYSIS.json",
+    "sha256": "3739785c7a35922715efa38a27c4eb6901cd0643f8fcccbd6e8761310faadc8f"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_P20/ANALYSIS_ALLOWED.json",
+    "sha256": "f4f5ac5b97950462e990e1a15726c0eaf0751b92dc1738cf1d71aedd41a551c7"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_REP/PLAN.json",
+    "sha256": "562a29b8ac35f16cea01ba6a7354b458a5c98c7e20c8b4083045f957b409fd97"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_REP/VERIFY.json",
+    "sha256": "18aa567c0c8b80b48b06bb510997a5188785664344b58b42ada8880e68e85e8c"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_REP/ANALYSIS.json",
+    "sha256": "e32940a26f1f51031d10d7731d9123d90910b35eccbb6f4b255ba69ab06935ea"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_REP/ANALYSIS_ALLOWED.json",
+    "sha256": "6fd629da95125ec54ea923634fb262de3b3fd91a68103895a89ad154a3a1b44d"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2400/PLAN.json",
+    "sha256": "1498200cb1e9a7a38e90379f24ac99bb03374681b980f89abf2f286c3a1e9657"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2400/VERIFY.json",
+    "sha256": "4802dbe24133c638ce8cd4bda901051226a18169f14f6d482db21b66c9244162"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2400/ANALYSIS.json",
+    "sha256": "4cb49679b84490cba9e4eb4464759eb2bccd4fe2f1dc3479b09fc00580df2645"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2400/ANALYSIS_ALLOWED.json",
+    "sha256": "9c1a4084cccc26663dbcae456fa2916453d696d46ee8cfefd4e2b82fdf162424"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2400C/PLAN.json",
+    "sha256": "3d3f2ce8ffdead2f09594f7492a5c96afcc25e2e5557c59531b20870d0a90384"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2400C/VERIFY.json",
+    "sha256": "fb237fa3d6af2ff90edda1b077a8fab951a6e483b8d1c2c5637b9d5384b54089"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2400C/ANALYSIS.json",
+    "sha256": "9f8da34eaa9e0eed057a09b0cd1ae4164b85b8c5bf11fee19b3717dcfa27dac4"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2400C/ANALYSIS_ALLOWED.json",
+    "sha256": "d785b70f1acaf7aab979fb82d9b4da561e6c8e59f7ae4e69019be1724bb360c6"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2800/PLAN.json",
+    "sha256": "54b7199a9278ad311f2de13b51d538a0de0c55b08e1a3b0248729594ddc498fa"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2800/VERIFY.json",
+    "sha256": "aad4ae1de8e10a21a58df4fece2c67e6df07d0b7ef675dba86d2a5ad3ebc35bc"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2800/ANALYSIS.json",
+    "sha256": "6855bbbe7621fcfab0d147e759aa4a3ec68863e22fe9c3bad7ace97f25bdea40"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D2800/ANALYSIS_ALLOWED.json",
+    "sha256": "751545a583028ef685ee98e20ed9f3d95838c0188f048ef147fcebb9cc899f82"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D3200/PLAN.json",
+    "sha256": "8588b68e89ff3c7fc28b7db015a29b84c627c8b902d7370503eef978c8cd7df5"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D3200/VERIFY.json",
+    "sha256": "ca22254012ce9456fedc5ca965b145a8e0a5a9af07f47af011a56523d5dcd42c"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D3200/ANALYSIS.json",
+    "sha256": "58eb9223e9d57e85dfbfce28c337e87eddd480679bb2e55ded3b25c8c8c5dd0e"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R3_D3200/ANALYSIS_ALLOWED.json",
+    "sha256": "57cea1d70e46dd4e6c800691ada6702a104761c7d5bd13aed351ea3d65b2e07d"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R5/PLAN.json",
+    "sha256": "ed78ad7e49ca2f2c190399028f518ccde321d777864f028b73e73243e318bf2c"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R5/VERIFY.json",
+    "sha256": "78682433fe68cb6c38fbea9a9de0e2887223e2ed7bce4abc9108fe8e860cf99c"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R5/ANALYSIS.json",
+    "sha256": "42c369fb94a352ac7e3138e7ad94213c2ddec84e2a6cc4a12e4d83283146d582"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R5/ANALYSIS_ALLOWED.json",
+    "sha256": "44d0d1d66bad587425b5f2cbed71583a272d9d2727e506bbff45b86fdc2d6009"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_UNC/PLAN.json",
+    "sha256": "2b1b5c80c39b3d4f37a555c99309ef3f5f7538aca5702d3427bedb7e495e3d3f"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_UNC/VERIFY.json",
+    "sha256": "719203356f5f70a54bfdc75797ca7849eabd841336ea5f2f775d7a7b0bee53b6"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_UNC/ANALYSIS.json",
+    "sha256": "5546b9c41e31c4485153dc9f87d2705171c5a1be959386b21766b4b575687cb8"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_UNC/ANALYSIS_ALLOWED.json",
+    "sha256": "bde65d47c930c685bb5c45f59b728783ce2933e410bdc12dd033f7d7239e59b2"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_UNC/UNC_VERDICT.json",
+    "sha256": "d488d48b42d5d7630380f79a4cfff24b090624da1fdec8a75d49a9863b7ae161"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_UNC/FAIRX_UNC.json",
+    "sha256": "0971d406217e840191ffeb94a094c58474de5e47bc445444e7df5ec8e955e26e"
+   },
+   {
+    "baseline": "mappo",
+    "name": "parent UNION_r5",
+    "role": "parent",
+    "sha256": "f20f03bdaab842f2abb3def8d0a259f1d8e73030e40eed89d2d09591611c5cb4"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R6/PLAN.json",
+    "sha256": "0153f5c081cf3603f6643bec1d5e6191eb4c044e7debd43423002ca168dd38aa"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R6/VERIFY.json",
+    "sha256": "8b060147ed68c68f1450c1c5a07f327bc9b83edd271f177e6f10c1e54c722ac0"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R6/ANALYSIS.json",
+    "sha256": "4ce2b43f6e218380ebb01666c8e221715529b28ef5ce92a1e2fc26fba905b4ab"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R6/ANALYSIS_ALLOWED.json",
+    "sha256": "922b5a5b9bd5f9f78313b776b30d72c4bc00afd204965647b63373f1600ab1ee"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R6/R6_VERDICT.json",
+    "sha256": "7eea2f6e32d48741386149d681b69174221299e1ad57900ae7f937f7b9fe56f0"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R6/FAIRX_R6.json",
+    "sha256": "99e9a0941889100e77452685828958fc30892db7f99e7b222d45c1e9d4a8f45c"
+   },
+   {
+    "baseline": "mappo",
+    "name": "ANALYSIS_R6/BANK_R6.jsonl",
+    "sha256": "df59d0720a521463ab967032a688e4413ec619dd4393718df446f618d79fa68e"
+   },
+   {
+    "baseline": "mappo",
+    "name": "parent UNION_R5_UNC",
+    "role": "parent",
+    "sha256": "e2a161b13d48c02b6179130b8f5a4a83fdefa5c722d46f2fb87754ae9a49d58a"
+   },
+   {
+    "baseline": "mappo",
+    "name": "parent guidance (priority rewrite)",
+    "role": "parent",
+    "sha256": "a6c9c6cb949cf111cd4777db869fcf4a2ccd69a29b4f4251ee64973c0f7ca0f0"
+   }
+  ]
+ },
+ "weight": 1.0
+}
