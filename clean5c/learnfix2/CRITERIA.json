@@ -84,7 +84,7 @@
   "disclosure": "replay is off-policy (recorded behaviour had no bias); most of the one-update movement is PPO (0.042, at its 0.045 cap); EV-BC is bounded by the 0.06 cumulative update cap and adds 0.001-0.014"
  },
  "amendment_2": {
-  "written": "2026-11-09 ~03:4x before the re-run (MAIN)",
+  "written": "2026-11-09 03:02 (commit time), before the re-run (MAIN)",
   "update_kl_cap": 0.075,
   "criteria": "C1-C5 unchanged",
   "fallback": "if B P(none) after one update < 0.75 with 0.075, register 0.06 and report"
