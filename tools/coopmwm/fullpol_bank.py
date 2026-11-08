@@ -78,6 +78,11 @@ def plans(rows, analysis=None):
             vals = [per_seed[s]['cell_groups_vs_u0'][g] for s in seeds
                     if (per_seed[s].get('cell_groups_vs_u0') or {}).get(g) is not None]
             groups[g] = float(np.mean(vals)) if vals else None
+        # p20 D2400 fairness priority hook: CVaR90 per-vehicle delay (strategy - u0, s) from the ANALYSIS
+        # ('cvar90_diff') or every seed's bank row ('cvar90_vs_u0'); None when absent (fail closed there)
+        cvars = [per_seed[s].get('cvar90_vs_u0') for s in seeds]
+        cvar = (float(stats['cvar90_diff']) if stats is not None and stats.get('cvar90_diff') is not None
+                else float(np.mean(cvars)) if all(v is not None for v in cvars) else None)
         first = rs[0]
         out[(cell, fam)] = dict(cell=cell, family=fam, n_seeds=len(seeds), activations=len(rs),
                                 mean_veh_s=-mean, lb95_veh_s=-hi, ub95_veh_s=-lo, gain_source=src,
@@ -88,7 +93,7 @@ def plans(rows, analysis=None):
                                 members=max(len(r['members']) for r in rs),
                                 lcexec_parity=first.get('lcexec_parity'), n2_parity=first.get('n2_parity_verdict'),
                                 template=first.get('template'), template_sha256=first.get('template_sha256'),
-                                offer_condition=first.get('offer_condition'))
+                                offer_condition=first.get('offer_condition'), cvar90_diff_s=cvar)
     return out, skipped
 
 
@@ -105,7 +110,7 @@ def eligible(p, threshold_s=THRESHOLD_S):
 
 
 def build(bank_paths, *, fallback, analysis_paths=(), provenance, arm='B', arms=None, verify=None,
-          require_parity=True):
+          require_parity=True, eligible_fn=None):
     """Guidance doc (fullpol-regime-guidance-v1): bank targets where verified, F8S rule rows elsewhere."""
     from .fullpol_learn import guidance_doc
     rows, sources, analysis = [], [], {'cells': {}}
@@ -124,7 +129,7 @@ def build(bank_paths, *, fallback, analysis_paths=(), provenance, arm='B', arms=
     wm = wm_families(arms) if arms is not None else None
     parity = {f: (v.get('n2_parity') or {}).get('verdict') for f, v in ((verify or {}).get('families') or {}).items()}
     for (cell, fam), p in sorted(summary.items()):
-        ok, label = eligible(p)
+        ok, label = eligible(p) if eligible_fn is None else eligible_fn(p)[:2]
         verdict = p['n2_parity'] or parity.get(fam)
         if ok and wm is not None and fam not in wm.get(cell, set()):
             ok, label = False, 'not_wm_sourced'
@@ -135,7 +140,8 @@ def build(bank_paths, *, fallback, analysis_paths=(), provenance, arm='B', arms=
                    lb95_veh_s=p['lb95_veh_s'], ub95_veh_s=p['ub95_veh_s'], fair=ok, fair_label=label,
                    worst_group_increase_s=p['worst_group_increase_s'], group_increase_s=p['group_increase_s'],
                    source='wm_bank', executor=p['executor'], members=p['members'],
-                   lcexec_parity=p['lcexec_parity'], n2_parity=p['n2_parity'], template_sha256=p['template_sha256'])
+                   lcexec_parity=p['lcexec_parity'], n2_parity=p['n2_parity'], template_sha256=p['template_sha256'],
+                   **({} if p.get('cvar90_diff_s') is None else dict(cvar90_diff_s=p['cvar90_diff_s'])))
         p['target'] = ok
         row['n2_parity'] = p['n2_parity']
         if ok:

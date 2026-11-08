@@ -86,7 +86,7 @@ def host_receipt(host):
                 inventory_sha256=setup['inventory_sha256'])
 
 
-def check_guidance(cfg, missing_ok=()):
+def check_guidance(cfg, missing_ok=(), cells=CELL_KEYS):
     """FAIRAUDIT: ASSERT (not just record) the guidance sources - FULLPOL EV-BC on, regime guidance doc with
     SHA-cited sources, rows for arm B only (R = the no-guidance arm), no verified bank rows."""
     from . import fullpol_ev, fullpol_learn
@@ -105,7 +105,7 @@ def check_guidance(cfg, missing_ok=()):
     if not rows or any(r.get('arm') != 'B' for r in rows):
         raise ValueError('clean5a guidance rows must exist and be arm B only (R = no-guidance arm)')
     regimes = sorted({r['regime'] for r in rows})
-    missing = sorted(set(CELL_KEYS)-set(regimes)-set(missing_ok))
+    missing = sorted(set(cells)-set(regimes)-set(missing_ok))
     if missing:
         raise ValueError('clean5a guidance must cover every training cell: missing '+repr(missing))
     mappo_cells = sorted({r['regime'] for r in rows if r.get('baseline') == 'mappo'})
@@ -136,7 +136,8 @@ def keys(*, desc, guidance_doc, provenance):
 
 VARIANT = dict(run=RUN, quote_file=QUOTE_FILE, approval_file='BUDGET_CLEAN4.json', budget_file='CLEAN5A_BUDGET.json',
                design=DESIGN, approved=c4.APPROVED, budget_rule=None, keys=None, cfg_overrides={}, newmap_extra={},
-               requires_lc_runtime=False, authority=None, guidance_missing_ok=(), worlds=None)
+               requires_lc_runtime=False, authority=None, guidance_missing_ok=(), worlds=None,
+               cell_keys=CELL_KEYS)
 
 
 def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtime_sim_s, host, provenance,
@@ -194,7 +195,7 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
     cfg.pop('clean2_restart'); cfg.pop('clean2_budget')
     cfg['safety_reference'] = dict(by_world={}, unmatched_zero_event_benchmark=True,
         source='clean5a: no registered wz3to2 MAPPO check panel; unmatched TRAIN zero-event benchmark (conservative)')
-    cfg['newmap'] = dict(run=v['run'], map='wz3to2', base_controller='mappo_frozen', cell=list(CELL_KEYS),
+    cfg['newmap'] = dict(run=v['run'], map='wz3to2', base_controller='mappo_frozen', cell=list(v['cell_keys']),
         eval_panel_sha256=c4.EVAL_PANEL_SHA256, descriptor_sha256=desc.digest, network_file_sha256=c4.NET_FILE_SHA256,
         map_spec=c4.MAP_SPEC, final_eval_ceiling_sim_s=FINAL_EVAL_CEILING, v2v_range_m=c4.V2V_RANGE_M, rsu=False,
         base=dict(trunk=trunk, trunk_sha256=trunk_sha256, residual=u0, residual_sha256=u0_sha256,
@@ -210,7 +211,7 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
         raise ValueError('owner symmetric augmentation-OFF design required')
     if not ev_only(cfg):
         raise ValueError('clean5a requires the registered EV-only guidance mode')
-    guidance = check_guidance(cfg, v['guidance_missing_ok'])
+    guidance = check_guidance(cfg, v['guidance_missing_ok'], v['cell_keys'])
     rc.check_pins(cfg)
     budget = c4.budget(quote_doc=quote_doc, approval=approval, prior_runtime_sim_s=prior_runtime_sim_s,
                        approved=v['approved'], rule=v['budget_rule'])
@@ -317,7 +318,9 @@ def prepare(source, *, contexts, guidance_doc, quote_doc, approval, prior_runtim
             imitation=dict(epochs=IMITATION_EPOCHS, ev_bc_steps=fullpol_ev.settings(cfg)['ev_bc_steps'], kl_cap=0.045,
                            bc_kl='mean over labelled CAV decision rows (FULLPOL 24080ea2)',
                            trigger_ppo_kl=fullpol_ev.settings(cfg)['ppo_kl'], pace_rule=fullpol_ev.PACE_RULE),
-            seeds='TRAIN worlds 989220-989267 over 6 staged cells (16/update); final panel 989600-989695 + 3c (N6)',
+            seeds=('TRAIN worlds 989220-989267 over 6 staged cells (16/update); final panel 989600-989695 + 3c (N6)'
+                   if tuple(v['cell_keys']) == CELL_KEYS else 'TRAIN worlds 989220-989267 over the cells '
+                   +', '.join(v['cell_keys'])+' (CONFIG worlds_by_update); final panel: N6 (p20 amendment)'),
             criterion=rc.criterion_document(), reporting=cfg['clean2_reporting_definition'],
             paired_evaluation='in-run u8/u24 OFF; final = N6 launcher (claims 3a/3c), debited from v2v_final',
             registered_state_order=c4.STATE_ORDER_RULE_TEXT, safety=c4.SAFETY_RULE), sort_keys=True)+'\n')

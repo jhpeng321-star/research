@@ -68,7 +68,7 @@ VARIANT = dict(run=RUN, quote_file=QUOTE_FILE, approval_file=APPROVAL_FILE, budg
                                  hold_lane_pin='ON (MAIN 2026-11-07; FULLPOL 5cbd616e): '+HOLD_LANE_PIN_NOTE,
                                  practice_offer_note='practice_offer ON (0.5); no exact-plan demonstration slots in '
                                  'clean5b (no templates, EV-BC only), so it is inert - disclosed'),
-               requires_lc_runtime=True, authority=AUTHORITY, guidance_missing_ok=(), worlds=None)
+               requires_lc_runtime=True, authority=AUTHORITY, guidance_missing_ok=(), worlds=None, cell_keys=c5.CELL_KEYS)
 
 
 def prepare(source, *, root=ROOT, **kwargs):
@@ -128,16 +128,18 @@ F8_NOTE = ('MAIN 06:37 (registered, memory restart option a): 8 episodes per arm
            'HALF the episodes of the original 16-per-update design - disclosed.')
 
 
-def worlds_by_update_8():
-    """8 TRAIN worlds per update over the 6 staged cells (cell rotates with the update), seeds cycle in sixths."""
+def worlds_by_update_8(cell_keys=None):
+    """8 TRAIN worlds per update over the staged cells (default the 6 clean5 cells; cell rotates with the
+    update), seeds cycle in sixths (the same 48 TRAIN seeds whatever the cells)."""
     from . import map_scenarios as ms
+    keys = c5.CELL_KEYS if cell_keys is None else tuple(cell_keys)
     cells = {c['cell_key']: c for c in ms.cells()}
     out = {}
     for u in range(1, 25):
         offset = ((u-1) % 6)*F8_EPISODES
         rows = []
         for k, seed in enumerate(c5.TRAIN_SEEDS[offset:offset+F8_EPISODES]):
-            cell = cells[c5.CELL_KEYS[(k+u) % len(c5.CELL_KEYS)]]
+            cell = cells[keys[(k+u) % len(keys)]]
             rows.append(ms.world(seed, cell['demand'], cell['penetration']))
         out[str(u)] = rows
     return out
@@ -249,3 +251,174 @@ VARIANT_C = dict(VARIANT_F8, run=C_RUN, quote_file=C_QUOTE_FILE, approval_file=C
 def prepare_c(source, *, root=C_ROOT, g4_workers=C_G4_WORKERS, learn_threads_max=C_LEARN_THREADS_MAX, **kwargs):
     variant = dict(VARIANT_C, cfg_overrides=_c_overrides(g4_workers, learn_threads_max))
     return c5.prepare(source, root=root, variant=variant, **kwargs)
+
+
+# ---------------------------------------------------------------- p20 (owner REGISTRATION 2026-11-08 17:22)
+# "switch now and build it and restart": training cells -> 20% CAV for BOTH the WM-guided (clean5c, cpuW) and the
+# rule-guided (F8, cpuZ) runs. Same speed code (c4/speed-env 64afeb8e), same TRAIN seeds (989220-989267, 8 per arm
+# per update), B = R except the guidance. Guidance docs are files (PREPARE_INPUTS guidance_path) built by
+# ops/p20_guidance.py, so a newly WMVERIFY-verified p20 bank (any cell) can be swapped in before launch.
+# MAIN/OWNER (later 2026-11-08): include low congestion; per-cell priority by congestion; prefer plans that improve
+# BOTH delay and fairness.
+
+P20_CELLS = ('D2400_p20', 'D2800_p20', 'D3200_p20')
+P20_PRIORITY = dict(D3200_p20='delay', D2800_p20='fair_and_delay', D2400_p20='fairness')
+P20_RULE_FAMILIES = ('wall_g_duo12', 'wall_g_solo2')   # LOWCAV D3200_p20 PASS (multicrit/lowcav MULTICRIT_confirm)
+P20_G4_WORKERS = 6        # REV-SPD 13:51: measured G4 worker peak 7.1 GB -> 6 workers (peak 163.8 GB); both p20 runs
+P20_PRIORITY_RULE = (
+    'p20 target priority by congestion (owner 2026-11-08): D3200 delay - lb95(gain) > 0 (over the 10 s group bound '
+    'labelled, fairness penalty on); D2800 the best fair plan that also cuts delay - lb95 > 0 AND worst group '
+    'increase <= 10 s; D2400 fairness - worst group increase < 0 AND CVaR90 delay below u0 AND delay not '
+    'significantly worse (ub95(gain) >= 0); targets with lb95 <= 0 are admitted only by that fairness rule '
+    '(row admission flag). Where a cell has plans improving BOTH delay (lb95 > 0) and fairness (worst <= 10 s; '
+    'D2400 worst < 0), only those are kept. Cells without a target: "none" (B trains there like R).')
+P20_NOTE = ('p20 (owner REGISTRATION 2026-11-08 17:22): training cells = 20% CAV only (D2400/D2800/D3200_p20); same '
+            'TRAIN seeds, episodes, speed code and B = R code; only the guidance differs. '+P20_PRIORITY_RULE)
+
+
+def _check_p20_cells(cells):
+    if tuple(sorted(cells)) != P20_CELLS:
+        raise ValueError('p20 cells must be exactly '+repr(P20_CELLS))
+    return P20_CELLS
+
+
+def p20_eligible(p, threshold_s=None):
+    """(eligible, label, both) for a plan/row (cell or regime, lb95_veh_s, ub95_veh_s, worst_group_increase_s,
+    optional cvar90_diff_s = CVaR90 per-vehicle delay strategy - u0, seconds)."""
+    from .fullpol_fair import THRESHOLD_S
+    th = THRESHOLD_S if threshold_s is None else threshold_s
+    cell = p.get('cell') or p.get('regime')
+    priority = P20_PRIORITY.get(cell)
+    if priority is None:
+        return False, 'not_a_p20_training_cell', False
+    lb, ub, worst, cvar = p['lb95_veh_s'], p.get('ub95_veh_s'), p.get('worst_group_increase_s'), p.get('cvar90_diff_s')
+    if priority == 'delay':
+        if not lb > 0:
+            return False, 'lb95<=0', False
+        within = worst is not None and worst <= th
+        return True, 'delay:'+('within_fair_bound' if within else 'over_fair_bound'), within
+    if worst is None:
+        return False, 'groups_missing', False
+    if priority == 'fair_and_delay':
+        if not lb > 0:
+            return False, 'lb95<=0', False
+        return (worst <= th), ('fair_and_delay' if worst <= th else 'over_fair_bound'), worst <= th
+    if not worst < 0:
+        return False, 'worst_group_not_lowered', False
+    if cvar is None:
+        return False, 'cvar90_missing', False
+    if not cvar < 0:
+        return False, 'cvar90_not_lowered', False
+    if ub is None or ub < 0:
+        return False, 'delay_significantly_worse', False
+    return True, 'fairness', lb > 0
+
+
+def p20_select(doc, cells, *, families=None, note):
+    """Guidance doc for the p20 training cells: rows outside the cells (or, for the rule doc, the registered
+    families) dropped; the p20 priority applied per row; prefer-both per cell; clean5c templates / verified
+    cells restricted to the kept WM plans; per-cell labels (priority, source, targets); re-hashed with the parent
+    doc as a cited source. Fail closed when no row is left."""
+    import copy
+    from .fullpol_learn import FAIRNESS_ADMISSION, guidance_doc
+    cells = set(_check_p20_cells(cells))
+    kept, rejected = [], {}
+    for r in doc['rows']:
+        if r['regime'] not in cells or (families is not None and r['family'] not in families):
+            continue
+        ok, label, both = p20_eligible(r)
+        if not ok:
+            rejected[f"{r['regime']}/{r['family']}"] = dict(reason=label, source=r.get('source'))
+            continue
+        row = dict(copy.deepcopy(r), fair=True, p20_label=label, p20_both=both)
+        if not r['lb95_veh_s'] > 0:
+            row['admission'] = FAIRNESS_ADMISSION          # D2400 fairness priority only
+        kept.append(row)
+    rows = []
+    for cell in sorted(cells):
+        mine = [r for r in kept if r['regime'] == cell]
+        if any(r['p20_both'] for r in mine):
+            for r in mine:
+                if not r['p20_both']:
+                    rejected[f"{cell}/{r['family']}"] = dict(reason='not_both_while_both_available', source=r.get('source'))
+            mine = [r for r in mine if r['p20_both']]
+        rows += mine
+    if not rows:
+        raise ValueError('p20 guidance has no eligible rows in the training cells')
+    sources = list(doc['source']['sources'])+[dict(name='parent guidance (p20 selection)', sha256=doc['source']['sha256'],
+                                                   baseline='mappo', role='parent')]
+    out = guidance_doc(rows, sources=sources, provenance=doc['provenance']+' | '+note, weight=doc['weight'],
+                       clip=doc['clip'])
+    for k in set(doc)-set(out):
+        out[k] = copy.deepcopy(doc[k])
+    wm_kept = {(r['regime'], r['family']) for r in rows if r.get('source') == 'wm_bank'}
+    if 'clean5c' in doc:
+        c = out['clean5c']
+        c['templates'] = [t for t in c['templates'] if (t['cell'], t['family']) in wm_kept]
+        c['verified_cells'] = sorted({cell for cell, _ in wm_kept})
+        c['rejected'] = dict({k: v for k, v in c['rejected'].items() if k.split('/')[0] in cells},
+                             **{k: v['reason'] for k, v in rejected.items() if v.get('source') == 'wm_bank'})
+        c['skipped'] = {k: v for k, v in c['skipped'].items() if k.split('/')[0] in cells}
+    labels = {}
+    for cell in sorted(cells):
+        mine = [r for r in rows if r['regime'] == cell]
+        srcs = sorted({'wm' if r.get('source') == 'wm_bank' else 'rule' for r in mine})
+        labels[cell] = dict(priority=P20_PRIORITY[cell], source='+'.join(srcs) if srcs else 'none',
+                            fallback=bool(mine) and all(r.get('fallback') for r in mine),
+                            targets=[dict(family=r['family'], label=r['p20_label'], both=r['p20_both'],
+                                          lb95_veh_s=r['lb95_veh_s'], worst_group_increase_s=r.get('worst_group_increase_s'),
+                                          cvar90_diff_s=r.get('cvar90_diff_s')) for r in mine])
+    out['p20'] = dict(rule=P20_PRIORITY_RULE, cells=labels, families=None if families is None else list(families),
+                      rejected=rejected, parent_sha256=doc['source']['sha256'], note=note)
+    return out
+
+
+def check_p20_guidance(doc, cells, *, wm):
+    """Prepare-time (zero physics): a p20-selected doc; every row, template and verified cell in the training
+    cells; the rule doc carries only the registered LOWCAV families; returns the 'none' cells (no target)."""
+    cells = set(_check_p20_cells(cells))
+    p20 = doc.get('p20') or {}
+    regimes = {r['regime'] for r in doc['rows']}
+    if (p20.get('rule') != P20_PRIORITY_RULE or sorted(p20.get('cells') or ()) != sorted(cells) or not regimes <= cells
+            or any(not r.get('p20_label') or r.get('fair') is not True for r in doc['rows'])):
+        raise ValueError('p20 guidance must be p20-selected for the training cells (ops/p20_guidance.py)')
+    if wm:
+        c = doc.get('clean5c') or {}
+        if not set(c.get('verified_cells', ())) <= cells or any(t['cell'] not in cells for t in c.get('templates', ())):
+            raise ValueError('p20 clean5c bank templates outside the training cells')
+    elif not {r['family'] for r in doc['rows']} <= set(P20_RULE_FAMILIES) or 'clean5c' in doc:
+        raise ValueError('p20 rule guidance must be the LOWCAV families '+repr(P20_RULE_FAMILIES)+' only')
+    none = tuple(sorted(cells-regimes))
+    if none != tuple(c for c, v in sorted(p20['cells'].items()) if v['source'] == 'none'):
+        raise ValueError('p20 guidance labels disagree with its rows')
+    return none
+
+
+def _p20_variant(base, cells, g4_workers, *, label, wm, doc, overrides):
+    none = check_p20_guidance(doc, cells, wm=wm)
+    sources = {c: v['source'] for c, v in doc['p20']['cells'].items()}
+    note = P20_NOTE+f' {label}: per-cell guidance source {sources}.'
+    return dict(base, cell_keys=cells, worlds=lambda: worlds_by_update_8(cells), guidance_missing_ok=none,
+                cfg_overrides=dict(overrides, g4_workers=g4_workers), design=base['design']+' '+note,
+                authority=base['authority']+'; '+note,
+                newmap_extra=dict(base['newmap_extra'], variant=label, p20_note=note, no_guidance_cells=list(none),
+                                  training_cells=list(cells), p20_guidance_sources=sources,
+                                  p20_priority=dict(P20_PRIORITY)))
+
+
+def prepare_f8_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS, **kwargs):
+    """Rule-guided p20 (F8 code; B = LOWCAV duo12 / wall_g_solo2 EV-BC where eligible, R = none)."""
+    cells = _check_p20_cells(cells)
+    variant = _p20_variant(VARIANT_F8, cells, g4_workers, label='clean5b-F8-p20', wm=False, doc=guidance_doc,
+                           overrides=VARIANT_F8['cfg_overrides'])
+    return c5.prepare(source, root=root, variant=variant, guidance_doc=guidance_doc, **kwargs)
+
+
+def prepare_c_p20(source, *, root, guidance_doc, cells=P20_CELLS, g4_workers=P20_G4_WORKERS,
+                  learn_threads_max=C_LEARN_THREADS_MAX, **kwargs):
+    """WM-guided p20 (clean5c code; B = WMVERIFY-verified p20 WM plans, rule fallback labelled, R = none;
+    B and R the same templates)."""
+    cells = _check_p20_cells(cells)
+    variant = _p20_variant(VARIANT_C, cells, g4_workers, label='clean5c-p20', wm=True, doc=guidance_doc,
+                           overrides=_c_overrides(g4_workers, learn_threads_max))
+    return c5.prepare(source, root=root, variant=variant, guidance_doc=guidance_doc, **kwargs)

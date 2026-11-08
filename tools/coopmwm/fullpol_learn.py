@@ -149,9 +149,14 @@ def ev_table(cfg, arm):
     return table, receipt
 
 
+FAIRNESS_ADMISSION = 'p20-fairness-priority-v1'   # owner 2026-11-08: D2400_p20 fairness targets (guidance row flag)
+
+
 def qualifying(rows):
-    """Registered admission convention: families with lb95 > 0, best first (lb95, mean, name)."""
-    ok = [r for r in rows.values() if r['lb95_veh_s'] > 0]
+    """Registered admission convention: families with lb95 > 0, best first (lb95, mean, name). A row flagged
+    admission = FAIRNESS_ADMISSION (p20 D2400 fairness priority, set only by the p20 guidance builder) also
+    qualifies; it ranks after every lb95 > 0 family by the same key. Unflagged docs: unchanged."""
+    ok = [r for r in rows.values() if r['lb95_veh_s'] > 0 or r.get('admission') == FAIRNESS_ADMISSION]
     return [r['family'] for r in sorted(ok, key=lambda r: (-r['lb95_veh_s'], -r['mean_veh_s'], r['family']))]
 
 

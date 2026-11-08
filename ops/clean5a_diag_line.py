@@ -71,7 +71,8 @@ def line(root, u):
                    for p in ups[arm]['physical']} for arm in ups}
     jobs = {arm: {p['world']['seed']: p['id'] for p in ups[arm]['physical']} for arm in ('B', 'R')}
     parts = []
-    for cell in CELLS:
+    present = {c for d in delay.values() for c, _ in d.values()}
+    for cell in [c for c in CELLS if c in present]+sorted(present-set(CELLS)):
         cell_bits = []
         for arm in ('B', 'R'):
             dec = {'lane2': [0, 0], 'lane01': [0, 0]}
