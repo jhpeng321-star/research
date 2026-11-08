@@ -1,0 +1,140 @@
+[
+ {
+  "run": "coopmwm20261108_clean5bf8u",
+  "arm": "R",
+  "update": 5,
+  "learnfix": false,
+  "episodes": 8,
+  "ticks": 548,
+  "before": {
+   "choice_rows": 2393,
+   "p_none_choice": 0.16762416064739227,
+   "act_rows": 0,
+   "p_target_act": null,
+   "none_rows": 0,
+   "p_none_on_none_rows": null
+  },
+  "after_ppo": {
+   "choice_rows": 2393,
+   "p_none_choice": 0.1558607667684555,
+   "act_rows": 0,
+   "p_target_act": null,
+   "none_rows": 0,
+   "p_none_on_none_rows": null
+  },
+  "after": {
+   "choice_rows": 2393,
+   "p_none_choice": 0.1558607667684555,
+   "act_rows": 0,
+   "p_target_act": null,
+   "none_rows": 0,
+   "p_none_on_none_rows": null
+  },
+  "choice_kl_ppo": 0.003994110028236506,
+  "choice_kl_total": 0.003994110028236506,
+  "ppo": {
+   "rule": "row_mean",
+   "kl_budget": 0.045,
+   "final_kl": 0.000517791137099266,
+   "accepted": 548,
+   "rejected": 0
+  },
+  "learnfix_receipt": {},
+  "learnfix_steps": 0,
+  "ev_bc": {
+   "fit": {
+    "initial_ce": null,
+    "final_ce": null,
+    "passes": []
+   },
+   "rows": {
+    "episodes_without_regime_rows": 8
+   },
+   "learnfix": null
+  }
+ },
+ {
+  "run": "coopmwm20261108_clean5bf8u",
+  "arm": "R",
+  "update": 5,
+  "learnfix": true,
+  "episodes": 8,
+  "ticks": 548,
+  "before": {
+   "choice_rows": 2393,
+   "p_none_choice": 0.16762416064739227,
+   "act_rows": 0,
+   "p_target_act": null,
+   "none_rows": 0,
+   "p_none_on_none_rows": null
+  },
+  "after_ppo": {
+   "choice_rows": 2393,
+   "p_none_choice": 0.19557783007621765,
+   "act_rows": 0,
+   "p_target_act": null,
+   "none_rows": 0,
+   "p_none_on_none_rows": null
+  },
+  "after": {
+   "choice_rows": 2393,
+   "p_none_choice": 0.19557783007621765,
+   "act_rows": 0,
+   "p_target_act": null,
+   "none_rows": 0,
+   "p_none_on_none_rows": null
+  },
+  "choice_kl_ppo": 0.010934275489212598,
+  "choice_kl_total": 0.010934275489212598,
+  "ppo": {
+   "rule": "choice_row_mean (learnfix)",
+   "kl_budget": 0.045,
+   "final_kl": 0.01093427979073829,
+   "accepted": 72,
+   "rejected": 0
+  },
+  "learnfix_receipt": {
+   "rule": "c4/learnfix v1 (MAIN 2026-11-08, LEARNDIAG): EV-BC act / explicit-teacher-none / unlabelled labels with equal act:none total weight (row weight <= 1); trigger PPO with fairness harm on acting rows only, per-cell baseline + choice-row normalised advantages, epochs x minibatches of decision ticks (separate seeded order), choice-row KL cap and report, entropy weight capped at entropy_frac x RMS(adv) / mean H",
+   "ticks": 548,
+   "advantages": {
+    "choice_rows": 2393,
+    "cell_baseline": {
+     "D3200_p20": -0.010076659731566906,
+     "D2400_p20": -0.021911220625042915,
+     "D2800_p20": -0.0021261484362185
+    },
+    "std": 0.015667833387851715,
+    "raw_rms": 0.015664558857679367
+   },
+   "entropy_weight": 0.01,
+   "mean_entropy": 1.9621526002883911,
+   "adv_rms": 0.9997910261154175,
+   "accepted": 72,
+   "stopped": null,
+   "final_choice_kl": 0.01093427979073829,
+   "kl_budget": 0.045,
+   "kl_rule": "mean KL over choice rows (>= 1 non-none valid slot), all ticks of the update"
+  },
+  "learnfix_steps": 72,
+  "ev_bc": {
+   "fit": {
+    "initial_ce": null,
+    "final_ce": null,
+    "passes": []
+   },
+   "rows": {
+    "episodes_without_regime_rows": 8
+   },
+   "learnfix": {
+    "rule": "c4/learnfix v1 (MAIN 2026-11-08, LEARNDIAG): EV-BC act / explicit-teacher-none / unlabelled labels with equal act:none total weight (row weight <= 1); trigger PPO with fairness harm on acting rows only, per-cell baseline + choice-row normalised advantages, epochs x minibatches of decision ticks (separate seeded order), choice-row KL cap and report, entropy weight capped at entropy_frac x RMS(adv) / mean H",
+    "row_weight": {
+     "act": 0.0,
+     "none": 0.0
+    },
+    "act_rows": 0,
+    "none_rows": 0,
+    "weighting": "record weight = sum of its row weights (update-level act:none balance)"
+   }
+  }
+ }
+]

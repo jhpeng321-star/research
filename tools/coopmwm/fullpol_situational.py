@@ -381,6 +381,9 @@ def build(act_paths, analyses, bank_paths, *, cells, provenance, onset_paths, st
     return doc
 
 
+RULE_SOURCES = ('f8s_rule', 'rule', 'rule_multicrit')
+
+
 def check(doc, cells):
     """Prepare-time (zero physics): a situational doc; rows/templates in the training cells; every template
     carries its admitted bins; every row family admitted. Returns the cells without a target ('none')."""
@@ -389,7 +392,14 @@ def check(doc, cells):
     admitted = {p['family'] for p in sit.get('pairs', ()) if p['admitted']}
     regimes = {r['regime'] for r in doc['rows']}
     c = doc.get('clean5c') or {}
-    if (sit.get('rule') != RULE or not regimes <= cells or {r['family'] for r in doc['rows']} - admitted
+    # UNION bank (MAIN 2026-11-08 ~23:0x): WM rows carry their situational block (admitted pairs only); rule rows
+    # (provenance-tagged, no situational block) must be fairness-eligible with lb95 > 0
+    wm_rows = [r for r in doc['rows'] if r.get('situational') is not None]
+    rule_rows = [r for r in doc['rows'] if r.get('situational') is None]
+    if any(r.get('source') not in RULE_SOURCES or r.get('fair') is not True or not r['lb95_veh_s'] > 0
+           for r in rule_rows):
+        raise ValueError('union guidance: rule rows must be provenance-tagged fair rows with lb95 > 0')
+    if (sit.get('rule') != RULE or not regimes <= cells or {r['family'] for r in wm_rows} - admitted
             or any(t['cell'] not in cells or (t['offer_condition'].get('situation') or {}).get('rule') != RULE
                    or not t['offer_condition']['situation'].get('bins') for t in c.get('templates', ()))
             or any(r['arm'] != 'B' for r in doc['rows'])):
