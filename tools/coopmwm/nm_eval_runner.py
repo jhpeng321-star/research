@@ -81,7 +81,7 @@ MAPPO_LANE = True
 LANE_TRAIN_PATH = True
 #: DISTILL (draft amendment 31): STUDENT = a MAPPO_LANE-format export (BC from LEARNED_TRIGGER) run on EXACTLY the
 #: MAPPO_LANE training execution path below (lane_train_episode is arm-agnostic: the spec's bound executor is loaded)
-STUDENT_ARMS = ('STUDENT',)
+STUDENT_ARMS = ('STUDENT', 'STUDENT_RL')    # STUDENT_RL (DISTILL-RL): STUDENT continued by RL, same lane path
 LCEXEC_LANE_ACTIONS = 'tools.nm_mappo.lane_actions:lcexec'
 LANE_TRAIN_FILES = ('tools/nm_mappo/sanity_eval.py', 'tools/nm_mappo/lane_actions.py', 'tools/nm_mappo/n1_adapter.py',
                     'src/wms/control/mappo/agent.py', 'src/wms/control/mappo/rollout.py', 'tools/coopmwm/lc_runtime.py',

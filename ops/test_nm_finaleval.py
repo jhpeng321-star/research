@@ -266,7 +266,7 @@ def test_runner_without_decision_branches_never_blocks_the_evaluation(panel, tmp
 
 def test_the_real_runner_module_satisfies_the_contract():
     status = nm.Runtime().runner_status()
-    assert status == dict(ok=True, native=True, decisions=False, lane=True, student=True, rule=True, rule_fair=True, parity=True,
+    assert status == dict(ok=True, native=True, decisions=False, lane=True, student=True, student_rl=True, rule=True, rule_fair=True, parity=True,
                           oracle=True, learned=True, reason=None)           # amendments 25b/26 runner arms
     status = nm.Runtime('tools.coopmwm.no_such_nm_runner').runner_status()
     assert status['ok'] is False and 'not importable' in status['reason']
@@ -1761,7 +1761,7 @@ def test_p20c_distill_student_on_the_lane_path_and_analysis(p20c, tmp_path):
             nm.prerun_execute(final_root=bank_root, runtime=runner_off, panel=p20c, panel_3c=None, arms=('STUDENT',))
         out = nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None,
                                 arms=('STUDENT', 'MAPPO_LANE'), workers=8, chunk=96)
-        assert out['status'] == 'PASS' and out['cap_sim_s'] == 460_800
+        assert out['status'] == 'PASS' and out['cap_sim_s'] == 691_200
         assert out['coverage'] == {'STUDENT': dict(published=192, registered=192),
                                    'MAPPO_LANE': dict(published=192, registered=192)}
         rows = nm.fe.ledger_rows(bank_root)
@@ -1771,16 +1771,86 @@ def test_p20c_distill_student_on_the_lane_path_and_analysis(p20c, tmp_path):
         with pytest.raises(nm.Blocked, match='already started'):
             nm.bind_fake_mappo(tmp_path/'dry2', bank_root, 'STUDENT')
         a31 = nm.confirm_analyse(final_root=bank_root, panel=p20c, amendment='31', trained_roots={})
-    assert a31['primary']['contrast'] == 'STUDENT - U0' and a31['missing'] == {}
-    assert [(c['treatment'], c['reference']) for c in a31['contrasts']] == [
-        ('STUDENT', 'U0'), ('STUDENT', 'MAPPO_CT'), ('STUDENT', 'LEARNED_TRIGGER'), ('STUDENT', 'MAPPO_LANE'),
-        ('MAPPO_LANE', 'U0')]
-    for c in a31['contrasts']:
+    assert a31['primary']['contrast'] == 'STUDENT - U0' and a31['missing'] == {'STUDENT_RL': 'not bound'}
+    assert a31['primary_rl'] == dict(contrast='STUDENT_RL - STUDENT', verdict='unavailable')
+    assert [(c['treatment'], c['reference'], c['role']) for c in a31['contrasts']] == [
+        ('STUDENT', 'U0', 'PRIMARY'), ('STUDENT', 'MAPPO_CT', 'SECONDARY'), ('STUDENT', 'LEARNED_TRIGGER', 'SECONDARY'),
+        ('STUDENT', 'MAPPO_LANE', 'SECONDARY'), ('MAPPO_LANE', 'U0', 'SECONDARY'),
+        ('STUDENT_RL', 'STUDENT', 'PRIMARY_RL'), ('STUDENT_RL', 'U0', 'SECONDARY'), ('STUDENT_RL', 'MAPPO_CT', 'SECONDARY')]
+    for c in a31['contrasts'][:5]:
         assert 'groups' in c and 'tail_cvar90' in c and c['total_minus_ref']['ci95']
         assert set(c['safety']) == set(nm.SAFETY) and c['safety']['collisions']['treatment_total'] == 0
     assert a31['arms']['STUDENT']['executor_sha256'] == b['sha256']
     assert 'OUT OF DISTRIBUTION' in a31['arms']['MAPPO_LANE']['label']
     assert (bank_root/'CONFIRM_TABLES_A31.json').is_file()
+
+
+def test_p20c_student_rl_runs_alone_after_student(p20c, tmp_path):
+    """DISTILL-RL: STUDENT_RL (the RL-continued STUDENT, trainer 'mappo') binds the same lane path as STUDENT, runs
+    ALONE via bank-run on the p20c bank root after the STUDENT/MAPPO_LANE records exist (own 230,400 share of the
+    DISTILL phase), leaves the STUDENT/MAPPO_LANE receipts untouched, and confirm-analyse 31 adds PRIMARY_RL
+    STUDENT_RL - STUDENT plus STUDENT_RL - U0 / - MAPPO_CT."""
+    import unittest.mock as um
+    f, bank, model = _bank_with_oracle(tmp_path, p20c)
+    bank_root = f['final_root']
+    runtime = nm.FakeRuntime(dict(oracle=True, learned=True))
+    with um.patch.object(nm, 'LEARNED_MODEL_SHA256', nm.file_sha(model)):
+        nm.bind_oracle(final_root=bank_root, bank_path=bank, model_path=model, authority='MAIN 28')
+        nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None,
+                          arms=nm.CONFIRM_BANK_ARMS, workers=8, chunk=192)
+        (tmp_path/'ct').mkdir()
+        nm.bind_fake_mappo(tmp_path/'ct', bank_root, 'MAPPO_CT')
+        nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None, arms=('MAPPO_CT',),
+                          workers=8, chunk=192)
+        s = nm.bind_fake_mappo(tmp_path/'dry', bank_root, 'STUDENT')
+        first = nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None,
+                                  arms=('STUDENT', 'MAPPO_LANE'), workers=8, chunk=192)
+        before = {x.name: x.read_bytes() for x in bank_root.glob('*.json')
+                  if 'STUDENT' in x.name or 'MAPPO_LANE' in x.name}
+        with pytest.raises(nm.Blocked, match='STUDENT_RL runs on the p20c bank root only'):
+            nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None,
+                              arms=('STUDENT_RL', 'LEARNED_TRIGGER'))
+        with pytest.raises(nm.Blocked, match='needs its binding'):
+            nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None, arms=('STUDENT_RL',))
+        # the STUDENT export itself is refused as STUDENT_RL (bound sha and the registered 20b49d26 prefix)
+        with pytest.raises(nm.Blocked, match='never substitutes the bound STUDENT'):
+            nm.bind_mappo(final_root=bank_root, path=s['path'], sha256=s['sha256'], kind='distill_rl_student',
+                          arm='STUDENT_RL', authority='t', train_config=s['train_config'], train_src=s['train_src'],
+                          dry_run=True)
+        with pytest.raises(nm.Blocked, match='never substitutes'):
+            nm.check_export('STUDENT_RL', '20b49d26' + '0' * 56,
+                            dict(trainer='mappo', lane_head=True, format='c4_dreamer/3'))
+        with pytest.raises(nm.Blocked, match='mappo export'):
+            nm.check_export('STUDENT_RL', 'ab' * 32, dict(trainer='distill_bc', lane_head=True, format='c4_dreamer/3'))
+        b = nm.bind_fake_mappo(tmp_path/'dry', bank_root, 'STUDENT_RL')
+        lane = nm.mappo_binding(bank_root, 'MAPPO_LANE')
+        assert b['kind'] == 'distill_rl_student' and b['export']['trainer'] == 'mappo' and b['export']['lane_head']
+        assert (b['train_config_sha256'], b['train_src_sha256']) == (lane['train_config_sha256'], lane['train_src_sha256'])
+        runner_off = nm.FakeRuntime(dict(oracle=True, learned=True, student_rl=False))
+        with pytest.raises(nm.Blocked, match='runner cannot run'):
+            nm.prerun_execute(final_root=bank_root, runtime=runner_off, panel=p20c, panel_3c=None, arms=('STUDENT_RL',))
+        out = nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None,
+                                arms=('STUDENT_RL',), workers=8, chunk=96)
+        assert out['status'] == 'PASS' and out['cap_sim_s'] == 691_200
+        assert out['coverage'] == {'STUDENT_RL': dict(published=192, registered=192)}
+        after = {x.name: x.read_bytes() for x in bank_root.glob('*.json')
+                 if ('STUDENT' in x.name and 'STUDENT_RL' not in x.name) or 'MAPPO_LANE' in x.name}
+        assert after == before
+        again = nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None,
+                                  arms=('STUDENT', 'MAPPO_LANE'))
+        assert again['receipts'] == first['receipts']
+        rows = nm.fe.ledger_rows(bank_root)
+        assert sum(r['sim_s'] for r in rows if r.get('phase') == 'distill_eval') == 3*230_400
+        a31 = nm.confirm_analyse(final_root=bank_root, panel=p20c, amendment='31', trained_roots={})
+    assert a31['missing'] == {} and a31['primary']['contrast'] == 'STUDENT - U0'
+    assert a31['primary_rl']['contrast'] == 'STUDENT_RL - STUDENT' and a31['primary_rl']['verdict'] in ('PASS', 'FAIL')
+    rl = [c for c in a31['contrasts'] if c['treatment'] == 'STUDENT_RL']
+    assert [(c['reference'], c['role']) for c in rl] == [('STUDENT', 'PRIMARY_RL'), ('U0', 'SECONDARY'),
+                                                          ('MAPPO_CT', 'SECONDARY')]
+    for c in rl:
+        assert 'groups' in c and 'tail_cvar90' in c and c['total_minus_ref']['ci95']
+        assert set(c['safety']) == set(nm.SAFETY)
+    assert a31['arms']['STUDENT_RL']['executor_sha256'] == b['sha256'] != a31['arms']['STUDENT']['executor_sha256']
 
 
 def test_student_binding_rules(p20c, tmp_path):
@@ -1831,7 +1901,8 @@ def test_check_lane_runner_requires_a_byte_copy_of_the_launcher_runner(tmp_path)
 def test_runner_dispatches_student_to_the_lane_training_path():
     from tools.coopmwm import nm_eval_runner as runner
     import unittest.mock as um
-    assert runner.STUDENT_ARMS == ('STUDENT',) and runner.LANE_TRAIN_PATH is True
+    assert runner.STUDENT_ARMS == ('STUDENT', 'STUDENT_RL') and runner.LANE_TRAIN_PATH is True
     with um.patch.object(runner, '_mappo_lane_episode', return_value='lane') as lane:
         assert runner.episode(dict(arm='STUDENT'), {}, '.') == 'lane'
-        lane.assert_called_once()
+        assert runner.episode(dict(arm='STUDENT_RL'), {}, '.') == 'lane'
+        assert lane.call_count == 2

@@ -69,10 +69,10 @@ ARMS = ('A', 'B', 'R')
 DECISION_ARMS = ('B', 'R')
 BASES = ('mappo_frozen', 'mappo_u0', 'native')   # clean5a: frozen S-MAPPOWZ snapshot base (A = base alone)
 ORDER = ('B', 'A', 'R', 'RULE', 'RULE_FAIR', 'ORACLE', 'ORACLE_WM', 'LEARNED_TRIGGER', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE',
-         'MAPPO_CT', 'STUDENT')
+         'MAPPO_CT', 'STUDENT', 'STUDENT_RL')
 #: MAIN 2026-11-06 (FAIRAUDIT F6): 7 arms; BASE is an alias (U0 for a mappo_u0 base, NATIVE for native)
 EPISODE_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE', 'ORACLE', 'ORACLE_WM',
-                'LEARNED_TRIGGER', 'MAPPO_CT', 'STUDENT')
+                'LEARNED_TRIGGER', 'MAPPO_CT', 'STUDENT', 'STUDENT_RL')
 COMPARATOR_ARMS = ('MAPPO_SPEED', 'MAPPO_LANE')        # claim 3b, one seal per comparator
 #: amendment 30 (MAIN 2026-11-09 15:29, owner-approved): U0's MAPPO speed policy continued for 96 episodes with its
 #: original objective; evaluated on the p20c bank root exactly like MAPPO_SPEED (bound export + the bound zero-residual u0)
@@ -85,23 +85,36 @@ CT_ARM = 'MAPPO_CT'
 #: manifest must be the ones bound for MAPPO_LANE. MAPPO_LANE itself (never run on p20c in amendment 28) may run in
 #: the same phase on the p20c bank root.
 STUDENT_ARM = 'STUDENT'
-DISTILL_ARMS = (STUDENT_ARM, 'MAPPO_LANE')
-LANE_PATH_ARMS = ('MAPPO_LANE', STUDENT_ARM)            # arms on the S-MAPPOWZL training execution path
-BOUND_ARMS = ('U0',)+COMPARATOR_ARMS+(CT_ARM, STUDENT_ARM)   # executors bound by path + sha256
+#: DISTILL-RL (draft amendment 31 extension; PENDING MAIN registration before any STUDENT_RL outcome): STUDENT_RL =
+#: the STUDENT export continued by RL with the MAPPO_CT recipe (lane head on, 12 updates x 8 episodes; c4/distill-rl
+#: 88d5f00a, export trainer 'mappo'); identical to STUDENT in every respect (lane path, MAPPO_LANE training config +
+#: manifest binding, checks, own 230,400 share of the DISTILL phase) except the executor, its kind and its refusals.
+STUDENT_RL_ARM = 'STUDENT_RL'
+STUDENT_ARMS = (STUDENT_ARM, STUDENT_RL_ARM)             # MAPPO_LANE-format students on the lane path
+DISTILL_ARMS = (STUDENT_ARM, 'MAPPO_LANE', STUDENT_RL_ARM)
+LANE_PATH_ARMS = ('MAPPO_LANE', STUDENT_ARM, STUDENT_RL_ARM)   # arms on the S-MAPPOWZL training execution path
+BOUND_ARMS = ('U0',)+COMPARATOR_ARMS+(CT_ARM,)+STUDENT_ARMS   # executors bound by path + sha256
 CT_PHASE = 'mappo_ct'
 CT_CAP_SIM_S = 192*1200                                 # the amendment-30 eval part (230,400) of the mappo_ct line
 DISTILL_PHASE = 'distill_eval'
-DISTILL_CAP_SIM_S = len(DISTILL_ARMS)*192*1200          # 230,400 per arm (STUDENT; MAPPO_LANE optional) = 460,800
+DISTILL_CAP_SIM_S = len(DISTILL_ARMS)*192*1200          # 230,400 per arm (STUDENT, STUDENT_RL; MAPPO_LANE optional) = 691,200
 #: the registered MAPPO_LANE lane path (BOUND_MAPPO_LANE.json of the p20 / p20x r2 roots): training config file sha
 #: and the LANE_TRAIN_FILES manifest sha. STUDENT must bind the same (no other lane writer / rules / actions).
 LANE_TRAIN_CONFIG_SHA256 = '539d505acda46c93b020248a8f4090245da0c832bb39c47af5e0374fb0de4bcf'
 LANE_TRAIN_SRC_SHA256 = 'f07f37c54a68a807d6d2dffd354516e971142baa20dc14af61fa5c0bba4df5c4'
 STUDENT_TRAINERS = ('mappo', 'distill_bc')              # export 'trainer' field: same format, BC-trained weights
+STUDENT_RL_TRAINERS = ('mappo',)                        # the RL export (wms.control.mappo.agent export: trainer='mappo')
+TRAINERS = {STUDENT_ARM: STUDENT_TRAINERS, STUDENT_RL_ARM: STUDENT_RL_TRAINERS}
 STUDENT_AUTHORITY = ('DRAFT amendment 31 (DISTILL, 2026-11-09 night) - PENDING MAIN registration before any STUDENT '
                      'outcome: STUDENT = MAPPO_LANE-format direct-output policy behaviour-cloned from LEARNED_TRIGGER, '
                      'bound by path + sha256, run on the MAPPO_LANE training execution path; sealed on the 192-world '
                      'p20c panel; primary STUDENT - U0; secondary STUDENT - MAPPO_CT, STUDENT - LEARNED_TRIGGER, '
                      'STUDENT - MAPPO_LANE, MAPPO_LANE - U0; fairness groups, CVaR90, safety; budget 230,400 per arm')
+STUDENT_RL_AUTHORITY = ('DRAFT amendment 31 extension (DISTILL-RL, 2026-11-09 night) - PENDING MAIN registration before '
+                        'any STUDENT_RL outcome: STUDENT_RL = the STUDENT export continued by RL with the MAPPO_CT '
+                        'recipe (lane head on, 12 x 8 episodes), bound by path + sha256, run on the MAPPO_LANE training '
+                        'execution path exactly like STUDENT; primary-RL STUDENT_RL - STUDENT; secondary STUDENT_RL - U0, '
+                        'STUDENT_RL - MAPPO_CT; fairness groups, CVaR90, safety; budget 230,400')
 CT_AUTHORITY = ('MAIN 2026-11-09 15:29 amendment 30 (owner-approved): MAPPO_CT = U0 MAPPO speed policy + 96 episodes '
                 'of its original MAPPO objective at D2800_p20 (training seeds only); sealed on the 192-world p20c '
                 'panel against its U0; primary MAPPO_CT - U0; secondary LEARNED_TRIGGER - MAPPO_CT, fairness, CVaR90; '
@@ -110,7 +123,7 @@ CLAIM3A_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'NATIVE', 'ORACLE', 'O
                 'LEARNED_TRIGGER')                       # +25b oracle bounds, +26 learned trigger
 #: records of these arms carry the executor sha actually loaded (bound executors)
 EXECUTOR_ARMS = ('U0', 'RULE', 'RULE_FAIR', 'ORACLE', 'ORACLE_WM', 'LEARNED_TRIGGER')+COMPARATOR_ARMS+('MAPPO_CT',
-                                                                                                   STUDENT_ARM)
+                                                                                                   )+STUDENT_ARMS
 RULE_ARMS = ('RULE', 'RULE_FAIR')
 #: amendments 25 + 25b (MAIN 2026-11-09 00:06, pre-outcome): privileged upper bounds, NOT deployable. Both = U0 (bound
 #: u0 executor, A/0) + oracle_plan on the frozen end-of-training bank (CLEAN5C5 final-update snapshot, bound only
@@ -207,7 +220,9 @@ MAPPO_KINDS = {
     'MAPPO_CT': {'u0_continued_d2800_p20_96ep': 'U0 MAPPO speed policy continued 96 episodes, original objective '
                                                 '(amendment 30)'},
     'STUDENT': {'distill_bc_learned_trigger': 'DISTILL student: MAPPO_LANE-format direct-output policy (accel + lane), '
-                                              'behaviour-cloned from LEARNED_TRIGGER (draft amendment 31)'}}
+                                              'behaviour-cloned from LEARNED_TRIGGER (draft amendment 31)'},
+    'STUDENT_RL': {'distill_rl_student': 'DISTILL-RL: STUDENT continued by RL with the MAPPO_CT recipe, lane head on, '
+                                         '12x8 episodes (draft amendment 31 extension)'}}
 #: MAIN 2026-11-06 registered binding: MAPPO-speed = S-MAPPOWZ it168 ONLY (no it84/42/24 substitution);
 #: MAPPO-lane = the S-MAPPOWZL final export, never aecd7d70; the transferred d9042cc5 u0 is the U0 arm.
 REQUIRED_ITERATION = {'MAPPO_SPEED': 168}
@@ -215,7 +230,9 @@ REFUSED_SHA_PREFIXES = {'U0': (), 'MAPPO_SPEED': ('d9042cc5',), 'MAPPO_LANE': ('
                         'MAPPO_CT': ('d9042cc5', 'aecd7d70'),
                         # STUDENT is a new export: never a comparator executor (U0 trunk, v5 lane-on, S-MAPPOWZL it48,
                         # MAPPO_CT u12)
-                        'STUDENT': ('d9042cc5', 'aecd7d70', 'd13cd2f7', '069a4f85')}
+                        'STUDENT': ('d9042cc5', 'aecd7d70', 'd13cd2f7', '069a4f85'),
+                        # STUDENT_RL: STUDENT's list + the STUDENT export itself (20b49d26): it must be the RL export
+                        'STUDENT_RL': ('d9042cc5', 'aecd7d70', 'd13cd2f7', '069a4f85', '20b49d26')}
 REQUIRED_SHA = {'U0': FROZEN_MAPPO_SHA}
 FALLBACK_SHA_PREFIX = 'd9042cc5'
 U0_LABEL = 'MAPPO u0 transferred (frozen d9042cc5 executor, zero residual)'
@@ -1022,7 +1039,7 @@ def check_export(arm, sha256, meta):
         raise Blocked(f'{arm} never substitutes {sha256[:8]} (registered binding)')
     if arm in REQUIRED_SHA and sha256 != REQUIRED_SHA[arm]:
         raise Blocked(f'{arm} is the frozen {REQUIRED_SHA[arm][:8]} executor only')
-    if meta.get('trainer') != 'mappo' and not (arm == STUDENT_ARM and meta.get('trainer') in STUDENT_TRAINERS):
+    if meta.get('trainer') not in TRAINERS.get(arm, ('mappo',)):
         raise Blocked(f'{arm} must be a mappo export')
     if arm == 'MAPPO_SPEED':
         if meta.get('iteration') != REQUIRED_ITERATION[arm]:
@@ -1033,8 +1050,8 @@ def check_export(arm, sha256, meta):
         raise Blocked('MAPPO_CT must be a speed-only export that differs from the frozen U0 executor')
     if arm in LANE_PATH_ARMS and not meta.get('lane_head'):
         raise Blocked(f'{arm} must carry its lane head')
-    if arm == STUDENT_ARM and (meta.get('format') != 'c4_dreamer/3' or meta.get('lane_control') not in (None, 'learned')):
-        raise Blocked('STUDENT must be a c4_dreamer/3 export with a learned lane head (the MAPPO_LANE format)')
+    if arm in STUDENT_ARMS and (meta.get('format') != 'c4_dreamer/3' or meta.get('lane_control') not in (None, 'learned')):
+        raise Blocked(f'{arm} must be a c4_dreamer/3 export with a learned lane head (the MAPPO_LANE format)')
     return meta
 
 
@@ -1071,6 +1088,10 @@ def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', 
         raise Blocked('authority (verbatim decision/message) required')
     if file_sha(path) != sha256:
         raise Blocked(f'{path} does not hash to {sha256}')
+    if arm == STUDENT_RL_ARM:        # the RL export must differ from the bound STUDENT export of this root
+        student = mappo_binding(final_root, STUDENT_ARM)
+        if student is not None and student['sha256'] == sha256:
+            raise Blocked('STUDENT_RL never substitutes the bound STUDENT export')
     meta = export_meta(path)
     if dry_run and arm in REQUIRED_SHA:      # dry run only: a stand-in cannot hash to the frozen executor
         meta = dict(check_export(arm, REQUIRED_SHA[arm], meta), dry_run_stand_in=True)
@@ -1086,13 +1107,13 @@ def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', 
         manifest = {f: file_sha(Path(train_src)/f) for f in LANE_TRAIN_FILES}
         residual = dict(residual or {}, train_src=str(train_src), train_src_files=manifest,
                         train_src_sha256=hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest())
-    if arm == STUDENT_ARM:           # DISTILL: exactly the MAPPO_LANE lane path, only the executor differs
+    if arm in STUDENT_ARMS:          # DISTILL: exactly the MAPPO_LANE lane path, only the executor differs
         lane = mappo_binding(final_root, 'MAPPO_LANE')
         want = ((lane['train_config_sha256'], lane['train_src_sha256']) if lane is not None else
                 (None, None) if dry_run else (LANE_TRAIN_CONFIG_SHA256, LANE_TRAIN_SRC_SHA256))
         got = (residual['train_config_sha256'], residual['train_src_sha256'])
         if want != (None, None) and got != want:
-            raise Blocked(f'STUDENT must bind the MAPPO_LANE training config + training-path manifest '
+            raise Blocked(f'{arm} must bind the MAPPO_LANE training config + training-path manifest '
                           f'{[w[:8] for w in want]}, got {[g[:8] for g in got]}')
     if declared_unavailable(final_root, arm) is not None:
         raise Blocked(f'{arm} was declared unavailable; that declaration stands')
@@ -1504,7 +1525,7 @@ class Runtime:
             module = importlib.import_module(self.runner)
         except ImportError as error:
             return dict(ok=False, reason=f'{self.runner} not importable: {error!r}', native=False, decisions=False,
-                        lane=False, student=False, rule=False, rule_fair=False, parity=False, oracle=False,
+                        lane=False, student=False, student_rl=False, rule=False, rule_fair=False, parity=False, oracle=False,
                         learned=False)
         ok = getattr(module, 'MAP', None) == MAP and callable(getattr(module, 'episode', None))
         return dict(ok=ok, native=ok and getattr(module, 'NATIVE', True) is not False,
@@ -1512,6 +1533,8 @@ class Runtime:
                     lane=ok and getattr(module, 'LANE_TRAIN_PATH', False) is True,
                     student=ok and getattr(module, 'LANE_TRAIN_PATH', False) is True
                     and STUDENT_ARM in getattr(module, 'STUDENT_ARMS', ()),
+                    student_rl=ok and getattr(module, 'LANE_TRAIN_PATH', False) is True
+                    and STUDENT_RL_ARM in getattr(module, 'STUDENT_ARMS', ()),
                     rule=ok and getattr(module, 'RULE', False) is True and RULE_STRATEGY in getattr(module, 'RULE_STRATEGIES', ())
                     and importlib.util.find_spec(RULE_MODULE) is not None,
                     rule_fair=ok and 'wall_g_solo2' in getattr(module, 'RULE_STRATEGIES', ())
@@ -1622,7 +1645,7 @@ def fake_episode(spec, work=None):
     w, arm = spec['world'], spec['arm']
     u = _h(w['seed'], arm)/0xffffffff
     factor = dict(NATIVE=1.06, U0=1.0, RULE=.985, RULE_FAIR=.99, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985, ORACLE=.97, ORACLE_WM=.98, LEARNED_TRIGGER=.985, MAPPO_CT=.996,
-                  STUDENT=.988,
+                  STUDENT=.988, STUDENT_RL=.986,
                   B=0.975)[arm]
     record = dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='graded',
                   vehicle_log=(_fake_vehicle_log(Path(work)/VEHICLE_LOG, w['seed'], arm) if work is not None else
@@ -1717,7 +1740,7 @@ class FakeRuntime:
     def __init__(self, runner=None):
         self.calls = []
         # decisions=False like the real runner (F7 not built, MAIN decision); tests may switch branches on
-        self.status = dict(dict(ok=True, native=True, decisions=False, lane=True, student=True, rule=True, rule_fair=True, parity=True,
+        self.status = dict(dict(ok=True, native=True, decisions=False, lane=True, student=True, student_rl=True, rule=True, rule_fair=True, parity=True,
                                 reason=None),
                            **(runner or {}))
 
@@ -3440,6 +3463,8 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=Non
     distill = SETTING == 'p20c' and bool(arms) and set(arms) <= set(DISTILL_ARMS)
     if STUDENT_ARM in arms and not distill:
         raise Blocked('STUDENT runs on the p20c bank root only, alone or with MAPPO_LANE (DISTILL)')
+    if STUDENT_RL_ARM in arms and not distill:
+        raise Blocked('STUDENT_RL runs on the p20c bank root only, alone or with the other DISTILL arms')
     bank = set(arms) <= set(BANK_ARMS)
     if not (set(arms) <= set(PRERUN_ARMS) or bank or ct or distill):
         raise Blocked(f'pre-run arms are {PRERUN_ARMS}; bank-run arms are {BANK_ARMS}')
@@ -3474,6 +3499,7 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=Non
         if not runner['ok'] or ('NATIVE' in arms and not runner['native']) or ('RULE' in arms and not runner.get('rule')) \
                 or ('RULE_FAIR' in arms and not runner.get('rule_fair')) or ('MAPPO_LANE' in arms and not runner.get('lane')) \
                 or (STUDENT_ARM in arms and not runner.get('student')) \
+                or (STUDENT_RL_ARM in arms and not runner.get('student_rl')) \
                 or (set(ORACLE_ARMS) & set(arms) and not runner.get('oracle')) \
                 or (set(LEARNED_ARMS) & set(arms) and not runner.get('learned')):
             raise Blocked(f'runner cannot run the pre-run arms: {runner}')
@@ -3487,7 +3513,7 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=Non
             if (u0['residual_path'], u0['residual_sha256']) != (plan['u0']['path'], plan['u0']['sha256']):
                 raise Blocked('the U0 binding residual is not the pre-run u0 copy')
         waves = []
-        bound = {arm: mappo_binding(final_root, arm) for arm in arms if arm in COMPARATOR_ARMS+(CT_ARM, STUDENT_ARM)}
+        bound = {arm: mappo_binding(final_root, arm) for arm in arms if arm in COMPARATOR_ARMS+(CT_ARM,)+STUDENT_ARMS}
         if bank:
             oracle = oracle_binding(final_root)
             if oracle is None:
@@ -4187,7 +4213,7 @@ def bind_fake_mappo(out, final_root, arm='MAPPO_SPEED', residual=None):
         torch.save(dict(format='c4_dreamer/3', trainer='distill_bc' if arm == STUDENT_ARM else 'mappo',
                         iteration=168 if arm == 'MAPPO_SPEED' else 999,
                         lane_control=('native' if arm in ('MAPPO_SPEED', 'MAPPO_CT') else
-                                      None if arm == STUDENT_ARM else 'policy'),
+                                      None if arm in STUDENT_ARMS else 'policy'),
                         lane_head=arm in LANE_PATH_ARMS,
                         policy=policy, note='dry-run stand-in, not a MAPPO export'), fake)
     kind = next(iter(MAPPO_KINDS[arm]))
@@ -4196,7 +4222,7 @@ def bind_fake_mappo(out, final_root, arm='MAPPO_SPEED', residual=None):
         extra = dict(residual_path=str(residual), residual_sha256=file_sha(residual))
     else:                                    # dry run: a stand-in training config for the F11 path
         # STUDENT shares the MAPPO_LANE training config + tree (the lane path), exactly as the real binding
-        config = Path(out)/f'fake_{("MAPPO_LANE" if arm == STUDENT_ARM else arm).lower()}_train_config.toml'
+        config = Path(out)/f'fake_{("MAPPO_LANE" if arm in STUDENT_ARMS else arm).lower()}_train_config.toml'
         if not config.exists():
             config.write_text(f'# dry-run stand-in for the {config.stem} training run config' + chr(10), encoding='utf-8')
         extra = dict(train_config=config)
@@ -4210,7 +4236,7 @@ def bind_fake_mappo(out, final_root, arm='MAPPO_SPEED', residual=None):
             extra['train_src'] = src
     return bind_mappo(final_root=final_root, path=fake, sha256=file_sha(fake), kind=kind, arm=arm,
                       authority='DRY RUN ONLY - not N7', check=dict(status='dry run'),
-                      dry_run=arm in REQUIRED_SHA or arm == STUDENT_ARM,
+                      dry_run=arm in REQUIRED_SHA or arm in STUDENT_ARMS,
                       **extra)
 
 
@@ -4261,7 +4287,7 @@ def dry_run(*, out, panel, base='mappo_frozen', replicated=True, prerun=True):
 def distill_dry_run(*, out, panel):
     """DISTILL wiring proof, FAKE physics, writes only under ``out`` (p20c only): a stand-in bank root reproducing the
     amendment-28/30 layout (U0 pre-run, ORACLE_WM + LEARNED_TRIGGER bank-run, MAPPO_CT), then bind-mappo STUDENT (and
-    the MAPPO_LANE stand-in) -> bank-run STUDENT,MAPPO_LANE -> confirm-analyse 31. Zero SUMO; no real result is read."""
+    the MAPPO_LANE stand-in, STUDENT_RL) -> bank-run STUDENT,MAPPO_LANE,STUDENT_RL -> confirm-analyse 31. Zero SUMO; no real result is read."""
     global LEARNED_MODEL_SHA256
     _need_p20c()
     out = guard(Path(out))
@@ -4291,6 +4317,7 @@ def distill_dry_run(*, out, panel):
         steps['mappo_ct'] = prerun_execute(final_root=bank_root, runtime=runtime, panel=panel, panel_3c=None,
                                            arms=(CT_ARM,), workers=8)
         student = bind_fake_mappo(out/'dry', bank_root, STUDENT_ARM)
+        student_rl = bind_fake_mappo(out/'dry', bank_root, STUDENT_RL_ARM)
         steps['distill'] = prerun_execute(final_root=bank_root, runtime=runtime, panel=panel, panel_3c=None,
                                           arms=DISTILL_ARMS, workers=8)
         tables = confirm_analyse(final_root=bank_root, panel=panel, amendment='31', trained_roots={})
@@ -4301,12 +4328,16 @@ def distill_dry_run(*, out, panel):
                 student_binding=dict(kind=student['kind'], sha256=student['sha256'],
                                      train_config_sha256=student['train_config_sha256'],
                                      train_src_sha256=student['train_src_sha256']),
+                student_rl_binding=dict(kind=student_rl['kind'], sha256=student_rl['sha256'],
+                                        trainer=student_rl['export']['trainer'],
+                                        train_config_sha256=student_rl['train_config_sha256'],
+                                        train_src_sha256=student_rl['train_src_sha256']),
                 steps={k: dict(status=v['status'], coverage=v['coverage'], cap_sim_s=v['cap_sim_s'])
                        for k, v in steps.items()},
                 fake_charged_by_phase={ph: sum(r['sim_s'] for r in rows if r.get('phase') == ph)
                                        for ph in sorted({r.get('phase') for r in rows})},
                 analysis=dict(file=str(bank_root/'CONFIRM_TABLES_A31.json'), sha256=tables['analysis_sha256'],
-                              primary=tables['primary'], missing=tables['missing'],
+                              primary=tables['primary'], primary_rl=tables.get('primary_rl'), missing=tables['missing'],
                               contrasts=[f"{c['treatment']} - {c['reference']} ({c['role']})" for c in tables['contrasts']],
                               keys_per_contrast=sorted(tables['contrasts'][0])),
                 note='FAKE physics: the numbers are stand-ins, not outcomes')
@@ -4437,12 +4468,16 @@ CONFIRM_SPECS = {
     '31': dict(update=0, bank_arms=('U0', 'LEARNED_TRIGGER', CT_ARM)+DISTILL_ARMS, labels=(),
                contrasts=((STUDENT_ARM, 'U0', 'PRIMARY'), (STUDENT_ARM, CT_ARM, 'SECONDARY'),
                           (STUDENT_ARM, 'LEARNED_TRIGGER', 'SECONDARY'), (STUDENT_ARM, 'MAPPO_LANE', 'SECONDARY'),
-                          ('MAPPO_LANE', 'U0', 'SECONDARY')),
+                          ('MAPPO_LANE', 'U0', 'SECONDARY'),
+                          (STUDENT_RL_ARM, STUDENT_ARM, 'PRIMARY_RL'), (STUDENT_RL_ARM, 'U0', 'SECONDARY'),
+                          (STUDENT_RL_ARM, CT_ARM, 'SECONDARY')),
                rule=('STUDENT - U0 (the amendment-28 U0 of the same panel) paired total delay (J veh-s per world, '
                      'whole-world bootstrap) 95% CI reported, PASS = upper < 0; secondary STUDENT - MAPPO_CT, '
                      'STUDENT - LEARNED_TRIGGER (the teacher), STUDENT - MAPPO_LANE, MAPPO_LANE - U0; fairness '
                      'co-criteria, CVaR90 and safety (hard brakes, collisions, teleports, TTC events) for each. '
-                     + STUDENT_AUTHORITY),
+                     + STUDENT_AUTHORITY + '. DISTILL-RL: PRIMARY_RL STUDENT_RL - STUDENT paired total delay 95% CI '
+                     'reported, PASS = upper < 0; secondary STUDENT_RL - U0, STUDENT_RL - MAPPO_CT; the same co-criteria '
+                     'and safety. ' + STUDENT_RL_AUTHORITY),
                file='CONFIRM_TABLES_A31.json', safety_contrasts=True,
                pooling='same panel and U0 as amendment 28; reported separately; never pooled with p20x'),
 }
@@ -4866,6 +4901,12 @@ def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identit
                 row['safety'] = _safety_contrast(have, worlds, arm, ref)
         contrasts.append(row)
     primary = contrasts[0]
+    primary_rl = {}                  # DISTILL-RL (amendment 31 extension): its own primary, beside STUDENT - U0
+    for c in contrasts:
+        if c['role'] == 'PRIMARY_RL':
+            primary_rl = dict(primary_rl=dict(contrast=f"{c['treatment']} - {c['reference']}",
+                                              verdict=('unavailable' if c.get('status') == 'unavailable' else
+                                                       'PASS' if c['ci95_upper_below_0'] else 'FAIL')))
     arms = {a: dict(label=TRAINED_ARMS.get(a) or dict(ORACLE_LABELS).get(a)
                     or (MAPPO_KINDS[CT_ARM]['u0_continued_d2800_p20_96ep'] if a == CT_ARM else None)
                     or (next(iter(MAPPO_KINDS[a].values())) + (' - '+MAPPO_LANE_OOD if a == 'MAPPO_LANE' and MAPPO_LANE_OOD
@@ -4897,7 +4938,7 @@ def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identit
                       oracle_binding_sha256=oracle['receipt_sha256'], u0_binding_sha256=u0['binding_sha256'],
                       sources={k: v.get('receipt_sha256') if isinstance(v, dict) else v for k, v in sources.items()},
                       roots={k: str(v) for k, v in roots.items()}, missing=missing,
-                      pooling=spec_['pooling']),
+                      pooling=spec_['pooling'], **primary_rl),
                  'analysis_sha256')
     target = final_root/spec_['file']
     if target.exists():

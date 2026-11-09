@@ -133,7 +133,7 @@ def fake_plant(calls, moves_at):
 def test_runner_declares_the_contract():
     assert runner.MAP == 'wz3to2' and runner.NATIVE is True and callable(runner.episode)
     assert not hasattr(runner, 'decision_branch')            # per-decision branches not built: never faked
-    assert nm.Runtime().runner_status() == dict(ok=True, native=True, decisions=False, lane=True, student=True, rule=True, rule_fair=True,
+    assert nm.Runtime().runner_status() == dict(ok=True, native=True, decisions=False, lane=True, student=True, student_rl=True, rule=True, rule_fair=True,
                                                 parity=True, oracle=True, learned=True, reason=None)
     assert runner.MAPPO_LANE is True and runner.RULE is True and runner.rule_digest() == nm.RULE_SHA256
 
