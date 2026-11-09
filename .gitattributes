@@ -43,3 +43,6 @@ assets/research/newmap_candidates/wz3to2/* -text
 # TRIGCLF LEARNED_TRIGGER: the model doc is pinned by its raw file sha256 (runner + tests); keep LF on checkout.
 ops/learned_trigger/*.json -text
 tools/coopmwm/fixtures/learned_trigger_parity.json -text
+ops/nm_eval_panel_wz3to2_a33_D2800.json -text
+ops/nm_eval_trainblock_wz3to2_a33t_D2800.json -text
+ops/a33_model/*.json -text

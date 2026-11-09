@@ -101,38 +101,55 @@ FROZEN_MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cff
 #: amendment 28: extended to 993299 for the p20c confirmation panel (993100-993291; repeat = seed - 993000 keeps the
 #: p20x worlds byte-identical).
 EVAL_HELDOUT_RANGE = (993000, 993299)
+#: amendment 33 (MAIN 2026-11-10): the FRESH 192-world D2800_p20 panel 999500-999691 (999692-999699 reserved unused;
+#: repeat = seed - 999500) and the fresh TRAIN-type classifier-data block 991600-991699 (repeat = seed - 991600; the
+#: duo12_v20 / U0 / incumbent verification tapes of the COMBINED classifier, never evaluation). Same physics-neutral
+#: runtime registration (labels only; TRAIN roles still refuse them); the 993000-993299 worlds are unchanged.
+A33_PANEL_RANGE = (999500, 999699)
+A33_TRAIN_RANGE = (991600, 991699)
+EVAL_HELDOUT_RANGES = ((EVAL_HELDOUT_RANGE[0], EVAL_HELDOUT_RANGE[1], 993000),
+                       (A33_PANEL_RANGE[0], A33_PANEL_RANGE[1], A33_PANEL_RANGE[0]),
+                       (A33_TRAIN_RANGE[0], A33_TRAIN_RANGE[1], A33_TRAIN_RANGE[0]))
+
+
+def _eval_base(seed):
+    if type(seed) is not int:
+        return None
+    return next((base for lo, hi, base in EVAL_HELDOUT_RANGES if lo <= seed <= hi), None)
 
 
 def install_eval_ranges(ms=None):
-    """Idempotent: add EVAL_HELDOUT_RANGE to map_scenarios (seed_scope, repeat_index if present, world)."""
+    """Idempotent: add EVAL_HELDOUT_RANGES to map_scenarios (seed_scope, repeat_index if present, world)."""
     if ms is None:
         try:
             from . import map_scenarios as ms
         except ImportError:
             return False
-    if getattr(ms, '_N6_EVAL_RANGES', None) == EVAL_HELDOUT_RANGE:
+    if getattr(ms, '_N6_EVAL_RANGES', None) == EVAL_HELDOUT_RANGES:
         return True
-    lo, hi = EVAL_HELDOUT_RANGE
+    if getattr(ms, '_N6_EVAL_RANGES', None) is not None:
+        raise RuntimeError('map_scenarios already carries a different eval-range registration')
     scope0, world0 = ms.seed_scope, ms.world
 
     def seed_scope(seed):
-        if type(seed) is int and lo <= seed <= hi:
+        if _eval_base(seed) is not None:
             return 'heldout'
         return scope0(seed)
 
     def world(seed, demand, penetration):
-        if not (type(seed) is int and lo <= seed <= hi):
+        base = _eval_base(seed)
+        if base is None:
             return world0(seed, demand, penetration)
         cell = next((c for c in ms.cells() if c['demand'] == demand and c['penetration'] == penetration), None)
         if cell is None or type(demand) is not int:
             raise ValueError(f'({demand!r}, {penetration!r}) is not a registered {ms.MAP} cell')
-        return dict(seed=seed, cell=cell['cell'], repeat=seed-lo, penetration=penetration, demand=demand,
+        return dict(seed=seed, cell=cell['cell'], repeat=seed-base, penetration=penetration, demand=demand,
                     map=ms.MAP, cell_key=cell['cell_key'])
     ms.seed_scope, ms.world = seed_scope, world
     if hasattr(ms, 'repeat_index'):
         rep0 = ms.repeat_index
-        ms.repeat_index = lambda seed: seed-lo if type(seed) is int and lo <= seed <= hi else rep0(seed)
-    ms._N6_EVAL_RANGES = EVAL_HELDOUT_RANGE
+        ms.repeat_index = lambda seed: seed-_eval_base(seed) if _eval_base(seed) is not None else rep0(seed)
+    ms._N6_EVAL_RANGES = EVAL_HELDOUT_RANGES
     return True
 
 
@@ -405,6 +422,36 @@ def a32_hook(ck, world, arm):
     return a32_arms.make_hook(arm, cell, **kw), loaded
 
 
+A33_ARMS = ('COMBINED',)          # amendment 33 (MAIN 2026-11-10): WM plans + duo12_v20, retrained classifier gate
+
+
+def a33_hook(ck, world):
+    """Amendment 33 COMBINED: a33_combined.make_hook on the WM-only bank fd385a2b + the duo12_v20 rule row of UNION_UNC
+    39f384a2 (both file shas re-verified) with the retrained classifier model doc (file sha re-verified) for this
+    world's cell_key; executed code == registration (a33_sha256). Returns (hook, digest)."""
+    from . import a33_combined, learned_trigger
+    cell = world.get('cell_key')
+    if not cell or cell != ck.get('cell_key'):
+        raise ValueError('COMBINED: world cell_key missing or not the bound cell_key')
+    loaded = a33_combined.a33_digest()
+    if loaded != ck.get('a33_sha256'):
+        raise ValueError('COMBINED: a33_combined differs from its registration (a33_sha256)')
+
+    def doc(key, pinned):
+        entry = ck.get(key) or {}
+        path = Path(entry.get('path', ''))
+        if entry.get('file_sha256') != pinned or not path.is_file() or _sha(path) != pinned:
+            raise ValueError(f'COMBINED: {key} changed after registration')
+        return json.loads(path.read_text(encoding='utf-8'))
+    wm = doc('oracle_bank', a33_combined.WM_BANK_SHA256)
+    union = doc('duo_bank', a33_combined.DUO_BANK_SHA256)
+    mdoc = ck.get('combined_model') or {}
+    model = learned_trigger.load_model(mdoc.get('path', ''), mdoc.get('file_sha256'))
+    if list(model['families']) != list(a33_combined.FAMILIES):
+        raise ValueError('COMBINED: classifier families are not the COMBINED families')
+    return a33_combined.make_hook(a33_combined.combined_bank(wm, union, cell), cell, model), loaded
+
+
 def rule_hook(strategy, expected_sha256):
     import importlib
     if strategy not in RULE_STRATEGIES:
@@ -519,10 +566,10 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     ck = spec['checkpoint']
     arm, update = ck['arm'], int(ck['update'])
     executor, loaded, rule, oracle = native['checkpoint'], None, None, None
-    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS + A32_ARMS:
+    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS + A32_ARMS + A33_ARMS:
         kind = dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator', MAPPO_CT='mappo_comparator',
                     ORACLE='oracle', ORACLE_WM='oracle', LEARNED_TRIGGER='learned_trigger',
-                    **{a: 'a32' for a in A32_ARMS})[spec['arm']]
+                    **{a: 'a32' for a in A32_ARMS}, COMBINED='a33')[spec['arm']]
         if ck.get('kind') != kind or (arm, update) != ('A', 0):
             raise ValueError(f'{spec["arm"]} arm = its bound executor + the bound common u0 (zero residual)')
         # the bound zero-residual u0 (A_checkpoint_000.pt, sha re-verified), loaded by the SAME
@@ -542,6 +589,9 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
             rule = oracle
         if spec['arm'] in A32_ARMS:
             oracle = a32_hook(ck, world, spec['arm'])
+            rule = oracle
+        if spec['arm'] in A33_ARMS:
+            oracle = a33_hook(ck, world)
             rule = oracle
     else:
         path = Path(native['run_root'])/f'{arm}_checkpoint_{update:03}.pt'
@@ -579,7 +629,10 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     if loaded is not None:
         extra['executor_sha256_loaded'] = loaded
     extra['vehicle_log'] = vehicle_log
-    if oracle is not None and spec['arm'] in A32_ARMS:
+    if oracle is not None and spec['arm'] in A33_ARMS:
+        extra['a33_sha256_loaded'] = oracle[1]
+        extra['a33'] = oracle[0].receipts()
+    elif oracle is not None and spec['arm'] in A32_ARMS:
         extra['a32_sha256_loaded'] = oracle[1]
         extra['a32'] = oracle[0].receipts()
     elif oracle is not None and spec['arm'] in LEARNED_ARMS:
@@ -1169,7 +1222,7 @@ def episode(spec, cfg, work):
         return _native_episode(spec, cfg, work)
     if spec['arm'] == 'MAPPO_LANE':
         return _mappo_lane_episode(spec, cfg, work)
-    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS             + A32_ARMS:
+    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS             + A32_ARMS + A33_ARMS:
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
 

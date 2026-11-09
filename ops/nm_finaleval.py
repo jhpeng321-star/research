@@ -363,7 +363,7 @@ SETTINGS['p20c'] = dict(SETTINGS['p20x'],
                           '(B 230,400 + U0 plant-identity 2,400); used before: 1,651,080 (p20 723,480, p20x r1 1,800, '
                           'p20x r2 923,400, amendment-26 smoke 2,400)'))
 CONFIRM_BANK_ARMS = ('ORACLE_WM', 'LEARNED_TRIGGER')
-BANK_SETTINGS = ('p20x', 'p20c')
+BANK_SETTINGS = ('p20x', 'p20c', 'a33', 'a33t')
 #: trained arms (amendment 28): label -> registered description; evaluated as arm B at TRAINED_UPDATE on the training
 #: root's own CONFIG/source (the exact training execution path), charged to the trained final root's own ledger
 TRAINED_ARMS = dict(C5D='CLEAN5C5D-B u12 (cpuZ coopmwm20261109_clean5c5d: WM-only bank fd385a2b + DEMOX WM demo '
@@ -394,7 +394,40 @@ SETTINGS_PINS = dict(p20=dict(PANEL_SHA256='fe64aa3566fe156c94a03b5809f83df5f6be
                      p20x=dict(PANEL_SHA256='a0603e5dacf26fb076adc2a3a1831fd96522b1f1a85844a83e3d500bdbcde0aa',
                                PANEL_3C_SHA256=None),
                      p20c=dict(PANEL_SHA256='d2ed7783ae9ea071f89aec4397d3ee155161878b44e1717b02188b16e7ff7fa2',
+                               PANEL_3C_SHA256=None),
+                     a33=dict(PANEL_SHA256='ab2933df19e84c2bb4c1f8ef2f97f3fdb2807763739b64a6943520941cfa47b5',
+                              PANEL_3C_SHA256=None),
+                     a33t=dict(PANEL_SHA256='7065a293321e0b9800d73cc18da5574a718bf2ef83937327694307d3a85a394a',
                                PANEL_3C_SHA256=None))
+#: amendment 33 (MAIN 2026-11-10, owner "register option 1 and start it"; pre-outcome): a FRESH sealed D2800_p20
+#: panel of 192 worlds 999500-999691 (999692-999699 reserved unused), evaluation-only ('a33'); arms U0, DUO_HOLD,
+#: LEARNED_TRIGGER, COMBINED on the p20x/p20c pre-run plant (mirror of the bank-root bindings on gpuB). 'a33t' = the
+#: fresh TRAIN-type classifier-data block 991600-991639 (40 worlds; U0 / DUO_HOLD / SOLO_HOLD verification tapes of the
+#: COMBINED classifier; never evaluation, never pooled), executed through the same runner (scope label only).
+A33_SEEDS = (999500, 999691)
+SETTINGS['a33'] = dict(SETTINGS['p20c'],
+    N_WORLDS=192, EVAL_RANGE=(999500, 999699), EVAL_EXTRA_RANGE=(999500, 999699), SEEDS_RESERVED=(999692, 999699),
+    PANEL_SIZE_REASON=('MAIN amendment 33 (owner 2026-11-10): a FRESH sealed 192-world D2800_p20 panel; 999692-999699 '
+                       'reserved unused'),
+    CELL_AUTHORITY='owner 2026-11-10 (REGISTRATION): MAIN amendment 33, FRESH D2800_p20 panel',
+    PANEL_AUTHORITY=('A33 amendment 33 (MAIN 2026-11-10): fresh audited held-out integers 999500-999691 (D2800_p20); '
+                     'eval-only held-out range 999500-999699; disjoint from 9896xx, 993000-993299 and every '
+                     'train/verify seed'),
+    EXPOSURE_EXTRA=dict(
+        checked=('amendment-33 audit: 999500-999699 as standalone integers absent from REGISTRATION.md seed use, '
+                 'protocols/experiment_history.json, every local branch ref, the a28/a32 panels and run dirs '
+                 '(E:/agent-work/a33/SEED_AUDIT.json)',),
+        disclosed=('; amendment 33: fresh integers, so no arrival stream is shared with any other panel; registered '
+                   'for evaluation only at runtime by the runner (TRAIN roles still refuse it)')),
+    PANEL_FILE=HERE/'nm_eval_panel_wz3to2_a33_D2800.json', PANEL_3C_FILE=None)
+SETTINGS['a33t'] = dict(SETTINGS['a33'],
+    N_WORLDS=40, EVAL_RANGE=(991600, 991699), EVAL_EXTRA_RANGE=(991600, 991699), SEEDS_RESERVED=(991640, 991699),
+    PANEL_SIZE_REASON=('MAIN amendment 33: COMBINED classifier data, 40 fresh TRAIN-type worlds x (U0, DUO_HOLD, '
+                       'SOLO_HOLD) = 144,000 sim-s <= 150,000; 991640-991699 reserved unused'),
+    CELL_AUTHORITY='owner 2026-11-10 (REGISTRATION): MAIN amendment 33, classifier training tapes (TRAIN-type)',
+    PANEL_AUTHORITY=('A33 amendment 33: fresh audited TRAIN-type integers 991600-991639 (D2800_p20) for the COMBINED '
+                     'classifier data ONLY (never evaluation); executed through the eval runner (scope label only)'),
+    PANEL_FILE=HERE/'nm_eval_trainblock_wz3to2_a33t_D2800.json')
 MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'
 #: MAIN 2026-11-06 (N11 F4): the panel binds the staged probe network bytes (sha256 of wz3to2.net.xml)
 NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'
