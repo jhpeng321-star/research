@@ -71,7 +71,8 @@ def bindings(final_root):
     u0, oracle = N.mappo_binding(final_root, 'U0'), N.oracle_binding(final_root)
     if u0 is None or oracle is None:
         raise N.Blocked('A32 needs the bank-root U0 binding and the sealed ORACLE_BINDING (mirror)')
-    return u0, oracle
+    # specs carry the binding LOCATION on the run hosts (gpuA bank root == gpuB mirror path), on every host
+    return dict(u0, binding_path=f'{RUN_ROOT}/BOUND_U0.json'), oracle
 
 
 def a32_specs(arm, panel, final_root, *, check_files=True):
