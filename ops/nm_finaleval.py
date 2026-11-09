@@ -4577,7 +4577,7 @@ def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identit
             continue
         have[arm], sources[arm], roots[arm] = {r['world_id']: r for r in records}, source, final_root
     identity = {}
-    loaded_updates = set()
+    loaded_updates = {}
     for label in spec_['labels']:
         path = (trained_roots or {}).get(label)
         if path is None:
@@ -4585,12 +4585,12 @@ def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identit
             identity[label] = dict(verdict='UNAVAILABLE', reason='trained root not given')
             continue
         got = _trained_records(Path(path), panel, label)
-        if amendment == '29' and spec_['update'] == 24 and 13 <= int(got['plan']['update']) < 24 and not loaded_updates:
-            spec_ = dict(spec_, update=int(got['plan']['update']),
-                         stop_rule=('MAIN 2026-11-09 12:23 disk-safety stop: amendment 29 evaluates the last sealed '
-                                    f'update u{int(got["plan"]["update"])} instead of u24 (disclosed)'))
-        loaded_updates.add(int(got['plan']['update']))
-        if int(got['plan']['update']) != spec_['update']:
+        k = int(got['plan']['update'])
+        if amendment == '29' and spec_['update'] == 24 and 13 <= k <= 24:
+            loaded_updates[label] = k     # disk-safety stop: each training run's own last sealed update (disclosed)
+            if 'C5D' in loaded_updates and 'C5DR' in loaded_updates and loaded_updates['C5D'] != loaded_updates['C5DR']:
+                raise Blocked('C5D and C5DR come from one training run: their evaluated updates must be equal')
+        elif k != spec_['update']:
             raise Blocked(f'{label}: amendment {amendment} evaluates u{spec_["update"]}, root is u{got["plan"]["update"]}')
         if spec_['update'] != 12 or label not in IDENTITY_LABELS:   # inherited from the u12 identity root
             src = (identity_roots or {}).get(label)
@@ -4648,7 +4648,12 @@ def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identit
             arms[a]['activations'] = dict(worlds_with_any=sum(1 for r in receipts if r.get('activations')),
                                           total=sum(int(r.get('activations') or 0) for r in receipts))
     value = seal(dict(schema=SCHEMA+'.confirm_tables', amendment=amendment, setting=SETTING,
-                      update=spec_['update'], stop_rule=spec_.get('stop_rule'),
+                      update=(spec_['update'] if not loaded_updates or set(loaded_updates.values()) == {24}
+                              else dict(loaded_updates)),
+                      stop_rule=(None if not loaded_updates or set(loaded_updates.values()) == {24} else
+                                 'MAIN 2026-11-09 12:23 disk-safety stop: amendment 29 evaluates the last sealed '
+                                 'update instead of u24 (' + ', '.join(f'{a}=u{u}' for a, u in loaded_updates.items())
+                                 + '; disclosed)'),
                       panel_sha256=panel['panel_sha256'], n_worlds=len(worlds),
                       primary_rule=spec_['rule'],
                       primary=dict(contrast=f'{spec_["contrasts"][0][0]} - {spec_["contrasts"][0][1]}',

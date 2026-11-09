@@ -1677,5 +1677,5 @@ def test_p20c_amendment29_disk_stop_evaluates_the_last_sealed_update(p20c, tmp_p
         a29 = nm.confirm_analyse(final_root=f['final_root'], panel=p20c, amendment='29',
                                  trained_roots=dict(C5D=roots[('C5D', 16)], C5DR=roots[('C5DR', 16)]),
                                  identity_roots=dict(C5D=roots[('C5D', 12)], C5DR=roots[('C5D', 12)]))
-    assert a29['update'] == 16 and 'u16 instead of u24' in a29['stop_rule'] and a29['primary']['contrast'] == 'C5D - U0'
+    assert a29['update'] == dict(C5D=16, C5DR=16) and 'C5D=u16' in a29['stop_rule'] and a29['primary']['contrast'] == 'C5D - U0'
     assert a29['plant_identity']['C5D']['verdict'] == 'PASS' and a29['missing']['F8B'] == 'trained root not given'
