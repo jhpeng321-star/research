@@ -1,0 +1,39 @@
+{
+ "amendment": "29",
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend28b.json",
+  "registration_sha256": "07cda5bea202c3a6a683d41f97e435edbd8cc3296cfd09b738df6093822f5a95"
+ },
+ "analysis": {
+  "co_criteria": "fairness groups <= 10 s/veh (point; CI reported) and CVaR90 (CI lower <= 0) for every contrast",
+  "command": "confirm-analyse --amendment 29 --trained-roots C5D=..,F8B=..,C5DR=.. (u24 roots) --identity-roots C5D=<u12 C5D>,F8B=<u12 F8B>,C5DR=<u12 C5D>",
+  "output": "CONFIRM_TABLES_A29.json (sealed, bank root)",
+  "plant_identity": "inherited from the u12 identity roots of the same training CONFIG digest",
+  "pooling": "reported separately from the u12 tables; never pooled with p20x",
+  "primary": "C5D u24 - U0 paired total delay, 95% CI upper < 0",
+  "secondary": [
+   "C5D u24 - F8B u24",
+   "C5D u24 - C5DR u24"
+  ]
+ },
+ "arms": {
+  "C5D": "CLEAN5C5D-B u24",
+  "C5DR": "CLEAN5C5D-R u24",
+  "F8B": "F8V4B-B u24",
+  "binding": "bind-trained at u24 after the run ends (A/B/R u24 receipts + checkpoints + COMPLETE, monitors u1..u24 bound to the CONFIG, safety clean, frozen A == u0); new trained roots /home/ubuntu/nm_finaleval_p20c_{c5d,c5dr,f8b}_u24, phase v2v_final_confirm_trained, cap 230,400 each"
+ },
+ "authority": [
+  "MAIN 2026-11-09 09:24 AMENDMENT 29 (owner \"go to 24\")",
+  "MAIN 2026-11-09 09:26 C5DR addition"
+ ],
+ "budget": {
+  "allocation_total": 5000000,
+  "cumulative": "1,651,080 used before + 1,389,000 (28/28b) + 691,200 (29) = 3,731,280 <= 5,000,000",
+  "detail": "3 x 192 x 1,200",
+  "sim_s": 691200
+ },
+ "panel": "the SAME p20c panel d2ed7783 (192 worlds 993100-993291) and the amendment-28 bank-root U0 waves",
+ "registration_sha256": "4ac4e6f1777213d3b47980be8a74d20d036ee393770c9f50822a5a7c96470acf",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: registered before any u24 checkpoint exists and before any amendment-28/29 outcome"
+}

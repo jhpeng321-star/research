@@ -1570,8 +1570,9 @@ def _trained_root(tmp_path, panel, name):
 
 
 def test_p20c_amendment28_bank_root_trained_roots_and_confirm_analysis(p20c, tmp_path):
-    """Amendment 28: bank root (U0 pre-run + ORACLE_WM/LEARNED_TRIGGER bank-run within 2 x 230,400), two trained roots
-    (U0 plant identity on 2 worlds, then B u12 on 192 worlds, own ledgers) and the sealed CONFIRM_TABLES."""
+    """Amendments 28/29: bank root (U0 pre-run + ORACLE_WM/LEARNED_TRIGGER bank-run within 2 x 230,400); trained roots
+    C5D (B), F8B (B) and C5DR (R, same run as C5D) at u12 (C5D/F8B run U0 plant identity on 2 worlds; C5DR inherits
+    it) and at u24 (identity inherited); sealed CONFIRM_TABLES (u12) and CONFIRM_TABLES_A29 (u24)."""
     import unittest.mock as um
     f = prerun_fixture(tmp_path, p20c)
     bank_root = f['final_root']
@@ -1581,6 +1582,8 @@ def test_p20c_amendment28_bank_root_trained_roots_and_confirm_analysis(p20c, tmp
     bank.write_text('{"wm": 1}')
     model.write_text('{}')
     runtime = nm.FakeRuntime(dict(oracle=True, learned=True))
+    troots = {'C5D': _trained_root(tmp_path, p20c, 'c5d')[0], 'F8B': _trained_root(tmp_path, p20c, 'f8b')[0]}
+    troots['C5DR'] = troots['C5D']                                       # the unguided arm of the same run
     with um.patch.object(nm, 'LEARNED_MODEL_SHA256', nm.file_sha(model)):
         nm.bind_oracle(final_root=bank_root, bank_path=bank, model_path=model, authority='MAIN 28')
         with pytest.raises(nm.Blocked, match='amendment 28 bank arms'):
@@ -1588,40 +1591,53 @@ def test_p20c_amendment28_bank_root_trained_roots_and_confirm_analysis(p20c, tmp
         out = nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None,
                                 arms=nm.CONFIRM_BANK_ARMS, workers=8, chunk=192)
         assert out['status'] == 'PASS' and out['cap_sim_s'] == 460_800
-        roots = {}
-        for label in nm.TRAINED_ARMS:
-            troot, cfg = _trained_root(tmp_path, p20c, label.lower())
-            final = tmp_path/f'confirm_{label.lower()}'
-            plan = nm.confirm_register(root=troot, final_root=final, runtime=nm.FakeRuntime(), panel=p20c, label=label,
-                                       authority='MAIN 28')
-            assert plan['label'] == label and plan['update'] == 12
-            with pytest.raises(nm.Blocked, match='TRAINED_BOUND'):
-                nm.confirm_run(final_root=final, runtime=nm.FakeRuntime(), panel=p20c)
-            (troot/'OWNER_STOP.json').write_text('{}')                   # training ended at u12: expected
-            bound = nm.bind_trained(final_root=final, runtime=nm.FakeRuntime(), panel=p20c, authority='u12 export')
-            assert bound['gate']['ended_training'] == {'OWNER_STOP.json': nm.file_sha(troot/'OWNER_STOP.json')}
-            with pytest.raises(nm.Blocked, match='never rebound'):
-                nm.bind_trained(final_root=final, runtime=nm.FakeRuntime(), panel=p20c, authority='again')
-            with pytest.raises(nm.Blocked, match='bind-mappo --arm U0'):
-                nm.confirm_run(final_root=final, runtime=nm.FakeRuntime(), panel=p20c)
-            nm.bind_fake_mappo(tmp_path/label.lower(), final, 'U0', residual=troot/'A_checkpoint_000.pt')
-            done = nm.confirm_run(final_root=final, runtime=nm.FakeRuntime(), panel=p20c, workers=8, chunk=96)
-            assert done['status'] == 'PASS'
-            assert {k: v['published'] for k, v in done['coverage'].items()} == {f'{label}_IDENT_U0': 2,
-                                                                                 f'{label}_B_u012': 192}
-            rows = nm.fe.ledger_rows(final)
-            assert sum(r['sim_s'] for r in rows if r['phase'] == nm.TRAINED_PHASE) == 230_400
-            assert sum(r['sim_s'] for r in rows if r['phase'] == nm.IDENTITY_PHASE) == 2_400
-            assert not nm.fe.ledger_rows(troot) or all(not str(r['id']).startswith('nmfinal_')
-                                                       for r in nm.fe.ledger_rows(troot))
-            roots[label] = final
+        roots = {12: {}, 24: {}}
+        for update in (12, 24):
+            for label in ('C5D', 'F8B', 'C5DR'):
+                troot = troots[label]
+                final = tmp_path/f'confirm_{label.lower()}_u{update}'
+                plan = nm.confirm_register(root=troot, final_root=final, runtime=nm.FakeRuntime(), panel=p20c,
+                                           label=label, authority='MAIN 28/29', update=update)
+                assert plan['update'] == update and plan['arm'] == nm.TRAINED_ARM_LETTER[label]
+                assert plan['amendment'] == ('28' if update == 12 else '29')
+                with pytest.raises(nm.Blocked, match='TRAINED_BOUND'):
+                    nm.confirm_run(final_root=final, runtime=nm.FakeRuntime(), panel=p20c)
+                (troot/f'{nm.TRAINED_ARM_LETTER[label]}_track2_{update:03}.pt').write_bytes(b'fake layer')
+                bound = nm.bind_trained(final_root=final, runtime=nm.FakeRuntime(), panel=p20c, authority='export')
+                assert bound['update'] == update and bound['checkpoint']['arm'] == nm.TRAINED_ARM_LETTER[label]
+                with pytest.raises(nm.Blocked, match='never rebound'):
+                    nm.bind_trained(final_root=final, runtime=nm.FakeRuntime(), panel=p20c, authority='again')
+                own = update == 12 and label in nm.IDENTITY_LABELS
+                if own:
+                    with pytest.raises(nm.Blocked, match='bind-mappo --arm U0'):
+                        nm.confirm_run(final_root=final, runtime=nm.FakeRuntime(), panel=p20c)
+                    nm.bind_fake_mappo(tmp_path/label.lower(), final, 'U0', residual=troot/'A_checkpoint_000.pt')
+                done = nm.confirm_run(final_root=final, runtime=nm.FakeRuntime(), panel=p20c, workers=8, chunk=96)
+                wave = f'{label}_{nm.TRAINED_ARM_LETTER[label]}_u{update:03}'
+                assert done['status'] == 'PASS'
+                assert {k: v['published'] for k, v in done['coverage'].items()} == dict(
+                    {wave: 192}, **({f'{label}_IDENT_U0': 2} if own else {}))
+                rows = nm.fe.ledger_rows(final)
+                assert sum(r['sim_s'] for r in rows if r['phase'] == nm.TRAINED_PHASE) == 230_400
+                assert sum(r['sim_s'] for r in rows if r['phase'] == nm.IDENTITY_PHASE) == (2_400 if own else 0)
+                roots[update][label] = final
         with pytest.raises(nm.Blocked, match='not the sealed C5D trained root'):
             nm.confirm_analyse(final_root=bank_root, panel=p20c, trained_roots=dict(C5D=bank_root))
-        value = nm.confirm_analyse(final_root=bank_root, panel=p20c, trained_roots=roots)
-    assert value['missing'] == {} and value['primary']['contrast'] == 'ORACLE_WM - U0'
+        with pytest.raises(nm.Blocked, match='amendment 29 evaluates u24'):
+            nm.confirm_analyse(final_root=bank_root, panel=p20c, trained_roots=roots[12], amendment='29')
+        value = nm.confirm_analyse(final_root=bank_root, panel=p20c, trained_roots=roots[12],
+                                   identity_roots=dict(C5DR=roots[12]['C5D']))
+        a29 = nm.confirm_analyse(final_root=bank_root, panel=p20c, trained_roots=roots[24], amendment='29',
+                                 identity_roots=dict(roots[12], C5DR=roots[12]['C5D']))
+    assert value['missing'] == {} and value['primary']['contrast'] == 'ORACLE_WM - U0' and value['update'] == 12
     assert [(c['treatment'], c['reference'], c['role']) for c in value['contrasts']] == list(nm.CONFIRM_CONTRASTS)
     assert all('total_minus_ref' in c and 'groups' in c and 'tail_cvar90' in c for c in value['contrasts'])
     assert value['primary']['verdict'] == ('PASS' if value['contrasts'][0]['ci95_upper_below_0'] else 'FAIL')
-    assert {k: v['verdict'] for k, v in value['plant_identity'].items()} == {'C5D': 'PASS', 'F8B': 'PASS'}
+    assert {k: v['verdict'] for k, v in value['plant_identity'].items()} == {'C5D': 'PASS', 'F8B': 'PASS',
+                                                                            'C5DR': 'PASS'}
     assert value['contrasts'][2]['plant_identity'] == 'PASS' and 'never pooled' in value['pooling']
     assert (bank_root/nm.CONFIRM_TABLES).is_file()
+    assert a29['amendment'] == '29' and a29['update'] == 24 and a29['primary']['contrast'] == 'C5D - U0'
+    assert [(c['treatment'], c['reference']) for c in a29['contrasts']] == [('C5D', 'U0'), ('C5D', 'F8B'), ('C5D', 'C5DR')]
+    assert {k: v['verdict'] for k, v in a29['plant_identity'].items()} == {'C5D': 'PASS', 'F8B': 'PASS', 'C5DR': 'PASS'}
+    assert set(a29['arms']) == {'U0', 'C5D', 'F8B', 'C5DR'} and (bank_root/'CONFIRM_TABLES_A29.json').is_file()

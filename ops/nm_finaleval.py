@@ -356,8 +356,15 @@ BANK_SETTINGS = ('p20x', 'p20c')
 TRAINED_ARMS = dict(C5D='CLEAN5C5D-B u12 (cpuZ coopmwm20261109_clean5c5d: WM-only bank fd385a2b + DEMOX WM demo '
                         '6c0d040a; c4/strongguide 905a5a02, CONFIG de74ceb3)',
                     F8B='F8V4B-B u12 (cpuW coopmwm20261109_f8v4b: rule-only bank 15edd209 + rule demo 74fe9103; '
-                        'c4/strongguide 905a5a02, CONFIG 0f4101f5)')
+                        'c4/strongguide 905a5a02, CONFIG 0f4101f5)',
+                    C5DR=('CLEAN5C5D-R (the unguided arm of the same run: same verified-only action set, no targets or '
+                          'demos; MAIN 2026-11-09 09:26 addition to amendments 28/29)'))
+#: the evaluated arm letter of each trained label (B = world-model guided, R = unguided)
+TRAINED_ARM_LETTER = dict(C5D='B', F8B='B', C5DR='R')
+#: labels that run their own U0 plant-identity episodes at u12; C5DR shares C5D's training CONFIG (inherited)
+IDENTITY_LABELS = ('C5D', 'F8B')
 TRAINED_UPDATE = 12
+TRAINED_UPDATES = (12, 24)          # amendment 28 = u12; amendment 29 (owner 'go to 24') = u24, same panel and U0
 TRAINED_PLAN = 'TRAINED_PLAN.json'
 TRAINED_PHASE = 'v2v_final_confirm_trained'
 TRAINED_CAP_SIM_S = 192*HORIZON_S
@@ -403,6 +410,13 @@ RUNNER_CONTRACT = dict(
                      'sumo_verify.branch_sim_s). record = spec identity keys + status graded, J_veh_s over '
                      '[t_s, t_s+360), safety.'))
 SEED_TOKEN = re.compile(r'(?<![\da-fA-F.])(9896\d\d)(?![\da-fA-F])')
+SIX_DIGITS = re.compile(r'(?<![\da-fA-F.])(\d{6})(?![\da-fA-F])')
+
+
+def _eval_tokens(text):
+    """Six-digit tokens inside the setting's EVAL_RANGE (p60: exactly the SEED_TOKEN 9896xx hits; amendment 28: the
+    p20c range, so declared 9896xx text in a p20 training CONFIG is not an exposure of the p20c panel)."""
+    return [int(m) for m in SIX_DIGITS.findall(str(text)) if EVAL_RANGE[0] <= int(m) <= EVAL_RANGE[1]]
 REPLICATED_FILE = 'track2_diagnostics/replicated_u024_live.json'
 
 
@@ -828,7 +842,7 @@ def _seed_hits(value, skip=False):
     elif isinstance(value, int) and EVAL_RANGE[0] <= value <= EVAL_RANGE[1]:
         yield value
     elif isinstance(value, str):
-        yield from (int(m) for m in SEED_TOKEN.findall(value))
+        yield from _eval_tokens(value)
 
 
 def exposure_check(root, cfg):
@@ -837,7 +851,7 @@ def exposure_check(root, cfg):
     and this launcher's own job ids are allowed)."""
     found = dict(config=sorted(set(_seed_hits(cfg))),
                  ledger=sorted({int(m) for r in fe.ledger_rows(root) if not str(r.get('id', '')).startswith(PREFIXES)
-                                for m in SEED_TOKEN.findall(str(r.get('id', '')))}))
+                                for m in _eval_tokens(r.get('id', ''))}))
     registration = Path(root)/'ISOLATED_REGISTRATION.json'
     if registration.is_file():
         found['registration'] = sorted(set(_seed_hits(read(registration))))
@@ -4187,14 +4201,40 @@ def _analyse_published(root, final_root, runtime, panel, panel_3c=None, update=P
 # ---------------------------------------------------------------- amendment 28: p20c confirmation (trained roots)
 
 TRAINED_BOUND = 'TRAINED_BOUND_u012.json'
+
+
+def _bound_name(update):
+    return f'TRAINED_BOUND_u{int(update):03}.json'
+
+
+def _amendment(update):
+    return '28' if int(update) == 12 else '29'
 CONFIRM_TABLES = 'CONFIRM_TABLES.json'
 #: the registered contrasts (amendment 28): (treatment, reference, role); diff = treatment - reference
 CONFIRM_CONTRASTS = (('ORACLE_WM', 'U0', 'PRIMARY'), ('LEARNED_TRIGGER', 'U0', 'SECONDARY'),
-                     ('C5D', 'U0', 'SECONDARY'), ('C5D', 'F8B', 'SECONDARY'))
+                     ('C5D', 'U0', 'SECONDARY'), ('C5D', 'F8B', 'SECONDARY'),
+                     ('C5D', 'C5DR', 'SECONDARY'))      # MAIN 09:26: the effect of world-model guidance on learning
 CONFIRM_PRIMARY_RULE = ('ORACLE_WM - U0 paired total delay (J veh-s per world, whole-world bootstrap) 95% CI upper < 0 '
                         'on the 192-world p20c panel; fairness co-criteria (every registered group mean per-vehicle '
                         'delay increase <= 10 s) and CVaR90 (95% CI lower <= 0) reported for every contrast; a '
                         'SEPARATE pre-registered confirmation test, never pooled with the amendment-27 p20x panel')
+
+
+#: amendment 29 (owner 'go to 24', MAIN 2026-11-09 09:24, pre-outcome): CLEAN5C5D-B u24 and F8V4B-B u24 on the SAME
+#: p20c panel with the amendment-28 U0; reported separately from u12
+CONFIRM_SPECS = {
+    '28': dict(update=12, bank_arms=('U0',)+CONFIRM_BANK_ARMS, contrasts=CONFIRM_CONTRASTS, rule=CONFIRM_PRIMARY_RULE,
+               labels=('C5D', 'F8B', 'C5DR'),
+               file=CONFIRM_TABLES,
+               pooling='never pooled with the amendment-27 p20x panel (separate pre-registered test)'),
+    '29': dict(update=24, bank_arms=('U0',), labels=('C5D', 'F8B', 'C5DR'),
+               contrasts=(('C5D', 'U0', 'PRIMARY'), ('C5D', 'F8B', 'SECONDARY'), ('C5D', 'C5DR', 'SECONDARY')),
+               rule=('CLEAN5C5D-B u24 - U0 (the amendment-28 U0 of the same panel) paired total delay 95% CI upper < 0; '
+                     'secondary C5D u24 - F8B u24; fairness co-criteria and CVaR90 for both; plant identity inherited '
+                     'from the amendment-28 u12 root of the same training CONFIG'),
+               file='CONFIRM_TABLES_A29.json',
+               pooling='reported separately from the u12 (amendment 28) tables; never pooled with p20x'),
+}
 
 
 def _need_p20c():
@@ -4215,8 +4255,11 @@ def trained_plan(final_root):
 
 
 def trained_bound(final_root):
-    path = Path(final_root)/TRAINED_BOUND
-    return verify(read(path), 'receipt_sha256', TRAINED_BOUND) if path.is_file() else None
+    plan = trained_plan(final_root)
+    if plan is None:
+        return None
+    path = Path(final_root)/_bound_name(plan['update'])
+    return verify(read(path), 'receipt_sha256', path.name) if path.is_file() else None
 
 
 class TrainedRuntime(PrerunRuntime):
@@ -4255,11 +4298,14 @@ class TrainedRuntime(PrerunRuntime):
             raise Blocked(f'trained root: {error}') from None
 
 
-def confirm_register(*, root, final_root, runtime, panel, label, authority):
+def confirm_register(*, root, final_root, runtime, panel, label, authority, update=TRAINED_UPDATE):
     """Zero physics: a NEW trained final root for one amendment-28 trained arm, bound to its training root and CONFIG
     (validated by the deployed source's production loader), the p20c panel, phases and caps. The B checkpoint is bound
     later (bind-trained, after the u12 export)."""
     label = _trained_label(label)
+    if int(update) not in TRAINED_UPDATES:
+        raise Blocked(f'trained update must be one of {TRAINED_UPDATES} (amendments 28/29)')
+    update = int(update)
     root, final_root = Path(root), guard(Path(final_root))
     if final_root.exists():
         raise Blocked('final root exists; never overwrite')
@@ -4282,20 +4328,26 @@ def confirm_register(*, root, final_root, runtime, panel, label, authority):
     exposure = exposure_check(root, cfg)
     view = runtime.plant_view(cfg)
     final_root.mkdir(parents=True)
-    plan = seal(dict(schema=SCHEMA+'.trained_plan', created=datetime.now(timezone.utc).isoformat(), amendment='28',
+    if update == 12 and label in IDENTITY_LABELS:
+        identity = dict(arm='U0', worlds=IDENTITY_WORLDS,
+                        rule=('U0 (frozen d9042cc5 + the training root zero-residual u0) on this training plant for the '
+                              'first 2 panel worlds must equal the bank-root U0 records: |J diff| <= 1e-6 veh-s and '
+                              'identical safety counters; otherwise the '
+                              f'{label} - U0 contrast is reported as plant-identity FAILED (not a claim)'))
+        phases = {TRAINED_PHASE: TRAINED_CAP_SIM_S, IDENTITY_PHASE: IDENTITY_CAP_SIM_S}
+    else:
+        identity = dict(inherited=('the plant-identity verdict of the u12 identity root (C5D or F8B) with the same '
+                                   'training CONFIG digest (same plant and source; no new identity episodes)'))
+        phases = {TRAINED_PHASE: TRAINED_CAP_SIM_S}
+    plan = seal(dict(schema=SCHEMA+'.trained_plan', created=datetime.now(timezone.utc).isoformat(),
+                     amendment=_amendment(update),
                      authority=str(authority), label=label, description=TRAINED_ARMS[label], setting=SETTING,
                      training_root=str(root), config_sha256=digest(cfg), config_file_sha256=file_sha(root/'CONFIG.json'),
                      source_root=cfg.get('source_root'), source_manifest_sha256=cfg.get('source_manifest_sha256'),
                      newmap=deepcopy(nm_), training_eval_panel_note=('the training CONFIG binds its own panel sha; the '
                                                                      'p20c panel is new (amendment 28), cell checked'),
                      plant_view=view, exposure=exposure, panel_sha256=panel['panel_sha256'],
-                     update=TRAINED_UPDATE, arm='B', phases={TRAINED_PHASE: TRAINED_CAP_SIM_S,
-                                                             IDENTITY_PHASE: IDENTITY_CAP_SIM_S},
-                     identity=dict(arm='U0', worlds=IDENTITY_WORLDS,
-                                   rule=('U0 (frozen d9042cc5 + the training root zero-residual u0) on this training '
-                                         'plant for the first 2 panel worlds must equal the bank-root U0 records: '
-                                         '|J diff| <= 1e-6 veh-s and identical safety counters; otherwise the '
-                                         f'{label} - U0 contrast is reported as plant-identity FAILED (not a claim)')),
+                     update=update, arm=TRAINED_ARM_LETTER[label], phases=phases, identity=identity,
                      sealed=('F12: no wave is opened, tabulated or summarised until confirm-analyse after every '
                              'registered arm is published')), 'receipt_sha256')
     publish(final_root/TRAINED_PLAN, plan)
@@ -4336,7 +4388,8 @@ def bind_trained(*, final_root, runtime, panel, authority):
     if plan is None:
         raise Blocked(f'{TRAINED_PLAN} missing')
     if trained_bound(final_root) is not None:
-        raise Blocked(f'{TRAINED_BOUND} exists; never rebound')
+        raise Blocked(f'{_bound_name(plan["update"])} exists; never rebound')
+    update = int(plan['update'])
     if not str(authority or '').strip():
         raise Blocked('authority required')
     root = Path(plan['training_root'])
@@ -4344,25 +4397,27 @@ def bind_trained(*, final_root, runtime, panel, authority):
     cfg = pre.config(root)
     binding = dict(base=plan['newmap']['base_controller'], panel_sha256=panel['panel_sha256'])
     stops = _ended_training_health(root)
-    gated = gate(root, cfg, _EndedTraining(runtime), binding, None, TRAINED_UPDATE)
+    gated = gate(root, cfg, _EndedTraining(runtime), binding, None, update)
     gated['ended_training'] = stops
-    side = root/f'B_track2_{TRAINED_UPDATE:03}.pt'
+    letter = TRAINED_ARM_LETTER[plan['label']]
+    side = root/f'{letter}_track2_{update:03}.pt'
     if not side.is_file():
-        raise Blocked(f'{side.name} missing (the B evaluation layer of u{TRAINED_UPDATE})')
-    spec = episode_specs('B', panel, cfg, root, binding['base'], update=TRAINED_UPDATE)[0]['checkpoint']
-    if spec['file_sha256'] != gated['checkpoint_sha256']['B']:
-        raise Blocked('B checkpoint changed between the gate and the binding')
+        raise Blocked(f'{side.name} missing (the {letter} evaluation layer of u{update})')
+    spec = episode_specs(letter, panel, cfg, root, binding['base'], update=update)[0]['checkpoint']
+    if spec['file_sha256'] != gated['checkpoint_sha256'][letter]:
+        raise Blocked(f'{letter} checkpoint changed between the gate and the binding')
     value = seal(dict(schema=SCHEMA+'.trained_bound', label=plan['label'], trained_plan_sha256=plan['receipt_sha256'],
-                      authority=str(authority), update=TRAINED_UPDATE, checkpoint=spec,
+                      authority=str(authority), update=update, amendment=_amendment(update), checkpoint=spec,
                       track2_layer=dict(path=str(side), file_sha256=file_sha(side)), gate=gated,
                       bound_utc=datetime.now(timezone.utc).isoformat()), 'receipt_sha256')
-    publish(final_root/TRAINED_BOUND, value)
+    publish(final_root/_bound_name(update), value)
     return value
 
 
 def trained_specs(panel, bound, label):
     """B episodes of the trained arm from its SEALED binding (no training-root file is needed to rebuild them)."""
-    return [dict(job_id=f'nmfinal_{label.lower()}_b_u{TRAINED_UPDATE:03}_{i:04}', arm='B', world_id=r['world_id'],
+    u, letter = int(bound['update']), TRAINED_ARM_LETTER[label]
+    return [dict(job_id=f'nmfinal_{label.lower()}_{letter.lower()}_u{u:03}_{i:04}', arm=letter, world_id=r['world_id'],
                  world=deepcopy(r['world']), checkpoint=deepcopy(bound['checkpoint']), sim_s=HORIZON_S,
                  window=dict(WINDOW), noise_seed=r['world']['seed'], deterministic=True,
                  panel_sha256=panel['panel_sha256'], capture=None)
@@ -4410,7 +4465,7 @@ def confirm_run(*, final_root, runtime, panel, workers=16, chunk=None):
     final_root = Path(final_root)
     plan, bound = trained_plan(final_root), trained_bound(final_root)
     if plan is None or bound is None:
-        raise Blocked(f'{TRAINED_PLAN} and {TRAINED_BOUND} (bind-trained after the u12 export) required')
+        raise Blocked(f'{TRAINED_PLAN} and TRAINED_BOUND_u<update>.json (bind-trained after the export) required')
     if plan['panel_sha256'] != panel['panel_sha256']:
         raise Blocked('TRAINED_PLAN binds another panel')
     root, label = Path(plan['training_root']), plan['label']
@@ -4430,21 +4485,26 @@ def confirm_run(*, final_root, runtime, panel, workers=16, chunk=None):
         if file_sha(Path(bound['checkpoint']['path'])) != bound['checkpoint']['file_sha256'] or \
                 file_sha(Path(bound['track2_layer']['path'])) != bound['track2_layer']['file_sha256']:
             raise Blocked('bound B u12 checkpoint / evaluation layer changed after the binding')
+        update = int(plan['update'])
         u0 = mappo_binding(final_root, 'U0')
-        if u0 is None or u0['residual_sha256'] != cfg.get('common_checkpoint_sha256') \
-                or Path(u0['residual_path']) != root/'A_checkpoint_000.pt':
+        own_identity = update == 12 and label in IDENTITY_LABELS
+        if own_identity and (u0 is None or u0['residual_sha256'] != cfg.get('common_checkpoint_sha256')
+                             or Path(u0['residual_path']) != root/'A_checkpoint_000.pt'):
             raise Blocked('bind-mappo --arm U0 with --residual-path <training root>/A_checkpoint_000.pt first')
         chunk = int(chunk or 2*workers)
         if chunk < 1:
             raise Blocked('chunk must be >= 1')
-        s1, r1, cov1 = _chunk_loop(final_root, [(f'{label}_IDENT_U0', 'episode',
-                                                 identity_specs(panel, u0, cfg, root, label))],
-                                   root=root, cfg=cfg, runtime=ident, workers=min(workers, IDENTITY_WORLDS),
-                                   chunk=IDENTITY_WORLDS, status=status, step=current)
+        if own_identity:
+            s1, r1, cov1 = _chunk_loop(final_root, [(f'{label}_IDENT_U0', 'episode',
+                                                     identity_specs(panel, u0, cfg, root, label))],
+                                       root=root, cfg=cfg, runtime=ident, workers=min(workers, IDENTITY_WORLDS),
+                                       chunk=IDENTITY_WORLDS, status=status, step=current)
+        else:                                   # identity inherited from the u12 identity root (same CONFIG)
+            s1, r1, cov1 = False, 0, {}
         stopped, rounds, cov2 = s1, r1, {}
         if not s1:
             train = TrainedRuntime(runtime, final_root, TRAINED_PHASE)
-            s2, r2, cov2 = _chunk_loop(final_root, [(f'{label}_B_u{TRAINED_UPDATE:03}', 'episode',
+            s2, r2, cov2 = _chunk_loop(final_root, [(f'{label}_{TRAINED_ARM_LETTER[label]}_u{update:03}', 'episode',
                                                      trained_specs(panel, bound, label))],
                                        root=root, cfg=cfg, runtime=train, workers=workers, chunk=chunk, status=status,
                                        step=current)
@@ -4478,7 +4538,8 @@ def _trained_records(final_root, panel, label):
     if plan is None or bound is None or plan['label'] != label or plan['panel_sha256'] != panel['panel_sha256']:
         raise Blocked(f'{final_root}: not the sealed {label} trained root of this panel')
     specs = trained_specs(panel, bound, label)
-    records, source, covered = published(final_root, f'{label}_B_u{TRAINED_UPDATE:03}', specs, check_episode)
+    records, source, covered = published(final_root, f'{label}_{TRAINED_ARM_LETTER[label]}_u{int(bound["update"]):03}',
+                                         specs, check_episode)
     ident = _wave_records(final_root, f'{label}_IDENT_U0')
     want = [r['world_id'] for r in panel['worlds'][:IDENTITY_WORLDS]]
     if [r.get('world_id') for r in ident] != want or any(r.get('arm') != 'U0' or r.get('status') != 'graded'
@@ -4487,11 +4548,14 @@ def _trained_records(final_root, panel, label):
     return dict(plan=plan, bound=bound, records=records, source=source, covered=covered, n=len(specs), identity=ident)
 
 
-def confirm_analyse(*, final_root, panel, trained_roots):
+def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identity_roots=None):
     """Zero physics (amendment 28): the registered contrasts on the p20c panel from the bank root (U0, ORACLE_WM,
     LEARNED_TRIGGER) and the two trained roots (C5D, F8B): paired total delay CI95, the group co-criteria, CVaR90;
     the U0 plant-identity check of each trained root. Sealed CONFIRM_TABLES.json in the bank root."""
     _need_p20c()
+    if amendment not in CONFIRM_SPECS:
+        raise Blocked(f'confirm analysis amendments are {sorted(CONFIRM_SPECS)}')
+    spec_ = CONFIRM_SPECS[amendment]
     final_root = Path(final_root)
     plan = prerun_plan(final_root)
     if plan is None or plan['panel_sha256'] != panel['panel_sha256']:
@@ -4504,7 +4568,7 @@ def confirm_analyse(*, final_root, panel, trained_roots):
     worlds = [r['world_id'] for r in panel['worlds']]
     bootstrap = dict(panel['contract']['bootstrap'])
     have, sources, missing, roots = {}, {}, {}, {}
-    for arm in ('U0',)+CONFIRM_BANK_ARMS:
+    for arm in spec_['bank_arms']:
         specs = episode_specs(arm, panel, cfg, plant, 'mappo_frozen', oracle if arm in BANK_ARMS else None, u0)
         records, source, covered = published(final_root, arm, specs, check_episode)
         if covered < len(specs):
@@ -4512,13 +4576,26 @@ def confirm_analyse(*, final_root, panel, trained_roots):
             continue
         have[arm], sources[arm], roots[arm] = {r['world_id']: r for r in records}, source, final_root
     identity = {}
-    for label in TRAINED_ARMS:
+    for label in spec_['labels']:
         path = (trained_roots or {}).get(label)
         if path is None:
             missing[label] = 'trained root not given'
             identity[label] = dict(verdict='UNAVAILABLE', reason='trained root not given')
             continue
         got = _trained_records(Path(path), panel, label)
+        if int(got['plan']['update']) != spec_['update']:
+            raise Blocked(f'{label}: amendment {amendment} evaluates u{spec_["update"]}, root is u{got["plan"]["update"]}')
+        if spec_['update'] != 12 or label not in IDENTITY_LABELS:   # inherited from the u12 identity root
+            src = (identity_roots or {}).get(label)
+            if src is None:
+                got['identity'] = None
+            else:
+                base_label = trained_plan(Path(src))['label']
+                base = _trained_records(Path(src), panel, base_label)
+                if base['plan']['config_sha256'] != got['plan']['config_sha256'] or int(base['plan']['update']) != 12 \
+                        or base_label not in IDENTITY_LABELS:
+                    raise Blocked(f'{label}: identity root is not a u12 identity root of the same training CONFIG')
+                got['identity'] = base['identity']
         if got['covered'] < got['n']:
             missing[label] = f'{got["covered"]}/{got["n"]} published'
         else:
@@ -4542,7 +4619,7 @@ def confirm_analyse(*, final_root, panel, trained_roots):
             raise Blocked(f'{arm}: vehicle logs missing or invalid on this host')
         reports[arm] = rows
     contrasts = []
-    for arm, ref, role in CONFIRM_CONTRASTS:
+    for arm, ref, role in spec_['contrasts']:
         row = dict(treatment=arm, reference=ref, role=role,
                    convention='diff = treatment - reference; negative = treatment has less delay')
         if arm not in have or ref not in have:
@@ -4558,27 +4635,28 @@ def confirm_analyse(*, final_root, panel, trained_roots):
                     mean_J_veh_s=float(np.mean([have[a][w]['J_veh_s'] for w in worlds])),
                     safety_totals={k: int(sum(have[a][w]['safety'][k] for w in worlds)) for k in SAFETY})
             for a in have}
-    for a in CONFIRM_BANK_ARMS:
+    for a in [x for x in CONFIRM_BANK_ARMS if x in spec_['bank_arms']]:
         if a in have:
             receipts = [have[a][w].get('oracle') or have[a][w].get('learned_trigger') or {} for w in worlds]
             arms[a]['activations'] = dict(worlds_with_any=sum(1 for r in receipts if r.get('activations')),
                                           total=sum(int(r.get('activations') or 0) for r in receipts))
-    value = seal(dict(schema=SCHEMA+'.confirm_tables', amendment='28', setting=SETTING,
-                      panel_sha256=panel['panel_sha256'], n_worlds=len(worlds), primary_rule=CONFIRM_PRIMARY_RULE,
-                      primary=dict(contrast='ORACLE_WM - U0',
+    value = seal(dict(schema=SCHEMA+'.confirm_tables', amendment=amendment, setting=SETTING,
+                      update=spec_['update'], panel_sha256=panel['panel_sha256'], n_worlds=len(worlds),
+                      primary_rule=spec_['rule'],
+                      primary=dict(contrast=f'{spec_["contrasts"][0][0]} - {spec_["contrasts"][0][1]}',
                                    verdict=('unavailable' if primary.get('status') == 'unavailable' else
                                             'PASS' if primary['ci95_upper_below_0'] else 'FAIL')),
                       contrasts=contrasts, plant_identity=identity, arms=arms, bootstrap=bootstrap,
                       oracle_binding_sha256=oracle['receipt_sha256'], u0_binding_sha256=u0['binding_sha256'],
                       sources={k: v.get('receipt_sha256') if isinstance(v, dict) else v for k, v in sources.items()},
                       roots={k: str(v) for k, v in roots.items()}, missing=missing,
-                      pooling='never pooled with the amendment-27 p20x panel (separate pre-registered test)'),
+                      pooling=spec_['pooling']),
                  'analysis_sha256')
-    target = final_root/CONFIRM_TABLES
+    target = final_root/spec_['file']
     if target.exists():
         old = verify(read(target), 'analysis_sha256', target.name)
         if old['analysis_sha256'] != value['analysis_sha256']:
-            publish(final_root/f'CONFIRM_TABLES_{int(time.time())}.json', value)
+            publish(final_root/f'{target.stem}_{int(time.time())}.json', value)
         return value
     publish(target, value)
     return value
@@ -4636,6 +4714,9 @@ def main(argv=None):
     p.add_argument('--model', help='bind-oracle: the LEARNED_TRIGGER model doc (sha 8e0ddd3e)')
     p.add_argument('--bank-arms', default=','.join(BANK_ARMS), help='bank-run: comma-separated subset of the bank arms')
     p.add_argument('--label', choices=tuple(TRAINED_ARMS), help='amendment 28: trained arm label (confirm-register)')
+    p.add_argument('--amendment', default='28', choices=('28', '29'), help='confirm-analyse: 28 (u12) or 29 (u24)')
+    p.add_argument('--identity-roots', help='confirm-analyse: label=<u12 identity root> for labels without their own '
+                                            'identity episodes (C5DR=<C5D u12 root>; amendment 29: every label)')
     p.add_argument('--trained-roots', help='confirm-analyse: C5D=<trained root>,F8B=<trained root> (this host)')
     p.add_argument('--zero-sumo-only', action='store_true', help='host-identity: skip the 420 s replay')
     p.add_argument('--cap', type=int, help='prerun-amend-cap: the new pre-run sub-cap (MAIN decision)')
@@ -4756,7 +4837,7 @@ def main(argv=None):
             result = dict(receipt_sha256=value['receipt_sha256'], bank=value['bank'], banks=value['banks'])
         elif a.command == 'confirm-register':
             value = confirm_register(root=a.root, final_root=a.final_root, runtime=Runtime(a.runner), panel=panel,
-                                     label=a.label, authority=a.authority)
+                                     label=a.label, authority=a.authority, update=a.update or TRAINED_UPDATE)
             result = dict(receipt_sha256=value['receipt_sha256'], label=value['label'],
                           config_sha256=value['config_sha256'], training_root=value['training_root'])
         elif a.command == 'bind-trained':
@@ -4775,7 +4856,9 @@ def main(argv=None):
                                      workers=a.workers, chunk=a.chunk)
         elif a.command == 'confirm-analyse':
             roots = dict(x.split('=', 1) for x in (a.trained_roots or '').split(',') if x)
-            value = confirm_analyse(final_root=a.final_root, panel=panel, trained_roots=roots)
+            ident = dict(x.split('=', 1) for x in (a.identity_roots or '').split(',') if x)
+            value = confirm_analyse(final_root=a.final_root, panel=panel, trained_roots=roots,
+                                    amendment=a.amendment, identity_roots=ident)
             result = dict(analysis_sha256=value['analysis_sha256'], primary=value['primary'], missing=value['missing'],
                           plant_identity={k: v.get('verdict') for k, v in value['plant_identity'].items()})
         elif a.command == 'bank-analyse':
