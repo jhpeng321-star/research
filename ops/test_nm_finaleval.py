@@ -1679,3 +1679,39 @@ def test_p20c_amendment29_disk_stop_evaluates_the_last_sealed_update(p20c, tmp_p
                                  identity_roots=dict(C5D=roots[('C5D', 12)], C5DR=roots[('C5D', 12)]))
     assert a29['update'] == dict(C5D=16, C5DR=16) and 'C5D=u16' in a29['stop_rule'] and a29['primary']['contrast'] == 'C5D - U0'
     assert a29['plant_identity']['C5D']['verdict'] == 'PASS' and a29['missing']['F8B'] == 'trained root not given'
+
+
+def test_p20c_amendment30_mappo_ct_on_the_bank_root(p20c, tmp_path):
+    """Amendment 30: MAPPO_CT (bound speed-only export != frozen U0) runs alone on the sealed p20c bank root under its
+    own phase/cap; confirm-analyse 30 seals MAPPO_CT - U0 (primary) and LEARNED_TRIGGER - MAPPO_CT."""
+    import unittest.mock as um
+    f = prerun_fixture(tmp_path, p20c)
+    bank_root = f['final_root']
+    run_prerun(dict(f, panel_3c=None), workers=8, chunk=192)
+    bank, model = tmp_path/'wm.json', tmp_path/'model.json'
+    bank.write_text('{"wm": 1}')
+    model.write_text('{}')
+    runtime = nm.FakeRuntime(dict(oracle=True, learned=True))
+    with um.patch.object(nm, 'LEARNED_MODEL_SHA256', nm.file_sha(model)):
+        nm.bind_oracle(final_root=bank_root, bank_path=bank, model_path=model, authority='MAIN 28')
+        with pytest.raises(nm.Blocked, match='MAPPO_CT runs alone'):
+            nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None,
+                              arms=('LEARNED_TRIGGER', 'MAPPO_CT'))
+        nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None,
+                          arms=nm.CONFIRM_BANK_ARMS, workers=8, chunk=192)
+        with pytest.raises(nm.Blocked, match='needs its binding'):
+            nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None, arms=('MAPPO_CT',))
+        (tmp_path/'ct').mkdir()
+        nm.bind_fake_mappo(tmp_path/'ct', bank_root, 'MAPPO_CT')
+        assert nm.mappo_binding(bank_root, 'MAPPO_CT')['kind'] == 'u0_continued_d2800_p20_96ep'
+        out = nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None, arms=('MAPPO_CT',),
+                                workers=8, chunk=192)
+        assert out['status'] == 'PASS' and out['cap_sim_s'] == 230_400
+        rows = nm.fe.ledger_rows(bank_root)
+        assert sum(r['sim_s'] for r in rows if r.get('phase') == 'mappo_ct') == 230_400
+        a30 = nm.confirm_analyse(final_root=bank_root, panel=p20c, amendment='30', trained_roots={})
+    assert a30['primary']['contrast'] == 'MAPPO_CT - U0' and a30['missing'] == {}
+    assert [(c['treatment'], c['reference']) for c in a30['contrasts']] == [('MAPPO_CT', 'U0'),
+                                                                            ('LEARNED_TRIGGER', 'MAPPO_CT')]
+    assert all('groups' in c and 'tail_cvar90' in c for c in a30['contrasts'])
+    assert (bank_root/'CONFIRM_TABLES_A30.json').is_file()

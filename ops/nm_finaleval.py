@@ -68,16 +68,26 @@ A_ALIAS_LABEL = ('A = U0: the frozen control arm (no PPO update) carries the u0 
 ARMS = ('A', 'B', 'R')
 DECISION_ARMS = ('B', 'R')
 BASES = ('mappo_frozen', 'mappo_u0', 'native')   # clean5a: frozen S-MAPPOWZ snapshot base (A = base alone)
-ORDER = ('B', 'A', 'R', 'RULE', 'RULE_FAIR', 'ORACLE', 'ORACLE_WM', 'LEARNED_TRIGGER', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE')
+ORDER = ('B', 'A', 'R', 'RULE', 'RULE_FAIR', 'ORACLE', 'ORACLE_WM', 'LEARNED_TRIGGER', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE',
+         'MAPPO_CT')
 #: MAIN 2026-11-06 (FAIRAUDIT F6): 7 arms; BASE is an alias (U0 for a mappo_u0 base, NATIVE for native)
 EPISODE_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE', 'ORACLE', 'ORACLE_WM',
-                'LEARNED_TRIGGER')
+                'LEARNED_TRIGGER', 'MAPPO_CT')
 COMPARATOR_ARMS = ('MAPPO_SPEED', 'MAPPO_LANE')        # claim 3b, one seal per comparator
-BOUND_ARMS = ('U0',)+COMPARATOR_ARMS                    # executors bound by path + sha256
+#: amendment 30 (MAIN 2026-11-09 15:29, owner-approved): U0's MAPPO speed policy continued for 96 episodes with its
+#: original objective; evaluated on the p20c bank root exactly like MAPPO_SPEED (bound export + the bound zero-residual u0)
+CT_ARM = 'MAPPO_CT'
+BOUND_ARMS = ('U0',)+COMPARATOR_ARMS+(CT_ARM,)          # executors bound by path + sha256
+CT_PHASE = 'mappo_ct'
+CT_CAP_SIM_S = 192*1200                                 # the amendment-30 eval part (230,400) of the mappo_ct line
+CT_AUTHORITY = ('MAIN 2026-11-09 15:29 amendment 30 (owner-approved): MAPPO_CT = U0 MAPPO speed policy + 96 episodes '
+                'of its original MAPPO objective at D2800_p20 (training seeds only); sealed on the 192-world p20c '
+                'panel against its U0; primary MAPPO_CT - U0; secondary LEARNED_TRIGGER - MAPPO_CT, fairness, CVaR90; '
+                'budget line mappo_ct 450,000 (eval 230,400)')
 CLAIM3A_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'NATIVE', 'ORACLE', 'ORACLE_WM',
                 'LEARNED_TRIGGER')                       # +25b oracle bounds, +26 learned trigger
 #: records of these arms carry the executor sha actually loaded (bound executors)
-EXECUTOR_ARMS = ('U0', 'RULE', 'RULE_FAIR', 'ORACLE', 'ORACLE_WM', 'LEARNED_TRIGGER')+COMPARATOR_ARMS
+EXECUTOR_ARMS = ('U0', 'RULE', 'RULE_FAIR', 'ORACLE', 'ORACLE_WM', 'LEARNED_TRIGGER')+COMPARATOR_ARMS+('MAPPO_CT',)
 RULE_ARMS = ('RULE', 'RULE_FAIR')
 #: amendments 25 + 25b (MAIN 2026-11-09 00:06, pre-outcome): privileged upper bounds, NOT deployable. Both = U0 (bound
 #: u0 executor, A/0) + oracle_plan on the frozen end-of-training bank (CLEAN5C5 final-update snapshot, bound only
@@ -170,11 +180,14 @@ FROZEN_MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cff
 MAPPO_KINDS = {
     'U0': {'u0_transferred_d9042cc5': 'MAPPO u0 transferred (frozen d9042cc5 executor, zero residual)'},
     'MAPPO_SPEED': {'retrained_wz3to2_it168': 'speed-only MAPPO retrained on wz3to2 (S-MAPPOWZ it168)'},
-    'MAPPO_LANE': {'lane_retrained_wz3to2_final': 'lane-capable MAPPO retrained on wz3to2 (S-MAPPOWZL final)'}}
+    'MAPPO_LANE': {'lane_retrained_wz3to2_final': 'lane-capable MAPPO retrained on wz3to2 (S-MAPPOWZL final)'},
+    'MAPPO_CT': {'u0_continued_d2800_p20_96ep': 'U0 MAPPO speed policy continued 96 episodes, original objective '
+                                                '(amendment 30)'}}
 #: MAIN 2026-11-06 registered binding: MAPPO-speed = S-MAPPOWZ it168 ONLY (no it84/42/24 substitution);
 #: MAPPO-lane = the S-MAPPOWZL final export, never aecd7d70; the transferred d9042cc5 u0 is the U0 arm.
 REQUIRED_ITERATION = {'MAPPO_SPEED': 168}
-REFUSED_SHA_PREFIXES = {'U0': (), 'MAPPO_SPEED': ('d9042cc5',), 'MAPPO_LANE': ('aecd7d70', 'd9042cc5')}
+REFUSED_SHA_PREFIXES = {'U0': (), 'MAPPO_SPEED': ('d9042cc5',), 'MAPPO_LANE': ('aecd7d70', 'd9042cc5'),
+                        'MAPPO_CT': ('d9042cc5', 'aecd7d70')}
 REQUIRED_SHA = {'U0': FROZEN_MAPPO_SHA}
 FALLBACK_SHA_PREFIX = 'd9042cc5'
 U0_LABEL = 'MAPPO u0 transferred (frozen d9042cc5 executor, zero residual)'
@@ -871,7 +884,7 @@ def allocation(cfg):
     return 'budget', ((cfg.get('budget') or {}).get('phases') or {}).get(PHASE)
 
 
-def own_reserve(final_root, jobs, phase, *, cap=None, clean_root=None, calls=None):
+def own_reserve(final_root, jobs, phase, *, cap=None, clean_root=None, calls=None, allocation=None):
     """The evaluation root's OWN ledger (<final_root>/CHARGES.jsonl): whole waves precharged before any
     dispatch; total over every phase <= ALLOCATION_SIM_S; ``cap`` bounds this phase. The clean run's
     root and ledger are never written (check_pins: a standalone experiment accounts in its own root)."""
@@ -890,8 +903,9 @@ def own_reserve(final_root, jobs, phase, *, cap=None, clean_root=None, calls=Non
         if len(set(ids)) != len(ids) or set(ids) & known:
             raise Blocked('duplicate charge/attempt')
         amount = sum(j['sim_s'] for j in jobs)
-        if sum(r['sim_s'] for r in rows)+amount > ALLOCATION_SIM_S:
-            raise Blocked(f'{PHASE} allocation {ALLOCATION_SIM_S} would be exceeded (own ledger)')
+        allocation = ALLOCATION_SIM_S if allocation is None else allocation
+        if sum(r['sim_s'] for r in rows)+amount > allocation:
+            raise Blocked(f'{PHASE} allocation {allocation} would be exceeded (own ledger)')
         if cap is not None and sum(r['sim_s'] for r in rows if r.get('phase') == phase)+amount > cap:
             raise Blocked(f'{phase} cap {cap} would be exceeded')
         with (final_root/'CHARGES.jsonl').open('a', encoding='utf-8') as f:
@@ -987,6 +1001,8 @@ def check_export(arm, sha256, meta):
             raise Blocked(f'MAPPO_SPEED is S-MAPPOWZ it168 only (export iteration {meta.get("iteration")})')
         if meta.get('lane_head'):
             raise Blocked('MAPPO_SPEED must be speed-only (export has a lane head)')
+    if arm == CT_ARM and (meta.get('lane_head') or sha256 == FROZEN_MAPPO_SHA):
+        raise Blocked('MAPPO_CT must be a speed-only export that differs from the frozen U0 executor')
     if arm == 'MAPPO_LANE' and not meta.get('lane_head'):
         raise Blocked('MAPPO_LANE must carry its lane head')
     return meta
@@ -1192,14 +1208,15 @@ def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None, update=UPD
     if arm in ARMS:
         path = root/f'{arm}_checkpoint_{int(update):03}.pt'
         checkpoint = dict(path=str(path), file_sha256=file_sha(path), update=int(update), arm=arm)
-    elif arm in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED'):
+    elif arm in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', CT_ARM):
         if u0 is None:
             raise Blocked(f'{arm} needs the U0 binding (frozen executor + zero-residual u0): bind-mappo --arm U0')
         exe = u0 if arm in ('U0', 'RULE', 'RULE_FAIR') else binding
         if exe is None:
             raise Blocked(f'{arm} executor not bound (bind-mappo --arm {arm})')
         # executor = the bound frozen/comparator export; residual = the bound zero-residual u0
-        checkpoint = dict(kind=dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator')[arm],
+        checkpoint = dict(kind=dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator',
+                                    MAPPO_CT='mappo_comparator')[arm],
                           comparator_kind=exe['kind'], label=exe['label'], executor_path=exe['path'],
                           executor_sha256=exe['sha256'], binding_sha256=exe['binding_sha256'],
                           binding_path=exe['binding_path'], path=u0['residual_path'], file_sha256=u0['residual_sha256'],
@@ -1562,7 +1579,7 @@ def _fake_vehicle_log(path, seed, arm, t0=WARMUP_S, t1=HORIZON_S):
 def fake_episode(spec, work=None):
     w, arm = spec['world'], spec['arm']
     u = _h(w['seed'], arm)/0xffffffff
-    factor = dict(NATIVE=1.06, U0=1.0, RULE=.985, RULE_FAIR=.99, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985, ORACLE=.97, ORACLE_WM=.98, LEARNED_TRIGGER=.985,
+    factor = dict(NATIVE=1.06, U0=1.0, RULE=.985, RULE_FAIR=.99, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985, ORACLE=.97, ORACLE_WM=.98, LEARNED_TRIGGER=.985, MAPPO_CT=.996,
                   B=0.975)[arm]
     record = dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='graded',
                   vehicle_log=(_fake_vehicle_log(Path(work)/VEHICLE_LOG, w['seed'], arm) if work is not None else
@@ -3219,6 +3236,26 @@ class PrerunRuntime:
         return self.inner.run(items, cfg, workers)
 
 
+class MappoCtRuntime(PrerunRuntime):
+    """Amendment 30: MAPPO_CT on the p20c bank root, own phase CT_PHASE, cap CT_CAP_SIM_S; the root allocation is
+    raised by exactly that cap (the mappo_ct line, not the amendment-28 allocation)."""
+    phase = CT_PHASE
+
+    def check_capacity(self, amount):
+        rows = fe.ledger_rows(self.final_root)
+        if sum(r['sim_s'] for r in rows if r.get('phase') == CT_PHASE)+amount > CT_CAP_SIM_S:
+            raise Blocked(f'MAPPO_CT: {CT_PHASE} cap {CT_CAP_SIM_S} would be exceeded')
+        if sum(r['sim_s'] for r in rows)+amount > ALLOCATION_SIM_S+CT_CAP_SIM_S:
+            raise Blocked(f'MAPPO_CT: root allocation {ALLOCATION_SIM_S}+{CT_CAP_SIM_S} would be exceeded')
+
+    def reserve(self, cfg, jobs):
+        try:
+            own_reserve(self.final_root, jobs, CT_PHASE, cap=CT_CAP_SIM_S, calls=self.calls,
+                        allocation=ALLOCATION_SIM_S+CT_CAP_SIM_S)
+        except Blocked as error:
+            raise Blocked(f'MAPPO_CT: {error}') from None
+
+
 class BankRuntime(PrerunRuntime):
     """Amendment 27: the bank arms (ORACLE, ORACLE_WM, LEARNED_TRIGGER) on the pre-run plant of this root, charged to
     its own ledger under phase v2v_final_bank, cap BANK_CAP_SIM_S (the allocation bound still applies)."""
@@ -3324,12 +3361,20 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=Non
         raise Blocked('PRERUN_PLAN.json missing: prerun-register first')
     if (plan['panel_sha256'], plan['panel_3c_sha256']) != (panel['panel_sha256'], panel_3c and panel_3c['panel_sha256']):
         raise Blocked('PRERUN_PLAN binds other panels')
+    ct = tuple(arms) == (CT_ARM,)
+    if CT_ARM in arms and (not ct or SETTING != 'p20c'):
+        raise Blocked('MAPPO_CT runs alone, on the p20c bank root only (amendment 30)')
     bank = set(arms) <= set(BANK_ARMS)
-    if not (set(arms) <= set(PRERUN_ARMS) or bank):
+    if not (set(arms) <= set(PRERUN_ARMS) or bank or ct):
         raise Blocked(f'pre-run arms are {PRERUN_ARMS}; bank-run arms are {BANK_ARMS}')
     if bank and SETTING == 'p20c' and not set(arms) <= set(CONFIRM_BANK_ARMS):
         raise Blocked(f'amendment 28 bank arms are {CONFIRM_BANK_ARMS} only')
-    if bank:
+    if ct:
+        pre = runtime if isinstance(runtime, MappoCtRuntime) else MappoCtRuntime(getattr(runtime, 'inner', runtime),
+                                                                                  final_root)
+        if oracle_binding(final_root) is None or mappo_binding(final_root, 'U0') is None:
+            raise Blocked('MAPPO_CT runs on the sealed amendment-28 bank root (U0 + ORACLE binding present)')
+    elif bank:
         pre = runtime if isinstance(runtime, BankRuntime) else BankRuntime(getattr(runtime, 'inner', runtime), final_root)
     else:
         pre = runtime if isinstance(runtime, PrerunRuntime) else PrerunRuntime(runtime, final_root)
@@ -3353,14 +3398,14 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=Non
         if pre.physics:
             map_check(bind_map_api(None), panel)
         u0 = mappo_binding(final_root, 'U0')
-        if {'U0', 'RULE', 'RULE_FAIR'} & set(arms) or bank:
+        if {'U0', 'RULE', 'RULE_FAIR'} & set(arms) or bank or ct:
             if u0 is None:
                 raise Blocked('bind-mappo --arm U0 (frozen d9042cc5 + --residual-path <final_root>/prerun_plant/'
                               'A_checkpoint_000.pt) before the pre-run')
             if (u0['residual_path'], u0['residual_sha256']) != (plan['u0']['path'], plan['u0']['sha256']):
                 raise Blocked('the U0 binding residual is not the pre-run u0 copy')
         waves = []
-        bound = {arm: mappo_binding(final_root, arm) for arm in arms if arm in COMPARATOR_ARMS}
+        bound = {arm: mappo_binding(final_root, arm) for arm in arms if arm in COMPARATOR_ARMS+(CT_ARM,)}
         if bank:
             oracle = oracle_binding(final_root)
             if oracle is None:
@@ -3409,7 +3454,7 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=Non
                    coverage={k: dict(published=v[0], registered=v[1]) for k, v in cov.items()},
                    receipts={k: v['receipt_sha256'] for k, v in receipts.items()},
                    charged_sim_s=sum(r['sim_s'] for r in fe.ledger_rows(final_root)),
-                   cap_sim_s=BANK_CAP_SIM_S if bank else effective_prerun_cap(final_root, plan),
+                   cap_sim_s=CT_CAP_SIM_S if ct else BANK_CAP_SIM_S if bank else effective_prerun_cap(final_root, plan),
                    resume=None if not stopped else ('remove STOP_PRERUN (or copy the whole final root to the same '
                                                     'absolute path on the other host) and run prerun-run again'))
         status(current, out['status'], out)
@@ -4054,7 +4099,7 @@ def bind_fake_mappo(out, final_root, arm='MAPPO_SPEED', residual=None):
         if arm == 'MAPPO_LANE':
             policy['lane_head.weight'] = torch.zeros(1)
         torch.save(dict(format='c4_dreamer/3', trainer='mappo', iteration=168 if arm == 'MAPPO_SPEED' else 999,
-                        lane_control='native' if arm == 'MAPPO_SPEED' else 'policy', lane_head=arm == 'MAPPO_LANE',
+                        lane_control='native' if arm in ('MAPPO_SPEED', 'MAPPO_CT') else 'policy', lane_head=arm == 'MAPPO_LANE',
                         policy=policy, note='dry-run stand-in, not a MAPPO export'), fake)
     kind = next(iter(MAPPO_KINDS[arm]))
     extra = {}
@@ -4235,6 +4280,13 @@ CONFIRM_SPECS = {
                      'from the amendment-28 u12 root of the same training CONFIG'),
                file='CONFIRM_TABLES_A29.json',
                pooling='reported separately from the u12 (amendment 28) tables; never pooled with p20x'),
+    '30': dict(update=0, bank_arms=('U0', 'LEARNED_TRIGGER', CT_ARM), labels=(),
+               contrasts=((CT_ARM, 'U0', 'PRIMARY'), ('LEARNED_TRIGGER', CT_ARM, 'SECONDARY')),
+               rule=('MAPPO_CT - U0 (the amendment-28 U0 of the same panel) paired total delay (J veh-s per world, '
+                     'whole-world bootstrap) 95% CI reported, PASS = upper < 0; secondary LEARNED_TRIGGER - MAPPO_CT; '
+                     'fairness co-criteria and CVaR90 for both. ' + CT_AUTHORITY),
+               file='CONFIRM_TABLES_A30.json',
+               pooling='same panel and U0 as amendment 28; reported separately; never pooled with p20x'),
 }
 
 
@@ -4570,7 +4622,9 @@ def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identit
     bootstrap = dict(panel['contract']['bootstrap'])
     have, sources, missing, roots = {}, {}, {}, {}
     for arm in spec_['bank_arms']:
-        specs = episode_specs(arm, panel, cfg, plant, 'mappo_frozen', oracle if arm in BANK_ARMS else None, u0)
+        specs = episode_specs(arm, panel, cfg, plant, 'mappo_frozen',
+                              oracle if arm in BANK_ARMS else mappo_binding(final_root, arm) if arm == CT_ARM else None,
+                              u0)
         records, source, covered = published(final_root, arm, specs, check_episode)
         if covered < len(specs):
             missing[arm] = f'{covered}/{len(specs)} published'
@@ -4638,7 +4692,9 @@ def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identit
                 row['plant_identity'] = identity.get(arm, {}).get('verdict')
         contrasts.append(row)
     primary = contrasts[0]
-    arms = {a: dict(label=TRAINED_ARMS.get(a) or dict(ORACLE_LABELS).get(a) or 'U0 (frozen MAPPO d9042cc5 + u0)',
+    arms = {a: dict(label=TRAINED_ARMS.get(a) or dict(ORACLE_LABELS).get(a)
+                    or (MAPPO_KINDS[CT_ARM]['u0_continued_d2800_p20_96ep'] if a == CT_ARM else None)
+                    or 'U0 (frozen MAPPO d9042cc5 + u0)',
                     mean_J_veh_s=float(np.mean([have[a][w]['J_veh_s'] for w in worlds])),
                     safety_totals={k: int(sum(have[a][w]['safety'][k] for w in worlds)) for k in SAFETY})
             for a in have}
@@ -4727,7 +4783,8 @@ def main(argv=None):
     p.add_argument('--model', help='bind-oracle: the LEARNED_TRIGGER model doc (sha 8e0ddd3e)')
     p.add_argument('--bank-arms', default=','.join(BANK_ARMS), help='bank-run: comma-separated subset of the bank arms')
     p.add_argument('--label', choices=tuple(TRAINED_ARMS), help='amendment 28: trained arm label (confirm-register)')
-    p.add_argument('--amendment', default='28', choices=('28', '29'), help='confirm-analyse: 28 (u12) or 29 (u24)')
+    p.add_argument('--amendment', default='28', choices=('28', '29', '30'),
+                   help='confirm-analyse: 28 (u12), 29 (u24 / disk-stop k) or 30 (MAPPO_CT)')
     p.add_argument('--identity-roots', help='confirm-analyse: label=<u12 identity root> for labels without their own '
                                             'identity episodes (C5DR=<C5D u12 root>; amendment 29: every label)')
     p.add_argument('--trained-roots', help='confirm-analyse: C5D=<trained root>,F8B=<trained root> (this host)')

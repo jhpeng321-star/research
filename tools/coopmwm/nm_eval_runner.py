@@ -484,8 +484,8 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     ck = spec['checkpoint']
     arm, update = ck['arm'], int(ck['update'])
     executor, loaded, rule, oracle = native['checkpoint'], None, None, None
-    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED') + ORACLE_ARMS + LEARNED_ARMS:
-        kind = dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator',
+    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS:
+        kind = dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator', MAPPO_CT='mappo_comparator',
                     ORACLE='oracle', ORACLE_WM='oracle', LEARNED_TRIGGER='learned_trigger')[spec['arm']]
         if ck.get('kind') != kind or (arm, update) != ('A', 0):
             raise ValueError(f'{spec["arm"]} arm = its bound executor + the bound common u0 (zero residual)')
@@ -1127,7 +1127,7 @@ def episode(spec, cfg, work):
         return _native_episode(spec, cfg, work)
     if spec['arm'] == 'MAPPO_LANE':
         return _mappo_lane_episode(spec, cfg, work)
-    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED') + ORACLE_ARMS + LEARNED_ARMS:
+    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS:
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
 
