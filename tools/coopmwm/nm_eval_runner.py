@@ -79,6 +79,9 @@ MAPPO_LANE = True
 #: or G5-tensor executor: tools.nm_mappo.sanity_eval resolve(config) -> wms build_env (n1_adapter.make_env with
 #: lane_writer='lcexec') -> load_actor(lane_actions=LCEXEC_LANE_ACTIONS) = LaneActor (ActorStep, deterministic)
 LANE_TRAIN_PATH = True
+#: DISTILL (draft amendment 31): STUDENT = a MAPPO_LANE-format export (BC from LEARNED_TRIGGER) run on EXACTLY the
+#: MAPPO_LANE training execution path below (lane_train_episode is arm-agnostic: the spec's bound executor is loaded)
+STUDENT_ARMS = ('STUDENT',)
 LCEXEC_LANE_ACTIONS = 'tools.nm_mappo.lane_actions:lcexec'
 LANE_TRAIN_FILES = ('tools/nm_mappo/sanity_eval.py', 'tools/nm_mappo/lane_actions.py', 'tools/nm_mappo/n1_adapter.py',
                     'src/wms/control/mappo/agent.py', 'src/wms/control/mappo/rollout.py', 'tools/coopmwm/lc_runtime.py',
@@ -1125,7 +1128,7 @@ def episode(spec, cfg, work):
     """One registered evaluation episode -> graded record (raises on any refusal/anomaly)."""
     if spec['arm'] == 'NATIVE':
         return _native_episode(spec, cfg, work)
-    if spec['arm'] == 'MAPPO_LANE':
+    if spec['arm'] in ('MAPPO_LANE',)+STUDENT_ARMS:
         return _mappo_lane_episode(spec, cfg, work)
     if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS:
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')

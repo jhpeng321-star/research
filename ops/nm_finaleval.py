@@ -69,17 +69,39 @@ ARMS = ('A', 'B', 'R')
 DECISION_ARMS = ('B', 'R')
 BASES = ('mappo_frozen', 'mappo_u0', 'native')   # clean5a: frozen S-MAPPOWZ snapshot base (A = base alone)
 ORDER = ('B', 'A', 'R', 'RULE', 'RULE_FAIR', 'ORACLE', 'ORACLE_WM', 'LEARNED_TRIGGER', 'U0', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE',
-         'MAPPO_CT')
+         'MAPPO_CT', 'STUDENT')
 #: MAIN 2026-11-06 (FAIRAUDIT F6): 7 arms; BASE is an alias (U0 for a mappo_u0 base, NATIVE for native)
 EPISODE_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_LANE', 'NATIVE', 'ORACLE', 'ORACLE_WM',
-                'LEARNED_TRIGGER', 'MAPPO_CT')
+                'LEARNED_TRIGGER', 'MAPPO_CT', 'STUDENT')
 COMPARATOR_ARMS = ('MAPPO_SPEED', 'MAPPO_LANE')        # claim 3b, one seal per comparator
 #: amendment 30 (MAIN 2026-11-09 15:29, owner-approved): U0's MAPPO speed policy continued for 96 episodes with its
 #: original objective; evaluated on the p20c bank root exactly like MAPPO_SPEED (bound export + the bound zero-residual u0)
 CT_ARM = 'MAPPO_CT'
-BOUND_ARMS = ('U0',)+COMPARATOR_ARMS+(CT_ARM,)          # executors bound by path + sha256
+#: DISTILL (draft amendment 31, 2026-11-09 night; PENDING MAIN registration before any STUDENT outcome): the STUDENT
+#: arm = a direct-output per-CAV policy (acceleration + lane head) in the MAPPO_LANE (S-MAPPOWZL) export format,
+#: behaviour-cloned from LEARNED_TRIGGER; it runs EXACTLY the MAPPO_LANE execution path (amendment 17/17c: fresh
+#: interpreter in the bound S-MAPPOWZL training tree, lcexec ActorStep LaneActor, lcexec lane writer = lcMode 513,
+#: the training env's speed mode) with only the executor file swapped; the training config and training-path
+#: manifest must be the ones bound for MAPPO_LANE. MAPPO_LANE itself (never run on p20c in amendment 28) may run in
+#: the same phase on the p20c bank root.
+STUDENT_ARM = 'STUDENT'
+DISTILL_ARMS = (STUDENT_ARM, 'MAPPO_LANE')
+LANE_PATH_ARMS = ('MAPPO_LANE', STUDENT_ARM)            # arms on the S-MAPPOWZL training execution path
+BOUND_ARMS = ('U0',)+COMPARATOR_ARMS+(CT_ARM, STUDENT_ARM)   # executors bound by path + sha256
 CT_PHASE = 'mappo_ct'
 CT_CAP_SIM_S = 192*1200                                 # the amendment-30 eval part (230,400) of the mappo_ct line
+DISTILL_PHASE = 'distill_eval'
+DISTILL_CAP_SIM_S = len(DISTILL_ARMS)*192*1200          # 230,400 per arm (STUDENT; MAPPO_LANE optional) = 460,800
+#: the registered MAPPO_LANE lane path (BOUND_MAPPO_LANE.json of the p20 / p20x r2 roots): training config file sha
+#: and the LANE_TRAIN_FILES manifest sha. STUDENT must bind the same (no other lane writer / rules / actions).
+LANE_TRAIN_CONFIG_SHA256 = '539d505acda46c93b020248a8f4090245da0c832bb39c47af5e0374fb0de4bcf'
+LANE_TRAIN_SRC_SHA256 = 'f07f37c54a68a807d6d2dffd354516e971142baa20dc14af61fa5c0bba4df5c4'
+STUDENT_TRAINERS = ('mappo', 'distill_bc')              # export 'trainer' field: same format, BC-trained weights
+STUDENT_AUTHORITY = ('DRAFT amendment 31 (DISTILL, 2026-11-09 night) - PENDING MAIN registration before any STUDENT '
+                     'outcome: STUDENT = MAPPO_LANE-format direct-output policy behaviour-cloned from LEARNED_TRIGGER, '
+                     'bound by path + sha256, run on the MAPPO_LANE training execution path; sealed on the 192-world '
+                     'p20c panel; primary STUDENT - U0; secondary STUDENT - MAPPO_CT, STUDENT - LEARNED_TRIGGER, '
+                     'STUDENT - MAPPO_LANE, MAPPO_LANE - U0; fairness groups, CVaR90, safety; budget 230,400 per arm')
 CT_AUTHORITY = ('MAIN 2026-11-09 15:29 amendment 30 (owner-approved): MAPPO_CT = U0 MAPPO speed policy + 96 episodes '
                 'of its original MAPPO objective at D2800_p20 (training seeds only); sealed on the 192-world p20c '
                 'panel against its U0; primary MAPPO_CT - U0; secondary LEARNED_TRIGGER - MAPPO_CT, fairness, CVaR90; '
@@ -87,7 +109,8 @@ CT_AUTHORITY = ('MAIN 2026-11-09 15:29 amendment 30 (owner-approved): MAPPO_CT =
 CLAIM3A_ARMS = ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'NATIVE', 'ORACLE', 'ORACLE_WM',
                 'LEARNED_TRIGGER')                       # +25b oracle bounds, +26 learned trigger
 #: records of these arms carry the executor sha actually loaded (bound executors)
-EXECUTOR_ARMS = ('U0', 'RULE', 'RULE_FAIR', 'ORACLE', 'ORACLE_WM', 'LEARNED_TRIGGER')+COMPARATOR_ARMS+('MAPPO_CT',)
+EXECUTOR_ARMS = ('U0', 'RULE', 'RULE_FAIR', 'ORACLE', 'ORACLE_WM', 'LEARNED_TRIGGER')+COMPARATOR_ARMS+('MAPPO_CT',
+                                                                                                   STUDENT_ARM)
 RULE_ARMS = ('RULE', 'RULE_FAIR')
 #: amendments 25 + 25b (MAIN 2026-11-09 00:06, pre-outcome): privileged upper bounds, NOT deployable. Both = U0 (bound
 #: u0 executor, A/0) + oracle_plan on the frozen end-of-training bank (CLEAN5C5 final-update snapshot, bound only
@@ -182,12 +205,17 @@ MAPPO_KINDS = {
     'MAPPO_SPEED': {'retrained_wz3to2_it168': 'speed-only MAPPO retrained on wz3to2 (S-MAPPOWZ it168)'},
     'MAPPO_LANE': {'lane_retrained_wz3to2_final': 'lane-capable MAPPO retrained on wz3to2 (S-MAPPOWZL final)'},
     'MAPPO_CT': {'u0_continued_d2800_p20_96ep': 'U0 MAPPO speed policy continued 96 episodes, original objective '
-                                                '(amendment 30)'}}
+                                                '(amendment 30)'},
+    'STUDENT': {'distill_bc_learned_trigger': 'DISTILL student: MAPPO_LANE-format direct-output policy (accel + lane), '
+                                              'behaviour-cloned from LEARNED_TRIGGER (draft amendment 31)'}}
 #: MAIN 2026-11-06 registered binding: MAPPO-speed = S-MAPPOWZ it168 ONLY (no it84/42/24 substitution);
 #: MAPPO-lane = the S-MAPPOWZL final export, never aecd7d70; the transferred d9042cc5 u0 is the U0 arm.
 REQUIRED_ITERATION = {'MAPPO_SPEED': 168}
 REFUSED_SHA_PREFIXES = {'U0': (), 'MAPPO_SPEED': ('d9042cc5',), 'MAPPO_LANE': ('aecd7d70', 'd9042cc5'),
-                        'MAPPO_CT': ('d9042cc5', 'aecd7d70')}
+                        'MAPPO_CT': ('d9042cc5', 'aecd7d70'),
+                        # STUDENT is a new export: never a comparator executor (U0 trunk, v5 lane-on, S-MAPPOWZL it48,
+                        # MAPPO_CT u12)
+                        'STUDENT': ('d9042cc5', 'aecd7d70', 'd13cd2f7', '069a4f85')}
 REQUIRED_SHA = {'U0': FROZEN_MAPPO_SHA}
 FALLBACK_SHA_PREFIX = 'd9042cc5'
 U0_LABEL = 'MAPPO u0 transferred (frozen d9042cc5 executor, zero residual)'
@@ -994,7 +1022,7 @@ def check_export(arm, sha256, meta):
         raise Blocked(f'{arm} never substitutes {sha256[:8]} (registered binding)')
     if arm in REQUIRED_SHA and sha256 != REQUIRED_SHA[arm]:
         raise Blocked(f'{arm} is the frozen {REQUIRED_SHA[arm][:8]} executor only')
-    if meta.get('trainer') != 'mappo':
+    if meta.get('trainer') != 'mappo' and not (arm == STUDENT_ARM and meta.get('trainer') in STUDENT_TRAINERS):
         raise Blocked(f'{arm} must be a mappo export')
     if arm == 'MAPPO_SPEED':
         if meta.get('iteration') != REQUIRED_ITERATION[arm]:
@@ -1003,8 +1031,10 @@ def check_export(arm, sha256, meta):
             raise Blocked('MAPPO_SPEED must be speed-only (export has a lane head)')
     if arm == CT_ARM and (meta.get('lane_head') or sha256 == FROZEN_MAPPO_SHA):
         raise Blocked('MAPPO_CT must be a speed-only export that differs from the frozen U0 executor')
-    if arm == 'MAPPO_LANE' and not meta.get('lane_head'):
-        raise Blocked('MAPPO_LANE must carry its lane head')
+    if arm in LANE_PATH_ARMS and not meta.get('lane_head'):
+        raise Blocked(f'{arm} must carry its lane head')
+    if arm == STUDENT_ARM and (meta.get('format') != 'c4_dreamer/3' or meta.get('lane_control') not in (None, 'learned')):
+        raise Blocked('STUDENT must be a c4_dreamer/3 export with a learned lane head (the MAPPO_LANE format)')
     return meta
 
 
@@ -1046,9 +1076,9 @@ def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', 
         meta = dict(check_export(arm, REQUIRED_SHA[arm], meta), dry_run_stand_in=True)
     else:
         meta = check_export(arm, sha256, meta)
-    if arm == 'MAPPO_LANE':          # amendment 17: the S-MAPPOWZL training execution path (tree manifest bound)
+    if arm in LANE_PATH_ARMS:        # amendment 17: the S-MAPPOWZL training execution path (tree manifest bound)
         if train_config is None or train_src is None:
-            raise Blocked('MAPPO_LANE needs --train-config and --train-src (its training source tree)')
+            raise Blocked(f'{arm} needs --train-config and --train-src (the S-MAPPOWZL training source tree)')
         from tools.coopmwm.nm_eval_runner import LANE_TRAIN_FILES
         missing = [f for f in LANE_TRAIN_FILES if not (Path(train_src)/f).is_file()]
         if missing:
@@ -1056,6 +1086,14 @@ def bind_mappo(*, final_root, path, sha256, kind, authority, arm='MAPPO_SPEED', 
         manifest = {f: file_sha(Path(train_src)/f) for f in LANE_TRAIN_FILES}
         residual = dict(residual or {}, train_src=str(train_src), train_src_files=manifest,
                         train_src_sha256=hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest())
+    if arm == STUDENT_ARM:           # DISTILL: exactly the MAPPO_LANE lane path, only the executor differs
+        lane = mappo_binding(final_root, 'MAPPO_LANE')
+        want = ((lane['train_config_sha256'], lane['train_src_sha256']) if lane is not None else
+                (None, None) if dry_run else (LANE_TRAIN_CONFIG_SHA256, LANE_TRAIN_SRC_SHA256))
+        got = (residual['train_config_sha256'], residual['train_src_sha256'])
+        if want != (None, None) and got != want:
+            raise Blocked(f'STUDENT must bind the MAPPO_LANE training config + training-path manifest '
+                          f'{[w[:8] for w in want]}, got {[g[:8] for g in got]}')
     if declared_unavailable(final_root, arm) is not None:
         raise Blocked(f'{arm} was declared unavailable; that declaration stands')
     if _wave_started(final_root, arm):
@@ -1227,12 +1265,13 @@ def episode_specs(arm, panel, cfg, root, base, binding=None, u0=None, update=UPD
         if arm == 'RULE_FAIR':
             checkpoint.update(rule=RULE_FAIR_STRATEGY, rule_sha256=RULE_FAIR_SHA256,
                               rule_module='tools.coopmwm.regimeu0_multicrit', rule_source='c4/multicrit 4ff09522')
-    elif arm == 'MAPPO_LANE':
+    elif arm in LANE_PATH_ARMS:
         if binding is None:
-            raise Blocked('MAPPO_LANE comparator not bound (bind-mappo --arm MAPPO_LANE)')
+            raise Blocked(f'{arm} comparator not bound (bind-mappo --arm {arm})')
         if not binding.get('train_src') or not binding.get('train_config'):
-            raise Blocked('MAPPO_LANE runs only on its training path: bind with --train-config and --train-src')
-        checkpoint = dict(kind='mappo_lane', comparator_kind=binding['kind'], label=binding['label'],
+            raise Blocked(f'{arm} runs only on its training path: bind with --train-config and --train-src')
+        checkpoint = dict(kind='mappo_lane' if arm == 'MAPPO_LANE' else 'student_lane',
+                          comparator_kind=binding['kind'], label=binding['label'],
                           executor_path=binding['path'], executor_sha256=binding['sha256'],
                           binding_sha256=binding['binding_sha256'], binding_path=binding['binding_path'],
                           train_config=binding['train_config'], train_config_sha256=binding['train_config_sha256'],
@@ -1465,11 +1504,14 @@ class Runtime:
             module = importlib.import_module(self.runner)
         except ImportError as error:
             return dict(ok=False, reason=f'{self.runner} not importable: {error!r}', native=False, decisions=False,
-                        lane=False, rule=False, rule_fair=False, parity=False, oracle=False, learned=False)
+                        lane=False, student=False, rule=False, rule_fair=False, parity=False, oracle=False,
+                        learned=False)
         ok = getattr(module, 'MAP', None) == MAP and callable(getattr(module, 'episode', None))
         return dict(ok=ok, native=ok and getattr(module, 'NATIVE', True) is not False,
                     decisions=ok and callable(getattr(module, 'decision_branch', None)),
                     lane=ok and getattr(module, 'LANE_TRAIN_PATH', False) is True,
+                    student=ok and getattr(module, 'LANE_TRAIN_PATH', False) is True
+                    and STUDENT_ARM in getattr(module, 'STUDENT_ARMS', ()),
                     rule=ok and getattr(module, 'RULE', False) is True and RULE_STRATEGY in getattr(module, 'RULE_STRATEGIES', ())
                     and importlib.util.find_spec(RULE_MODULE) is not None,
                     rule_fair=ok and 'wall_g_solo2' in getattr(module, 'RULE_STRATEGIES', ())
@@ -1580,6 +1622,7 @@ def fake_episode(spec, work=None):
     w, arm = spec['world'], spec['arm']
     u = _h(w['seed'], arm)/0xffffffff
     factor = dict(NATIVE=1.06, U0=1.0, RULE=.985, RULE_FAIR=.99, MAPPO_SPEED=.995, MAPPO_LANE=.993, A=0.99, R=0.985, ORACLE=.97, ORACLE_WM=.98, LEARNED_TRIGGER=.985, MAPPO_CT=.996,
+                  STUDENT=.988,
                   B=0.975)[arm]
     record = dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='graded',
                   vehicle_log=(_fake_vehicle_log(Path(work)/VEHICLE_LOG, w['seed'], arm) if work is not None else
@@ -1660,7 +1703,7 @@ def fake_parity(spec):
     trace = []
     for t in range(300, spec['sim_s']):
         cav = {f'main.{j}': [round(-1500.+j*40+(t-300)*20., 4), 20., j % 3, round(-.5+(_h(seed, j, t) % 100)/100., 4),
-                             (j % 3 if spec['arm'] == 'MAPPO_LANE' else None)] for j in range(5)}
+                             (j % 3 if spec['arm'] in LANE_PATH_ARMS else None)] for j in range(5)}
         trace.append(dict(t=t, n=9, cav=cav))
     return dict({k: deepcopy(spec[k]) for k in IDENTITY}, status='traced', kind='parity', path=spec['path'],
                 trace=trace, executor_sha256_loaded=spec['checkpoint']['executor_sha256'],
@@ -1674,7 +1717,7 @@ class FakeRuntime:
     def __init__(self, runner=None):
         self.calls = []
         # decisions=False like the real runner (F7 not built, MAIN decision); tests may switch branches on
-        self.status = dict(dict(ok=True, native=True, decisions=False, lane=True, rule=True, rule_fair=True, parity=True,
+        self.status = dict(dict(ok=True, native=True, decisions=False, lane=True, student=True, rule=True, rule_fair=True, parity=True,
                                 reason=None),
                            **(runner or {}))
 
@@ -3256,6 +3299,36 @@ class MappoCtRuntime(PrerunRuntime):
             raise Blocked(f'MAPPO_CT: {error}') from None
 
 
+class DistillRuntime(PrerunRuntime):
+    """DISTILL (draft amendment 31): STUDENT (and optionally MAPPO_LANE) on the p20c bank root, own phase
+    DISTILL_PHASE, cap DISTILL_CAP_SIM_S; the root allocation is raised by exactly the amendment-30 and DISTILL caps."""
+    phase = DISTILL_PHASE
+
+    def check_capacity(self, amount):
+        rows = fe.ledger_rows(self.final_root)
+        if sum(r['sim_s'] for r in rows if r.get('phase') == DISTILL_PHASE)+amount > DISTILL_CAP_SIM_S:
+            raise Blocked(f'DISTILL: {DISTILL_PHASE} cap {DISTILL_CAP_SIM_S} would be exceeded')
+        if sum(r['sim_s'] for r in rows)+amount > ALLOCATION_SIM_S+CT_CAP_SIM_S+DISTILL_CAP_SIM_S:
+            raise Blocked('DISTILL: root allocation would be exceeded')
+
+    def reserve(self, cfg, jobs):
+        try:
+            own_reserve(self.final_root, jobs, DISTILL_PHASE, cap=DISTILL_CAP_SIM_S, calls=self.calls,
+                        allocation=ALLOCATION_SIM_S+CT_CAP_SIM_S+DISTILL_CAP_SIM_S)
+        except Blocked as error:
+            raise Blocked(f'DISTILL: {error}') from None
+
+
+def check_lane_runner(binding, runner=None):
+    """The lane-path subprocess imports tools.coopmwm.nm_eval_runner from the bound training tree: it must be
+    byte-identical to this launcher's runner (the p20c eval range 993100-993299 is installed at its import)."""
+    mine = Path(importlib.import_module(runner or RUNNER).__file__)
+    theirs = Path(binding['train_src'])/'tools/coopmwm/nm_eval_runner.py'
+    if not theirs.is_file() or file_sha(theirs) != file_sha(mine):
+        raise Blocked(f'{theirs} must be a byte copy of the launcher runner {mine} (stage the training tree first)')
+    return file_sha(mine)
+
+
 class BankRuntime(PrerunRuntime):
     """Amendment 27: the bank arms (ORACLE, ORACLE_WM, LEARNED_TRIGGER) on the pre-run plant of this root, charged to
     its own ledger under phase v2v_final_bank, cap BANK_CAP_SIM_S (the allocation bound still applies)."""
@@ -3364,8 +3437,11 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=Non
     ct = tuple(arms) == (CT_ARM,)
     if CT_ARM in arms and (not ct or SETTING != 'p20c'):
         raise Blocked('MAPPO_CT runs alone, on the p20c bank root only (amendment 30)')
+    distill = SETTING == 'p20c' and bool(arms) and set(arms) <= set(DISTILL_ARMS)
+    if STUDENT_ARM in arms and not distill:
+        raise Blocked('STUDENT runs on the p20c bank root only, alone or with MAPPO_LANE (DISTILL)')
     bank = set(arms) <= set(BANK_ARMS)
-    if not (set(arms) <= set(PRERUN_ARMS) or bank or ct):
+    if not (set(arms) <= set(PRERUN_ARMS) or bank or ct or distill):
         raise Blocked(f'pre-run arms are {PRERUN_ARMS}; bank-run arms are {BANK_ARMS}')
     if bank and SETTING == 'p20c' and not set(arms) <= set(CONFIRM_BANK_ARMS):
         raise Blocked(f'amendment 28 bank arms are {CONFIRM_BANK_ARMS} only')
@@ -3374,6 +3450,11 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=Non
                                                                                   final_root)
         if oracle_binding(final_root) is None or mappo_binding(final_root, 'U0') is None:
             raise Blocked('MAPPO_CT runs on the sealed amendment-28 bank root (U0 + ORACLE binding present)')
+    elif distill:
+        pre = runtime if isinstance(runtime, DistillRuntime) else DistillRuntime(getattr(runtime, 'inner', runtime),
+                                                                                  final_root)
+        if oracle_binding(final_root) is None or mappo_binding(final_root, 'U0') is None:
+            raise Blocked('DISTILL runs on the sealed amendment-28 bank root (U0 + ORACLE binding present)')
     elif bank:
         pre = runtime if isinstance(runtime, BankRuntime) else BankRuntime(getattr(runtime, 'inner', runtime), final_root)
     else:
@@ -3392,6 +3473,7 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=Non
             raise Blocked('set COOPMWM_MAP_SPEC to the staged wz3to2 MAP_SPEC.json (N1 process map) before physics')
         if not runner['ok'] or ('NATIVE' in arms and not runner['native']) or ('RULE' in arms and not runner.get('rule')) \
                 or ('RULE_FAIR' in arms and not runner.get('rule_fair')) or ('MAPPO_LANE' in arms and not runner.get('lane')) \
+                or (STUDENT_ARM in arms and not runner.get('student')) \
                 or (set(ORACLE_ARMS) & set(arms) and not runner.get('oracle')) \
                 or (set(LEARNED_ARMS) & set(arms) and not runner.get('learned')):
             raise Blocked(f'runner cannot run the pre-run arms: {runner}')
@@ -3405,7 +3487,7 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=Non
             if (u0['residual_path'], u0['residual_sha256']) != (plan['u0']['path'], plan['u0']['sha256']):
                 raise Blocked('the U0 binding residual is not the pre-run u0 copy')
         waves = []
-        bound = {arm: mappo_binding(final_root, arm) for arm in arms if arm in COMPARATOR_ARMS+(CT_ARM,)}
+        bound = {arm: mappo_binding(final_root, arm) for arm in arms if arm in COMPARATOR_ARMS+(CT_ARM, STUDENT_ARM)}
         if bank:
             oracle = oracle_binding(final_root)
             if oracle is None:
@@ -3414,6 +3496,9 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=Non
         for arm in arms:
             if arm in bound and bound[arm] is None:
                 raise Blocked(f'{arm} pre-run needs its binding first (bind-mappo --arm {arm})')
+        if distill and pre.physics:
+            for arm in arms:
+                check_lane_runner(bound[arm], getattr(getattr(pre, 'inner', pre), 'runner', None))
         for arm in arms:
             waves.append((arm, 'episode', episode_specs(arm, panel, cfg, plant, 'mappo_frozen', bound.get(arm), u0)))
         for arm in arms if panel_3c is not None else ():      # amendment 23b: a root may hold one panel only
@@ -3454,7 +3539,8 @@ def prerun_execute(*, final_root, runtime, panel, panel_3c, workers=16, arms=Non
                    coverage={k: dict(published=v[0], registered=v[1]) for k, v in cov.items()},
                    receipts={k: v['receipt_sha256'] for k, v in receipts.items()},
                    charged_sim_s=sum(r['sim_s'] for r in fe.ledger_rows(final_root)),
-                   cap_sim_s=CT_CAP_SIM_S if ct else BANK_CAP_SIM_S if bank else effective_prerun_cap(final_root, plan),
+                   cap_sim_s=(CT_CAP_SIM_S if ct else DISTILL_CAP_SIM_S if distill else BANK_CAP_SIM_S if bank
+                              else effective_prerun_cap(final_root, plan)),
                    resume=None if not stopped else ('remove STOP_PRERUN (or copy the whole final root to the same '
                                                     'absolute path on the other host) and run prerun-run again'))
         status(current, out['status'], out)
@@ -4096,21 +4182,25 @@ def bind_fake_mappo(out, final_root, arm='MAPPO_SPEED', residual=None):
     fake = Path(out)/f'fake_{arm.lower()}_wz3to2.pt'
     if not fake.exists():
         policy = {'actor.0.weight': torch.zeros(1)}
-        if arm == 'MAPPO_LANE':
+        if arm in LANE_PATH_ARMS:
             policy['lane_head.weight'] = torch.zeros(1)
-        torch.save(dict(format='c4_dreamer/3', trainer='mappo', iteration=168 if arm == 'MAPPO_SPEED' else 999,
-                        lane_control='native' if arm in ('MAPPO_SPEED', 'MAPPO_CT') else 'policy', lane_head=arm == 'MAPPO_LANE',
+        torch.save(dict(format='c4_dreamer/3', trainer='distill_bc' if arm == STUDENT_ARM else 'mappo',
+                        iteration=168 if arm == 'MAPPO_SPEED' else 999,
+                        lane_control=('native' if arm in ('MAPPO_SPEED', 'MAPPO_CT') else
+                                      None if arm == STUDENT_ARM else 'policy'),
+                        lane_head=arm in LANE_PATH_ARMS,
                         policy=policy, note='dry-run stand-in, not a MAPPO export'), fake)
     kind = next(iter(MAPPO_KINDS[arm]))
     extra = {}
     if arm == 'U0':
         extra = dict(residual_path=str(residual), residual_sha256=file_sha(residual))
     else:                                    # dry run: a stand-in training config for the F11 path
-        config = Path(out)/f'fake_{arm.lower()}_train_config.toml'
+        # STUDENT shares the MAPPO_LANE training config + tree (the lane path), exactly as the real binding
+        config = Path(out)/f'fake_{("MAPPO_LANE" if arm == STUDENT_ARM else arm).lower()}_train_config.toml'
         if not config.exists():
-            config.write_text(f'# dry-run stand-in for the {arm} training run config' + chr(10), encoding='utf-8')
+            config.write_text(f'# dry-run stand-in for the {config.stem} training run config' + chr(10), encoding='utf-8')
         extra = dict(train_config=config)
-        if arm == 'MAPPO_LANE':              # dry run: a stand-in training source tree (amendment 17)
+        if arm in LANE_PATH_ARMS:            # dry run: a stand-in training source tree (amendment 17)
             from tools.coopmwm.nm_eval_runner import LANE_TRAIN_FILES
             src = Path(out)/'fake_mappo_lane_train_src'
             for f in LANE_TRAIN_FILES:
@@ -4119,7 +4209,8 @@ def bind_fake_mappo(out, final_root, arm='MAPPO_SPEED', residual=None):
                     (src/f).write_text('# dry-run stand-in' + chr(10), encoding='utf-8')
             extra['train_src'] = src
     return bind_mappo(final_root=final_root, path=fake, sha256=file_sha(fake), kind=kind, arm=arm,
-                      authority='DRY RUN ONLY - not N7', check=dict(status='dry run'), dry_run=arm in REQUIRED_SHA,
+                      authority='DRY RUN ONLY - not N7', check=dict(status='dry run'),
+                      dry_run=arm in REQUIRED_SHA or arm == STUDENT_ARM,
                       **extra)
 
 
@@ -4165,6 +4256,60 @@ def dry_run(*, out, panel, base='mappo_frozen', replicated=True, prerun=True):
                 fake_v2v_final_sim_s=charged, quote=plan['quote'], prerun=pre,
                 fake_prerun_sim_s=sum(r['sim_s'] for r in fe.ledger_rows(final_root) if r['phase'] == PRERUN_PHASE),
                 tables=sorted(str(x) for x in final_root.glob('CLAIM3*_TABLES_u*.md')))
+
+
+def distill_dry_run(*, out, panel):
+    """DISTILL wiring proof, FAKE physics, writes only under ``out`` (p20c only): a stand-in bank root reproducing the
+    amendment-28/30 layout (U0 pre-run, ORACLE_WM + LEARNED_TRIGGER bank-run, MAPPO_CT), then bind-mappo STUDENT (and
+    the MAPPO_LANE stand-in) -> bank-run STUDENT,MAPPO_LANE -> confirm-analyse 31. Zero SUMO; no real result is read."""
+    global LEARNED_MODEL_SHA256
+    _need_p20c()
+    out = guard(Path(out))
+    if out.exists() and any(out.iterdir()):
+        raise Blocked('distill dry-run output directory must be empty')
+    out.mkdir(parents=True, exist_ok=True)
+    root, cfg = build_fake_root(out/'dry', panel, 'mappo_frozen')
+    runtime, bank_root = FakeRuntime(dict(oracle=True, learned=True)), out/'dry'/'final_root'
+    prerun_register(final_root=bank_root, plant_config=root/'CONFIG.json', u0_path=root/'A_checkpoint_000.pt',
+                    u0_sha256=cfg['common_checkpoint_sha256'], runtime=runtime, panel=panel, panel_3c=None,
+                    authority='DISTILL DRY RUN ONLY')
+    bind_fake_mappo(out/'dry', bank_root, 'U0', residual=bank_root/PRERUN_PLANT/'A_checkpoint_000.pt')
+    bind_fake_mappo(out/'dry', bank_root, 'MAPPO_LANE')
+    if prerun_logcheck(final_root=bank_root, runtime=runtime, panel=panel)['verdict'] != 'PASS':
+        raise Blocked('distill dry-run logcheck failed')
+    steps = dict(u0=prerun_execute(final_root=bank_root, runtime=runtime, panel=panel, panel_3c=None, workers=8))
+    bank, model = out/'fake_bank.json', out/'fake_learned_model.json'
+    bank.write_text('{"dry": 1}', encoding='utf-8')
+    model.write_text('{}', encoding='utf-8')
+    saved, LEARNED_MODEL_SHA256 = LEARNED_MODEL_SHA256, file_sha(model)
+    try:
+        bind_oracle(final_root=bank_root, bank_path=bank, model_path=model, authority='DISTILL DRY RUN ONLY')
+        steps['bank'] = prerun_execute(final_root=bank_root, runtime=runtime, panel=panel, panel_3c=None,
+                                       arms=CONFIRM_BANK_ARMS, workers=8)
+        (out/'ct').mkdir()
+        bind_fake_mappo(out/'ct', bank_root, CT_ARM)
+        steps['mappo_ct'] = prerun_execute(final_root=bank_root, runtime=runtime, panel=panel, panel_3c=None,
+                                           arms=(CT_ARM,), workers=8)
+        student = bind_fake_mappo(out/'dry', bank_root, STUDENT_ARM)
+        steps['distill'] = prerun_execute(final_root=bank_root, runtime=runtime, panel=panel, panel_3c=None,
+                                          arms=DISTILL_ARMS, workers=8)
+        tables = confirm_analyse(final_root=bank_root, panel=panel, amendment='31', trained_roots={})
+    finally:
+        LEARNED_MODEL_SHA256 = saved
+    rows = fe.ledger_rows(bank_root)
+    return dict(status='PASS', physics=False, new_sim_s=0, out=str(out), bank_root=str(bank_root),
+                student_binding=dict(kind=student['kind'], sha256=student['sha256'],
+                                     train_config_sha256=student['train_config_sha256'],
+                                     train_src_sha256=student['train_src_sha256']),
+                steps={k: dict(status=v['status'], coverage=v['coverage'], cap_sim_s=v['cap_sim_s'])
+                       for k, v in steps.items()},
+                fake_charged_by_phase={ph: sum(r['sim_s'] for r in rows if r.get('phase') == ph)
+                                       for ph in sorted({r.get('phase') for r in rows})},
+                analysis=dict(file=str(bank_root/'CONFIRM_TABLES_A31.json'), sha256=tables['analysis_sha256'],
+                              primary=tables['primary'], missing=tables['missing'],
+                              contrasts=[f"{c['treatment']} - {c['reference']} ({c['role']})" for c in tables['contrasts']],
+                              keys_per_contrast=sorted(tables['contrasts'][0])),
+                note='FAKE physics: the numbers are stand-ins, not outcomes')
 
 
 # ---------------------------------------------------------------- CLI
@@ -4287,7 +4432,31 @@ CONFIRM_SPECS = {
                      'fairness co-criteria and CVaR90 for both. ' + CT_AUTHORITY),
                file='CONFIRM_TABLES_A30.json',
                pooling='same panel and U0 as amendment 28; reported separately; never pooled with p20x'),
+    #: DISTILL (draft amendment 31; register before any STUDENT outcome). MAPPO_LANE contrasts are 'unavailable'
+    #: unless MAPPO_LANE is bound and run on this root.
+    '31': dict(update=0, bank_arms=('U0', 'LEARNED_TRIGGER', CT_ARM)+DISTILL_ARMS, labels=(),
+               contrasts=((STUDENT_ARM, 'U0', 'PRIMARY'), (STUDENT_ARM, CT_ARM, 'SECONDARY'),
+                          (STUDENT_ARM, 'LEARNED_TRIGGER', 'SECONDARY'), (STUDENT_ARM, 'MAPPO_LANE', 'SECONDARY'),
+                          ('MAPPO_LANE', 'U0', 'SECONDARY')),
+               rule=('STUDENT - U0 (the amendment-28 U0 of the same panel) paired total delay (J veh-s per world, '
+                     'whole-world bootstrap) 95% CI reported, PASS = upper < 0; secondary STUDENT - MAPPO_CT, '
+                     'STUDENT - LEARNED_TRIGGER (the teacher), STUDENT - MAPPO_LANE, MAPPO_LANE - U0; fairness '
+                     'co-criteria, CVaR90 and safety (hard brakes, collisions, teleports, TTC events) for each. '
+                     + STUDENT_AUTHORITY),
+               file='CONFIRM_TABLES_A31.json', safety_contrasts=True,
+               pooling='same panel and U0 as amendment 28; reported separately; never pooled with p20x'),
 }
+
+
+def _safety_contrast(have, worlds, arm, ref):
+    """Per-contrast safety: panel totals of each counter and the per-world paired difference summary."""
+    out = {}
+    for k in SAFETY:
+        x = np.array([have[arm][w]['safety'][k] for w in worlds], float)
+        y = np.array([have[ref][w]['safety'][k] for w in worlds], float)
+        out[k] = dict(treatment_total=int(x.sum()), reference_total=int(y.sum()), diff_total=int((x-y).sum()),
+                      worlds_treatment_worse=int((x > y).sum()), worlds_treatment_better=int((x < y).sum()))
+    return out
 
 
 def _need_p20c():
@@ -4622,9 +4791,12 @@ def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identit
     bootstrap = dict(panel['contract']['bootstrap'])
     have, sources, missing, roots = {}, {}, {}, {}
     for arm in spec_['bank_arms']:
-        specs = episode_specs(arm, panel, cfg, plant, 'mappo_frozen',
-                              oracle if arm in BANK_ARMS else mappo_binding(final_root, arm) if arm == CT_ARM else None,
-                              u0)
+        bound_ = (oracle if arm in BANK_ARMS else
+                  mappo_binding(final_root, arm) if arm in (CT_ARM,)+DISTILL_ARMS else None)
+        if arm in (CT_ARM,)+DISTILL_ARMS and bound_ is None:
+            missing[arm] = 'not bound'
+            continue
+        specs = episode_specs(arm, panel, cfg, plant, 'mappo_frozen', bound_, u0)
         records, source, covered = published(final_root, arm, specs, check_episode)
         if covered < len(specs):
             missing[arm] = f'{covered}/{len(specs)} published'
@@ -4690,14 +4862,20 @@ def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identit
             row['ci95_upper_below_0'] = row['total_lower']
             if ref == 'U0' and arm in TRAINED_ARMS:
                 row['plant_identity'] = identity.get(arm, {}).get('verdict')
+            if spec_.get('safety_contrasts'):
+                row['safety'] = _safety_contrast(have, worlds, arm, ref)
         contrasts.append(row)
     primary = contrasts[0]
     arms = {a: dict(label=TRAINED_ARMS.get(a) or dict(ORACLE_LABELS).get(a)
                     or (MAPPO_KINDS[CT_ARM]['u0_continued_d2800_p20_96ep'] if a == CT_ARM else None)
+                    or (next(iter(MAPPO_KINDS[a].values())) + (' - '+MAPPO_LANE_OOD if a == 'MAPPO_LANE' and MAPPO_LANE_OOD
+                                                               else '') if a in DISTILL_ARMS else None)
                     or 'U0 (frozen MAPPO d9042cc5 + u0)',
                     mean_J_veh_s=float(np.mean([have[a][w]['J_veh_s'] for w in worlds])),
                     safety_totals={k: int(sum(have[a][w]['safety'][k] for w in worlds)) for k in SAFETY})
             for a in have}
+    for a in [x for x in DISTILL_ARMS if x in have]:
+        arms[a]['executor_sha256'] = mappo_binding(final_root, a)['sha256']
     for a in [x for x in CONFIRM_BANK_ARMS if x in spec_['bank_arms']]:
         if a in have:
             receipts = [have[a][w].get('oracle') or have[a][w].get('learned_trigger') or {} for w in worlds]
@@ -4739,7 +4917,8 @@ def main(argv=None):
                                        'prerun-envparity', 'envparity-assess', 'host-identity',
                                        'bind-mappo', 'declare-unavailable', 'run', 'analyse', 'dry-run',
                                        'bind-oracle', 'bank-run', 'bank-analyse',
-                                       'confirm-register', 'bind-trained', 'confirm-run', 'confirm-analyse'))
+                                       'confirm-register', 'bind-trained', 'confirm-run', 'confirm-analyse',
+                                       'distill-dry-run'))
     p.add_argument('--setting', choices=('p60',)+tuple(SETTINGS), default=os.environ.get('NM_SETTING', 'p60'),
                    help='evaluation setting (amendment 22): p60 = the registered default; p20 = the 20%% CAV panels')
     p.add_argument('--root', default=None)
@@ -4781,10 +4960,12 @@ def main(argv=None):
     p.add_argument('--bank', help='bind-oracle: the common bank doc (ORACLE_WM, LEARNED_TRIGGER, applicability labels)')
     p.add_argument('--oracle-bank', help='bind-oracle: the ORACLE (union) bank doc override (amendment 27)')
     p.add_argument('--model', help='bind-oracle: the LEARNED_TRIGGER model doc (sha 8e0ddd3e)')
-    p.add_argument('--bank-arms', default=','.join(BANK_ARMS), help='bank-run: comma-separated subset of the bank arms')
+    p.add_argument('--bank-arms', default=','.join(BANK_ARMS),
+                   help='bank-run: comma-separated subset of the bank arms; p20c also MAPPO_CT alone (amendment 30) or '
+                        'STUDENT[,MAPPO_LANE] (DISTILL)')
     p.add_argument('--label', choices=tuple(TRAINED_ARMS), help='amendment 28: trained arm label (confirm-register)')
-    p.add_argument('--amendment', default='28', choices=('28', '29', '30'),
-                   help='confirm-analyse: 28 (u12), 29 (u24 / disk-stop k) or 30 (MAPPO_CT)')
+    p.add_argument('--amendment', default='28', choices=('28', '29', '30', '31'),
+                   help='confirm-analyse: 28 (u12), 29 (u24 / disk-stop k), 30 (MAPPO_CT) or 31 (DISTILL STUDENT)')
     p.add_argument('--identity-roots', help='confirm-analyse: label=<u12 identity root> for labels without their own '
                                             'identity episodes (C5DR=<C5D u12 root>; amendment 29: every label)')
     p.add_argument('--trained-roots', help='confirm-analyse: C5D=<trained root>,F8B=<trained root> (this host)')
@@ -4838,6 +5019,8 @@ def main(argv=None):
         panel = load_panel(a.panel)
         if a.command == 'dry-run':
             result = dry_run(out=a.out, panel=panel, base=a.base or 'mappo_frozen')
+        elif a.command == 'distill-dry-run':
+            result = distill_dry_run(out=a.out, panel=panel)
         elif a.command == 'check':
             result = check(root=a.root, final_root=a.final_root, runtime=runtime_(), panel=panel,
                            map_module=a.map_api, update=a.update)
