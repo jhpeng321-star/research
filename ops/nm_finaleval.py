@@ -4267,10 +4267,14 @@ def confirm_register(*, root, final_root, runtime, panel, label, authority):
         raise Blocked('authority required')
     cfg = runtime.config(root)
     nm_ = cfg.get('newmap') if isinstance(cfg.get('newmap'), dict) else {}
-    try:
-        same_cell = _cell_key(nm_.get('cell') or {}) == _cell_key(panel['cell'])
-    except (KeyError, TypeError, ValueError, AttributeError, StopIteration):
-        same_cell = False
+    cell = nm_.get('cell')
+    if isinstance(cell, list):                 # clean5 p20 CONFIGs: the list of training cell keys
+        same_cell = cell == [panel['cell']['cell_key']]
+    else:
+        try:
+            same_cell = _cell_key(cell or {}) == _cell_key(panel['cell'])
+        except (KeyError, TypeError, ValueError, AttributeError, StopIteration):
+            same_cell = False
     if nm_.get('map') != MAP or not same_cell:
         raise Blocked(f'training CONFIG map/cell {nm_.get("map")}/{nm_.get("cell")} is not the panel D2800_p20 cell')
     if nm_.get('base_controller') not in BASES:

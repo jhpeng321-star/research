@@ -1555,6 +1555,16 @@ def test_p20c_panel_is_192_fresh_eval_only_worlds_disjoint_from_p20x(p20c):
 
 def _trained_root(tmp_path, panel, name):
     root, cfg = nm.build_fake_root(tmp_path/name, panel, 'mappo_frozen')
+    if name == 'f8b':                          # the clean5 p20 CONFIG form: a list of training cell keys
+        cfg['newmap']['cell'] = ['D2800_p20']
+        (root/'CONFIG.json').unlink()
+        nm.publish(root/'CONFIG.json', cfg)
+        for u in range(1, nm.UPDATE+1):
+            path = root/f'LEARNING_MONITOR_u{u:03}.json'
+            row = json.loads(path.read_text())
+            row.pop('receipt_sha256', None)
+            path.unlink()
+            nm.publish(path, nm.seal(dict(row, config_sha256=nm.digest(cfg)), 'receipt_sha256'))
     (root/'B_track2_012.pt').write_bytes(b'fake B layer u12')
     return root, cfg
 
