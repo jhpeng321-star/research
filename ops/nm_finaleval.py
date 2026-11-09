@@ -97,7 +97,7 @@ BOUND_ARMS = ('U0',)+COMPARATOR_ARMS+(CT_ARM,)+STUDENT_ARMS   # executors bound 
 CT_PHASE = 'mappo_ct'
 CT_CAP_SIM_S = 192*1200                                 # the amendment-30 eval part (230,400) of the mappo_ct line
 DISTILL_PHASE = 'distill_eval'
-DISTILL_CAP_SIM_S = len(DISTILL_ARMS)*192*1200          # 230,400 per arm (STUDENT, STUDENT_RL; MAPPO_LANE optional) = 691,200
+DISTILL_CAP_SIM_S = 702_480   # MAIN 2026-11-09 23:xx: = registered amendment-31 eval budget (3 arms x 192 x 1200 + identity/retry allowance), covers the one charged replay
 #: the registered MAPPO_LANE lane path (BOUND_MAPPO_LANE.json of the p20 / p20x r2 roots): training config file sha
 #: and the LANE_TRAIN_FILES manifest sha. STUDENT must bind the same (no other lane writer / rules / actions).
 LANE_TRAIN_CONFIG_SHA256 = '539d505acda46c93b020248a8f4090245da0c832bb39c47af5e0374fb0de4bcf'
