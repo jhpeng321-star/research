@@ -238,6 +238,31 @@ def logged_tick(log):
         cf.tick = original
 
 
+# ---------------------------------------------------------------- DISTILL teacher log (off by default)
+
+def distill_logger(spec, world, oracle):
+    """None unless ``spec['distill_log']`` (DISTILL collection only; LEARNED_TRIGGER arm only); the eval path never
+    sets it, so ``distill_tick(None)`` patches nothing."""
+    opts = spec.get('distill_log')
+    if not opts:
+        return None
+    if spec['arm'] not in LEARNED_ARMS or oracle is None:
+        raise ValueError('distill_log is defined for the LEARNED_TRIGGER arm only')
+    from .distill_log import DistillLogger, episode_meta
+    return DistillLogger(opts['path'], meta=episode_meta(spec, world), hook=oracle[0],
+                         dwell_s=float(opts.get('dwell_s', 3.0)))
+
+
+@contextmanager
+def distill_tick(logger):
+    if logger is None:
+        yield None
+        return
+    from .distill_log import distill_tick as wrap
+    with wrap(logger) as value:
+        yield value
+
+
 # ---------------------------------------------------------------- MAPPO comparator binding
 
 def read_binding(path):
@@ -522,9 +547,10 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
                warm_history=native['warm_history'], accel_bounds=native['accel_bounds'])
     # As launch_evaluation.episode: the original registered guards (both route map worlds to N1).
     vlog = VehicleLog(work)
+    dlog = distill_logger(spec, world, oracle)       # DISTILL (off unless spec['distill_log']): read-only teacher log
     try:
         with patched(accel_plant, dict(guard=protocol.guard, install_seed_scope=protocol.install_seed_scope)), \
-                logged_tick(vlog):
+                logged_tick(vlog), distill_tick(dlog):
             if loaded is None:
                 result = accel_plant.episode(job, controller_hook=hook, policy_loader=loader)
             else:
@@ -540,6 +566,8 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     if loaded is not None:
         extra['executor_sha256_loaded'] = loaded
     extra['vehicle_log'] = vehicle_log
+    if dlog is not None:
+        extra['distill'] = dlog.close()
     if oracle is not None and spec['arm'] in LEARNED_ARMS:
         extra['learned_trigger_sha256_loaded'] = oracle[1]
         extra['learned_trigger'] = oracle[0].receipts()
