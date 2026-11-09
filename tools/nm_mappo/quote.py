@@ -71,6 +71,9 @@ OPTIONS = {
                     purpose="REDUCED-COST: 1/4 of the original updates (>= 3.5x the per-arm on-map "
                             "training experience of the clean3-style method by its 57,600 sim-s/update A+B+R basis)"),
     "ft24_u0": dict(iterations=24, init="u0", purpose="minimum: 24 updates, matches the method's 24-update schedule"),
+    "rl12x8_student": dict(iterations=12, episodes=8, init="student", lane_factor=(1.05, 1.5),
+                           purpose="DIST-RL STUDENT_RL: the BC STUDENT (lane-on actor) continues with the ORIGINAL "
+                                   "MAPPO objective/code only (no imitation), MAPPO_CT budget 12 x 8 = 96 episodes"),
     "ct12x8_u0": dict(iterations=12, episodes=8, init="u0",
                       purpose="MAPPO_CT (AMENDMENT 30): U0 continues with the original MAPPO objective/code for "
                               "the cooperative runs' episode budget, 12 updates x 8 episodes = 96 episodes"),

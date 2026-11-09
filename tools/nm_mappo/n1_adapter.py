@@ -39,11 +39,21 @@ def install(map_name: str = "wz3to2"):
     return desc, map_runtime.installed_record()
 
 
+def train_seeds(ms):
+    """Registered TRAIN range; plus ONLY the opt-in ``COOPMWM_EXTRA_TRAIN_RANGES`` block(s) of a
+    registered run (DIST-RL; unset -> the unchanged ``(lo, hi)`` pair)."""
+    extra = getattr(ms, "ENV_EXTRA_TRAIN_RANGES", ())
+    if not extra:
+        return tuple(ms.TRAIN_RANGE)
+    lo, hi = ms.TRAIN_RANGE
+    return tuple(range(lo, hi + 1)) + tuple(s for a, b in extra for s in range(a, b + 1))
+
+
 def descriptor(name: str) -> dict:
     desc, record = install(name)
     from tools.coopmwm import map_scenarios as ms
     return {"name": name, "env_name": ENV_NAME, "env_kwargs": {"map_name": name},
-            "train_seeds": tuple(ms.TRAIN_RANGE), "heldout_seeds": tuple(ms.HELDOUT_RANGE),
+            "train_seeds": train_seeds(ms), "heldout_seeds": tuple(ms.HELDOUT_RANGE),
             "demands_vph": tuple(ms.DEMANDS), "penetrations": tuple(ms.SHARES),
             "spec_sha256": desc.digest, "network_file_sha256": desc.network_file_sha256,
             "k_slots": desc.k_slots, "install_record": record}

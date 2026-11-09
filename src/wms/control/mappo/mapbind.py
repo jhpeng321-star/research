@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import copy
 import importlib
+import os
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
@@ -176,7 +177,14 @@ class MapBinding:
 def stub_descriptor(name: str) -> dict:
     if name not in _STUBS:
         raise MapBindingError(f"no stub descriptor for map {name!r}; set [map] api to the N1 loader")
-    return copy.deepcopy(_STUBS[name])
+    desc = copy.deepcopy(_STUBS[name])
+    extra = os.environ.get("COOPMWM_EXTRA_TRAIN_RANGES", "")
+    if extra and name == "wz3to2":          # DIST-RL opt-in block (validated by the N1 map module)
+        from tools.coopmwm.map_scenarios import parse_extra_train_ranges
+        lo, hi = desc["train_seeds"]
+        desc["train_seeds"] = tuple(range(lo, hi + 1)) + tuple(
+            s for a, b in parse_extra_train_ranges(extra) for s in range(a, b + 1))
+    return desc
 
 
 def load_descriptor(name: str, api: str = ""):

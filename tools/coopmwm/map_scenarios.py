@@ -43,6 +43,36 @@ TRAIN_RANGE = (989200, 989599)
 EXTRA_TRAIN_RANGES = ((989000, 989099),)
 HELDOUT_RANGE = (989600, 989699)
 FORBIDDEN_RANGES = ((964000, 964199), (962000, 962999), (977000, 977999))
+
+#: DIST-RL (2026-11-09): OPT-IN extra TRAIN block for one registered run, from the environment
+#: ``COOPMWM_EXTRA_TRAIN_RANGES="lo-hi[,lo-hi]"`` (inherited by spawned rollout workers).  Unset ->
+#: byte-identical behaviour.  A block may never touch the forbidden / evaluation / panel blocks below
+#: (all of 989xxx incl. the wz3to2 TRAIN / WM-data / HELD-OUT / verification ranges, 993xxx confirmation
+#: panels, 991xxx, the COOPMWM 990600-990659 final panel, 984000-984023 dev, 986072-986083 check).
+ENV_EXTRA_TRAIN = 'COOPMWM_EXTRA_TRAIN_RANGES'
+EXTENSION_BANNED_RANGES = FORBIDDEN_RANGES + ((989000, 989999), (993000, 993999), (991000, 991999),
+                                              (990600, 990659), (984000, 984023), (986072, 986083))
+
+
+def parse_extra_train_ranges(text):
+    """``"lo-hi[,lo-hi]"`` -> ((lo, hi), ...); raises on malformed / overlapping / banned blocks."""
+    out = []
+    for part in (p.strip() for p in str(text or '').split(',')):
+        if not part:
+            continue
+        lo_s, sep, hi_s = part.partition('-')
+        lo, hi = (int(lo_s), int(hi_s)) if sep else (int(lo_s), int(lo_s))
+        if not (100000 <= lo <= hi <= 999999) or hi - lo >= 10000:
+            raise ValueError(f'{ENV_EXTRA_TRAIN}: bad block {part!r} (6-digit, lo<=hi, < 10000 seeds)')
+        for a, b in EXTENSION_BANNED_RANGES + tuple(out):
+            if lo <= b and hi >= a:
+                raise ValueError(f'{ENV_EXTRA_TRAIN}: block {part!r} overlaps {a}-{b}')
+        out.append((lo, hi))
+    return tuple(out)
+
+
+ENV_EXTRA_TRAIN_RANGES = parse_extra_train_ranges(__import__('os').environ.get(ENV_EXTRA_TRAIN, ''))
+EXTRA_TRAIN_RANGES = EXTRA_TRAIN_RANGES + ENV_EXTRA_TRAIN_RANGES
 EPISODE_S = 1200
 WARMUP_S = 300
 HORIZON_S = 901            # leverprobe Backend: warmup 300 + 901 -> SUMO end 1201, plant stop 1200

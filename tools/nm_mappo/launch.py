@@ -129,13 +129,27 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
               sumo_home: str | None, workers: int | None = None, config: Path = CONFIG,
               allow_stub: bool = False, wall_cap_h: float | None = None,
               phase_cap_sim_s: float | None = None, other_charges_sim_s: float = 0.0,
-              ledger: str | None = None, nice: int = 19, disk_floor_gb: float = 1.0) -> dict:
+              ledger: str | None = None, nice: int = 19, disk_floor_gb: float = 1.0,
+              init_sha256: str | None = None, extra_train_ranges: str | None = None) -> dict:
     if option not in Q.OPTIONS:
         raise SystemExit(f"unknown option {option!r}; choose from {sorted(Q.OPTIONS)}")
     if host not in Q.HOSTS:
         raise SystemExit(f"unknown host {host!r}; choose from {sorted(Q.HOSTS)}")
     q = Q.option_quote(option)
-    binding, cfg = resolve_binding(config)
+    # DIST-RL: opt-in seed block (validated by the map module), visible to the binding check only
+    # while planning; SUMO stages get it through the PLAN env (set before any map import there).
+    saved = os.environ.get("COOPMWM_EXTRA_TRAIN_RANGES")
+    if extra_train_ranges:
+        os.environ["COOPMWM_EXTRA_TRAIN_RANGES"] = str(extra_train_ranges)
+    try:
+        binding, cfg = resolve_binding(config)
+        if extra_train_ranges:
+            binding.check_seeds(cfg["rollout"]["seeds"])
+    finally:
+        if saved is None:
+            os.environ.pop("COOPMWM_EXTRA_TRAIN_RANGES", None)
+        else:
+            os.environ["COOPMWM_EXTRA_TRAIN_RANGES"] = saved
     if binding.is_stub and not allow_stub:
         raise SystemExit("map binding is the STUB descriptor (N1 not landed / [map] api unset); "
                          "use --allow-stub only for a dry plan (SUMO stages will refuse)")
@@ -144,6 +158,13 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
         if not init:
             raise SystemExit("--init <MAPPO u0 policy_00169.pt> is required for a u0 warm start")
         init_record = {"kind": "u0", "path": str(init), "sha256": U0_SHA256}
+    elif q["init"] == "student":
+        # DIST-RL: the BC STUDENT exported lane-on actor, sha256 pinned at plan time (no default)
+        if not init or not init_sha256:
+            raise SystemExit("--init <STUDENT policy .pt> and --init-sha256 are required for a student start")
+        if Path(init).exists() and sha256_file(init) != init_sha256:
+            raise SystemExit("--init sha256 != --init-sha256")
+        init_record = {"kind": "student", "path": str(init), "sha256": str(init_sha256)}
     else:
         init, init_record = None, {"kind": "scratch", "path": None, "sha256": None}
     workers = int(workers or Q.HOSTS[host]["workers"])
@@ -155,7 +176,10 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
         raise SystemExit("planned production + smoke + other charges exceed the registered phase cap")
     lane_control = cfg.get("policy", {}).get("lane_control", "learned")
     lane_head = q.get("lane_head")
-    if (lane_head is not None) != (lane_control == "learned"):
+    if q["init"] == "student":
+        if lane_control != "learned" or lane_head is not None:
+            raise SystemExit("a student start needs the lane-on config and loads the student's own lane head")
+    elif (lane_head is not None) != (lane_control == "learned"):
         raise SystemExit(f"option {option!r} (lane_head={lane_head}) does not match the config "
                          f"lane_control={lane_control!r}")
     production = train_argv(python, config, run_dir / "production", init=init, workers=workers,
@@ -187,7 +211,8 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
         "python": python, "sumo_home": sumo_home,
         "argv": {"smoke": smoke, "production": production},
         "env": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1",
-                "CUDA_VISIBLE_DEVICES": "", "PYTHONDONTWRITEBYTECODE": "1"},
+                "CUDA_VISIBLE_DEVICES": "", "PYTHONDONTWRITEBYTECODE": "1",
+                **({"COOPMWM_EXTRA_TRAIN_RANGES": str(extra_train_ranges)} if extra_train_ranges else {})},
         "rules": ["no HELD-OUT 989600-989699 seed", "never 964000-964199/962xxx/977xxx",
                   "own PIDs only", "no checkpoint selection by evaluation outcomes"],
     }
@@ -219,9 +244,9 @@ def verify_plan(run_dir: Path, *, check_init: bool = True, plan_name: str = "PLA
         raise SystemExit(f"{reg_path.name} does not bind {plan_name}")
     if sha256_text_lf(plan["config"]["path"]) != plan["config"]["sha256_lf"]:
         raise SystemExit("config changed since the plan")
-    if check_init and plan["init"]["kind"] == "u0":
+    if check_init and plan["init"]["kind"] in ("u0", "student"):
         if sha256_file(plan["init"]["path"]) != plan["init"]["sha256"]:
-            raise SystemExit("init checkpoint sha256 != MAPPO u0 d9042cc5...")
+            raise SystemExit(f"init checkpoint sha256 != pinned {plan['init']['sha256'][:8]}...")
     return {"plan": plan, "plan_sha256": digest, "registered": reg, "plan_name": plan_name}
 
 
@@ -294,7 +319,8 @@ def cmd_plan(a) -> int:
                      allow_stub=a.allow_stub, wall_cap_h=a.wall_cap_h,
                      phase_cap_sim_s=a.phase_cap_sim_s, other_charges_sim_s=a.other_charges_sim_s,
                      ledger=a.ledger, config=Path(a.config) if a.config else CONFIG, nice=a.nice,
-                     disk_floor_gb=a.disk_floor_gb)
+                     disk_floor_gb=a.disk_floor_gb, init_sha256=a.init_sha256,
+                     extra_train_ranges=a.extra_train_ranges)
     write_json_new(run_dir / "PLAN.json", plan)
     print(json.dumps({"plan": str(run_dir / "PLAN.json"),
                       "plan_sha256": sha256_file(run_dir / "PLAN.json"),
@@ -311,14 +337,14 @@ def cmd_check(a) -> int:
     out = run_dir / f"check_{int(time.time())}"
     argv = [sys.executable, "-m", "wms.control.mappo.train", "--config", plan["config"]["path"],
             "--smoke", "--workers", "1", "--out", str(out)]
-    if plan["init"]["kind"] == "u0":
+    if plan["init"]["kind"] in ("u0", "student"):
         if sha256_file(plan["init"]["path"]) != plan["init"]["sha256"]:
-            raise SystemExit("init checkpoint sha256 != MAPPO u0 d9042cc5...")
+            raise SystemExit(f"init checkpoint sha256 != pinned {plan['init']['sha256'][:8]}...")
         argv += ["--init-from", plan["init"]["path"]]
         if plan["init"].get("lane_head"):
             argv += ["--init-lane-head", plan["init"]["lane_head"],
                      "--init-lane-head-seed", str(plan["init"]["lane_head_seed"])]
-    env = dict(os.environ, PYTHONPATH=os.pathsep.join([str(CODE / "src"), str(CODE)]))
+    env = dict(os.environ, **plan.get("env", {}), PYTHONPATH=os.pathsep.join([str(CODE / "src"), str(CODE)]))
     rc = subprocess.call(argv, cwd=CODE, env=env)
     print(json.dumps({"check": str(out), "rc": rc, "sim_s": 0}))
     return rc
@@ -460,10 +486,15 @@ def cmd_bind(a) -> int:
     plan, digest = load_plan(run_dir)
     path = run_dir / "production" / f"policy_{int(a.iteration):05d}.pt"
     payload = torch.load(path, map_location="cpu", weights_only=False)
-    if payload.get("lane_control") != "native" or any(k.startswith("lane_head.") for k in payload["policy"]):
+    lane_on = plan.get("lane_control") == "learned"
+    has_head = any(k.startswith("lane_head.") for k in payload["policy"])
+    if lane_on and (payload.get("lane_control", "learned") != "learned" or not has_head):
+        raise SystemExit(f"{path}: not a lane-on actor (plan lane_control learned)")
+    if not lane_on and (payload.get("lane_control") != "native" or has_head):
         raise SystemExit(f"{path}: not a speed-only (native-lane) actor")
     receipt = {"path": str(path), "sha256": sha256_file(path), "iteration": int(a.iteration),
-               "lane_control": "native", "plan_sha256": digest, "option": plan["option"],
+               "lane_control": "learned" if lane_on else "native", "plan_sha256": digest,
+               "option": plan["option"],
                "preregistered_snapshot": int(a.iteration) in plan["snapshots_preregistered"]
                or int(a.iteration) == plan["iterations"],
                "bound_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
@@ -480,6 +511,9 @@ def parse(argv=None):
     p.add_argument("--host", default="cpuQ")
     p.add_argument("--run-dir", required=True)
     p.add_argument("--init", default=None)
+    p.add_argument("--init-sha256", default=None, help="pinned sha256 of a --init student actor")
+    p.add_argument("--extra-train-ranges", default=None,
+                   help="registered opt-in TRAIN seed block 'lo-hi' (PLAN env COOPMWM_EXTRA_TRAIN_RANGES)")
     p.add_argument("--python", default=sys.executable)
     p.add_argument("--sumo-home", default=os.environ.get("SUMO_HOME"))
     p.add_argument("--workers", type=int, default=None)
