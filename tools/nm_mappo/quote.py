@@ -68,6 +68,9 @@ OPTIONS = {
                     purpose="REDUCED-COST: 1/4 of the original updates (>= 3.5x the per-arm on-map "
                             "training experience of the clean3-style method by its 57,600 sim-s/update A+B+R basis)"),
     "ft24_u0": dict(iterations=24, init="u0", purpose="minimum: 24 updates, matches the method's 24-update schedule"),
+    "ct12x8_u0": dict(iterations=12, episodes=8, init="u0",
+                      purpose="MAPPO_CT (AMENDMENT 30): U0 continues with the original MAPPO objective/code for "
+                              "the cooperative runs' episode budget, 12 updates x 8 episodes = 96 episodes"),
 }
 
 
@@ -92,11 +95,13 @@ def wall_h_for_workers(iterations: int, workers: int, *, factor_low: float = 1.0
 def option_quote(name: str, *, factor_low: float = 1.0, factor_high: float = 1.3) -> dict:
     opt = OPTIONS[name]
     it = int(opt["iterations"])
-    controlled = it * EPISODES * HORIZON_S
-    planned = it * EPISODES * EPISODE_SIM_S
+    episodes = int(opt.get("episodes", EPISODES))
+    controlled = it * episodes * HORIZON_S
+    planned = it * episodes * EPISODE_SIM_S
     walls = {host: [round(it * iteration_wall_s(host, f) / 3600.0, 2) for f in (factor_low, factor_high)]
              for host in HOSTS}
-    return {"option": name, "init": opt["init"], "iterations": it, "episodes": it * EPISODES,
+    return {"option": name, "init": opt["init"], "iterations": it, "episodes": it * episodes,
+            "episodes_per_iteration": episodes,
             "controlled_s": controlled, "max_sumo_seconds_flag": controlled,
             "planned_sim_s": planned, "smoke_sim_s": SMOKE_SIM_S,
             "planned_total_sim_s": planned + SMOKE_SIM_S,

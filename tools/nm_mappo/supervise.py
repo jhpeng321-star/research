@@ -148,10 +148,11 @@ def main() -> int:
     stage, run_dir = sys.argv[1], Path(sys.argv[2])
     plan_name = sys.argv[3] if len(sys.argv) > 3 else "PLAN.json"
     assert stage in ("smoke", "production", "resume"), stage
-    assert os.getpriority(os.PRIO_PROCESS, 0) == 19, "start with nice -n 19"
     fd_limits = raise_fd_limit()
     checked = L.verify_plan(run_dir, plan_name=plan_name)
     plan = checked["plan"]
+    want_nice = int(plan.get("nice", 19))
+    assert os.getpriority(os.PRIO_PROCESS, 0) == want_nice, f"start with nice -n {want_nice}"
     files = verify_bundle()
     target = "smoke" if stage == "smoke" else "production"
     out = run_dir / target
@@ -182,7 +183,7 @@ def main() -> int:
             "stage": stage, "supervisor": identity(os.getpid()), "trainer": owner, "command": argv,
             "started_utc": utc(), "deadline_unix": deadline, "plan_sha256": checked["plan_sha256"],
             "registration_sha256": checked["registered"].get("registration_sha256"),
-            "bundle_files_verified": files, "nice": 19, "nofile_limits": fd_limits})
+            "bundle_files_verified": files, "nice": want_nice, "nofile_limits": fd_limits})
         known = {(owner["pid"], owner["start_ticks"]): owner}
         stop_sent, last_guard = False, 0.0
         with (out / f"OWN_PIDS_{stage}_{owner['pid']}.jsonl").open("x") as pidlog:
