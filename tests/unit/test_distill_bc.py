@@ -155,3 +155,29 @@ def test_wzl_lane_init_loads():
     wzl = torch.load(ROOT / T.DEFAULT_CONFIG["wzl_path"], weights_only=True)["policy"]
     assert torch.equal(policy.lane_head[-1].weight, wzl["lane_head.2.weight"])
     assert rec["lane_head"]["sha256"] == T.DEFAULT_CONFIG["wzl_sha256"]
+
+
+def test_unsorted_frame_rows_are_resorted(fixture_dir, tmp_path):
+    """A shard whose within-frame rows are not in slot order loads identically (labels remapped)."""
+    src = sorted((fixture_dir / "shards").glob("*.npz"))[0]
+    z = dict(np.load(src, allow_pickle=False))
+    off, n = z["off"], int(z["off"][-1])
+    perm = np.arange(n)
+    rng = np.random.default_rng(0)
+    for i in range(len(z["t"])):
+        perm[off[i]:off[i + 1]] = rng.permutation(np.arange(off[i], off[i + 1]))
+    inverse = np.empty(n, np.int64)
+    inverse[perm] = np.arange(n)
+    shuffled = dict(z)
+    for key in ("slot", "vid", "s_m", "v_mps", "a_mps2", "lane", "junction", "is_cav", "length_m",
+                "cmd_accel_mps2", "lane_intent", "dwell_age_s"):
+        shuffled[key] = z[key][perm]
+    shuffled["cav_row"] = inverse[z["cav_row"]]
+    (tmp_path / "shards").mkdir()
+    np.savez_compressed(tmp_path / "shards" / src.name, **shuffled)
+    a = D.read_shard(src)
+    b = D.read_shard(tmp_path / "shards" / src.name)
+    for key in ("acc_tgt", "acc_u0", "lane_tgt", "cat"):
+        assert np.array_equal(a[key], b[key], equal_nan=True)
+    for key in a["veh"]:
+        assert np.array_equal(a["veh"][key], b["veh"][key])

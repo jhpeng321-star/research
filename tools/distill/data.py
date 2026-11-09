@@ -102,16 +102,24 @@ def read_shard(path, *, pre_onset_s: int = 10, lane_target: str = "observed") ->
         if arr.shape[0] != n:
             raise ValueError(f"{path}: {key} has {arr.shape[0]} rows, off says {n}")
         veh[key] = arr
-    # present slots in slot order inside each frame (the compact_present order)
+    # present slots in slot order inside each frame (= the compact_present order); a shard written in another
+    # within-frame order is re-sorted (stable) and its label row indices remapped
     slot = z["slot"].astype(np.int64)
+    frame_of_row = np.repeat(np.arange(len(t)), np.diff(off))
+    order = np.lexsort((slot, frame_of_row))
     for i in range(len(t)):
-        seg = slot[off[i]:off[i + 1]]
-        if seg.size > 1 and np.any(np.diff(seg) <= 0):
-            raise ValueError(f"{path}: frame {i} slots not strictly increasing")
+        seg = slot[order[off[i]:off[i + 1]]]
+        if seg.size > 1 and np.any(np.diff(seg) == 0):
+            raise ValueError(f"{path}: frame {i} has a duplicated slot")
+    resorted = not np.array_equal(order, np.arange(n))
+    if resorted:
+        veh = {k: v[order] for k, v in veh.items()}
+    inverse = np.empty(n, np.int64)
+    inverse[order] = np.arange(n)
     lab = {k: z[k] for k in LABEL_KEYS}
-    vid = z["vid"].astype(np.int64)
+    vid = z["vid"].astype(np.int64)[order]
     m = len(lab["cav_row"])
-    rows = lab["cav_row"].astype(np.int64)
+    rows = inverse[lab["cav_row"].astype(np.int64)] if m else lab["cav_row"].astype(np.int64)
     if m and (rows.min() < 0 or rows.max() >= n or not veh["is_cav"][rows].all()):
         raise ValueError(f"{path}: cav_row out of range or not a CAV row")
     step = lab["cav_step"].astype(np.int64)
