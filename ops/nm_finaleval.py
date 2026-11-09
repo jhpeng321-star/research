@@ -428,6 +428,40 @@ SETTINGS['a33t'] = dict(SETTINGS['a33'],
     PANEL_AUTHORITY=('A33 amendment 33: fresh audited TRAIN-type integers 991600-991639 (D2800_p20) for the COMBINED '
                      'classifier data ONLY (never evaluation); executed through the eval runner (scope label only)'),
     PANEL_FILE=HERE/'nm_eval_trainblock_wz3to2_a33t_D2800.json')
+#: amendment 35 (MAIN 2026-11-10 ~04:30, owner-relayed reviewer request; pre-outcome): FROZEN-controller transfer.
+#: U0, LEARNED_TRIGGER (bank fd385a2b, model 8e0ddd3e, threshold 0.378785) and DUO_HOLD (duo12_v20), unchanged, on four
+#: FRESH 96-world panels, one per cell (exploratory; never pooled). The registered generator (N1 map_scenarios) builds
+#: shares {0.2, 0.4, 0.6} only, so the preferred D2800_p10 / D2800_p30 are not constructible: substitutes (recorded
+#: in REGISTRATION.md before any episode) D2800_p10 -> D2800_p60 and D2800_p30 -> D2800_p40. The bank rows are looked
+#: up under their source cell D2800_p20 (runner bank_cell_key); same plant / bindings as the p20c bank root mirror.
+A35_CELLS = (('a35_D2400_p20', 2400, 0.2, 998000, 'D2400_p20 (preferred)'),
+             ('a35_D3200_p20', 3200, 0.2, 998100, 'D3200_p20 (preferred)'),
+             ('a35_D2800_p60', 2800, 0.6, 998200, 'D2800_p60 (substitute for D2800_p10: no share < 0.2 is constructible)'),
+             ('a35_D2800_p40', 2800, 0.4, 998300, 'D2800_p40 (substitute for D2800_p30: nearest constructible share '
+                                                  'other than the D2800_p20 source cell)'))
+for _name, _d, _p, _lo, _why in A35_CELLS:
+    SETTINGS[_name] = dict(SETTINGS['p20c'],
+        CELL=dict(demand=_d, penetration=_p), PARITY_CELL=dict(demand=_d, penetration=_p),
+        N_WORLDS=96, CLAIM3C_WORLDS=0, EVAL_RANGE=(_lo, _lo+99), EVAL_EXTRA_RANGE=(_lo, _lo+99),
+        SEEDS_RESERVED=(_lo+96, _lo+99),
+        PANEL_SIZE_REASON=(f'MAIN amendment 35: a FRESH 96-world transfer panel {_lo}-{_lo+95} ({_why}); '
+                           f'{_lo+96}-{_lo+99} reserved unused'),
+        CELL_AUTHORITY=f'MAIN amendment 35 (REGISTRATION 2026-11-10): frozen-controller transfer cell {_why}',
+        PANEL_AUTHORITY=(f'A35 amendment 35: fresh audited held-out integers {_lo}-{_lo+95}; eval-only range '
+                         f'{_lo}-{_lo+99}; disjoint from 9896xx, 993000-993299, 999500-999699 and every train/verify seed'),
+        EXPOSURE_EXTRA=dict(
+            checked=('amendment-35 audit: 998000-998399 as standalone integers absent from REGISTRATION.md seed use, '
+                     'protocols/experiment_history.json, every c4/* branch tip, the a28/a32/a33 panels and run dirs '
+                     '(E:/agent-work/a35/SEED_AUDIT.json)',),
+            disclosed=('; amendment 35: fresh integers, so no arrival stream is shared with any other panel; registered '
+                       'for evaluation only at runtime by the runner (TRAIN roles still refuse it)')),
+        PANEL_FILE=HERE/f'nm_eval_panel_wz3to2_{_name}.json', PANEL_3C_FILE=None)
+BANK_SETTINGS = BANK_SETTINGS + tuple(c[0] for c in A35_CELLS)
+#: amendment 35 panels (registered 2026-11-10 after the seed audit, before any amendment-35 episode)
+SETTINGS_PINS['a35_D2400_p20'] = dict(PANEL_SHA256='456c5f3f9721b679b16132ffeea24b51b553530453c4f00e5bd670f5f72eb5ed', PANEL_3C_SHA256=None)
+SETTINGS_PINS['a35_D3200_p20'] = dict(PANEL_SHA256='152dbfe93017f4b5c97f8925c832b332578fd66c53037208f4ad157733a6b280', PANEL_3C_SHA256=None)
+SETTINGS_PINS['a35_D2800_p60'] = dict(PANEL_SHA256='425e8a8d0a15dd93bb915e7d49f58d427e807f18e3f523e3fd77df24d3dd2995', PANEL_3C_SHA256=None)
+SETTINGS_PINS['a35_D2800_p40'] = dict(PANEL_SHA256='b9ad776dd866c6a4dd38f45520331ded5958a9202dd8d2ae8fdb9f416d358272', PANEL_3C_SHA256=None)
 MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'
 #: MAIN 2026-11-06 (N11 F4): the panel binds the staged probe network bytes (sha256 of wz3to2.net.xml)
 NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'

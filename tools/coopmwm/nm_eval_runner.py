@@ -107,9 +107,28 @@ EVAL_HELDOUT_RANGE = (993000, 993299)
 #: runtime registration (labels only; TRAIN roles still refuse them); the 993000-993299 worlds are unchanged.
 A33_PANEL_RANGE = (999500, 999699)
 A33_TRAIN_RANGE = (991600, 991699)
+#: amendment 35 (MAIN 2026-11-10, frozen-controller transfer): four FRESH 96-world panels, one per transfer cell, on the
+#: blocks 998000-998099, 998100-998199, 998200-998299, 998300-998399 (xx96-xx99 reserved unused; repeat = seed - block
+#: start). Same physics-neutral runtime registration (labels only; TRAIN roles still refuse them).
+A35_PANEL_RANGES = ((998000, 998099), (998100, 998199), (998200, 998299), (998300, 998399))
 EVAL_HELDOUT_RANGES = ((EVAL_HELDOUT_RANGE[0], EVAL_HELDOUT_RANGE[1], 993000),
                        (A33_PANEL_RANGE[0], A33_PANEL_RANGE[1], A33_PANEL_RANGE[0]),
-                       (A33_TRAIN_RANGE[0], A33_TRAIN_RANGE[1], A33_TRAIN_RANGE[0]))
+                       (A33_TRAIN_RANGE[0], A33_TRAIN_RANGE[1], A33_TRAIN_RANGE[0])) + tuple(
+                       (lo, hi, lo) for lo, hi in A35_PANEL_RANGES)
+#: amendment 35: the frozen controllers' plans / classifier were built for D2800_p20; in a transfer cell they run
+#: as-is, i.e. the bank rows / templates are looked up under this source cell (ck['bank_cell_key']) while the world
+#: is the transfer cell. Absent key (every pre-a35 spec) -> the world cell, unchanged.
+A35_BANK_CELL = 'D2800_p20'
+
+
+def bank_cell(ck, cell):
+    """The cell whose bank rows the plan executor admits: ck['bank_cell_key'] (amendment 35, must be D2800_p20),
+    else the world cell (every pre-a35 spec; unchanged behaviour)."""
+    if 'bank_cell_key' not in ck:
+        return cell
+    if ck['bank_cell_key'] != A35_BANK_CELL:
+        raise ValueError(f'bank_cell_key {ck["bank_cell_key"]!r} is not the registered transfer source {A35_BANK_CELL}')
+    return A35_BANK_CELL
 
 
 def _eval_base(seed):
@@ -384,7 +403,7 @@ def learned_trigger_hook(ck, world):
         raise ValueError('LEARNED_TRIGGER: learned_trigger differs from its registration (learned_trigger_sha256)')
     model = learned_trigger.load_model(mpath, mdoc['file_sha256'])
     doc = json.loads(path.read_text(encoding='utf-8'))
-    return learned_trigger.make_hook(doc, cell, model), loaded
+    return learned_trigger.make_hook(doc, bank_cell(ck, cell), model), loaded
 
 
 A32_ARMS = ('SOLO_HOLD', 'DUO_HOLD', 'BANK_ALWAYS')     # amendment 32 ablation (MAIN 2026-11-10, owner-approved)
@@ -419,7 +438,7 @@ def a32_hook(ck, world, arm):
         kw['bank_doc'] = doc('oracle_bank')
         mdoc = ck.get('learned_trigger_model') or {}
         kw['model'] = learned_trigger.load_model(mdoc.get('path', ''), mdoc.get('file_sha256'))
-    return a32_arms.make_hook(arm, cell, **kw), loaded
+    return a32_arms.make_hook(arm, bank_cell(ck, cell), **kw), loaded
 
 
 A33_ARMS = ('COMBINED',)          # amendment 33 (MAIN 2026-11-10): WM plans + duo12_v20, retrained classifier gate
