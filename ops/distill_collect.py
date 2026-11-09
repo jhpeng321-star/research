@@ -67,6 +67,7 @@ ENV = dict(SUMO_HOME='/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo'
            PYTHONDONTWRITEBYTECODE='1', LD_PRELOAD='/home/ubuntu/cpus_env/libmkl_intel_shim.so',
            COOPMWM_MAP_SPEC='/home/ubuntu/coopmwm20261106_clean4/inputs/map/wz3to2/MAP_SPEC.json',
            COOPMWM_G5_RUNTIME='1', NM_SETTING='p20c')
+MANIFEST_CMD = "find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum"
 BANNED = ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1', 'hetdata_truth', 'driver_params')
 
 
@@ -146,10 +147,11 @@ def cmd_stage(a):
     exists = ssh(host, f'test -e {stage} && echo yes || echo no').decode().strip()
     if exists == 'yes':
         raise SystemExit(f'{host}:{stage} exists (stages are never overwritten)')
-    # 1) inputs from gpuA, sha-verified
+    # 1) inputs from gpuA (or a verified earlier stage, --base-from HOST:STAGE; gpuA's link is ~30 KB/s), sha-verified
+    base_host, _, base_stage = (a.base_from or '').partition(':')
     files, shas = {}, {}
     for k, path in GPUA_INPUTS.items():
-        data = ssh(GPUA, f'cat {path}')
+        data = ssh(base_host, f'cat {base_stage}/inputs/{LOCAL_NAMES[k]}') if base_host else ssh(GPUA, f'cat {path}')
         shas[k] = sha_bytes(data)
         if k in EXPECTED and shas[k] != EXPECTED[k]:
             raise SystemExit(f'gpuA {k} sha {shas[k]} != registered {EXPECTED[k]}')
@@ -160,8 +162,12 @@ def cmd_stage(a):
     u0 = json.loads(files['bound_u0'])
     if u0['residual_sha256'] != shas['residual']:
         raise SystemExit('BOUND_U0 does not bind the fetched residual')
-    # 2) the exact a28 source tree
-    src_tgz = ssh(GPUA, f'tar -C {os.path.dirname(GPUA_SRC)} -czf - {os.path.basename(GPUA_SRC)}')
+    # 2) the exact a28 source tree; its file manifest digest is always taken on gpuA (tiny) and re-checked on the host
+    manifest = ssh(GPUA, f'cd {GPUA_SRC} && {MANIFEST_CMD}').decode().split()[0]
+    if base_host:
+        src_tgz = ssh(base_host, f'cat {base_stage}/incoming/src.tgz')
+    else:
+        src_tgz = ssh(GPUA, f'tar -C {os.path.dirname(GPUA_SRC)} -czf - {os.path.basename(GPUA_SRC)}')
     # 3) push + build on the host
     ssh(host, f'mkdir -p {stage}/inputs {stage}/incoming')
     ssh(host, f'cat > {stage}/incoming/src.tgz', data=src_tgz)
@@ -170,11 +176,13 @@ def cmd_stage(a):
         ssh(host, f'cat > {stage}/inputs/{LOCAL_NAMES[k]}', data=data)
     src = f'{stage}/src'
     build = (f'set -e; cd {stage}; mkdir -p src_x; tar -xzf incoming/src.tgz -C src_x; '
-             f'mv src_x/{os.path.basename(GPUA_SRC)} src; rmdir src_x; tar -xf incoming/overlay.tar -C src; '
+             f'mv src_x/{os.path.basename(GPUA_SRC)} src; rmdir src_x; '
+             f'm=$(cd src && {MANIFEST_CMD} | cut -d" " -f1); [ "$m" = {manifest} ] || {{ echo BASE_MANIFEST $m; exit 9; }}; '
+             f'tar -xf incoming/overlay.tar -C src; '
              f'grep -c $(printf "\\r") src/pytools/tools/coopmwm/distill_log.py && exit 7 || true')
     ssh(host, build)
     stage_doc = dict(schema='distill_stage/1', created=now(), host=host, commit=commit, base_src=f'gpuA:{GPUA_SRC}',
-                     src=src, overlay=osums, py=PY, env=dict(ENV, PYTHONPATH=':'.join(
+                     base_manifest_sha256=manifest, base_from=a.base_from, src=src, overlay=osums, py=PY, env=dict(ENV, PYTHONPATH=':'.join(
                          [f'{src}/pytools', f'{src}/runtime_src', f'{src}/WM_PACKAGE',
                           '/home/ubuntu/e3final/runtime/src', '/home/ubuntu/e3final/runtime']),
                          PATH=f'{ENV["SUMO_HOME"]}/bin:/home/ubuntu/miniconda3/bin:/usr/bin:/bin',
@@ -369,6 +377,8 @@ def main(argv=None):
     sub = p.add_subparsers(dest='cmd', required=True)
     s = sub.add_parser('stage')
     s.add_argument('--host', required=True, choices=sorted(HOSTS))
+    s.add_argument('--base-from', default=None, help='HOST:STAGE_DIR of an earlier verified stage (skip the slow gpuA '
+                   'tar; the base manifest is still checked against gpuA)')
     c = sub.add_parser('collect')
     c.add_argument('--stage', required=True, help='<STAGE_DIR>/<commit8>/STAGE.json on this host')
     c.add_argument('--root', required=True)
