@@ -1165,6 +1165,9 @@ def _mappo_lane_run(spec, cfg, work, *, world, stop, role, recorder=None, vehicl
 
 def episode(spec, cfg, work):
     """One registered evaluation episode -> graded record (raises on any refusal/anomaly)."""
+    if spec.get('horizon_a34') is not None:      # amendment 34: the sealed episode extended past 1,200 s
+        from . import a34_horizon
+        return a34_horizon.episode(spec, cfg, work)
     if spec['arm'] == 'NATIVE':
         return _native_episode(spec, cfg, work)
     if spec['arm'] == 'MAPPO_LANE':
