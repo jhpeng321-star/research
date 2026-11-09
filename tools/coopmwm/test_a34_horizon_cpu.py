@@ -60,43 +60,50 @@ class Ledger:
 
 
 class Sumo:
-    """Loads trips LOOKAHEAD s before departure; inserts at most ``capacity`` per 0.5 s step; travel ``travel`` s."""
-    LOOKAHEAD = 200.
+    """Loads a trip only at its departure step (as observed on wz3to2) or LOOKAHEAD s before; inserts at most
+    ``capacity`` per 0.5 s step (oldest first); travel ``travel`` s. TraCI-like surface used by the extension."""
 
-    def __init__(self, trips, capacity=1, travel=100.):
+    def __init__(self, trips, capacity=1, travel=100., lookahead=0.):
         self.trips = {t.vehicle_id: t for t in trips}
-        self.capacity, self.travel = capacity, travel
-        self.now, self.loaded, self.removed, self.live = 0., set(), set(), {}
-        self.vehicle = types.SimpleNamespace(remove=self.remove, getIDCount=lambda: len(self.live))
+        self.capacity, self.travel, self.lookahead = capacity, travel, lookahead
+        self.now, self.loaded, self.removed, self.live, self.done = 0., set(), set(), {}, set()
+        self.last = ([], [])
+        self.vehicle = types.SimpleNamespace(remove=self.remove, getIDCount=lambda: len(self.live),
+                                             getIDList=lambda: list(self.live))
+        self.simulation = types.SimpleNamespace(getDepartedIDList=lambda: list(self.last[0]),
+                                                getPendingVehicles=self.pending)
+
+    def pending(self):
+        return [v for v in self.loaded if self.trips[v].depart_s <= self.now+1e-9]
 
     def remove(self, vid):
-        if vid not in self.loaded or vid in self.live or vid in self.removed:
+        if vid in self.live:
+            del self.live[vid]
+        elif vid in self.loaded:
+            self.loaded.discard(vid)
+        else:
             raise KeyError(f'Vehicle {vid!r} is not known')
-        self.loaded.discard(vid)
         self.removed.add(vid)
 
-    def step(self):
+    def simulationStep(self):
         self.now += .5
-        self.loaded |= {v for v, t in self.trips.items() if t.depart_s <= self.now+self.LOOKAHEAD
+        self.loaded |= {v for v, t in self.trips.items() if t.depart_s <= self.now+self.lookahead
                         and v not in self.removed and v not in self.live and v not in self.done}
         arrived = [v for v, t0 in self.live.items() if self.now-t0 >= self.travel]
         for v in arrived:
             del self.live[v]
             self.done.add(v)
-        pending = sorted((self.trips[v].depart_s, v) for v in self.loaded if self.trips[v].depart_s <= self.now+1e-9)
+        pending = sorted((self.trips[v].depart_s, v) for v in self.pending())
         departed = [v for _, v in pending[:self.capacity]]
         for v in departed:
             self.loaded.discard(v)
             self.live[v] = self.now
-        return departed, arrived
-
-    done: set
+        self.last = (departed, arrived)
 
 
 class Env:
     def __init__(self, trips, **kw):
         self.api = Sumo(trips, **kw)
-        self.api.done = set()
         self.ledger = Ledger(trips)
         self.now, self.end_s = 0., H.ORIGINAL_END_S
         while self.now < 300:
@@ -105,7 +112,9 @@ class Env:
     def physics(self):
         out = dict(road=0., source=0.)
         for _ in range(2):
-            departed, arrived = self.api.step()
+            self.api.simulationStep()
+            departed = self.api.simulation.getDepartedIDList()
+            arrived = self.api.last[1]
             before = self.ledger.source_vehicle_seconds
             self.ledger.advance(self.api.now, departed, arrived)
             out['source'] += self.ledger.source_vehicle_seconds-before
@@ -164,6 +173,7 @@ def test_identity_before_1200_and_no_arrivals_after():
     assert hz.final['end_reason'] == 'network_empty' and hz.final['on_road_at_end'] == 0
     assert hz.final['never_entered'] == [] and hz.final['arrived'] == hz.final['requested_by_1200']
     assert hz.withdrawn == future & ext.env.api.removed
+    assert len(hz.withdrawn) == hz.removed_pending+hz.removed_at_insertion
     assert ext.totals['team_delay_vs'] > base.totals['team_delay_vs']
     assert ext.env.end_s == H.END_S+1
 
@@ -192,20 +202,21 @@ def test_not_empty_by_2400_reports_never_entered_and_on_road():
     assert ext.actual <= H.END_S
 
 
-def test_withdraw_refuses_when_a_future_trip_cannot_be_held():
-    ts = trips()
-    plant = run(Plant(ts))
+def test_lookahead_loading_withdraws_pending_trips_before_departure():
+    ts = trips(rate=2.5)
     hz = H.Horizon()
-    hz.b = plant
-    plant.env.end_s = H.END_S+1
-    hz.totals_1200 = dict(plant.totals)
-    hz._trim(plant.env)
-    vid = min(hz.future, key=hz.future.get)
-    plant.env.api.loaded.discard(vid)                          # not removable and due now
-    plant.env.api.removed.add(vid)
-    hz.future[vid] = 1200.5
-    with pytest.raises(ValueError, match='cannot withdraw'):
-        hz._withdraw(plant.env, 1200.)
+    ext = run(Plant(ts, capacity=1, lookahead=200.), hz, stop=H.END_S)
+    future = {t.vehicle_id for t in ts if t.depart_s > 1200}
+    assert hz.removed_pending > 0 and len(hz.withdrawn) == hz.removed_pending+hz.removed_at_insertion
+    assert not future & set(ext.env.api.done) and hz.final['end_reason'] == 'network_empty'
+
+
+def test_same_step_insertions_are_removed_and_never_counted():
+    ts = trips()
+    hz = H.Horizon()
+    ext = run(Plant(ts), hz, stop=H.END_S)                      # lookahead 0: loaded at the departure step
+    assert hz.removed_at_insertion > 0
+    assert not set(hz.future) & set(ext.env.ledger.inserted) and not set(hz.future) & set(ext.env.api.live)
 
 
 def test_refuses_unexpected_plant_end():

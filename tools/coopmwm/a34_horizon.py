@@ -9,8 +9,10 @@ Mechanics (worker side, no frozen-runtime file is changed; every change takes ef
   the 2,400 s scenario fixture holds demand to 1,800 s), so ``done`` never fires inside [300, 2400);
 * at the start of control second t = 1,200 (ledger time 1,200, before the step) every requested trip with
   depart_s > 1,200 is withdrawn: removed from the RequestLedger (requests + due times; it never accrues source
-  wait) and, before its requested departure, removed from SUMO's insertion (``traci.vehicle.remove`` of the
-  loaded-not-departed vehicle). Trips requested at <= 1,200 s that still wait at the entrance stay queued and
+  wait) and kept out of the network: a withdrawn trip pending insertion (``simulation.getPendingVehicles``) is
+  removed before it departs; one that SUMO loads and inserts within the same 0.5 s physics step (route vehicles are
+  loaded only at their departure step) is removed right after that step, before any reader/controller/ledger sees
+  it (it never moves; queued trips requested earlier are tried for insertion first). Both are counted. Trips requested at <= 1,200 s that still wait at the entrance stay queued and
   enter when the plant lets them (their departure delay keeps accruing in J); if one never enters it is charged
   to the end (2,400 s) and listed separately;
 * before each control second t >= 1,200: if every remaining requested trip has arrived and no vehicle is in the
@@ -36,10 +38,10 @@ WARMUP_S = 300
 ORIGINAL_END_S = 1201.0                  # Backend reset: warmup 300 + horizon 901
 ARMS = ('U0', 'LEARNED_TRIGGER', 'DUO_HOLD')
 EXT_LOG = 'vehicles_ext.jsonl.gz'
-WITHDRAW_LOOKAHEAD_S = 10.0              # withdraw a future trip from insertion this long before its departure
 RECEIPT_KEYS = ('arrivals_end_s', 'end_s', 't_end_s', 'end_reason', 'J_1200_veh_s', 'totals_1200', 'totals_end',
                 'safety_1200', 'ttc_events_ext', 'future_trips', 'withdrawn', 'never_entered', 'on_road_at_end',
-                'requested_by_1200', 'inserted', 'arrived', 'actual_sim_s', 'ext_log')
+                'requested_by_1200', 'inserted', 'arrived', 'actual_sim_s', 'ext_log', 'removed_pending',
+                'removed_at_insertion')
 
 
 def a34_digest():
@@ -58,12 +60,13 @@ class NetworkEmpty(Exception):
 class Horizon:
     """Per-episode extension state (one episode per process at a time)."""
 
-    def __init__(self, *, arrivals_end=ARRIVALS_END_S, end=END_S, lookahead=WITHDRAW_LOOKAHEAD_S):
-        self.arrivals_end, self.end, self.lookahead = float(arrivals_end), float(end), float(lookahead)
+    def __init__(self, *, arrivals_end=ARRIVALS_END_S, end=END_S):
+        self.arrivals_end, self.end = float(arrivals_end), float(end)
         self.b = None
         self.totals_1200 = None
         self.future = None                 # vid -> requested depart_s (> arrivals_end)
         self.withdrawn = set()
+        self.removed_pending = self.removed_at_insertion = 0
         self.final = None
         self.log = None
 
@@ -107,23 +110,32 @@ class Horizon:
         original, future = led.advance, self.future
 
         def advance(now, departed, arrived):
-            if any(v in future for v in departed):
-                raise ValueError('A34: a withdrawn trip was inserted')
-            return original(now, departed, [v for v in arrived if v not in future])
+            if any(v in future and v not in self.withdrawn for v in departed):
+                raise ValueError('A34: a withdrawn trip was inserted and not removed')
+            return original(now, [v for v in departed if v not in future], [v for v in arrived if v not in future])
         led.advance = advance
+        api = env.api
+        step0 = api.simulationStep
+
+        def step(*args, **kwargs):                  # every physics step from 1,200 s on
+            out = step0(*args, **kwargs)
+            for vid in api.simulation.getDepartedIDList():
+                if vid in future and vid not in self.withdrawn:
+                    api.vehicle.remove(vid)
+                    if vid in api.vehicle.getIDList():
+                        raise ValueError(f'A34: withdrawn trip {vid} still in the network after removal')
+                    self.withdrawn.add(vid)
+                    self.removed_at_insertion += 1
+            return out
+        api.simulationStep = step                   # the plant Backend restores the original step on close
 
     def _withdraw(self, env, now):
         api = env.api
-        for vid, depart in sorted(self.future.items(), key=lambda kv: (kv[1], kv[0])):
-            if vid in self.withdrawn or depart > now+self.lookahead:
-                continue
-            try:
+        for vid in sorted(str(v) for v in api.simulation.getPendingVehicles()):
+            if vid in self.future and vid not in self.withdrawn:
                 api.vehicle.remove(vid)
-            except Exception as error:            # not loaded yet: retried next second, unless it is due now
-                if depart <= now+1.0+1e-9:
-                    raise ValueError(f'A34: cannot withdraw {vid} (depart {depart}) before insertion: {error!r}')
-                continue
-            self.withdrawn.add(vid)
+                self.withdrawn.add(vid)
+                self.removed_pending += 1
 
     @staticmethod
     def _empty(env):
@@ -148,6 +160,7 @@ class Horizon:
                     safety_1200=dict(collisions=int(t['collisions']), teleports=int(t['teleports']),
                                      hard_brakes=int(t['hard_brake'])),
                     ttc_events_ext=int(ttc_ext), future_trips=len(self.future), withdrawn=len(self.withdrawn),
+                    removed_pending=self.removed_pending, removed_at_insertion=self.removed_at_insertion,
                     actual_sim_s=float(self.b.actual), ext_log=ext_log)
 
 
