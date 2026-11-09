@@ -1310,7 +1310,7 @@ def test_p20x_panel_uses_fresh_eval_only_held_out_integers(p20x):
     assert ms.guard(ms.world(993010, 2800, 0.2), 'final_test')['seed'] == 993010
     with pytest.raises(ValueError):
         ms.guard(ms.world(993010, 2800, 0.2), 'train')                       # TRAIN roles still refuse them
-    assert ms.seed_scope(989600) == 'heldout' and ms.seed_scope(993100) is None and ms.seed_scope(989300) == 'train'
+    assert ms.seed_scope(989600) == 'heldout' and ms.seed_scope(993300) is None and ms.seed_scope(989300) == 'train'
     assert ms.world(989600, 3200, 0.2)['repeat'] == 0                         # N1 worlds unchanged
     used = set(range(989000, 989100)) | set(range(989200, 989700)) | set(range(989700, 990000)) | set(range(991000, 992000))
     assert not used & set(range(993000, 993100))
@@ -1399,7 +1399,7 @@ def test_oracle_arms_bind_after_training_and_validate_their_receipts(panel, tmp_
     f = make(tmp_path, panel)
     u0 = dict(kind='u0_transferred_d9042cc5', label='u0', path='/x/it168.pt', sha256='e'*64, binding_sha256='f'*64,
               binding_path='/x/b.json', residual_path='/x/A_checkpoint_000.pt', residual_sha256='c'*64)
-    with pytest.raises(nm.Blocked, match='p20x primary panel only'):
+    with pytest.raises(nm.Blocked, match='p20x primary panel'):
         nm.episode_specs('ORACLE', panel, f['cfg'], f['root'], 'mappo_u0', None, u0)
     assert 'oracle_ORACLE' not in nm.quote('mappo_u0')['need_ceiling']          # p60 quote unchanged
     monkeypatch.setattr(nm, 'SETTING', 'p20x')
@@ -1526,3 +1526,92 @@ def test_bank_run_amendment27_runs_the_bank_arms_in_their_own_phase(p20x, tmp_pa
         assert set(row) == {'all', 'applicable', 'non_applicable', 'breakdown', 'non_breakdown'}
         assert row['applicable']['n_worlds'] == 48 and 'total_minus_ref' in row['all'] and 'vs_MAPPO_LANE' in out['arms']['ORACLE']
         assert out['breakdown_rule'].startswith('U0 stop_and_go') and (final_root/'BANK_TABLES.json').is_file()
+
+
+# ---------------------------------------------------------------- amendment 28 (p20c confirmation panel)
+
+@pytest.fixture
+def p20c(monkeypatch):
+    for k, v in dict(nm.SETTINGS['p20c'], SETTING='p20c', **nm.SETTINGS_PINS['p20c']).items():
+        monkeypatch.setattr(nm, k, v)
+    return nm.load_panel()
+
+
+def test_p20c_panel_is_192_fresh_eval_only_worlds_disjoint_from_p20x(p20c):
+    from tools.coopmwm import map_scenarios as ms, nm_eval_runner as runner
+    assert p20c['cell']['cell_key'] == 'D2800_p20' and len(p20c['worlds']) == 192
+    assert [r['world']['seed'] for r in p20c['worlds']] == list(range(993100, 993292))
+    assert p20c['seeds_reserved_unused'] == [993292, 993299] and p20c['panel_sha256'].startswith('d2ed7783')
+    runner.install_eval_ranges(ms)
+    assert ms.seed_scope(993200) == 'heldout' and ms.world(993200, 2800, 0.2)['repeat'] == 200
+    assert ms.world(993010, 2800, 0.2)['repeat'] == 10                         # p20x worlds unchanged
+    with pytest.raises(ValueError):
+        ms.guard(ms.world(993150, 2800, 0.2), 'train')
+    p20x = json.loads((nm.HERE/'nm_eval_panel_wz3to2_p20x_D2800.json').read_text())
+    assert not {r['world']['seed'] for r in p20x['worlds']} & {r['world']['seed'] for r in p20c['worlds']}
+    assert nm.CONFIRM_TOTAL_SIM_S == 1_158_600 and nm.ALLOCATION_SIM_S == 693_000
+    assert nm.PRERUN_ARMS == ('U0',) and nm.BANK_CAP_SIM_S == 460_800
+
+
+def _trained_root(tmp_path, panel, name):
+    root, cfg = nm.build_fake_root(tmp_path/name, panel, 'mappo_frozen')
+    (root/'B_track2_012.pt').write_bytes(b'fake B layer u12')
+    return root, cfg
+
+
+def test_p20c_amendment28_bank_root_trained_roots_and_confirm_analysis(p20c, tmp_path):
+    """Amendment 28: bank root (U0 pre-run + ORACLE_WM/LEARNED_TRIGGER bank-run within 2 x 230,400), two trained roots
+    (U0 plant identity on 2 worlds, then B u12 on 192 worlds, own ledgers) and the sealed CONFIRM_TABLES."""
+    import unittest.mock as um
+    f = prerun_fixture(tmp_path, p20c)
+    bank_root = f['final_root']
+    assert f['plan']['arms'] == ['U0'] and f['plan']['cap_sim_s'] == 230_400
+    run_prerun(dict(f, panel_3c=None), workers=8, chunk=192)
+    bank, model = tmp_path/'wm.json', tmp_path/'model.json'
+    bank.write_text('{"wm": 1}')
+    model.write_text('{}')
+    runtime = nm.FakeRuntime(dict(oracle=True, learned=True))
+    with um.patch.object(nm, 'LEARNED_MODEL_SHA256', nm.file_sha(model)):
+        nm.bind_oracle(final_root=bank_root, bank_path=bank, model_path=model, authority='MAIN 28')
+        with pytest.raises(nm.Blocked, match='amendment 28 bank arms'):
+            nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None, arms=nm.BANK_ARMS)
+        out = nm.prerun_execute(final_root=bank_root, runtime=runtime, panel=p20c, panel_3c=None,
+                                arms=nm.CONFIRM_BANK_ARMS, workers=8, chunk=192)
+        assert out['status'] == 'PASS' and out['cap_sim_s'] == 460_800
+        roots = {}
+        for label in nm.TRAINED_ARMS:
+            troot, cfg = _trained_root(tmp_path, p20c, label.lower())
+            final = tmp_path/f'confirm_{label.lower()}'
+            plan = nm.confirm_register(root=troot, final_root=final, runtime=nm.FakeRuntime(), panel=p20c, label=label,
+                                       authority='MAIN 28')
+            assert plan['label'] == label and plan['update'] == 12
+            with pytest.raises(nm.Blocked, match='TRAINED_BOUND'):
+                nm.confirm_run(final_root=final, runtime=nm.FakeRuntime(), panel=p20c)
+            (troot/'OWNER_STOP.json').write_text('{}')                   # training ended at u12: expected
+            bound = nm.bind_trained(final_root=final, runtime=nm.FakeRuntime(), panel=p20c, authority='u12 export')
+            assert bound['gate']['ended_training'] == {'OWNER_STOP.json': nm.file_sha(troot/'OWNER_STOP.json')}
+            with pytest.raises(nm.Blocked, match='never rebound'):
+                nm.bind_trained(final_root=final, runtime=nm.FakeRuntime(), panel=p20c, authority='again')
+            with pytest.raises(nm.Blocked, match='bind-mappo --arm U0'):
+                nm.confirm_run(final_root=final, runtime=nm.FakeRuntime(), panel=p20c)
+            nm.bind_fake_mappo(tmp_path/label.lower(), final, 'U0', residual=troot/'A_checkpoint_000.pt')
+            done = nm.confirm_run(final_root=final, runtime=nm.FakeRuntime(), panel=p20c, workers=8, chunk=96)
+            assert done['status'] == 'PASS'
+            assert {k: v['published'] for k, v in done['coverage'].items()} == {f'{label}_IDENT_U0': 2,
+                                                                                 f'{label}_B_u012': 192}
+            rows = nm.fe.ledger_rows(final)
+            assert sum(r['sim_s'] for r in rows if r['phase'] == nm.TRAINED_PHASE) == 230_400
+            assert sum(r['sim_s'] for r in rows if r['phase'] == nm.IDENTITY_PHASE) == 2_400
+            assert not nm.fe.ledger_rows(troot) or all(not str(r['id']).startswith('nmfinal_')
+                                                       for r in nm.fe.ledger_rows(troot))
+            roots[label] = final
+        with pytest.raises(nm.Blocked, match='not the sealed C5D trained root'):
+            nm.confirm_analyse(final_root=bank_root, panel=p20c, trained_roots=dict(C5D=bank_root))
+        value = nm.confirm_analyse(final_root=bank_root, panel=p20c, trained_roots=roots)
+    assert value['missing'] == {} and value['primary']['contrast'] == 'ORACLE_WM - U0'
+    assert [(c['treatment'], c['reference'], c['role']) for c in value['contrasts']] == list(nm.CONFIRM_CONTRASTS)
+    assert all('total_minus_ref' in c and 'groups' in c and 'tail_cvar90' in c for c in value['contrasts'])
+    assert value['primary']['verdict'] == ('PASS' if value['contrasts'][0]['ci95_upper_below_0'] else 'FAIL')
+    assert {k: v['verdict'] for k, v in value['plant_identity'].items()} == {'C5D': 'PASS', 'F8B': 'PASS'}
+    assert value['contrasts'][2]['plant_identity'] == 'PASS' and 'never pooled' in value['pooling']
+    assert (bank_root/nm.CONFIRM_TABLES).is_file()

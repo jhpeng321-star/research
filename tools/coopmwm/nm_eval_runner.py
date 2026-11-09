@@ -98,7 +98,9 @@ FROZEN_MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cff
 #: amendment 23: evaluation-only held-out range (fresh integers for the p20x panels). Registered in this process's
 #: tools.coopmwm.map_scenarios at import: seed_scope -> 'heldout', repeat = seed - 993000. Physics-neutral: the
 #: N1 world dict only carries seed/cell/repeat labels; TRAIN roles still refuse these seeds (guard).
-EVAL_HELDOUT_RANGE = (993000, 993099)
+#: amendment 28: extended to 993299 for the p20c confirmation panel (993100-993291; repeat = seed - 993000 keeps the
+#: p20x worlds byte-identical).
+EVAL_HELDOUT_RANGE = (993000, 993299)
 
 
 def install_eval_ranges(ms=None):
