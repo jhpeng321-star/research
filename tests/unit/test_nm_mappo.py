@@ -492,3 +492,40 @@ def test_compute_amendment_plan_resume(tmp_path):
     assert L.main(["resume", "--run-dir", str(run), "--dry-run", "--plan", "PLAN_A1.json"]) == 0
     sup = L.supervisor_argv(a1, "resume", run, "PLAN_A1.json")
     assert sup[-3:] == ["resume", str(run), "PLAN_A1.json"]
+
+
+# ------------------------------------------------------------------ MAPPO_CT (AMENDMENT 30)
+CT_CONFIG = ROOT / "configs" / "c4_mappo_ct_d2800p20.toml"
+
+
+def test_ct_config_equals_wz_config_except_declared_deltas():
+    a = dict(_flat(loads(CONFIG.read_text(encoding="utf-8"))))
+    b = dict(_flat(loads(CT_CONFIG.read_text(encoding="utf-8"))))
+    deltas = {k for k in set(a) | set(b) if a.get(k, "<absent>") != b.get(k, "<absent>")}
+    assert deltas == {("rollout", k) for k in ("iterations", "episodes_per_iteration", "keep_every",
+                                               "max_sumo_seconds", "demands_vph", "penetrations",
+                                               "seeds")}
+    r = dict(loads(CT_CONFIG.read_text(encoding="utf-8"))["rollout"])
+    assert (r["iterations"], r["episodes_per_iteration"], r["keep_every"]) == (12, 8, 4)
+    assert r["max_sumo_seconds"] == 12 * 8 * 600
+    assert (r["demands_vph"], r["penetrations"]) == ([2800], [0.2])
+    seeds = M.seed_tuple(r["seeds"])
+    assert min(seeds) == 989200 and max(seeds) == 989587 and not any(M.forbidden(s) for s in seeds)
+
+
+def test_ct_plan_argv_nice_and_disk_floor(tmp_path):
+    import re
+    text = re.sub(r'(?m)^api = "[^"]*"', 'api = ""', CT_CONFIG.read_text(encoding="utf-8"), count=1)
+    stub = tmp_path / "ct.toml"
+    stub.write_text(text, encoding="utf-8")
+    plan = L.make_plan(option="ct12x8_u0", host="cpuV", run_dir=tmp_path, init="u0.pt",
+                       python="py", sumo_home=None, workers=8, allow_stub=True, config=stub,
+                       wall_cap_h=6, phase_cap_sim_s=150_000, nice=10, disk_floor_gb=25)
+    argv = plan["argv"]["production"]
+    assert argv[argv.index("--init-from"):] == [
+        "--init-from", "u0.pt", "--update-threads", "16", "--workers", "8", "--iterations", "12",
+        "--episodes-per-iteration", "8", "--max-sumo-seconds", "57600"]
+    assert plan["episodes_per_iteration"] == 8 and plan["per_iteration_sim_s"] == 8 * 900
+    assert plan["budget_sim_s"]["planned"] == 86_400 and plan["nice"] == 10
+    assert plan["disk_floor_bytes"] == 25_000_000_000
+    assert L.supervisor_argv(plan, "production", tmp_path)[:5] == ["setsid", "nohup", "nice", "-n", "10"]

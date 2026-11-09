@@ -129,7 +129,7 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
               sumo_home: str | None, workers: int | None = None, config: Path = CONFIG,
               allow_stub: bool = False, wall_cap_h: float | None = None,
               phase_cap_sim_s: float | None = None, other_charges_sim_s: float = 0.0,
-              ledger: str | None = None) -> dict:
+              ledger: str | None = None, nice: int = 19, disk_floor_gb: float = 1.0) -> dict:
     if option not in Q.OPTIONS:
         raise SystemExit(f"unknown option {option!r}; choose from {sorted(Q.OPTIONS)}")
     if host not in Q.HOSTS:
@@ -159,7 +159,7 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
         raise SystemExit(f"option {option!r} (lane_head={lane_head}) does not match the config "
                          f"lane_control={lane_control!r}")
     production = train_argv(python, config, run_dir / "production", init=init, workers=workers,
-                            iterations=q["iterations"], episodes=Q.EPISODES,
+                            iterations=q["iterations"], episodes=q["episodes_per_iteration"],
                             max_sumo_seconds=q["controlled_s"],
                             update_threads=int(rollout.get("update_threads", 16)), lane_head=lane_head)
     smoke = train_argv(python, config, run_dir / "smoke", init=init, workers=SMOKE["workers"],
@@ -175,15 +175,15 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
         "lane_control": lane_control, "lane_actions": cfg.get("policy", {}).get("lane_actions"),
         "binding": binding.record(), "sumo_allowed": not binding.is_stub,
         "seeds": rollout["seeds"], "workers": workers,
-        "iterations": q["iterations"], "episodes_per_iteration": Q.EPISODES,
+        "iterations": q["iterations"], "episodes_per_iteration": q["episodes_per_iteration"],
         "max_sumo_seconds_controlled": q["controlled_s"],
         "budget_sim_s": {"planned": q["planned_sim_s"], "smoke": q["smoke_sim_s"],
                          "planned_total": q["planned_total_sim_s"], "hard_cap": q["hard_cap_sim_s"]},
         "quote_wall_h": wall_h, "wall_cap_s": wall_cap_s,
         "snapshots_preregistered": [s for s in SNAPSHOTS if s <= q["iterations"]],
         "phase_cap_sim_s": phase_cap_sim_s, "other_charges_sim_s": other_charges_sim_s,
-        "per_iteration_sim_s": Q.EPISODES * Q.EPISODE_SIM_S, "ledger": ledger,
-        "disk_floor_bytes": 1_000_000_000,
+        "per_iteration_sim_s": q["episodes_per_iteration"] * Q.EPISODE_SIM_S, "ledger": ledger,
+        "disk_floor_bytes": int(float(disk_floor_gb) * 1_000_000_000), "nice": int(nice),
         "python": python, "sumo_home": sumo_home,
         "argv": {"smoke": smoke, "production": production},
         "env": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1",
@@ -291,9 +291,10 @@ def cmd_plan(a) -> int:
     run_dir.mkdir(parents=True, exist_ok=True)
     plan = make_plan(option=a.option, host=a.host, run_dir=run_dir, init=a.init,
                      python=a.python, sumo_home=a.sumo_home, workers=a.workers,
-                     allow_stub=a.allow_stub, wall_cap_h=a.wall_cap_h, config=Path(a.config),
+                     allow_stub=a.allow_stub, wall_cap_h=a.wall_cap_h,
                      phase_cap_sim_s=a.phase_cap_sim_s, other_charges_sim_s=a.other_charges_sim_s,
-                     ledger=a.ledger)
+                     ledger=a.ledger, config=Path(a.config) if a.config else CONFIG, nice=a.nice,
+                     disk_floor_gb=a.disk_floor_gb)
     write_json_new(run_dir / "PLAN.json", plan)
     print(json.dumps({"plan": str(run_dir / "PLAN.json"),
                       "plan_sha256": sha256_file(run_dir / "PLAN.json"),
@@ -372,7 +373,7 @@ def resume_argv(argv: list[str]) -> list[str]:
 
 
 def supervisor_argv(plan: dict, stage: str, run_dir: Path, plan_name: str = "PLAN.json") -> list[str]:
-    return ["setsid", "nohup", "nice", "-n", "19", plan["python"], "-u",
+    return ["setsid", "nohup", "nice", "-n", str(int(plan.get("nice", 19))), plan["python"], "-u",
             str(CODE / "tools" / "nm_mappo" / "supervise.py"), stage, str(run_dir), plan_name]
 
 
@@ -489,6 +490,9 @@ def parse(argv=None):
     p.add_argument("--other-charges-sim-s", type=float, default=0.0,
                    help="sim-s of the same phase charged outside production (smoke excluded)")
     p.add_argument("--ledger", default=None, help="phase charge ledger (JSONL) on the box")
+    p.add_argument("--nice", type=int, default=19, help="niceness of the detached supervisor/trainer")
+    p.add_argument("--disk-floor-gb", type=float, default=1.0,
+                   help="clean resumable stop when free disk falls below this")
     for name in ("check", "status", "stop"):
         sub.add_parser(name).add_argument("--run-dir", required=True)
     p = sub.add_parser("ack")

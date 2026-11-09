@@ -71,12 +71,15 @@ OPTIONS = {
                     purpose="REDUCED-COST: 1/4 of the original updates (>= 3.5x the per-arm on-map "
                             "training experience of the clean3-style method by its 57,600 sim-s/update A+B+R basis)"),
     "ft24_u0": dict(iterations=24, init="u0", purpose="minimum: 24 updates, matches the method's 24-update schedule"),
+    "ct12x8_u0": dict(iterations=12, episodes=8, init="u0",
+                      purpose="MAPPO_CT (AMENDMENT 30): U0 continues with the original MAPPO objective/code for "
+                              "the cooperative runs' episode budget, 12 updates x 8 episodes = 96 episodes"),
 }
 
 
-def iteration_wall_s(host: str, factor: float = 1.0) -> float:
+def iteration_wall_s(host: str, factor: float = 1.0, episodes: int = EPISODES) -> float:
     h = HOSTS[host]
-    waves = math.ceil(EPISODES / h["workers"])
+    waves = math.ceil(int(episodes) / h["workers"])
     update = UPDATE_S * h.get("update_penalty", 1.0)
     return (waves * WAVE_S * h["contention"] + update) * factor
 
@@ -95,14 +98,15 @@ def wall_h_for_workers(iterations: int, workers: int, *, factor_low: float = 1.0
 def option_quote(name: str, *, factor_low: float = 1.0, factor_high: float = 1.3) -> dict:
     opt = OPTIONS[name]
     it = int(opt["iterations"])
-    controlled = it * EPISODES * HORIZON_S
-    planned = it * EPISODES * EPISODE_SIM_S
+    episodes = int(opt.get("episodes", EPISODES))
+    controlled = it * episodes * HORIZON_S
+    planned = it * episodes * EPISODE_SIM_S
     lf = opt.get("lane_factor", (1.0, 1.0))
-    walls = {host: [round(it * iteration_wall_s(host, f) * g / 3600.0, 2)
+    walls = {host: [round(it * iteration_wall_s(host, f, episodes) * g / 3600.0, 2)
                     for f, g in ((factor_low, lf[0]), (factor_high, lf[1]))]
              for host in HOSTS}
     return {"option": name, "init": opt["init"], "lane_head": opt.get("lane_head"),
-            "iterations": it, "episodes": it * EPISODES,
+            "iterations": it, "episodes": it * episodes, "episodes_per_iteration": episodes,
             "controlled_s": controlled, "max_sumo_seconds_flag": controlled,
             "planned_sim_s": planned, "smoke_sim_s": SMOKE_SIM_S,
             "planned_total_sim_s": planned + SMOKE_SIM_S,
