@@ -130,7 +130,8 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
               allow_stub: bool = False, wall_cap_h: float | None = None,
               phase_cap_sim_s: float | None = None, other_charges_sim_s: float = 0.0,
               ledger: str | None = None, nice: int = 19, disk_floor_gb: float = 1.0,
-              init_sha256: str | None = None, extra_train_ranges: str | None = None) -> dict:
+              init_sha256: str | None = None, extra_train_ranges: str | None = None,
+              mem_floor_gb: float = 0.0) -> dict:
     if option not in Q.OPTIONS:
         raise SystemExit(f"unknown option {option!r}; choose from {sorted(Q.OPTIONS)}")
     if host not in Q.HOSTS:
@@ -208,6 +209,7 @@ def make_plan(*, option: str, host: str, run_dir: Path, init: str | None, python
         "phase_cap_sim_s": phase_cap_sim_s, "other_charges_sim_s": other_charges_sim_s,
         "per_iteration_sim_s": q["episodes_per_iteration"] * Q.EPISODE_SIM_S, "ledger": ledger,
         "disk_floor_bytes": int(float(disk_floor_gb) * 1_000_000_000), "nice": int(nice),
+        "mem_floor_bytes": int(float(mem_floor_gb) * 1_000_000_000),
         "python": python, "sumo_home": sumo_home,
         "argv": {"smoke": smoke, "production": production},
         "env": {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1",
@@ -289,6 +291,18 @@ def _stage_used_sim_s(stage_dir: Path, episode_sim_s: float) -> float:
     return float(st.get("sumo_seconds_simulated", 0.0)) + float(st.get("failed_episodes", 0)) * episode_sim_s
 
 
+def mem_available_bytes() -> int | None:
+    """Linux MemAvailable (None elsewhere)."""
+    try:
+        with open("/proc/meminfo") as fh:
+            for line in fh:
+                if line.startswith("MemAvailable:"):
+                    return int(line.split()[1]) * 1024
+    except OSError:
+        return None
+    return None
+
+
 def phase_guard(plan: dict, run_dir: Path) -> list[str]:
     """Reasons to stop production now: disk below the floor, or the registered phase cap would be
     exceeded by (smoke + other charges + production so far + the remaining planned iterations)."""
@@ -296,6 +310,9 @@ def phase_guard(plan: dict, run_dir: Path) -> list[str]:
     free = shutil.disk_usage(run_dir).free
     if free < int(plan.get("disk_floor_bytes") or 0):
         reasons.append(f"disk free {free} B < floor {plan['disk_floor_bytes']} B")
+    avail = mem_available_bytes()
+    if avail is not None and avail < int(plan.get("mem_floor_bytes") or 0):
+        reasons.append(f"MemAvailable {avail} B < floor {plan['mem_floor_bytes']} B")
     cap = plan.get("phase_cap_sim_s")
     if cap:
         episode = float(plan["per_iteration_sim_s"]) / float(plan["episodes_per_iteration"])
@@ -320,7 +337,7 @@ def cmd_plan(a) -> int:
                      phase_cap_sim_s=a.phase_cap_sim_s, other_charges_sim_s=a.other_charges_sim_s,
                      ledger=a.ledger, config=Path(a.config) if a.config else CONFIG, nice=a.nice,
                      disk_floor_gb=a.disk_floor_gb, init_sha256=a.init_sha256,
-                     extra_train_ranges=a.extra_train_ranges)
+                     extra_train_ranges=a.extra_train_ranges, mem_floor_gb=a.mem_floor_gb)
     write_json_new(run_dir / "PLAN.json", plan)
     print(json.dumps({"plan": str(run_dir / "PLAN.json"),
                       "plan_sha256": sha256_file(run_dir / "PLAN.json"),
@@ -417,6 +434,10 @@ def cmd_stage(a, stage: str) -> int:
         raise SystemExit("resume: no production checkpoints")
     if stage != "resume" and (run_dir / target).exists():
         raise SystemExit(f"{run_dir / target} exists: fresh stage only (use resume)")
+    avail = mem_available_bytes()
+    floor = int(checked["plan"].get("mem_floor_bytes") or 0)
+    if not a.dry_run and avail is not None and avail < floor:
+        raise SystemExit(f"admission: MemAvailable {avail} B < floor {floor} B")
     argv = supervisor_argv(checked["plan"], "resume" if stage == "resume" else target, run_dir,
                            a.plan)
     if a.dry_run:
@@ -527,6 +548,8 @@ def parse(argv=None):
     p.add_argument("--nice", type=int, default=19, help="niceness of the detached supervisor/trainer")
     p.add_argument("--disk-floor-gb", type=float, default=1.0,
                    help="clean resumable stop when free disk falls below this")
+    p.add_argument("--mem-floor-gb", type=float, default=0.0,
+                   help="refuse to start / clean resumable stop when MemAvailable falls below this (0 = off)")
     for name in ("check", "status", "stop"):
         sub.add_parser(name).add_argument("--run-dir", required=True)
     p = sub.add_parser("ack")

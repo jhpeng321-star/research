@@ -45,6 +45,9 @@ HOSTS = {
                  note="dedicated: 46 workers = one wave of 46 episodes"),
     "cpuQ": dict(cores=32, workers=30, contention=1.0,
                  note="second machine (cpuQ-class, 32 cores): the original speed-only host/settings"),
+    "cpuZ": dict(cores=48, workers=8, contention=1.0,
+                 note="MAPPO_CT / STUDENT_RL host: 8 workers = one wave of 8 episodes (measured MAPPO_CT "
+                      "~104 s/update incl. ~59 s update)"),
     "cpuV_shared12": dict(cores=12, workers=12, contention=1.0, update_penalty=1.1,
                           note="cpuV while N3/N4 hold the rest (12-core share as for newmap_probe)"),
 }

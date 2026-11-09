@@ -151,7 +151,8 @@ def test_plan_student_option(tmp_path, monkeypatch):
     sha = D.sha256_file(st)
     plan = L.make_plan(option="rl12x8_student", host="cpuQ", run_dir=tmp_path, init=str(st), python="py",
                        sumo_home=None, allow_stub=True, config=cfg, workers=8, init_sha256=sha,
-                       extra_train_ranges=BLOCK, phase_cap_sim_s=150_000, nice=10, disk_floor_gb=25)
+                       extra_train_ranges=BLOCK, phase_cap_sim_s=150_000, nice=10, disk_floor_gb=25,
+                       mem_floor_gb=30)
     prod = plan["argv"]["production"]
     assert prod[prod.index("--init-from") + 1] == str(st) and "--init-lane-head" not in prod
     assert prod[prod.index("--workers"):] == ["--workers", "8", "--iterations", "12",
@@ -161,6 +162,11 @@ def test_plan_student_option(tmp_path, monkeypatch):
                             "lane_head_seed": None}
     assert plan["env"]["COOPMWM_EXTRA_TRAIN_RANGES"] == BLOCK and plan["lane_control"] == "learned"
     assert plan["budget_sim_s"]["planned_total"] == 87_060 and plan["per_iteration_sim_s"] == 7_200
+    assert plan["mem_floor_bytes"] == 30_000_000_000 and plan["disk_floor_bytes"] == 25_000_000_000
+    monkeypatch.setattr(L, "mem_available_bytes", lambda: 29_000_000_000)
+    assert any("MemAvailable" in r for r in L.phase_guard(plan, tmp_path))
+    monkeypatch.setattr(L, "mem_available_bytes", lambda: 31_000_000_000)
+    assert not any("MemAvailable" in r for r in L.phase_guard(plan, tmp_path))
     with pytest.raises(SystemExit, match="init-sha256"):
         L.make_plan(option="rl12x8_student", host="cpuQ", run_dir=tmp_path, init=str(st), python="py",
                     sumo_home=None, allow_stub=True, config=cfg, extra_train_ranges=BLOCK)
@@ -204,3 +210,21 @@ def test_fake_physics_one_update_from_student(tmp_path):
     moved = [k for k in src["policy"] if not torch.equal(src["policy"][k], final["policy"][k])]
     assert moved, "one PPO update must move the student"
     assert set(final["policy"]) == set(src["policy"])
+
+
+def test_bind_final_lane_on_export(tmp_path):
+    cfg = _rendered(tmp_path, stub=True)
+    st = _student(tmp_path)
+    run = tmp_path / "run"
+    (run / "production").mkdir(parents=True)
+    plan = L.make_plan(option="rl12x8_student", host="cpuQ", run_dir=run, init=str(st), python="py",
+                       sumo_home=None, allow_stub=True, config=cfg, workers=8,
+                       init_sha256=D.sha256_file(st), extra_train_ranges=BLOCK)
+    L.write_json_new(run / "PLAN.json", plan)
+    (run / "production" / "policy_00012.pt").write_bytes(st.read_bytes())
+    assert L.main(["bind", "--run-dir", str(run), "--iteration", "12"]) == 0
+    receipt = json.loads((run / "BOUND_00012.json").read_text())
+    assert receipt["lane_control"] == "learned" and receipt["preregistered_snapshot"] is True
+    (run / "production" / "policy_00008.pt").write_bytes(_student(tmp_path, lane=False).read_bytes())
+    with pytest.raises(SystemExit, match="lane-on"):
+        L.main(["bind", "--run-dir", str(run), "--iteration", "8"])
