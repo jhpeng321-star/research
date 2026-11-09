@@ -1641,3 +1641,41 @@ def test_p20c_amendment28_bank_root_trained_roots_and_confirm_analysis(p20c, tmp
     assert [(c['treatment'], c['reference']) for c in a29['contrasts']] == [('C5D', 'U0'), ('C5D', 'F8B'), ('C5D', 'C5DR')]
     assert {k: v['verdict'] for k, v in a29['plant_identity'].items()} == {'C5D': 'PASS', 'F8B': 'PASS', 'C5DR': 'PASS'}
     assert set(a29['arms']) == {'U0', 'C5D', 'F8B', 'C5DR'} and (bank_root/'CONFIRM_TABLES_A29.json').is_file()
+
+
+def test_p20c_amendment29_disk_stop_evaluates_the_last_sealed_update(p20c, tmp_path):
+    """MAIN 12:23 disk-safety stop rule: amendment 29 evaluates the last sealed update k (13 <= k < 24) as 'u<k>'."""
+    f = prerun_fixture(tmp_path, p20c)
+    run_prerun(dict(f, panel_3c=None), workers=8, chunk=192)
+    bank, model = tmp_path/'wm.json', tmp_path/'model.json'
+    bank.write_text('{"wm": 1}')
+    model.write_text('{}')
+    import unittest.mock as um
+    troot = _trained_root(tmp_path, p20c, 'c5d')[0]
+    for arm in nm.ARMS:
+        (troot/f'{arm}_checkpoint_016.pt').write_bytes(f'fake {arm} u16'.encode())
+        nm.publish(troot/f'{arm}_UPDATE_016.json', nm.seal(dict(arm=arm, update=16), 'update_sha256'))
+    for arm in ('B', 'R'):
+        (troot/f'{arm}_track2_012.pt').write_bytes(b'u12 layer')
+        (troot/f'{arm}_track2_016.pt').write_bytes(b'u16 layer')
+    with pytest.raises(nm.Blocked, match='trained update must be one of'):
+        nm.confirm_register(root=troot, final_root=tmp_path/'bad', runtime=nm.FakeRuntime(), panel=p20c, label='C5D',
+                            authority='x', update=11)
+    roots = {}
+    for update, labels in ((12, ('C5D',)), (16, ('C5D', 'C5DR'))):
+        for label in labels:
+            final = tmp_path/f'r_{label}_{update}'
+            nm.confirm_register(root=troot, final_root=final, runtime=nm.FakeRuntime(), panel=p20c, label=label,
+                                authority='x', update=update)
+            nm.bind_trained(final_root=final, runtime=nm.FakeRuntime(), panel=p20c, authority='export')
+            if update == 12:
+                nm.bind_fake_mappo(tmp_path/'c5d', final, 'U0', residual=troot/'A_checkpoint_000.pt')
+            nm.confirm_run(final_root=final, runtime=nm.FakeRuntime(), panel=p20c, workers=8, chunk=192)
+            roots[(label, update)] = final
+    with um.patch.object(nm, 'LEARNED_MODEL_SHA256', nm.file_sha(model)):
+        nm.bind_oracle(final_root=f['final_root'], bank_path=bank, model_path=model, authority='MAIN 28')
+        a29 = nm.confirm_analyse(final_root=f['final_root'], panel=p20c, amendment='29',
+                                 trained_roots=dict(C5D=roots[('C5D', 16)], C5DR=roots[('C5DR', 16)]),
+                                 identity_roots=dict(C5D=roots[('C5D', 12)], C5DR=roots[('C5D', 12)]))
+    assert a29['update'] == 16 and 'u16 instead of u24' in a29['stop_rule'] and a29['primary']['contrast'] == 'C5D - U0'
+    assert a29['plant_identity']['C5D']['verdict'] == 'PASS' and a29['missing']['F8B'] == 'trained root not given'

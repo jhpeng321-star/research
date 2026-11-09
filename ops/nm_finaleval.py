@@ -364,7 +364,8 @@ TRAINED_ARM_LETTER = dict(C5D='B', F8B='B', C5DR='R')
 #: labels that run their own U0 plant-identity episodes at u12; C5DR shares C5D's training CONFIG (inherited)
 IDENTITY_LABELS = ('C5D', 'F8B')
 TRAINED_UPDATE = 12
-TRAINED_UPDATES = (12, 24)          # amendment 28 = u12; amendment 29 (owner 'go to 24') = u24, same panel and U0
+TRAINED_UPDATES = (12,)+tuple(range(13, 25))   # 28 = u12; 29 = u24, or the last sealed update k >= 13 under the
+#: MAIN 2026-11-09 12:23 pre-registered disk-safety stop rule (label 'u<k>', disclosed)
 TRAINED_PLAN = 'TRAINED_PLAN.json'
 TRAINED_PHASE = 'v2v_final_confirm_trained'
 TRAINED_CAP_SIM_S = 192*HORIZON_S
@@ -4576,6 +4577,7 @@ def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identit
             continue
         have[arm], sources[arm], roots[arm] = {r['world_id']: r for r in records}, source, final_root
     identity = {}
+    loaded_updates = set()
     for label in spec_['labels']:
         path = (trained_roots or {}).get(label)
         if path is None:
@@ -4583,6 +4585,11 @@ def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identit
             identity[label] = dict(verdict='UNAVAILABLE', reason='trained root not given')
             continue
         got = _trained_records(Path(path), panel, label)
+        if amendment == '29' and spec_['update'] == 24 and 13 <= int(got['plan']['update']) < 24 and not loaded_updates:
+            spec_ = dict(spec_, update=int(got['plan']['update']),
+                         stop_rule=('MAIN 2026-11-09 12:23 disk-safety stop: amendment 29 evaluates the last sealed '
+                                    f'update u{int(got["plan"]["update"])} instead of u24 (disclosed)'))
+        loaded_updates.add(int(got['plan']['update']))
         if int(got['plan']['update']) != spec_['update']:
             raise Blocked(f'{label}: amendment {amendment} evaluates u{spec_["update"]}, root is u{got["plan"]["update"]}')
         if spec_['update'] != 12 or label not in IDENTITY_LABELS:   # inherited from the u12 identity root
@@ -4641,7 +4648,8 @@ def confirm_analyse(*, final_root, panel, trained_roots, amendment='28', identit
             arms[a]['activations'] = dict(worlds_with_any=sum(1 for r in receipts if r.get('activations')),
                                           total=sum(int(r.get('activations') or 0) for r in receipts))
     value = seal(dict(schema=SCHEMA+'.confirm_tables', amendment=amendment, setting=SETTING,
-                      update=spec_['update'], panel_sha256=panel['panel_sha256'], n_worlds=len(worlds),
+                      update=spec_['update'], stop_rule=spec_.get('stop_rule'),
+                      panel_sha256=panel['panel_sha256'], n_worlds=len(worlds),
                       primary_rule=spec_['rule'],
                       primary=dict(contrast=f'{spec_["contrasts"][0][0]} - {spec_["contrasts"][0][1]}',
                                    verdict=('unavailable' if primary.get('status') == 'unavailable' else
@@ -4691,7 +4699,7 @@ def main(argv=None):
     p.add_argument('--a-sha', help='bind-arms: A checkpoint sha256 at --update (optional: A = U0 alias when frozen)')
     p.add_argument('--b-sha', help='bind-arms: B checkpoint sha256 at --update')
     p.add_argument('--r-sha', help='bind-arms: R checkpoint sha256 at --update')
-    p.add_argument('--update', type=int, choices=EVAL_UPDATES,
+    p.add_argument('--update', type=int, choices=TRAINED_UPDATES,
                    help='check/bind-arms/run/analyse: the evaluated update (12 = PRIMARY, 24 = SECONDARY); required')
     p.add_argument('--mirror-config-sha256', help='check/register/run/analyse/parity: the clean run root at --root is a '
                                                   'read-only mirror on this host; the registered CONFIG.json file sha256')
