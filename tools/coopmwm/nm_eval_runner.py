@@ -370,6 +370,41 @@ def learned_trigger_hook(ck, world):
     return learned_trigger.make_hook(doc, cell, model), loaded
 
 
+A32_ARMS = ('SOLO_HOLD', 'DUO_HOLD', 'BANK_ALWAYS')     # amendment 32 ablation (MAIN 2026-11-10, owner-approved)
+
+
+def a32_hook(ck, world, arm):
+    """Amendment 32: a32_arms.make_hook (the LEARNED_TRIGGER executor, start rule / plan set per arm) for this world's
+    cell_key; bank docs and the model doc file shas re-verified; executed code == registration (a32_sha256).
+    Returns (hook, digest)."""
+    from . import a32_arms, learned_trigger
+    if arm not in A32_ARMS or ck.get('a32_arm') != arm:
+        raise ValueError(f'A32: ck a32_arm {ck.get("a32_arm")!r} is not the arm {arm!r}')
+    cell = world.get('cell_key')
+    if not cell or cell != ck.get('cell_key'):
+        raise ValueError('A32: world cell_key missing or not the bound cell_key')
+    loaded = a32_arms.a32_digest()
+    if loaded != ck.get('a32_sha256'):
+        raise ValueError('A32: a32_arms differs from its registration (a32_sha256)')
+
+    def doc(key):
+        entry = ck.get(key) or {}
+        path = Path(entry.get('path', ''))
+        if not path.is_file() or _sha(path) != entry.get('file_sha256'):
+            raise ValueError(f'A32: {key} changed after registration')
+        return json.loads(path.read_text(encoding='utf-8'))
+    kw = {}
+    if arm == 'DUO_HOLD':
+        if (ck.get('duo_bank') or {}).get('file_sha256') != a32_arms.DUO_BANK_SHA256:
+            raise ValueError('A32: DUO_HOLD bank is not UNION_UNC 39f384a2')
+        kw['union_doc'] = doc('duo_bank')
+    if arm == 'BANK_ALWAYS':
+        kw['bank_doc'] = doc('oracle_bank')
+        mdoc = ck.get('learned_trigger_model') or {}
+        kw['model'] = learned_trigger.load_model(mdoc.get('path', ''), mdoc.get('file_sha256'))
+    return a32_arms.make_hook(arm, cell, **kw), loaded
+
+
 def rule_hook(strategy, expected_sha256):
     import importlib
     if strategy not in RULE_STRATEGIES:
@@ -484,9 +519,10 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     ck = spec['checkpoint']
     arm, update = ck['arm'], int(ck['update'])
     executor, loaded, rule, oracle = native['checkpoint'], None, None, None
-    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS:
+    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS + A32_ARMS:
         kind = dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator', MAPPO_CT='mappo_comparator',
-                    ORACLE='oracle', ORACLE_WM='oracle', LEARNED_TRIGGER='learned_trigger')[spec['arm']]
+                    ORACLE='oracle', ORACLE_WM='oracle', LEARNED_TRIGGER='learned_trigger',
+                    **{a: 'a32' for a in A32_ARMS})[spec['arm']]
         if ck.get('kind') != kind or (arm, update) != ('A', 0):
             raise ValueError(f'{spec["arm"]} arm = its bound executor + the bound common u0 (zero residual)')
         # the bound zero-residual u0 (A_checkpoint_000.pt, sha re-verified), loaded by the SAME
@@ -503,6 +539,9 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
             rule = oracle
         if spec['arm'] in LEARNED_ARMS:
             oracle = learned_trigger_hook(ck, world)
+            rule = oracle
+        if spec['arm'] in A32_ARMS:
+            oracle = a32_hook(ck, world, spec['arm'])
             rule = oracle
     else:
         path = Path(native['run_root'])/f'{arm}_checkpoint_{update:03}.pt'
@@ -540,7 +579,10 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     if loaded is not None:
         extra['executor_sha256_loaded'] = loaded
     extra['vehicle_log'] = vehicle_log
-    if oracle is not None and spec['arm'] in LEARNED_ARMS:
+    if oracle is not None and spec['arm'] in A32_ARMS:
+        extra['a32_sha256_loaded'] = oracle[1]
+        extra['a32'] = oracle[0].receipts()
+    elif oracle is not None and spec['arm'] in LEARNED_ARMS:
         extra['learned_trigger_sha256_loaded'] = oracle[1]
         extra['learned_trigger'] = oracle[0].receipts()
     elif oracle is not None:
@@ -1127,7 +1169,7 @@ def episode(spec, cfg, work):
         return _native_episode(spec, cfg, work)
     if spec['arm'] == 'MAPPO_LANE':
         return _mappo_lane_episode(spec, cfg, work)
-    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS:
+    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS             + A32_ARMS:
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
 
