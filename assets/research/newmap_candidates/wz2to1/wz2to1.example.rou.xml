@@ -1,0 +1,9 @@
+<!-- ILLUSTRATIVE flat demand for sumo-gui viewing only; the probe generates per-seed Poisson
+     requests with one textbook vType per HDV (newmap_probe/probe_core.py). -->
+<routes>
+    <vType id="cav_typical" carFollowModel="IDM" accel="1.2" decel="2.0" emergencyDecel="9.0" tau="1.2" minGap="2.0" delta="4.0" sigma="0" speedFactor="1.0" speedDev="0" lcStrategic="1.0" lcCooperative="0.65" lcSpeedGain="1.0" lcAssertive="1.0" impatience="0.3" color="1,0,0"/>
+    <vType id="hdv_median" carFollowModel="IDM" accel="1.2" decel="2.0" emergencyDecel="9.0" tau="1.2" minGap="2.0" delta="4.0" sigma="0" speedFactor="1.0" speedDev="0.1" lcStrategic="1.0" lcCooperative="0.65" lcSpeedGain="1.0" lcAssertive="1.0" impatience="0.3"/>
+    <route id="main" edges="up wz"/>
+    <flow id="main_main_hdv_median" type="hdv_median" route="main" begin="0" end="1800" vehsPerHour="840.0" departLane="free" departPos="last" departSpeed="max"/>
+    <flow id="main_main_cav_typical" type="cav_typical" route="main" begin="0" end="1800" vehsPerHour="360.0" departLane="free" departPos="last" departSpeed="max"/>
+</routes>

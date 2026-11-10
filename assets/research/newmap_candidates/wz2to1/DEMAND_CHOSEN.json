@@ -1,0 +1,10 @@
+{
+ "map": "wz2to1",
+ "demand_vph": {
+  "main": 1200
+ },
+ "penetration": 0.3,
+ "note": "probe demand: peak 1200 veh/h; calibrated vs 1000/1400/1700/2000 (severe lane-end capacity drop: ~770 veh/h discharge at 1400)",
+ "seeds": "989000-989006 (registered NEWMAP range 989000-989199, map-namespaced streams)",
+ "generator": "runs/active/C4-V7FT-20261017/newmap_probe/probe_core.py write_scenario"
+}

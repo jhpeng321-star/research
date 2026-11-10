@@ -196,6 +196,17 @@ REGISTERED = {
         k_slots=512,
         rsu=dict(source='cav_reports', block_upstream_s_m=-100.0, block_downstream_m=100.0),
     ),
+    # A38 (MAIN 2026-11-10 amendment 38, feasibility/build): the 2->1 lane-drop candidate road. 2-lane approach:
+    # SUMO up_1 (the only continuing lane) -> WM 1 (adjacent lane), up_0 (dropped) -> WM 2 (closing lane);
+    # WM lane 0 has NO road lane (empty in every observation). Plant/executor use only; the WM-S model frame
+    # (wms.core.road) still requires 3 lanes, so the WM refuses this map (A38 feasibility (b)).
+    'wz2to1': dict(
+        spec_sha256='e93e63f7bc7f228b858b674cde0befd6e9a0569e36be47bb29700b3e223cb53a',
+        network_sha256='e88e095514f92f2682f943c71a6e3d8e73f00efe6bd65833cbefd91696780abe',
+        network_file_sha256='7c7e9aa3934e541196704e9161b2e97b0ce8fffe0dc292c41afb17e2387d1179',
+        k_slots=512, approach_lanes=2,
+        rsu=dict(source='cav_reports', block_upstream_s_m=-100.0, block_downstream_m=100.0),
+    ),
 }
 
 
@@ -264,12 +275,21 @@ def load(path, *, frame: FrameContract = FRAME) -> MapDescriptor:
         raise ValueError(f'{name}: network differs from the registered map')
     up = neck['edge']
     up_lanes = sorted((v for v in net['lanes'].values() if v['edge'] == up), key=lambda v: v['index'])
-    if len(up_lanes) != frame.n_lanes or int(neck['dropped_lane']) != 0:
-        raise ValueError('the frame needs a 3-lane approach whose RIGHTMOST lane (index 0) drops')
-    if sorted(int(x) for x in neck['through_lanes']) != [1, 2]:
-        raise ValueError('through lanes must be SUMO 1 and 2')
-    # SUMO index 0 is rightmost: leftmost -> WM 0, middle -> WM 1, dropped -> WM merge lane.
-    wm_of = {2: frame.main_lanes[0], 1: frame.main_lanes[1], 0: frame.merge_lane}
+    n_app = int(reg.get('approach_lanes', frame.n_lanes))
+    if len(up_lanes) != n_app or int(neck['dropped_lane']) != 0:
+        raise ValueError(f'the frame needs a {n_app}-lane approach whose RIGHTMOST lane (index 0) drops')
+    if n_app == frame.n_lanes:
+        if sorted(int(x) for x in neck['through_lanes']) != [1, 2]:
+            raise ValueError('through lanes must be SUMO 1 and 2')
+        # SUMO index 0 is rightmost: leftmost -> WM 0, middle -> WM 1, dropped -> WM merge lane.
+        wm_of = {2: frame.main_lanes[0], 1: frame.main_lanes[1], 0: frame.merge_lane}
+    elif n_app == 2:
+        if sorted(int(x) for x in neck['through_lanes']) != [1]:
+            raise ValueError('2-lane approach: the through lane must be SUMO 1')
+        # A38: the continuing lane is the closing lane's neighbour (WM 1); WM 0 stays empty.
+        wm_of = {1: frame.main_lanes[1], 0: frame.merge_lane}
+    else:
+        raise ValueError(f'unsupported approach lane count {n_app}')
     table, ends = {}, {}
     for lane in up_lanes:
         x0, x1 = _straight_x(lane)
@@ -307,7 +327,8 @@ def load(path, *, frame: FrameContract = FRAME) -> MapDescriptor:
         network_file_sha256=file_sha,
         spec_sha256=spec_digest(spec), spec_path=str(spec_path.resolve()),
         bottleneck=dict(edge=up, sumo_dropped_lane=0, drop_x_m=drop_x, drop_s_m=drop_s,
-                        closing_lane=frame.merge_lane, through_lanes=list(frame.main_lanes),
+                        closing_lane=frame.merge_lane,
+                        through_lanes=list(frame.main_lanes) if n_app == frame.n_lanes else [frame.main_lanes[1]],
                         adjacent_lane=frame.main_lanes[1], anchor_x_m=anchor, node_x_m=float(neck['x_m'])),
         streams=spec['streams'], routes=tuple(tuple(r) for r in spec['routes']))
 

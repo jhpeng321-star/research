@@ -67,7 +67,11 @@ import json
 from pathlib import Path
 import types
 
-MAP = 'wz3to2'
+try:            # A38: the runner map is the PROCESS map (N1 map_scenarios, bound by COOPMWM_MAP_SPEC at import)
+    from . import map_scenarios as _process_map
+    MAP = _process_map.MAP
+except ImportError:
+    MAP = 'wz3to2'
 NATIVE = True
 ROLE = 'final_test'
 HORIZON_S = 1200
@@ -119,6 +123,13 @@ EVAL_HELDOUT_RANGES = ((EVAL_HELDOUT_RANGE[0], EVAL_HELDOUT_RANGE[1], 993000),
 #: as-is, i.e. the bank rows / templates are looked up under this source cell (ck['bank_cell_key']) while the world
 #: is the transfer cell. Absent key (every pre-a35 spec) -> the world cell, unchanged.
 A35_BANK_CELL = 'D2800_p20'
+#: amendment 38 (MAIN 2026-11-10): in a wz2to1 process (map_scenarios rebound by COOPMWM_MAP_SPEC) the runtime ranges
+#: are ONLY the wz2to1 calibration block 996000-996007 (TRAIN-type, executed as a scope label like a33t; repeat =
+#: seed - 996000 == the map registry's TRAIN repeat). The wz2to1 evaluation panel 997000-997099 is the map's own
+#: HELD-OUT range (no runtime registration). wz3to2 processes keep EVAL_HELDOUT_RANGES unchanged.
+A38_CAL_RANGE = (996000, 996007)
+A38_EVAL_RANGES = ((A38_CAL_RANGE[0], A38_CAL_RANGE[1], A38_CAL_RANGE[0]),)
+RANGES_BY_MAP = dict(wz2to1=A38_EVAL_RANGES)
 
 
 def bank_cell(ck, cell):
@@ -131,10 +142,11 @@ def bank_cell(ck, cell):
     return A35_BANK_CELL
 
 
-def _eval_base(seed):
+def _eval_base(seed, ranges=None):
     if type(seed) is not int:
         return None
-    return next((base for lo, hi, base in EVAL_HELDOUT_RANGES if lo <= seed <= hi), None)
+    return next((base for lo, hi, base in (EVAL_HELDOUT_RANGES if ranges is None else ranges) if lo <= seed <= hi),
+                None)
 
 
 def install_eval_ranges(ms=None):
@@ -144,19 +156,20 @@ def install_eval_ranges(ms=None):
             from . import map_scenarios as ms
         except ImportError:
             return False
-    if getattr(ms, '_N6_EVAL_RANGES', None) == EVAL_HELDOUT_RANGES:
+    ranges = RANGES_BY_MAP.get(getattr(ms, 'MAP', None), EVAL_HELDOUT_RANGES)   # A38: per process map
+    if getattr(ms, '_N6_EVAL_RANGES', None) == ranges:
         return True
     if getattr(ms, '_N6_EVAL_RANGES', None) is not None:
         raise RuntimeError('map_scenarios already carries a different eval-range registration')
     scope0, world0 = ms.seed_scope, ms.world
 
     def seed_scope(seed):
-        if _eval_base(seed) is not None:
+        if _eval_base(seed, ranges) is not None:
             return 'heldout'
         return scope0(seed)
 
     def world(seed, demand, penetration):
-        base = _eval_base(seed)
+        base = _eval_base(seed, ranges)
         if base is None:
             return world0(seed, demand, penetration)
         cell = next((c for c in ms.cells() if c['demand'] == demand and c['penetration'] == penetration), None)
@@ -167,8 +180,9 @@ def install_eval_ranges(ms=None):
     ms.seed_scope, ms.world = seed_scope, world
     if hasattr(ms, 'repeat_index'):
         rep0 = ms.repeat_index
-        ms.repeat_index = lambda seed: seed-_eval_base(seed) if _eval_base(seed) is not None else rep0(seed)
-    ms._N6_EVAL_RANGES = EVAL_HELDOUT_RANGES
+        ms.repeat_index = (lambda seed: seed-_eval_base(seed, ranges) if _eval_base(seed, ranges) is not None
+                           else rep0(seed))
+    ms._N6_EVAL_RANGES = ranges
     return True
 
 
@@ -471,6 +485,27 @@ def a33_hook(ck, world):
     return a33_combined.make_hook(a33_combined.combined_bank(wm, union, cell), cell, model), loaded
 
 
+A38_ARMS = ('HOLD_R2', 'HOLD_R2_DUO01')   # amendment 38: wz2to1 hand-written hold ports (tools/coopmwm/road2.py)
+
+
+def a38_hook(ck, world, arm):
+    """Amendment 38: road2.make_hook (oracle_plan.OracleCore on the one-row unconditional hold bank, wall trigger over
+    the wz2to1 approach lanes (0, 1)) for this world's cell_key; executed code == registration (a38_sha256).
+    Returns (hook, digest)."""
+    from . import road2
+    if arm not in A38_ARMS or ck.get('a38_arm') != arm:
+        raise ValueError(f'A38: ck a38_arm {ck.get("a38_arm")!r} is not the arm {arm!r}')
+    if MAP != road2.MAP:
+        raise ValueError(f'A38: process map {MAP} is not {road2.MAP}')
+    cell = world.get('cell_key')
+    if not cell or cell != ck.get('cell_key'):
+        raise ValueError('A38: world cell_key missing or not the bound cell_key')
+    loaded = road2.a38_digest()
+    if loaded != ck.get('a38_sha256'):
+        raise ValueError('A38: road2 differs from its registration (a38_sha256)')
+    return road2.make_hook(arm, cell, WARMUP_S), loaded
+
+
 def rule_hook(strategy, expected_sha256):
     import importlib
     if strategy not in RULE_STRATEGIES:
@@ -585,10 +620,10 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     ck = spec['checkpoint']
     arm, update = ck['arm'], int(ck['update'])
     executor, loaded, rule, oracle = native['checkpoint'], None, None, None
-    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS + A32_ARMS + A33_ARMS:
+    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS + A32_ARMS + A33_ARMS             + A38_ARMS:
         kind = dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator', MAPPO_CT='mappo_comparator',
                     ORACLE='oracle', ORACLE_WM='oracle', LEARNED_TRIGGER='learned_trigger',
-                    **{a: 'a32' for a in A32_ARMS}, COMBINED='a33')[spec['arm']]
+                    **{a: 'a32' for a in A32_ARMS}, **{a: 'a38' for a in A38_ARMS}, COMBINED='a33')[spec['arm']]
         if ck.get('kind') != kind or (arm, update) != ('A', 0):
             raise ValueError(f'{spec["arm"]} arm = its bound executor + the bound common u0 (zero residual)')
         # the bound zero-residual u0 (A_checkpoint_000.pt, sha re-verified), loaded by the SAME
@@ -611,6 +646,9 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
             rule = oracle
         if spec['arm'] in A33_ARMS:
             oracle = a33_hook(ck, world)
+            rule = oracle
+        if spec['arm'] in A38_ARMS:
+            oracle = a38_hook(ck, world, spec['arm'])
             rule = oracle
     else:
         path = Path(native['run_root'])/f'{arm}_checkpoint_{update:03}.pt'
@@ -648,7 +686,10 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     if loaded is not None:
         extra['executor_sha256_loaded'] = loaded
     extra['vehicle_log'] = vehicle_log
-    if oracle is not None and spec['arm'] in A33_ARMS:
+    if oracle is not None and spec['arm'] in A38_ARMS:
+        extra['a38_sha256_loaded'] = oracle[1]
+        extra['a38'] = oracle[0].receipts()
+    elif oracle is not None and spec['arm'] in A33_ARMS:
         extra['a33_sha256_loaded'] = oracle[1]
         extra['a33'] = oracle[0].receipts()
     elif oracle is not None and spec['arm'] in A32_ARMS:
@@ -718,7 +759,7 @@ def _native_run(spec, cfg, work, *, world, stop, role):
         native.setup(rt)
         install_seed_scope()
         if map_install(job) is None:
-            raise ValueError('NATIVE evaluation requires the wz3to2 map binding')
+            raise ValueError(f'NATIVE evaluation requires the {MAP} map binding')
         patch_globals(run.__globals__, job)
         # the map binding REPLACES the plant's observations() (CAV-report rows); wrap whatever is bound now
         # (316461a4 wrapped before this patch, so the log stayed empty)
@@ -1241,7 +1282,7 @@ def episode(spec, cfg, work):
         return _native_episode(spec, cfg, work)
     if spec['arm'] == 'MAPPO_LANE':
         return _mappo_lane_episode(spec, cfg, work)
-    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS             + A32_ARMS + A33_ARMS:
+    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS             + A32_ARMS + A33_ARMS + A38_ARMS:
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
 

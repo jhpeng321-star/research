@@ -53,6 +53,37 @@ TRAIN_ROLES = frozenset({'train', 'check', 'dev', 'smoke', 'mechanics', 'calibra
 HELDOUT_ROLES = frozenset({'final_test', 'final', 'heldout', 'replication_test', 'random_guide_test'})
 SCHEMA = 'coopmwm.map_scenario.v1'
 
+#: A38 (MAIN 2026-11-10 amendment 38): the second road wz2to1. One process = one map (N1): when COOPMWM_MAP_SPEC
+#: names the wz2to1 MAP_SPEC the module-level registry below is rebound once at import; wz3to2 values are untouched.
+#: Demands: the 3-demand calibration grid around the probe's chosen 1200 veh/h (probe calibrated 1000-2000; severe
+#: lane-end capacity drop, ~770 veh/h discharge at 1400). Share 0.2 only (paper setting). Seeds: fresh audited blocks
+#: (E:/agent-work/a38/SEED_AUDIT.json): TRAIN 996000-996199 (calibration + verification), HELD-OUT 997000-997099
+#: (96-world panel 997000-997095, 997096-997099 reserved unused). 995000-995199 = merge-map HICAV, not used.
+MAP_PROFILES = {
+    'wz2to1': dict(MAP='wz2to1', DEMANDS=(1000, 1200, 1400), SHARES=(0.2,), CANONICAL_CELL_KEY='D1200_p20',
+                   TRAIN_RANGE=(996000, 996199), EXTRA_TRAIN_RANGES=(), HELDOUT_RANGE=(997000, 997099)),
+}
+
+
+def _bind_profile():
+    import os
+    path = os.environ.get('COOPMWM_MAP_SPEC')
+    if not path:
+        return None
+    sp = Path(path)
+    sp = sp/'MAP_SPEC.json' if sp.is_dir() else sp
+    try:
+        name = json.loads(sp.read_text(encoding='utf-8')).get('name')
+    except (OSError, ValueError):
+        return None
+    prof = MAP_PROFILES.get(name)
+    if prof:
+        globals().update(prof)
+    return name if prof else None
+
+
+BOUND_PROFILE = _bind_profile()
+
 
 # ------------------------------------------------------------------- cells and worlds
 def cell_key(demand, penetration):

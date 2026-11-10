@@ -249,6 +249,10 @@ SUPERSEDED = {'b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1'
               'v1 cell 2800 veh/h x 0.3 superseded by the 3200 x 0.6 clean4 cell (MAIN 2026-11-06)'}
 PANEL_AUTHORITY = 'newmap_spec.md (MAIN 2026-11-06): HELD-OUT eval 989600-989699'
 EXPOSURE_EXTRA = dict(checked=(), disclosed='')
+#: A38: None = the wz3to2 base exposure text of build_panel (unchanged); a dict(checked, disclosed) replaces it
+EXPOSURE_BASE = None
+#: A38: True only for a declared TRAIN-type block executed through the eval runner (calibration; never evaluation)
+PANEL_TRAIN_TYPE = False
 SETTING = 'p60'
 MAPPO_LANE_OOD = None
 
@@ -493,6 +497,64 @@ RUNNER_CONTRACT = dict(
 SEED_TOKEN = re.compile(r'(?<![\da-fA-F.])(9896\d\d)(?![\da-fA-F])')
 SIX_DIGITS = re.compile(r'(?<![\da-fA-F.])(\d{6})(?![\da-fA-F])')
 
+#: AMENDMENT 38 (MAIN 2026-11-10, build; registration pending): the second road wz2to1 (2->1 lane drop). One process =
+#: one map (N1): these settings rebind the map identity (MAP, MAP_SPEC_REL, NET_SHA256, TRAIN_RANGE, RUNNER_CONTRACT)
+#: and must run in a process whose COOPMWM_MAP_SPEC names the wz2to1 MAP_SPEC (tools.coopmwm.map_scenarios rebinds
+#: its registry at import; the runner MAP follows it). Every wz3to2 setting above is unchanged. Seeds (fresh audited
+#: blocks, E:/agent-work/a38/SEED_AUDIT.json): TRAIN 996000-996199, HELD-OUT 997000-997099.
+#:  * a38_cal_D<d>: CALIBRATION blocks (TRAIN-type; U0 only; never evaluation, never pooled), the same 8 seeds
+#:    996000-996007 in each demand cell (map-namespaced streams; demand differs), executed through the eval runner as a
+#:    scope label (runner A38 range, like a33t); 996008-996199 reserved (verification), unused here.
+#:  * a38_D<d>_p20: the EVALUATION panel, 96 worlds 997000-997095, 997096-997099 reserved unused. Only one of the
+#:    three is registered after calibration (MAIN pins it in SETTINGS_PINS; unpinned here).
+A38_MAP = 'wz2to1'
+A38_MAP_SPEC_REL = 'assets/research/newmap_candidates/wz2to1/MAP_SPEC.json'
+A38_NET_SHA256 = '7c7e9aa3934e541196704e9161b2e97b0ce8fffe0dc292c41afb17e2387d1179'
+A38_TRAIN_RANGE = (996000, 996199)
+A38_HELDOUT_RANGE = (997000, 997099)
+A38_CAL_SEEDS = (996000, 996007)
+A38_DEMANDS = (1000, 1200, 1400)
+A38_SHARE = 0.2
+A38_CAL_SETTINGS = tuple(f'a38_cal_D{_d}' for _d in A38_DEMANDS)
+A38_EVAL_SETTINGS = tuple(f'a38_D{_d}_p20' for _d in A38_DEMANDS)
+_A38_EXPOSURE_BASE = dict(
+    checked=('amendment-38 audit: 996000-996199 and 997000-997099 as standalone integers absent from REGISTRATION.md '
+             'seed use, protocols/experiment_history.json, every c4/* branch tip and the a28-a35 panels / run dirs '
+             '(E:/agent-work/a38/SEED_AUDIT.json); 995000-995199 = merge-map HICAV, not used',),
+    disclosed=('wz2to1 worlds are map-namespaced (streams newmap_requests_v1:wz2to1:...), so no wz2to1 traffic '
+               'realisation shares draws with any wz3to2 or merge-map world; job/world ids carry the wz2to1_ prefix'))
+_A38_COMMON = dict(
+    MAP=A38_MAP, MAP_SPEC_REL=A38_MAP_SPEC_REL, NET_SHA256=A38_NET_SHA256, TRAIN_RANGE=A38_TRAIN_RANGE,
+    RUNNER_CONTRACT={k: (v.replace('wz3to2', A38_MAP) if isinstance(v, str) else v)
+                     for k, v in dict(RUNNER_CONTRACT, MAP=A38_MAP).items()},
+    CLAIM3C_CELL=None, CLAIM3C_KEY=None, CLAIM3C_WORLDS=0, CLAIM3C_SEED_START=None, PANEL_3C_FILE=None,
+    PANEL_SHA256=None, PANEL_3C_SHA256=None, EXPOSURE_BASE=_A38_EXPOSURE_BASE,
+    PRERUN_ARMS=('U0',), EXPOSURE_EXTRA=dict(checked=(), disclosed=''))
+for _d in A38_DEMANDS:
+    SETTINGS[f'a38_cal_D{_d}'] = dict(SETTINGS['p20c'], **_A38_COMMON,
+        CELL=dict(demand=_d, penetration=A38_SHARE), PARITY_CELL=dict(demand=_d, penetration=A38_SHARE),
+        N_WORLDS=A38_CAL_SEEDS[1]-A38_CAL_SEEDS[0]+1, EVAL_RANGE=A38_CAL_SEEDS, EVAL_EXTRA_RANGE=A38_CAL_SEEDS,
+        SEEDS_RESERVED=(A38_CAL_SEEDS[1]+1, A38_TRAIN_RANGE[1]), PANEL_TRAIN_TYPE=True,
+        PANEL_SIZE_REASON=(f'MAIN amendment 38: wz2to1 CALIBRATION block D{_d}_p20, 8 TRAIN-type worlds '
+                           f'{A38_CAL_SEEDS[0]}-{A38_CAL_SEEDS[1]} (same 8 seeds in each demand cell), U0 only; '
+                           f'{A38_CAL_SEEDS[1]+1}-{A38_TRAIN_RANGE[1]} reserved (verification), unused here'),
+        CELL_AUTHORITY=f'MAIN amendment 38 (build): wz2to1 demand calibration cell D{_d}_p20 (TRAIN-type, never evaluation)',
+        PANEL_AUTHORITY=(f'A38 amendment 38: TRAIN-type integers {A38_CAL_SEEDS[0]}-{A38_CAL_SEEDS[1]} of the wz2to1 '
+                         f'TRAIN block {A38_TRAIN_RANGE[0]}-{A38_TRAIN_RANGE[1]} for demand calibration ONLY (never '
+                         'evaluation, never pooled); executed through the eval runner (scope label only)'),
+        PANEL_FILE=HERE/f'nm_eval_calblock_wz2to1_a38_cal_D{_d}.json')
+    _lo = A38_HELDOUT_RANGE[0]
+    SETTINGS[f'a38_D{_d}_p20'] = dict(SETTINGS['p20c'], **_A38_COMMON,
+        CELL=dict(demand=_d, penetration=A38_SHARE), PARITY_CELL=dict(demand=_d, penetration=A38_SHARE),
+        N_WORLDS=96, EVAL_RANGE=A38_HELDOUT_RANGE, EVAL_EXTRA_RANGE=None, SEEDS_RESERVED=(_lo+96, _lo+99),
+        PANEL_TRAIN_TYPE=False,
+        PANEL_SIZE_REASON=(f'MAIN amendment 38: a FRESH 96-world wz2to1 evaluation panel {_lo}-{_lo+95} (D{_d}_p20); '
+                           f'{_lo+96}-{_lo+99} reserved unused'),
+        CELL_AUTHORITY=f'MAIN amendment 38: wz2to1 evaluation cell D{_d}_p20 (chosen by the U0 calibration)',
+        PANEL_AUTHORITY=(f'A38 amendment 38: fresh audited wz2to1 HELD-OUT integers {_lo}-{_lo+95} (the map registry '
+                         f'HELD-OUT range {A38_HELDOUT_RANGE[0]}-{A38_HELDOUT_RANGE[1]}); evaluation only'),
+        PANEL_FILE=HERE/f'nm_eval_panel_wz2to1_a38_D{_d}_p20.json')
+
 
 def _eval_tokens(text):
     """Six-digit tokens inside the setting's EVAL_RANGE (p60: exactly the SEED_TOKEN 9896xx hits; amendment 28: the
@@ -602,10 +664,10 @@ def build_panel(spec_path, registered_utc, *, demand=None, penetration=None):
     if net_sha != NET_SHA256:
         raise Blocked(f'network bytes {net_sha} are not the staged probe network {NET_SHA256}')
     if desc.name != MAP or set(spec['streams']) != {'main'}:
-        raise Blocked('MAP_SPEC is not the single-stream wz3to2 map')
+        raise Blocked(f'MAP_SPEC is not the single-stream {MAP} map')
     registered = next((c for c in ms.cells() if c['demand'] == demand and c['penetration'] == penetration), None)
     if registered is None:
-        raise Blocked(f'({demand}, {penetration}) is not a registered N1 wz3to2 cell')
+        raise Blocked(f'({demand}, {penetration}) is not a registered N1 {MAP} cell')
     stream = spec['streams']['main']
     cell = dict(demand_vph={'main': int(demand)}, penetration=float(penetration), cell=registered['cell'],
                 cell_key=registered['cell_key'], profile=stream['profile'], depart_lane=stream['depart_lane'],
@@ -680,12 +742,14 @@ def build_panel(spec_path, registered_utc, *, demand=None, penetration=None):
                      'newmap_requests_v1:{map}:{seed}:{stream}, CAV identity newmap_cav_v1:..., HDV parameters '
                      'sample_driver("{map}:{seed}", id)'),
         exposure=dict(
-            checked=['newmap_probe ledger: seeds 989000-989006 only', 'NEWMAP2: TRAIN 989200-989202 only',
-                     'tools/coopmwm, traffic_shepherd, ops code']+list(EXPOSURE_EXTRA['checked']),
-            disclosed=('integers 989600-989635 are the OLD merge-map S-COOPMWM final_test worlds '
-                       '(tools/coopmwm/protocol.py FINAL_START); wz3to2 worlds are map-namespaced, so no wz3to2 '
-                       'traffic realisation shares draws with them; job/world ids carry the wz3to2_ prefix'
-                       +EXPOSURE_EXTRA['disclosed'])),
+            checked=(list(EXPOSURE_BASE['checked']) if EXPOSURE_BASE else
+                     ['newmap_probe ledger: seeds 989000-989006 only', 'NEWMAP2: TRAIN 989200-989202 only',
+                      'tools/coopmwm, traffic_shepherd, ops code'])+list(EXPOSURE_EXTRA['checked']),
+            disclosed=(EXPOSURE_BASE['disclosed'] if EXPOSURE_BASE else
+                       ('integers 989600-989635 are the OLD merge-map S-COOPMWM final_test worlds '
+                        '(tools/coopmwm/protocol.py FINAL_START); wz3to2 worlds are map-namespaced, so no wz3to2 '
+                        'traffic realisation shares draws with them; job/world ids carry the wz3to2_ prefix'))
+                      +EXPOSURE_EXTRA['disclosed']),
         worlds=worlds, contract=contract, power=power)
     return seal(json.loads(json.dumps(panel)), 'panel_sha256')
 
@@ -697,10 +761,11 @@ def validate_panel(panel):
     worlds = panel.get('worlds') or []
     seeds = [r['world']['seed'] for r in worlds]
     if panel.get('map') != MAP or len(worlds) != N_WORLDS or len(set(seeds)) != N_WORLDS:
-        raise Blocked('panel must hold 96 distinct wz3to2 worlds')
+        raise Blocked(f'panel must hold {N_WORLDS} distinct {MAP} worlds')
     for row in worlds:
         s = row['world']['seed']
-        if not EVAL_RANGE[0] <= s <= EVAL_RANGE[1] or TRAIN_RANGE[0] <= s <= TRAIN_RANGE[1]:
+        # A38: a declared TRAIN-type block (calibration) lies inside the map TRAIN range by registration
+        if not EVAL_RANGE[0] <= s <= EVAL_RANGE[1] or (not PANEL_TRAIN_TYPE and TRAIN_RANGE[0] <= s <= TRAIN_RANGE[1]):
             raise Blocked(f'panel seed {s} outside the registered evaluation range')
         if row != dict(world_id=f'{MAP}_{s}', world=_world(s, panel['cell'])):
             raise Blocked(f'panel world {s} does not follow the registered cell/identity rule')
