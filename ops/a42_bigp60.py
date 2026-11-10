@@ -60,7 +60,7 @@ BANK_DIR = 'a42_banks'
 A42_DIR = HERE/'a42'
 CANDS_FILE = A42_DIR/f'CANDIDATES_{CELL}.json'
 #: pinned when MAIN registers the candidates (before any A42 SUMO); None = not registered -> verify refuses
-CANDIDATES_DOC_SHA256 = None
+CANDIDATES_DOC_SHA256 = '2f0d354a8c118765c228b2f82ff3b380f5361164c98c6e3c50b5a21b9c5a615e'
 IDENT_WAVE = 'A42_IDENT_U0'
 #: identity panels (A37/A41 pattern; no reference exists for an a35 D2800_p60 world, see PLAN note): tag, file, pin
 IDENT_PANELS = (('p20c', 'nm_eval_panel_wz3to2_p20c_D2800.json',

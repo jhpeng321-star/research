@@ -1,0 +1,1991 @@
+{
+ "STOP": false,
+ "amendment": "42",
+ "candidates": [
+  {
+   "family": "rand_91d30849c3357aae",
+   "key": "91d30849c3357aae",
+   "n_roles": 5,
+   "name": "rand_91d30849c3357aae",
+   "score": -14.05,
+   "selected_rank": 1,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "rand_91d30849c3357aae",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   },
+   "strategy_sha256": "5a9cee1123a367f09a6637e1521606a97518807cdfcd9d4c2b5c6b67bb8baa76",
+   "usable_larger_group": true,
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": 0.074,
+    "fair_cal": true,
+    "feasible": 0.05555555555555555,
+    "gain_vs_base": 0.2,
+    "gain_vs_base_lcb": 0.0,
+    "gain_vs_inc": -588.51,
+    "n_states": 18,
+    "worst_group_inc": 0.104
+   },
+   "wm_rank": 10
+  },
+  {
+   "family": "mut_2922c89d0b31d4c8",
+   "key": "2922c89d0b31d4c8",
+   "n_roles": 6,
+   "name": "mut_2922c89d0b31d4c8",
+   "score": -31.91,
+   "selected_rank": 2,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "mut_2922c89d0b31d4c8",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   },
+   "strategy_sha256": "c48dfa7cdffc9acdea0e61ffd705c2e6cca08ae068f8cccf119bc69bc692849a",
+   "usable_larger_group": true,
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": 1.135,
+    "fair_cal": true,
+    "feasible": 0.16666666666666666,
+    "gain_vs_base": 0.78,
+    "gain_vs_base_lcb": -1.3,
+    "gain_vs_inc": -587.93,
+    "n_states": 18,
+    "worst_group_inc": 0.817
+   },
+   "wm_rank": 11
+  },
+  {
+   "family": "rand_bb1cb39d47f0a524",
+   "key": "bb1cb39d47f0a524",
+   "n_roles": 5,
+   "name": "rand_bb1cb39d47f0a524",
+   "score": -38.23,
+   "selected_rank": 3,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "rand_bb1cb39d47f0a524",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   },
+   "strategy_sha256": "ca2a7ff4ad000c18edeb105ffc69274a222836892673686eb483973d408efb8a",
+   "usable_larger_group": true,
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": -2.982,
+    "fair_cal": true,
+    "feasible": 0.16666666666666666,
+    "gain_vs_base": 326.44,
+    "gain_vs_base_lcb": 0.0,
+    "gain_vs_inc": -262.28,
+    "n_states": 18,
+    "worst_group_inc": 0.802
+   },
+   "wm_rank": 12
+  },
+  {
+   "family": "mut_d7251d07b4f749e0",
+   "key": "d7251d07b4f749e0",
+   "n_roles": 6,
+   "name": "mut_d7251d07b4f749e0",
+   "score": -45.82,
+   "selected_rank": 4,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "mut_d7251d07b4f749e0",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   },
+   "strategy_sha256": "4d2622dc66227a9e36b896f06d8ec81cf96828fed362ab07dccc7a35c6f27843",
+   "usable_larger_group": true,
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": -0.007,
+    "fair_cal": true,
+    "feasible": 0.16666666666666666,
+    "gain_vs_base": 85.12,
+    "gain_vs_base_lcb": -6.98,
+    "gain_vs_inc": -503.6,
+    "n_states": 18,
+    "worst_group_inc": 0.958
+   },
+   "wm_rank": 13
+  },
+  {
+   "family": "rand_126ff1415b86997c",
+   "key": "126ff1415b86997c",
+   "n_roles": 4,
+   "name": "rand_126ff1415b86997c",
+   "score": -89.85,
+   "selected_rank": 5,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "rand_126ff1415b86997c",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   },
+   "strategy_sha256": "7eb6295cbff93c95f24307330816a710abc8645b379dc60b73c4a5702b20031c",
+   "usable_larger_group": true,
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": 0.215,
+    "fair_cal": true,
+    "feasible": 0.05555555555555555,
+    "gain_vs_base": -26.26,
+    "gain_vs_base_lcb": -78.79,
+    "gain_vs_inc": -614.97,
+    "n_states": 18,
+    "worst_group_inc": 0.176
+   },
+   "wm_rank": 14
+  },
+  {
+   "family": "rand_3a452b1348b01083",
+   "key": "3a452b1348b01083",
+   "n_roles": 5,
+   "name": "rand_3a452b1348b01083",
+   "score": -120.23,
+   "selected_rank": 6,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "rand_3a452b1348b01083",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   },
+   "strategy_sha256": "b512f36f43f28e0172c0f8e28ec1305208f1c5a043f6bea13977e374dfa5d776",
+   "usable_larger_group": true,
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": -3.313,
+    "fair_cal": false,
+    "feasible": 0.2777777777777778,
+    "gain_vs_base": 334.6,
+    "gain_vs_base_lcb": -38.38,
+    "gain_vs_inc": -254.11,
+    "n_states": 18,
+    "worst_group_inc": 1.617
+   },
+   "wm_rank": 15
+  }
+ ],
+ "cell": "D2800_p60",
+ "diverse": {
+  "amendment": "45",
+  "candidates": [
+   {
+    "class_counts": {
+     "eligible_not_top": 2,
+     "in_top_k": 0
+    },
+    "class_key": "n_roles=5|n_lanes=3|staggered=1|zone=full|phases=False",
+    "diverse_rank": 1,
+    "family": "rand_3dfc1e76fa2a4a72",
+    "final_index": 15,
+    "key": "3dfc1e76fa2a4a72",
+    "n_roles": 5,
+    "name": "rand_3dfc1e76fa2a4a72",
+    "score": -128.73,
+    "skip": null,
+    "strategy": {
+     "cooldown_s": 200,
+     "gate": null,
+     "name": "rand_3dfc1e76fa2a4a72",
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 1,
+       "v_w": 19.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 20.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 19.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 0,
+       "v_w": 20.0
+      }
+     ],
+     "slots": 1,
+     "spread_m": 300.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "full"
+    },
+    "strategy_sha256": "fc0677182bc74f4e9184c3020415f2a0b518d2c25965b57118f88bd87ea1e5fc",
+    "structural_class": {
+     "n_lanes": 3,
+     "n_roles": 5,
+     "phases": false,
+     "staggered": 1,
+     "zone": "full"
+    },
+    "wm": {
+     "bounded": true,
+     "cvar90_inc": 0.573,
+     "fair_cal": true,
+     "feasible": 0.05555555555555555,
+     "gain_vs_base": -41.88,
+     "gain_vs_base_lcb": -125.64,
+     "gain_vs_inc": -630.59,
+     "n_states": 18,
+     "worst_group_inc": 0.216
+    },
+    "wm_rank": 16
+   },
+   {
+    "class_counts": {
+     "eligible_not_top": 2,
+     "in_top_k": 2
+    },
+    "class_key": "n_roles=5|n_lanes=3|staggered=1|zone=far|phases=False",
+    "diverse_rank": 2,
+    "family": "rand_cfa9b70a3782d48e",
+    "final_index": 16,
+    "key": "cfa9b70a3782d48e",
+    "n_roles": 5,
+    "name": "rand_cfa9b70a3782d48e",
+    "score": -162.77,
+    "skip": null,
+    "strategy": {
+     "cooldown_s": 180,
+     "gate": null,
+     "name": "rand_cfa9b70a3782d48e",
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 22.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 90,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 1,
+       "v_w": 19.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 1,
+       "v_w": 22.0
+      }
+     ],
+     "slots": 1,
+     "spread_m": 300.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "far"
+    },
+    "strategy_sha256": "6afb26bf6cb40d75a741eb55fac213357bbd13e277a795124f8d34238400a6fb",
+    "structural_class": {
+     "n_lanes": 3,
+     "n_roles": 5,
+     "phases": false,
+     "staggered": 1,
+     "zone": "far"
+    },
+    "wm": {
+     "bounded": true,
+     "cvar90_inc": 0.197,
+     "fair_cal": true,
+     "feasible": 0.16666666666666666,
+     "gain_vs_base": 60.64,
+     "gain_vs_base_lcb": -124.84,
+     "gain_vs_inc": -528.07,
+     "n_states": 18,
+     "worst_group_inc": 0.898
+    },
+    "wm_rank": 17
+   },
+   {
+    "class_counts": {
+     "eligible_not_top": 3,
+     "in_top_k": 0
+    },
+    "class_key": "n_roles=4|n_lanes=3|staggered=1|zone=far|phases=False",
+    "diverse_rank": 3,
+    "family": "rand_1dcc6dea39c8ad8f",
+    "final_index": 17,
+    "key": "1dcc6dea39c8ad8f",
+    "n_roles": 4,
+    "name": "rand_1dcc6dea39c8ad8f",
+    "score": -168.1,
+    "skip": null,
+    "strategy": {
+     "cooldown_s": 180,
+     "gate": null,
+     "name": "rand_1dcc6dea39c8ad8f",
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.5,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 1,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 0,
+       "v_w": 22.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 1,
+       "v_w": 18.0
+      }
+     ],
+     "slots": 1,
+     "spread_m": 300.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "far"
+    },
+    "strategy_sha256": "4cbe3c52b438f729f61035980d0058021294bc16a0a293d59b5ba1f41824e159",
+    "structural_class": {
+     "n_lanes": 3,
+     "n_roles": 4,
+     "phases": false,
+     "staggered": 1,
+     "zone": "far"
+    },
+    "wm": {
+     "bounded": true,
+     "cvar90_inc": 0.526,
+     "fair_cal": true,
+     "feasible": 0.2777777777777778,
+     "gain_vs_base": 152.67,
+     "gain_vs_base_lcb": -101.61,
+     "gain_vs_inc": -436.04,
+     "n_states": 18,
+     "worst_group_inc": 1.087
+    },
+    "wm_rank": 18
+   },
+   {
+    "class_counts": {
+     "eligible_not_top": 1,
+     "in_top_k": 1
+    },
+    "class_key": "n_roles=4|n_lanes=3|staggered=0|zone=full|phases=False",
+    "diverse_rank": 4,
+    "family": "rand_202ecfc9e5fb1a40",
+    "final_index": 19,
+    "key": "202ecfc9e5fb1a40",
+    "n_roles": 4,
+    "name": "rand_202ecfc9e5fb1a40",
+    "score": -172.34,
+    "skip": null,
+    "strategy": {
+     "cooldown_s": 200,
+     "gate": null,
+     "name": "rand_202ecfc9e5fb1a40",
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 90,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 0,
+       "v_w": 18.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 18.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 0,
+       "v_w": 20.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 19.0
+      }
+     ],
+     "slots": 1,
+     "spread_m": 300.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "full"
+    },
+    "strategy_sha256": "c2b29357b70f626efce14870188bf6fe304e3671590d1b1c860583ac9f263a4a",
+    "structural_class": {
+     "n_lanes": 3,
+     "n_roles": 4,
+     "phases": false,
+     "staggered": 0,
+     "zone": "full"
+    },
+    "wm": {
+     "bounded": true,
+     "cvar90_inc": 0.512,
+     "fair_cal": true,
+     "feasible": 0.05555555555555555,
+     "gain_vs_base": -53.33,
+     "gain_vs_base_lcb": -159.99,
+     "gain_vs_inc": -642.04,
+     "n_states": 18,
+     "worst_group_inc": 0.276
+    },
+    "wm_rank": 20
+   },
+   {
+    "class_counts": {
+     "eligible_not_top": 1,
+     "in_top_k": 0
+    },
+    "class_key": "n_roles=4|n_lanes=3|staggered=0|zone=far|phases=False",
+    "diverse_rank": 5,
+    "family": "rand_986ba5c3bc410c31",
+    "final_index": 20,
+    "key": "986ba5c3bc410c31",
+    "n_roles": 4,
+    "name": "rand_986ba5c3bc410c31",
+    "score": -172.96,
+    "skip": null,
+    "strategy": {
+     "cooldown_s": 180,
+     "gate": null,
+     "name": "rand_986ba5c3bc410c31",
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 1,
+       "v_w": 18.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 180,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 22.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 19.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 180,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 19.0
+      }
+     ],
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "far"
+    },
+    "strategy_sha256": "a41b26c3dc6e0b8d38a802e59a989accb69994f85a6c59b7bfd64bfea3c9709e",
+    "structural_class": {
+     "n_lanes": 3,
+     "n_roles": 4,
+     "phases": false,
+     "staggered": 0,
+     "zone": "far"
+    },
+    "wm": {
+     "bounded": true,
+     "cvar90_inc": -0.711,
+     "fair_cal": false,
+     "feasible": 0.3333333333333333,
+     "gain_vs_base": 144.6,
+     "gain_vs_base_lcb": -113.78,
+     "gain_vs_inc": -444.11,
+     "n_states": 18,
+     "worst_group_inc": 1.49
+    },
+    "wm_rank": 21
+   },
+   {
+    "class_counts": {
+     "eligible_not_top": 1,
+     "in_top_k": 2
+    },
+    "class_key": "n_roles=6|n_lanes=3|staggered=1|zone=far|phases=False",
+    "diverse_rank": 6,
+    "family": "rand_64b48416a0f97a4e",
+    "final_index": 21,
+    "key": "64b48416a0f97a4e",
+    "n_roles": 6,
+    "name": "rand_64b48416a0f97a4e",
+    "score": -180.22,
+    "skip": null,
+    "strategy": {
+     "cooldown_s": 200,
+     "gate": null,
+     "name": "rand_64b48416a0f97a4e",
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.5,
+       "hold_s": 180,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 180,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 0,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 90,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 20.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 21.0
+      }
+     ],
+     "slots": 1,
+     "spread_m": 300.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "far"
+    },
+    "strategy_sha256": "b55d3bced5b6c514c3ef456085b391098f90ff6cc5fe9ba1c920eb20f5fdcfb5",
+    "structural_class": {
+     "n_lanes": 3,
+     "n_roles": 6,
+     "phases": false,
+     "staggered": 1,
+     "zone": "far"
+    },
+    "wm": {
+     "bounded": true,
+     "cvar90_inc": 0.504,
+     "fair_cal": true,
+     "feasible": 0.16666666666666666,
+     "gain_vs_base": -9.67,
+     "gain_vs_base_lcb": -136.19,
+     "gain_vs_inc": -598.38,
+     "n_states": 18,
+     "worst_group_inc": 0.344
+    },
+    "wm_rank": 22
+   },
+   {
+    "class_counts": {
+     "eligible_not_top": 2,
+     "in_top_k": 0
+    },
+    "class_key": "n_roles=4|n_lanes=3|staggered=1|zone=full|phases=False",
+    "diverse_rank": 7,
+    "family": "mut_83d437acad64130d",
+    "final_index": 23,
+    "key": "83d437acad64130d",
+    "n_roles": 4,
+    "name": "mut_83d437acad64130d",
+    "score": -209.7,
+    "skip": null,
+    "strategy": {
+     "cooldown_s": 200,
+     "gate": null,
+     "name": "mut_83d437acad64130d",
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.5,
+       "hold_s": 90,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 18.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 22.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 0,
+       "v_w": 18.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 19.0
+      }
+     ],
+     "slots": 1,
+     "spread_m": 300.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "full"
+    },
+    "strategy_sha256": "119d59da8a8fefb8fd688d4c80029fcbf6b2c824ec9e378a6c1ce196106f7f8f",
+    "structural_class": {
+     "n_lanes": 3,
+     "n_roles": 4,
+     "phases": false,
+     "staggered": 1,
+     "zone": "full"
+    },
+    "wm": {
+     "bounded": true,
+     "cvar90_inc": 0.868,
+     "fair_cal": true,
+     "feasible": 0.05555555555555555,
+     "gain_vs_base": -66.1,
+     "gain_vs_base_lcb": -198.3,
+     "gain_vs_inc": -654.81,
+     "n_states": 18,
+     "worst_group_inc": 0.267
+    },
+    "wm_rank": 24
+   },
+   {
+    "class_counts": {
+     "eligible_not_top": 1,
+     "in_top_k": 0
+    },
+    "class_key": "n_roles=4|n_lanes=3|staggered=0|zone=near|phases=False",
+    "diverse_rank": 8,
+    "family": "rand_563522080dbb631a",
+    "final_index": 24,
+    "key": "563522080dbb631a",
+    "n_roles": 4,
+    "name": "rand_563522080dbb631a",
+    "score": -220.4,
+    "skip": null,
+    "strategy": {
+     "cooldown_s": 120,
+     "gate": null,
+     "name": "rand_563522080dbb631a",
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.5,
+       "hold_s": 90,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 90,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 1,
+       "v_w": 18.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 1,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 21.0
+      }
+     ],
+     "slots": 1,
+     "spread_m": 300.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "near"
+    },
+    "strategy_sha256": "269de088a6755b9b4a6d980321ec0d576d607e78f4449ea8b80f17daffc20c95",
+    "structural_class": {
+     "n_lanes": 3,
+     "n_roles": 4,
+     "phases": false,
+     "staggered": 0,
+     "zone": "near"
+    },
+    "wm": {
+     "bounded": true,
+     "cvar90_inc": 0.733,
+     "fair_cal": true,
+     "feasible": 0.05555555555555555,
+     "gain_vs_base": -71.12,
+     "gain_vs_base_lcb": -213.37,
+     "gain_vs_inc": -659.83,
+     "n_states": 18,
+     "worst_group_inc": 0.373
+    },
+    "wm_rank": 25
+   },
+   {
+    "class_counts": {
+     "eligible_not_top": 1,
+     "in_top_k": 0
+    },
+    "class_key": "n_roles=3|n_lanes=2|staggered=1|zone=far|phases=False",
+    "diverse_rank": 9,
+    "family": "rand_ff5c57c5c303c194",
+    "final_index": 26,
+    "key": "ff5c57c5c303c194",
+    "n_roles": 3,
+    "name": "rand_ff5c57c5c303c194",
+    "score": -279.59,
+    "skip": null,
+    "strategy": {
+     "cooldown_s": 200,
+     "gate": null,
+     "name": "rand_ff5c57c5c303c194",
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.5,
+       "hold_s": 90,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 18.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 90,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 22.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 0,
+       "v_w": 21.0
+      }
+     ],
+     "slots": 1,
+     "spread_m": 300.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "far"
+    },
+    "strategy_sha256": "3e3319fcc471f9a592115b07ba9be0c8bc18f382d74d186a43b85cc136ea7f32",
+    "structural_class": {
+     "n_lanes": 2,
+     "n_roles": 3,
+     "phases": false,
+     "staggered": 1,
+     "zone": "far"
+    },
+    "wm": {
+     "bounded": true,
+     "cvar90_inc": 1.595,
+     "fair_cal": false,
+     "feasible": 0.3333333333333333,
+     "gain_vs_base": -22.54,
+     "gain_vs_base_lcb": -206.93,
+     "gain_vs_inc": -611.25,
+     "n_states": 18,
+     "worst_group_inc": 1.268
+    },
+    "wm_rank": 27
+   },
+   {
+    "class_counts": {
+     "eligible_not_top": 1,
+     "in_top_k": 0
+    },
+    "class_key": "n_roles=3|n_lanes=3|staggered=0|zone=far|phases=False",
+    "diverse_rank": 10,
+    "family": "rand_b7f8277c6c071619",
+    "final_index": 28,
+    "key": "b7f8277c6c071619",
+    "n_roles": 3,
+    "name": "rand_b7f8277c6c071619",
+    "score": -318.28,
+    "skip": null,
+    "strategy": {
+     "cooldown_s": 200,
+     "gate": null,
+     "name": "rand_b7f8277c6c071619",
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.5,
+       "hold_s": 90,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 0,
+       "v_w": 18.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 20.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 90,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 0,
+       "v_w": 22.0
+      }
+     ],
+     "slots": 1,
+     "spread_m": 300.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "far"
+    },
+    "strategy_sha256": "b947a1496d7d562f695c8a1040178ad9c44f05d2d5187ea2d8026d7bd0d29297",
+    "structural_class": {
+     "n_lanes": 3,
+     "n_roles": 3,
+     "phases": false,
+     "staggered": 0,
+     "zone": "far"
+    },
+    "wm": {
+     "bounded": true,
+     "cvar90_inc": 0.255,
+     "fair_cal": true,
+     "feasible": 0.2777777777777778,
+     "gain_vs_base": -9.06,
+     "gain_vs_base_lcb": -265.84,
+     "gain_vs_inc": -597.77,
+     "n_states": 18,
+     "worst_group_inc": 0.382
+    },
+    "wm_rank": 29
+   },
+   {
+    "class_counts": {
+     "eligible_not_top": 1,
+     "in_top_k": 0
+    },
+    "class_key": "n_roles=3|n_lanes=3|staggered=0|zone=full|phases=False",
+    "diverse_rank": 11,
+    "family": "rand_b4cfd3a63f8d767c",
+    "final_index": 29,
+    "key": "b4cfd3a63f8d767c",
+    "n_roles": 3,
+    "name": "rand_b4cfd3a63f8d767c",
+    "score": -328.17,
+    "skip": null,
+    "strategy": {
+     "cooldown_s": 200,
+     "gate": null,
+     "name": "rand_b4cfd3a63f8d767c",
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 0,
+       "v_w": 22.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 0,
+       "v_w": 21.0
+      }
+     ],
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "full"
+    },
+    "strategy_sha256": "7c019be5e1193eb6df0cbe3004667c0b5641f0c7065de9430382f4cb5c0b0b8d",
+    "structural_class": {
+     "n_lanes": 3,
+     "n_roles": 3,
+     "phases": false,
+     "staggered": 0,
+     "zone": "full"
+    },
+    "wm": {
+     "bounded": true,
+     "cvar90_inc": 1.388,
+     "fair_cal": false,
+     "feasible": 0.2777777777777778,
+     "gain_vs_base": -90.11,
+     "gain_vs_base_lcb": -303.58,
+     "gain_vs_inc": -678.82,
+     "n_states": 18,
+     "worst_group_inc": 0.509
+    },
+    "wm_rank": 30
+   },
+   {
+    "class_counts": {
+     "eligible_not_top": 2,
+     "in_top_k": 1
+    },
+    "class_key": "n_roles=5|n_lanes=3|staggered=1|zone=near|phases=False",
+    "diverse_rank": 12,
+    "family": "rand_98840190cd07e1c4",
+    "final_index": 30,
+    "key": "98840190cd07e1c4",
+    "n_roles": 5,
+    "name": "rand_98840190cd07e1c4",
+    "score": -395.57,
+    "skip": null,
+    "strategy": {
+     "cooldown_s": 180,
+     "gate": null,
+     "name": "rand_98840190cd07e1c4",
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 90,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 18.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 21.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 180,
+       "lane": 0,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 0,
+       "v_w": 19.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 90,
+       "lane": 2,
+       "lc_target": null,
+       "onset_s": 0,
+       "rank": 1,
+       "v_w": 22.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lane": 1,
+       "lc_target": null,
+       "onset_s": 20,
+       "rank": 1,
+       "v_w": 22.0
+      }
+     ],
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "near"
+    },
+    "strategy_sha256": "f661ffb8b0b6fdbd5cd13cf17ee1d6859026aadfa0194b3b26a37943a6f7a169",
+    "structural_class": {
+     "n_lanes": 3,
+     "n_roles": 5,
+     "phases": false,
+     "staggered": 1,
+     "zone": "near"
+    },
+    "wm": {
+     "bounded": true,
+     "cvar90_inc": 3.567,
+     "fair_cal": false,
+     "feasible": 0.16666666666666666,
+     "gain_vs_base": -154.24,
+     "gain_vs_base_lcb": -357.66,
+     "gain_vs_inc": -742.95,
+     "n_states": 18,
+     "worst_group_inc": 0.916
+    },
+    "wm_rank": 31
+   }
+  ],
+  "cap": 12,
+  "class_fields": [
+   "n_roles",
+   "n_lanes",
+   "staggered",
+   "zone",
+   "phases"
+  ],
+  "descriptor_fields": [
+   "n_roles",
+   "n_lanes",
+   "n_lc",
+   "speed_class",
+   "staggered",
+   "zone",
+   "trigger",
+   "gate",
+   "start_gate",
+   "phases"
+  ],
+  "n_classes": 13,
+  "n_classes_with_top_k_rows": 4,
+  "n_selected": 12,
+  "rule": "AMENDMENT 45: among eligible `final` rows (same skips as the A42 rule) NOT in the A42 top 6, group by structural class (n_roles, n_lanes, staggered, zone, phases) read from the row descriptor; per class the best row by WM score; classes ordered by that score; at most 12; ties by the order in `final`",
+  "skip_counts": {
+   "in_top_k": 6,
+   "not_class_best": 6,
+   "not_eligible": 9,
+   "over_cap": 1
+  }
+ },
+ "doc_sha256": "2f0d354a8c118765c228b2f82ff3b380f5361164c98c6e3c50b5a21b9c5a615e",
+ "k": 6,
+ "n_eligible": 25,
+ "n_selected": 6,
+ "n_skipped": 9,
+ "n_usable_larger_in_candidates": 6,
+ "n_usable_larger_in_whole_final_list": 25,
+ "ranking": [
+  {
+   "key": "c6b176478af8c50c",
+   "name": "wall_g_solo2",
+   "score": 262.92,
+   "skip": "comparator",
+   "wm_rank": 1
+  },
+  {
+   "key": "6146cc2c7da3ce59",
+   "name": "solo2",
+   "score": 178.43,
+   "skip": "comparator",
+   "wm_rank": 2
+  },
+  {
+   "key": "3dee21d4da24a1b1",
+   "name": "rand_3dee21d4da24a1b1",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 3
+  },
+  {
+   "key": "4337b2b50205656b",
+   "name": "rand_4337b2b50205656b",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 4
+  },
+  {
+   "key": "45cd44dd577c3f05",
+   "name": "rand_45cd44dd577c3f05",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 5
+  },
+  {
+   "key": "6be5c14bb34f4c9b",
+   "name": "rand_6be5c14bb34f4c9b",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 6
+  },
+  {
+   "key": "aa4b1cc525925226",
+   "name": "rand_aa4b1cc525925226",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 7
+  },
+  {
+   "key": "d40ad9a836606870",
+   "name": "rand_d40ad9a836606870",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 8
+  },
+  {
+   "key": "ee885c06c42b08f5",
+   "name": "mut_ee885c06c42b08f5",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 9
+  },
+  {
+   "key": "91d30849c3357aae",
+   "name": "rand_91d30849c3357aae",
+   "score": -14.05,
+   "skip": null,
+   "wm_rank": 10
+  },
+  {
+   "key": "2922c89d0b31d4c8",
+   "name": "mut_2922c89d0b31d4c8",
+   "score": -31.91,
+   "skip": null,
+   "wm_rank": 11
+  },
+  {
+   "key": "bb1cb39d47f0a524",
+   "name": "rand_bb1cb39d47f0a524",
+   "score": -38.23,
+   "skip": null,
+   "wm_rank": 12
+  },
+  {
+   "key": "d7251d07b4f749e0",
+   "name": "mut_d7251d07b4f749e0",
+   "score": -45.82,
+   "skip": null,
+   "wm_rank": 13
+  },
+  {
+   "key": "126ff1415b86997c",
+   "name": "rand_126ff1415b86997c",
+   "score": -89.85,
+   "skip": null,
+   "wm_rank": 14
+  },
+  {
+   "key": "3a452b1348b01083",
+   "name": "rand_3a452b1348b01083",
+   "score": -120.23,
+   "skip": null,
+   "wm_rank": 15
+  },
+  {
+   "key": "3dfc1e76fa2a4a72",
+   "name": "rand_3dfc1e76fa2a4a72",
+   "score": -128.73,
+   "skip": null,
+   "wm_rank": 16
+  },
+  {
+   "key": "cfa9b70a3782d48e",
+   "name": "rand_cfa9b70a3782d48e",
+   "score": -162.77,
+   "skip": null,
+   "wm_rank": 17
+  },
+  {
+   "key": "1dcc6dea39c8ad8f",
+   "name": "rand_1dcc6dea39c8ad8f",
+   "score": -168.1,
+   "skip": null,
+   "wm_rank": 18
+  },
+  {
+   "key": "b06a5c00df0894f7",
+   "name": "mut_b06a5c00df0894f7",
+   "score": -169.89,
+   "skip": null,
+   "wm_rank": 19
+  },
+  {
+   "key": "202ecfc9e5fb1a40",
+   "name": "rand_202ecfc9e5fb1a40",
+   "score": -172.34,
+   "skip": null,
+   "wm_rank": 20
+  },
+  {
+   "key": "986ba5c3bc410c31",
+   "name": "rand_986ba5c3bc410c31",
+   "score": -172.96,
+   "skip": null,
+   "wm_rank": 21
+  },
+  {
+   "key": "64b48416a0f97a4e",
+   "name": "rand_64b48416a0f97a4e",
+   "score": -180.22,
+   "skip": null,
+   "wm_rank": 22
+  },
+  {
+   "key": "27d8ac4c3266a790",
+   "name": "mut_27d8ac4c3266a790",
+   "score": -183.96,
+   "skip": null,
+   "wm_rank": 23
+  },
+  {
+   "key": "83d437acad64130d",
+   "name": "mut_83d437acad64130d",
+   "score": -209.7,
+   "skip": null,
+   "wm_rank": 24
+  },
+  {
+   "key": "563522080dbb631a",
+   "name": "rand_563522080dbb631a",
+   "score": -220.4,
+   "skip": null,
+   "wm_rank": 25
+  },
+  {
+   "key": "88412e1a5aca760c",
+   "name": "rand_88412e1a5aca760c",
+   "score": -257.84,
+   "skip": null,
+   "wm_rank": 26
+  },
+  {
+   "key": "ff5c57c5c303c194",
+   "name": "rand_ff5c57c5c303c194",
+   "score": -279.59,
+   "skip": null,
+   "wm_rank": 27
+  },
+  {
+   "key": "0afa4056f3f2391a",
+   "name": "rand_0afa4056f3f2391a",
+   "score": -284.66,
+   "skip": null,
+   "wm_rank": 28
+  },
+  {
+   "key": "b7f8277c6c071619",
+   "name": "rand_b7f8277c6c071619",
+   "score": -318.28,
+   "skip": null,
+   "wm_rank": 29
+  },
+  {
+   "key": "b4cfd3a63f8d767c",
+   "name": "rand_b4cfd3a63f8d767c",
+   "score": -328.17,
+   "skip": null,
+   "wm_rank": 30
+  },
+  {
+   "key": "98840190cd07e1c4",
+   "name": "rand_98840190cd07e1c4",
+   "score": -395.57,
+   "skip": null,
+   "wm_rank": 31
+  },
+  {
+   "key": "fc9aeeb4bc5c16d9",
+   "name": "rand_fc9aeeb4bc5c16d9",
+   "score": -493.07,
+   "skip": null,
+   "wm_rank": 32
+  },
+  {
+   "key": "f9a7b4d323eaff22",
+   "name": "mut_f9a7b4d323eaff22",
+   "score": -672.65,
+   "skip": null,
+   "wm_rank": 33
+  },
+  {
+   "key": "1ac00f2fc96a03cd",
+   "name": "mut_1ac00f2fc96a03cd",
+   "score": -826.7,
+   "skip": null,
+   "wm_rank": 34
+  }
+ ],
+ "rule": "search `final` list by WM score desc (ties: strategy key), skip comparator / banned rows, plans the registered executor refuses (a37_cellbank.executor_refusal) and rows with feasibility 0 (never activated on the final states; MAIN ruling recorded in REGISTRATION.md 2026-11-10 22:40, pre-outcome: this is what \"(as R7B)\" means), top K = 6",
+ "schema": "coopmwm.a42_bigbank.v1.candidates",
+ "search": {
+  "cell": "D2800_p60",
+  "config": {
+   "H": 300,
+   "K_final": 4,
+   "K_screen": 4,
+   "bound_s": 10.0,
+   "bound_stat": "mean",
+   "dense": true,
+   "extra_seeds": [],
+   "f_vs_base": true,
+   "fair_tol": 0.0,
+   "fairer_total": "mean",
+   "fairness": true,
+   "finalists": 12,
+   "generations": 2,
+   "harm_cal": {
+    "cav": {
+     "a": -0.4070513746069852,
+     "b": 11.319378064636005,
+     "loo_rmse": 5.822610871909859,
+     "margin": 5.20008756771573,
+     "n": 16
+    },
+    "hdv": {
+     "a": -1.2629356145372017,
+     "b": 14.127612242136166,
+     "loo_rmse": 5.968806217576539,
+     "margin": 5.909415733464174,
+     "n": 16
+    },
+    "lane0": {
+     "a": -3.9181472625749167,
+     "b": 15.29777813742739,
+     "loo_rmse": 8.421302544110524,
+     "margin": 7.898504742795293,
+     "n": 16
+    },
+    "lane1": {
+     "a": -2.1499267835107725,
+     "b": 8.493370340962649,
+     "loo_rmse": 8.006179050229429,
+     "margin": 6.537214668319264,
+     "n": 16
+    },
+    "lane2": {
+     "a": 3.887780052970939,
+     "b": 2.501040392039844,
+     "loo_rmse": 3.3553147245504054,
+     "margin": 2.911111861671923,
+     "n": 16
+    }
+   },
+   "hold_only": true,
+   "lam": 0.5,
+   "lane2_extra_margin_s": 0.0,
+   "max_roles": 6,
+   "min_roles": 3,
+   "n_children": 24,
+   "n_elite": 6,
+   "n_final_states": 30,
+   "n_immigrants": 12,
+   "n_init": 48,
+   "n_screen_states": 4,
+   "novelty_weight": 40.0,
+   "onset_max": 30,
+   "p_mutate": 0.55,
+   "role_counts": [
+    3,
+    3,
+    4,
+    4,
+    5,
+    5,
+    6,
+    6
+   ],
+   "search_grid": {
+    "dmax": [
+     1.0,
+     1.5
+    ],
+    "hold_s": [
+     90,
+     120,
+     180
+    ],
+    "onset_s": [
+     0,
+     20
+    ],
+    "v_w": [
+     18.0,
+     19.0,
+     20.0,
+     21.0,
+     22.0
+    ]
+   },
+   "seed": 20261113,
+   "unconditional": true
+  },
+  "evaluated": 120,
+  "file_sha256": "b8e451eeca45ad407606d72d00675f1862adf44634987ea55bed22e6761f582a",
+  "n_final": 34,
+  "n_states": 18,
+  "schema": "wmc-strategy-search-v3"
+ },
+ "skip_counts": {
+  "comparator": 2,
+  "never_activated": 7
+ },
+ "skipped": [
+  {
+   "key": "c6b176478af8c50c",
+   "name": "wall_g_solo2",
+   "score": 262.92,
+   "skip": "comparator",
+   "wm_rank": 1
+  },
+  {
+   "key": "6146cc2c7da3ce59",
+   "name": "solo2",
+   "score": 178.43,
+   "skip": "comparator",
+   "wm_rank": 2
+  },
+  {
+   "key": "3dee21d4da24a1b1",
+   "name": "rand_3dee21d4da24a1b1",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 3
+  },
+  {
+   "key": "4337b2b50205656b",
+   "name": "rand_4337b2b50205656b",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 4
+  },
+  {
+   "key": "45cd44dd577c3f05",
+   "name": "rand_45cd44dd577c3f05",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 5
+  },
+  {
+   "key": "6be5c14bb34f4c9b",
+   "name": "rand_6be5c14bb34f4c9b",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 6
+  },
+  {
+   "key": "aa4b1cc525925226",
+   "name": "rand_aa4b1cc525925226",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 7
+  },
+  {
+   "key": "d40ad9a836606870",
+   "name": "rand_d40ad9a836606870",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 8
+  },
+  {
+   "key": "ee885c06c42b08f5",
+   "name": "mut_ee885c06c42b08f5",
+   "score": 0.0,
+   "skip": "never_activated",
+   "wm_rank": 9
+  }
+ ],
+ "stop_rule": "fewer than 1 candidate plan with >= 3 roles and WM feasibility > 0 -> STOP",
+ "verdict": "CONTINUE"
+}
