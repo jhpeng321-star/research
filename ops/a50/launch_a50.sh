@@ -56,7 +56,7 @@ fi
 ID=$($SSH 'id -u' 2>/dev/null) || die "ssh $USR@$HOST:$PORT failed (key auth required; no passwords)"
 SUDO=""; [ "$ID" = 0 ] || { $SSH 'sudo -n true' >/dev/null 2>&1 || die "non-root user without passwordless sudo"; SUDO="sudo -n"; }
 log "host $HOST:$PORT user $USR uid $ID nproc $($SSH nproc) $($SSH "df -Ph / | tail -1")"
-$SSH "pgrep -f 'tools.wzprop strategy' >/dev/null" && die "a WM strategy search is still running on this host (wait for it; never share its cores)"
+$SSH "pgrep -f '[t]ools.wzprop strategy' >/dev/null" && die "a WM strategy search is still running on this host (wait for it; never share its cores)"
 # read-only look at the A42 chain: never share cores with a live A42 chain
 $SSH "$SUDO bash -c 'p=\$(cat /root/a42v/chain.pid 2>/dev/null); [ -n \"\$p\" ] && kill -0 \$p 2>/dev/null'" \
   && die "the A42 chain (/root/a42v/chain.pid) is still alive on this host (wait for A42_ALL_DONE / A45_ALL_DONE)"
