@@ -487,6 +487,31 @@ BANK_SETTINGS = BANK_SETTINGS + tuple(c[0] for c in A37_VERIFY_CELLS)
 #: amendment 37 verification blocks (registered 2026-11-10 after the seed audit, before any amendment-37 episode)
 SETTINGS_PINS['a37v_D3200_p20'] = dict(PANEL_SHA256='e4791cfcf1d9baee265c6a02cb78ac9092901f2fa24e513d7ed24963111a1d42', PANEL_3C_SHA256=None)
 SETTINGS_PINS['a37v_D2400_p20'] = dict(PANEL_SHA256='b8fb13143ede9f2437bef5a0a731832658d11728c5f81b06c100be9c94df08e1', PANEL_3C_SHA256=None)
+#: amendment 42 (MAIN 2026-11-10 ~22:20, WM search for 3-6 CAV group plans at D2800_p60; pre-outcome): the UNC-rule SUMO
+#: verification of the search's top-6 plans on a FRESH audited TRAIN-type block 992000-992023 (992024-992099 reserved
+#: unused) and the one-shot confirmation panel 998600-998695 (998696-998699 reserved unused; not the A35 p60 panel
+#: 998200-998295). Same plant / bindings as the amendment-35 D2800_p60 cell (a35_D2800_p60); executed through the eval
+#: runner (scope label only); never pooled.
+A42_CELLS = (('a42v_D2800_p60', 992000, 24, 'verification', 'nm_eval_trainblock_wz3to2_a42v_D2800_p60.json'),
+             ('a42c_D2800_p60', 998600, 96, 'confirmation', 'nm_eval_panel_wz3to2_a42c_D2800_p60.json'))
+for _name, _lo, _n, _what, _file in A42_CELLS:
+    SETTINGS[_name] = dict(SETTINGS['a35_D2800_p60'],
+        N_WORLDS=_n, EVAL_RANGE=(_lo, _lo+99), EVAL_EXTRA_RANGE=(_lo, _lo+99), SEEDS_RESERVED=(_lo+_n, _lo+99),
+        PANEL_SIZE_REASON=(f'MAIN amendment 42: {_what} = {_n} fresh worlds {_lo}-{_lo+_n-1} (D2800_p60); '
+                           f'{_lo+_n}-{_lo+99} reserved unused'),
+        CELL_AUTHORITY=f'MAIN amendment 42 (REGISTRATION 2026-11-10 ~22:20): D2800_p60 {_what} of the WM 3-6 CAV plans',
+        PANEL_AUTHORITY=(f'A42 amendment 42: fresh audited integers {_lo}-{_lo+_n-1} (D2800_p60) for the {_what} stage '
+                         'ONLY; executed through the eval runner (scope label only); never pooled'),
+        EXPOSURE_EXTRA=dict(
+            checked=('amendment-42 audit: 992000-992099 and 998600-998699 as standalone integers absent from '
+                     'REGISTRATION.md seed use, protocols/experiment_history.json, every c4/* branch tip, the a32-a41 run '
+                     'and agent dirs (ops/a42/SEED_AUDIT.json)',),
+            disclosed=f'; amendment 42: fresh integers ({_what}), registered at runtime by the runner'),
+        PANEL_FILE=HERE/_file, PANEL_3C_FILE=None)
+BANK_SETTINGS = BANK_SETTINGS + tuple(c[0] for c in A42_CELLS)
+#: amendment 42 blocks (proposed after the seed audit, before any amendment-42 episode; MAIN records them)
+SETTINGS_PINS['a42v_D2800_p60'] = dict(PANEL_SHA256='58a0118430b8b91b6e0eca2a2e6904bd352af2dfd57a18e9aa8fa821ed63407e', PANEL_3C_SHA256=None)
+SETTINGS_PINS['a42c_D2800_p60'] = dict(PANEL_SHA256='0b42fd54790fc42d84a8f52e5cb74a78ccd41fa0450c410d1e349cd33bcb1adb', PANEL_3C_SHA256=None)
 MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'
 #: MAIN 2026-11-06 (N11 F4): the panel binds the staged probe network bytes (sha256 of wz3to2.net.xml)
 NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'

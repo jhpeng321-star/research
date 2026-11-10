@@ -1,0 +1,157 @@
+{
+ "schema": "a42.seed_audit_raw.v1",
+ "blocks": {
+  "verification": [
+   992000,
+   992099
+  ],
+  "confirmation": [
+   998600,
+   998699
+  ]
+ },
+ "forbidden_skipped": [
+  "sealed",
+  "holdout",
+  "heldout",
+  "cal_split",
+  "chunk5",
+  "j4b",
+  "inc1",
+  "hetdata_truth",
+  "driver_params"
+ ],
+ "skipped_files": "^(WAVE_|RESULT|A\\d+B?_RESULTS|vehicles|observable)",
+ "file_hits": {
+  "verification": [
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
+    "line": 10755,
+    "token": "992000",
+    "context": "sed by the build (NOT yet audited, not final): verification 992000-992023, confirmation 998600-99869"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
+    "line": 10755,
+    "token": "992023",
+    "context": "the build (NOT yet audited, not final): verification 992000-992023, confirmation 998600-998695. "
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\eval\\nm_finaleval_clean5a\\envequiv.VOID_3_17b\\work_plant\\CLAIM.json",
+    "line": 1,
+    "token": "992009",
+    "context": "{\"charged_sim_s\":420,\"id\":\"work_plant\",\"pid\":992009} "
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_493d8a59090866fa861134e4805850a0b13f9c6b550057d520853f187c60fc71\\CLAIM.json",
+    "line": 1,
+    "token": "992075",
+    "context": "66fa861134e4805850a0b13f9c6b550057d520853f187c60fc71\",\"pid\":992075} "
+   },
+   {
+    "path": "E:\\agent-work\\a37\\stagecheck\\root\\autodl-fs\\nm_finaleval_p20c_stage\\src_p20c_b5268408_5ecc4358\\ops\\test_nm_finaleval.py",
+    "line": 1315,
+    "token": "992000",
+    "context": ", 989700)) | set(range(989700, 990000)) | set(range(991000, 992000))     assert not used & set(range"
+   },
+   {
+    "path": "E:\\agent-work\\a40\\stage_src\\root\\autodl-fs\\nm_finaleval_p20c_stage\\src_p20c_b5268408_5ecc4358\\ops\\test_nm_finaleval.py",
+    "line": 1315,
+    "token": "992000",
+    "context": ", 989700)) | set(range(989700, 990000)) | set(range(991000, 992000))     assert not used & set(range"
+   },
+   {
+    "path": "E:\\agent-work\\distill-eval\\ops\\test_nm_finaleval.py",
+    "line": 1315,
+    "token": "992000",
+    "context": ", 989700)) | set(range(989700, 990000)) | set(range(991000, 992000))     assert not used & set(range"
+   },
+   {
+    "path": "E:\\agent-work\\a38-road2\\ops\\test_nm_finaleval.py",
+    "line": 1315,
+    "token": "992000",
+    "context": ", 989700)) | set(range(989700, 990000)) | set(range(991000, 992000))     assert not used & set(range"
+   },
+   {
+    "path": "E:\\agent-work\\a40-geomvar\\ops\\test_nm_finaleval.py",
+    "line": 1315,
+    "token": "992000",
+    "context": ", 989700)) | set(range(989700, 990000)) | set(range(991000, 992000))     assert not used & set(range"
+   },
+   {
+    "path": "E:\\agent-work\\a41-d3200bound\\ops\\test_nm_finaleval.py",
+    "line": 1315,
+    "token": "992000",
+    "context": ", 989700)) | set(range(989700, 990000)) | set(range(991000, 992000))     assert not used & set(range"
+   }
+  ],
+  "confirmation": [
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
+    "line": 10755,
+    "token": "998600",
+    "context": "dited, not final): verification 992000-992023, confirmation 998600-998695. "
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_25fc5af453a01942a5bee73799d2bc51263c2db1a06ff1b120112bdcc0e4e31a\\CLAIM.json",
+    "line": 1,
+    "token": "998610",
+    "context": "1942a5bee73799d2bc51263c2db1a06ff1b120112bdcc0e4e31a\",\"pid\":998610} "
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_2e7f6700871b7c1e0687cb699fa5870c83ea9962e6fc507fe01e511cc9f7b1dd\\CLAIM.json",
+    "line": 1,
+    "token": "998688",
+    "context": "7c1e0687cb699fa5870c83ea9962e6fc507fe01e511cc9f7b1dd\",\"pid\":998688} "
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_5630e273c23720b0b3d900eee2d9951a70c6c7acbbdc2857e500e2adf86038ea\\CLAIM.json",
+    "line": 1,
+    "token": "998613",
+    "context": "20b0b3d900eee2d9951a70c6c7acbbdc2857e500e2adf86038ea\",\"pid\":998613} "
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_7251797fa9fc3908e0e45e1608de32afc6eaaa5e1eb1f222a0a18195d3b2d3e5\\CLAIM.json",
+    "line": 1,
+    "token": "998635",
+    "context": "3908e0e45e1608de32afc6eaaa5e1eb1f222a0a18195d3b2d3e5\",\"pid\":998635} "
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_ccbfedf8458a133862746f637657732c1aa4286986b5513e291f682a1781fc33\\CLAIM.json",
+    "line": 1,
+    "token": "998655",
+    "context": "133862746f637657732c1aa4286986b5513e291f682a1781fc33\",\"pid\":998655} "
+   },
+   {
+    "path": "E:\\agent-work\\a41-d3200bound\\ops\\test_a41_d3200bound.py",
+    "line": 100,
+    "token": "998600",
+    "context": "998591, 3200, .2)['repeat'] == 191     assert ms.seed_scope(998600) is None     s1 = T37.use(monkeyp"
+   }
+  ]
+ },
+ "git_hits": {
+  "verification": [
+   {
+    "path_token": "ops/test_nm_finaleval.py:992000",
+    "n_tips": 13,
+    "example_tip": "036b83f68d87"
+   },
+   {
+    "path_token": "tests/test_demo_extract_cpu.py:992000",
+    "n_tips": 5,
+    "example_tip": "209a54e66f00"
+   }
+  ],
+  "confirmation": [
+   {
+    "path_token": "ops/test_a41_d3200bound.py:998600",
+    "n_tips": 1,
+    "example_tip": "a172ea5c740a"
+   }
+  ]
+ },
+ "n_files": 68703,
+ "n_tips": 543,
+ "audited": "2026-11-10 23:16:15 +0800"
+}

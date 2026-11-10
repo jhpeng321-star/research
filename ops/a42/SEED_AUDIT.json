@@ -1,0 +1,129 @@
+{
+ "schema": "a42.seed_audit.v1",
+ "audited": "2026-11-10 23:16:15 +0800",
+ "blocks": {
+  "verification": [
+   992000,
+   992099
+  ],
+  "confirmation": [
+   998600,
+   998699
+  ]
+ },
+ "used": {
+  "verification": [
+   992000,
+   992023
+  ],
+  "confirmation": [
+   998600,
+   998695
+  ]
+ },
+ "reserved_unused": {
+  "verification": [
+   992024,
+   992099
+  ],
+  "confirmation": [
+   998696,
+   998699
+  ]
+ },
+ "panels": {
+  "verification": {
+   "setting": "D2800_p60",
+   "file": "ops/nm_eval_trainblock_wz3to2_a42v_D2800_p60.json",
+   "n_worlds": 24,
+   "panel_sha256": "58a0118430b8b91b6e0eca2a2e6904bd352af2dfd57a18e9aa8fa821ed63407e",
+   "file_sha256": "398464581df966a2808f407f0a818873643c54759803022b12670567475cddea",
+   "runner_range": [
+    992000,
+    992099
+   ]
+  },
+  "confirmation": {
+   "setting": "D2800_p60",
+   "file": "ops/nm_eval_panel_wz3to2_a42c_D2800_p60.json",
+   "n_worlds": 96,
+   "panel_sha256": "0b42fd54790fc42d84a8f52e5cb74a78ccd41fa0450c410d1e349cd33bcb1adb",
+   "file_sha256": "8e332bcedd23dfab8d97948a24e6ad64763019e89bdaa942c072eb142e9aae88",
+   "runner_range": [
+    998600,
+    998699
+   ]
+  }
+ },
+ "method": "standalone-integer scan (ops/a42/seed_audit.py) of 68703 text files on E: plus git grep over 543 branch/worktree tips; forbidden paths skipped unopened; per-world outcome files skipped by name",
+ "forbidden_skipped": [
+  "sealed",
+  "holdout",
+  "heldout",
+  "cal_split",
+  "chunk5",
+  "j4b",
+  "inc1",
+  "hetdata_truth",
+  "driver_params"
+ ],
+ "skipped_files": "^(WAVE_|RESULT|A\\d+B?_RESULTS|vehicles|observable)",
+ "raw": "ops/a42/SEED_AUDIT_RAW.json",
+ "raw_sha256": "88e10443c5246e5e96b18627bf15ae5f41c902946b6f657f7647141ff50a54fd",
+ "n_raw_hits": {
+  "file_hits": {
+   "verification": 10,
+   "confirmation": 7
+  },
+  "git_hits": {
+   "verification": 2,
+   "confirmation": 1
+  }
+ },
+ "hit_classification": [
+  {
+   "where": "runs/active/C4-V7FT-20261017/REGISTRATION.md (A42 amendment text)",
+   "class": "own_registration",
+   "note": "MAIN's registration of these A42 blocks; not a run"
+  },
+  {
+   "where": "CLAIM.json files of clean5a envequiv work_plant and clean5c5b g4 jobs",
+   "class": "not_a_seed",
+   "note": "the integers are OS pid values (992009, 992075, 998610, 998613, 998635, 998655, 998688)"
+  },
+  {
+   "where": "ops/test_nm_finaleval.py:1315 (several worktrees / 13 tips)",
+   "class": "exclusive_range_end",
+   "note": "range(991000, 992000); 992000 itself not included"
+  },
+  {
+   "where": "tests/test_demo_extract_cpu.py:73 (5 tips)",
+   "class": "negative_test_literal",
+   "note": "assert_verification_seeds([992000]) must raise: 992000 is asserted OUTSIDE the demo verification ranges; no run"
+  },
+  {
+   "where": "E:/agent-work/a41-d3200bound/ops/test_a41_d3200bound.py:100 (tip a172ea5c)",
+   "class": "negative_test_literal",
+   "note": "asserts map_scenarios.seed_scope(998600) is None, i.e. 998600 is outside the A41 block; no run"
+  }
+ ],
+ "neighbours": {
+  "A41": [
+   998400,
+   998599
+  ],
+  "DISTILLRL": [
+   998700,
+   998999
+  ],
+  "finaleval_trainblock": [
+   991000,
+   991999
+  ]
+ },
+ "limits": "laptop E: records and local git tips only; remote hosts were not contacted (no ssh); files under forbidden path names and per-world outcome files were not opened",
+ "verdict": {
+  "verification": "UNUSED",
+  "confirmation": "UNUSED"
+ }
+}
