@@ -1,0 +1,74 @@
+{
+ "amendment": "44",
+ "doc_sha256": "6fd9202ea6dd15c9854853806f47e1f249d6e64947b3d75028b2d2ea09d30bb4",
+ "keys": {
+  "hold": "04bdd250d352bd8d",
+  "lc": "2def55a9e5b18d5c"
+ },
+ "note": "hand-made mechanics fixture; not a search candidate; values = registered grids",
+ "plans": {
+  "hold": {
+   "cooldown_s": 140,
+   "gate": null,
+   "name": "a44_fix_hold",
+   "phases": null,
+   "roles": [
+    {
+     "dmax": 1.0,
+     "hold_s": 120,
+     "lane": 2,
+     "lc_target": null,
+     "onset_s": 0,
+     "rank": 0,
+     "v_w": 22.0
+    },
+    {
+     "dmax": 1.0,
+     "hold_s": 120,
+     "lane": 1,
+     "lc_target": null,
+     "onset_s": 20,
+     "rank": 0,
+     "v_w": 22.0
+    }
+   ],
+   "slots": 1,
+   "spread_m": 200.0,
+   "start_gate": null,
+   "trigger": "wall",
+   "zone": "full"
+  },
+  "lc": {
+   "cooldown_s": 140,
+   "gate": null,
+   "name": "a44_fix_lc",
+   "phases": null,
+   "roles": [
+    {
+     "dmax": 1.0,
+     "hold_s": 120,
+     "lane": 2,
+     "lc_target": null,
+     "onset_s": 0,
+     "rank": 0,
+     "v_w": 22.0
+    },
+    {
+     "dmax": 1.0,
+     "hold_s": 120,
+     "lane": 1,
+     "lc_target": 2,
+     "onset_s": 20,
+     "rank": 0,
+     "v_w": 22.0
+    }
+   ],
+   "slots": 1,
+   "spread_m": 200.0,
+   "start_gate": null,
+   "trigger": "wall",
+   "zone": "full"
+  }
+ },
+ "schema": "coopmwm.a44.fixture.v1"
+}
