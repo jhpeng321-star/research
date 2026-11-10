@@ -35,7 +35,7 @@ sys.path.insert(0, str(HERE.parent))
 import nm_finaleval as N  # noqa: E402
 
 #: pinned when MAIN registers the A50 candidates (before any A50 SUMO); None = not registered -> verify refuses
-CANDIDATES_DOC_SHA256 = None
+CANDIDATES_DOC_SHA256 = '3b63698634a0ac7fc3217a1e73580c0f766211f001b0600fadd0fc48359d4ee5'
 
 CELL = 'D2800_p60'
 AMENDMENT = '50'
