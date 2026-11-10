@@ -134,4 +134,4 @@ def test_runner_wiring_and_ranges():
     assert 'COMBINED' in R.A33_ARMS
     assert ms.seed_scope(999500) == 'heldout' and ms.seed_scope(991600) == 'heldout'
     assert ms.world(999500, 2800, 0.2)['repeat'] == 0 and ms.world(993100, 2800, 0.2)['repeat'] == 100
-    assert ms.seed_scope(999700) is None and ms.seed_scope(991700) is None
+    assert ms.seed_scope(999700) is None and ms.seed_scope(991900) is None
