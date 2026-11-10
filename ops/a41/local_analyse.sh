@@ -12,6 +12,10 @@ OUT=$RUN/a41_d3200bound
 mkdir -p "$OUT"
 cd "$WT" || exit 1
 export PYTHONPATH=.
+# the records name their bindings by the HOST final-root path; remap that location string only (nm_finaleval
+# binding_location: must equal the offloaded LAUNCHER.json --final-root; binding content stays sha-verified and the
+# record identity check stays exact). MSYS2_ENV_CONV_EXCL keeps Git Bash from rewriting the POSIX path.
+export NM_HOST_FINAL_ROOT=/root/a41db/root MSYS2_ENV_CONV_EXCL=NM_HOST_FINAL_ROOT
 cp "$L"/SELECTION_A41.json "$L"/IDENTITY_GATE.json "$OUT"/ 2>/dev/null
 $P ops/a41_d3200bound.py reselect --final-root "$L" > "$OUT/RESELECT.json" || echo "reselect: not ready / failed"
 $P ops/a41_d3200bound.py analyse --final-root "$L" --out "$OUT" || echo "analyse: not ready / failed"

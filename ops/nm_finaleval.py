@@ -1088,7 +1088,31 @@ def mappo_binding(final_root, arm='MAPPO_SPEED'):
     value = verify(read(path), 'binding_sha256', f'{arm} binding')
     if value.get('arm') != arm or value['kind'] not in MAPPO_KINDS[arm]:
         raise Blocked(f'{arm} binding names another arm/kind')
-    return dict(value, binding_path=str(path))      # location only; the sealed record is unchanged
+    return dict(value, binding_path=binding_location(final_root, path))  # location only; sealed record unchanged
+
+
+HOST_FINAL_ROOT_ENV = 'NM_HOST_FINAL_ROOT'
+
+
+def binding_location(final_root, path):
+    """The binding's location string as the episode records name it. On the evaluating host: the file's own path.
+    Offline re-analysis of an OFFLOADED final root ($NM_HOST_FINAL_ROOT = the host's --final-root string): the same
+    file name under the host root, accepted only when the offloaded LAUNCHER.json shows the host ran with exactly that
+    --final-root. Only the location string is remapped: the binding CONTENT is self-verified above (binding_sha256)
+    and check_episode still compares the whole checkpoint descriptor (binding_sha256 included) exactly."""
+    host = os.environ.get(HOST_FINAL_ROOT_ENV)
+    if not host:
+        return str(path)
+    if not host.startswith('/') or host.endswith('/') or '\\' in host:
+        raise Blocked(f'{HOST_FINAL_ROOT_ENV} must be an absolute POSIX path without a trailing slash: {host!r}')
+    launcher = Path(final_root)/'LAUNCHER.json'
+    argv = read(launcher).get('argv', []) if launcher.is_file() else []
+    named = [argv[i+1] for i, x in enumerate(argv[:-1]) if x == '--final-root']
+    if named != [host]:
+        raise Blocked(f'{HOST_FINAL_ROOT_ENV}={host!r} is not the --final-root of the offloaded {launcher} ({named})')
+    if Path(path).parent.resolve() != Path(final_root).resolve():
+        raise Blocked(f'{path} is not a top-level file of the offloaded final root {final_root}')
+    return f'{host}/{Path(path).name}'
 
 
 def declared_unavailable(final_root, arm):
