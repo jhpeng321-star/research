@@ -19,6 +19,10 @@ bad=$(cd "$L/evaluation" && sha256sum -c --quiet "$O/OFFLOAD.sha256" 2>&1 | grep
 [ "$bad" = 0 ] || { echo "$bad offloaded files differ from their verified sha"; exit 1; }
 cd "$WT" || exit 1
 export PYTHONPATH=. COOPMWM_MAP_SPEC=$WT/assets/research/newmap_candidates/wz3to2v80/MAP_SPEC.json
+# the records name their bindings by the HOST final-root path; remap that location string only (nm_finaleval
+# binding_location: must equal the offloaded LAUNCHER.json --final-root; binding content stays sha-verified and the
+# record identity check stays exact). MSYS2_ENV_CONV_EXCL keeps Git Bash from rewriting the POSIX path.
+export NM_HOST_FINAL_ROOT=/root/a40gv/root MSYS2_ENV_CONV_EXCL=NM_HOST_FINAL_ROOT
 cp "$O/host/IDENTITY_GATE.json" "$O/host/cal/A40_CALSUMMARY.json" "$OUT"/ 2>/dev/null
 $P ops/a40_geomvar.py analyse --setting "$SETTING" --final-root "$L" --out "$OUT" || { echo "analyse: not ready / failed"; exit 1; }
 (cd "$OUT" && sha256sum *.json > SHA256SUMS)
