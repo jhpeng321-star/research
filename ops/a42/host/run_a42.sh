@@ -45,3 +45,11 @@ log "done: $(tail -1 "$BASE/analyse.out")"
 "$PY" $D status --setting a42c_D2800_p60 --final-root "$R" >> "$BASE/status.out" 2>&1
 log "charged $(python3 -c "import json;print(sum(json.loads(l)['sim_s'] for l in open('$R/CHARGES.jsonl')))" 2>/dev/null)"
 log "A42_ALL_DONE"
+
+# AMENDMENT 45 (same chain, after every A42 stage): diverse verification + the DIVERSE_BANK confirmation arm.
+# Search path: $BASE/A45_SEARCH (written by launch_a42.sh) else the A47 host search output.
+A45=$SRC/ops/a45/host/run_a45.sh
+if [ -f "$A45" ]; then
+  S45=$(cat "$BASE/A45_SEARCH" 2>/dev/null || echo /root/a47/search/STRATEGY_SEARCH_D2800_p60.json)
+  bash "$A45" "$S45" || log "A45 chain exit $?"
+fi

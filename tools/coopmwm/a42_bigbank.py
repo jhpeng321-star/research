@@ -84,7 +84,8 @@ def select(search, file_sha256):
                 and len(x['strategy']['roles']) >= MIN_ROLES and float(x['feasible']) > 0)
     stop = n_usable < 1
     by_reason = Counter(e['skip'] for e in sel['skipped'])
-    return dict(schema=SCHEMA+'.candidates', amendment='42', cell=CELL, k=K,
+    diverse = select_diverse(search, sel)
+    return dict(schema=SCHEMA+'.candidates', amendment='42', cell=CELL, k=K, diverse=diverse,
                 search=dict(file_sha256=file_sha256, schema=search.get('schema'), cell=search.get('cell'),
                             config=search.get('config'), evaluated=search.get('evaluated'),
                             n_states=search.get('n_states'), n_final=len(search['final'])),
@@ -93,6 +94,86 @@ def select(search, file_sha256):
                 skip_counts=dict(sorted(by_reason.items())), n_skipped=len(sel['skipped']),
                 n_eligible=len(sel['ranking'])-len(sel['skipped']), n_selected=len(sel['candidates']),
                 candidates=sel['candidates'], skipped=sel['skipped'], ranking=sel['ranking'])
+
+
+# ------------------------------------------------------------------------------------------------ AMENDMENT 45
+#: the search descriptor is the tuple tools.wzprop.strategy_search.descriptor(s) (a JSON list in `final`):
+#: (n_roles, n_lanes, n_lc, speed_class, staggered, zone, trigger, gate, start_gate, phases)
+DESCRIPTOR_FIELDS = ('n_roles', 'n_lanes', 'n_lc', 'speed_class', 'staggered', 'zone', 'trigger', 'gate', 'start_gate',
+                     'phases')
+CLASS_FIELDS = ('n_roles', 'n_lanes', 'staggered', 'zone', 'phases')
+DIVERSE_CAP = 12
+DIVERSE_RULE = ('AMENDMENT 45: among eligible `final` rows (same skips as the A42 rule) NOT in the A42 top 6, group by '
+                'structural class (n_roles, n_lanes, staggered, zone, phases) read from the row descriptor; per class '
+                'the best row by WM score; classes ordered by that score; at most 12; ties by the order in `final`')
+
+
+def structural_class(row):
+    """The A45 class of a search `final` row from its descriptor; the descriptor is cross-checked against the
+    strategy (fail closed on a mismatch)."""
+    d = row['descriptor']
+    if len(d) != len(DESCRIPTOR_FIELDS):
+        raise ValueError(f'{row["key"]}: descriptor has {len(d)} fields, expected {len(DESCRIPTOR_FIELDS)}')
+    named = dict(zip(DESCRIPTOR_FIELDS, d))
+    s = row['strategy']
+    on = [int(r['onset_s']) for r in s['roles']]
+    expect = dict(n_roles=len(s['roles']),
+                  n_lanes=len({r['lane'] if r.get('lc_target') is None else r['lc_target'] for r in s['roles']}),
+                  staggered=int(max(on) > min(on)), zone=s['zone'], phases=s.get('phases') is not None)
+    got = dict(n_roles=int(named['n_roles']), n_lanes=int(named['n_lanes']), staggered=int(named['staggered']),
+               zone=named['zone'], phases=bool(named['phases']))
+    if got != expect:
+        raise ValueError(f'{row["key"]}: descriptor {got} differs from the strategy {expect}')
+    return got
+
+
+def class_key(cls):
+    return '|'.join(f'{f}={cls[f]}' for f in CLASS_FIELDS)
+
+
+def select_diverse(search, sel, cap=DIVERSE_CAP):
+    """A45 diverse candidates from the SAME search `final` and the A42 selection ``sel`` (select_candidates output).
+    Eligible = not skipped by the A42 rule; the A42 top-K rows are never selected again. Deterministic."""
+    skip_of = {e['key']: e['skip'] for e in sel['ranking']}
+    rank_of = {e['key']: e['wm_rank'] for e in sel['ranking']}
+    top = {c['key'] for c in sel['candidates']}
+    order = sorted(range(len(search['final'])), key=lambda i: (-float(search['final'][i]['score']), i))
+    best, members, counts = {}, {}, dict(not_eligible=0, in_top_k=0, not_class_best=0, over_cap=0)
+    for i in order:
+        x = search['final'][i]
+        if skip_of[x['key']] is not None:
+            counts['not_eligible'] += 1
+            continue
+        ck = class_key(structural_class(x))
+        if x['key'] in top:
+            counts['in_top_k'] += 1
+            members.setdefault(ck, dict(eligible_not_top=0, in_top_k=0))['in_top_k'] += 1
+            continue
+        m = members.setdefault(ck, dict(eligible_not_top=0, in_top_k=0))
+        m['eligible_not_top'] += 1
+        if ck in best:
+            counts['not_class_best'] += 1
+            continue
+        best[ck] = (i, x)
+    classes = list(best.items())            # insertion order = (-score, final index) of the class best
+    counts['over_cap'] = max(0, len(classes)-cap)
+    out = []
+    for ck, (i, x) in classes[:cap]:
+        s = x['strategy']
+        out.append(dict(wm_rank=rank_of[x['key']], final_index=i, name=s['name'], key=x['key'], score=x['score'],
+                        skip=None, family=s['name'], strategy=s, strategy_sha256=C.spec_sha(s),
+                        wm=dict({f: x[f] for f in ('feasible', 'gain_vs_base', 'gain_vs_base_lcb', 'gain_vs_inc',
+                                                  'worst_group_inc', 'cvar90_inc', 'bounded', 'fair_cal')},
+                                n_states=x['n_states']),
+                        class_key=ck, structural_class=structural_class(x), class_counts=members[ck],
+                        diverse_rank=len(out)+1, n_roles=len(s['roles'])))
+    fams = [c['family'] for c in out]+[c['family'] for c in sel['candidates']]
+    if len(set(fams)) != len(fams):
+        raise ValueError('A45: family names of the diverse and top-K candidates collide')
+    return dict(amendment='45', rule=DIVERSE_RULE, cap=cap, descriptor_fields=list(DESCRIPTOR_FIELDS),
+                class_fields=list(CLASS_FIELDS), n_classes=len(classes),
+                n_classes_with_top_k_rows=sum(1 for m in members.values() if m['in_top_k']),
+                skip_counts=counts, n_selected=len(out), candidates=out)
 
 
 def doc_sha(doc):

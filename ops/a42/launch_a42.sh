@@ -1,5 +1,5 @@
 #!/bin/bash
-# AMENDMENT 42 one-command launcher (laptop, Git Bash):  bash ops/a42/launch_a42.sh HOST PORT [USER]   (default host: Box 2 121.4.20.123 port 22, SSH_KEY=~/.ssh/rented_box)
+# AMENDMENT 42 one-command launcher (laptop, Git Bash):  bash ops/a42/launch_a42.sh HOST PORT [USER] [A45_SEARCH]   (default host: Box 2 121.4.20.123 port 22, SSH_KEY=~/.ssh/rented_box)
 #   (PORT "-" = use the ssh config alias HOST as is; SSH_KEY=<file> adds -i <file>)
 #   1. ship dir from the COMMITTED branch tip (git blobs, LF): overlay.tar (ops/* + tools/coopmwm/* changed since the
 #      plant overlay 5ecc4358, + ops/a42/*), setup_host.sh, run_a42.sh, the a32 relay stage.tar / src7.tar, the DUO bank
@@ -9,6 +9,9 @@
 # Never launches inside a retry loop; never deletes anything remote.
 set -uo pipefail
 HOST=${1:?HOST}; PORT=${2:?PORT}; USR=${3:-root}
+# AMENDMENT 45: host path of the search output the pinned candidates document was selected from (checked by
+# ops/a45_divp60.py check-search on the host before any A45 episode); run_a42.sh runs run_a45.sh after A42.
+A45_SEARCH=${4:-/root/a47/search/STRATEGY_SEARCH_D2800_p60.json}
 WT=E:/agent-work/a42-bigp60
 A=E:/agent-work/a42-run
 RELAY=E:/agent-work/a32/relay
@@ -75,6 +78,8 @@ if ! $SSH "$SUDO test -f /root/a42v/SETUP_OK"; then
   $SSH "$SUDO test -f /root/a42v/SETUP_OK" || die "setup did not finish in 60 min (see /root/a42v/setup.log)"
 fi
 $SSH "$SUDO tail -6 /root/a42v/setup.log"
+$SSH "echo $A45_SEARCH | $SUDO tee /root/a42v/A45_SEARCH >/dev/null" || die "A45_SEARCH write"
+$SSH "$SUDO test -f $A45_SEARCH" || log "WARNING: A45 search $A45_SEARCH not on the host (A45 check-search will refuse)"
 $SSH "$SUDO cp $RS/run_a42.sh /root/a42v/run_a42.sh && $SUDO setsid nohup bash /root/a42v/run_a42.sh > /root/a42v/chain.nohup 2>&1 < /dev/null & echo chain-started" \
   || die "chain launch (check the host before any relaunch)"
 sleep 5

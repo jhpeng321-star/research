@@ -136,7 +136,8 @@ nice -n 19 "$PY" -m tools.coopmwm.nm_eval_runner setup-check --checkpoint /home/
 say "runner setup-check PASS (zero SUMO)"
 A37_MIRROR=$R nice -n 19 "$PY" -m pytest -q -p no:cacheprovider ops/test_a42_bigp60.py ops/test_a37_celltailor.py \
   pytools/tools/coopmwm/test_a42_bigbank_cpu.py pytools/tools/coopmwm/test_a37_cellbank_cpu.py \
-  pytools/tools/coopmwm/test_a32_arms_cpu.py pytools/tools/coopmwm/test_a35_transfer_cpu.py > "$BASE/tests.out" 2>&1 || { tail -30 "$BASE/tests.out"; die "CPU tests failed"; }
+  pytools/tools/coopmwm/test_a32_arms_cpu.py pytools/tools/coopmwm/test_a35_transfer_cpu.py \
+  ops/test_a45_divp60.py pytools/tools/coopmwm/test_a45_diverse_cpu.py > "$BASE/tests.out" 2>&1 || { tail -30 "$BASE/tests.out"; die "CPU tests failed"; }
 say "tests: $(tail -1 "$BASE/tests.out")"
 "$PY" ops/a42_bigp60.py prepare --final-root "$R" --setting a42v_D2800_p60 > "$BASE/prepare.json" || die "prepare (are the A42 candidates pinned?)"
 for s in a42v_D2800_p60 a42c_D2800_p60; do
