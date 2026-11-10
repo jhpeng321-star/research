@@ -488,6 +488,11 @@ def a37_hook(ck, world, arm):
         if arm != 'CELL_BANK' or a57_partlane.a57_digest() != ck.get('a57_sha256'):
             raise ValueError('A57: member-lane filter needs CELL_BANK and the registered a57_sha256')
         hook = a57_partlane.apply_filter(hook, ck['a57_member_lane'])
+    if 'a61_member_pick' in ck:        # amendment 61 PART_L2A/B: within-lane pick on top of the a57 lane filter
+        from . import a61_rankpick
+        if 'a57_member_lane' not in ck or a61_rankpick.a61_digest() != ck.get('a61_sha256'):
+            raise ValueError('A61: member pick needs the a57 lane filter and the registered a61_sha256')
+        hook = a61_rankpick.apply_pick(hook, ck['a57_member_lane'], ck['a61_member_pick'])
     return hook, loaded
 
 
