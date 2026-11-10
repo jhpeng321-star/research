@@ -51,6 +51,13 @@ A45_CAP_SIM_S = 480_000
 TOTAL_ALLOCATION_SIM_S = D.A42_CAP_SIM_S+A45_CAP_SIM_S         # both phases share the A42 final root's own ledger
 MAX_DIVERSE = 12
 VERIFY_SIM_S, CONFIRM_SIM_S = MAX_DIVERSE*24*1_200, 1*96*1_200
+#: amendment-specific names (amendment 50 reuses this driver with its own values; see ops/a50_divp60.py)
+AMENDMENT, LABEL, JOB_PREFIX = '45', 'A45', 'a45'
+VERIFY_TAG, CONFIRM_TAG = 'a45v', 'a45c'                              # job id prefixes
+VERIFY_WAVE_PREFIX = 'A45V_'
+SCHEMA_PREFIX = 'coopmwm.a45'
+LOG_FILE = 'A45_LOG.jsonl'
+RESULT_LABEL = 'amendment 45; exploratory row at 60% CAVs; never pooled; one shot'
 RETRY_RESERVE_SIM_S = A45_CAP_SIM_S-VERIFY_SIM_S-CONFIRM_SIM_S
 STOP_A45 = 'STOP_A45'
 CELL = D.CELL
@@ -58,6 +65,7 @@ ARM = 'DIVERSE_BANK'
 ADMISSION_FILE = f'ADMISSION_A45_{CELL}.json'
 CANDS_BANK = f'A45_DIV_CANDS_{CELL}.json'
 DIVERSE_BANK_FILE = f'A45_DIVERSE_BANK_{CELL}.json'
+RESULTS_FILE = f'A45_RESULTS_{CELL}.json'
 AUTHORITY = ('MAIN AMENDMENT 45 (registered): diverse structural-class candidates from the same A42 search, same 24 '
              'verification seeds and UNC rule, DIVERSE_BANK = admitted top 6 + diverse, one extra arm on the same 96 '
              'confirmation worlds; phase divp60_a45 cap 480,000')
@@ -69,13 +77,14 @@ NOT_BUILT = 'no diverse plan admitted: DIVERSE_BANK is not built (reported as th
 
 def budget_plan():
     if RETRY_RESERVE_SIM_S < 0 or VERIFY_SIM_S+CONFIRM_SIM_S+RETRY_RESERVE_SIM_S != A45_CAP_SIM_S:
-        raise N.Blocked('A45 budget arithmetic')
+        raise N.Blocked(f'{LABEL} budget arithmetic')
     return dict(phase=A45_PHASE, cap_sim_s=A45_CAP_SIM_S, verification_max=VERIFY_SIM_S, confirmation=CONFIRM_SIM_S,
                 retry_reserve=RETRY_RESERVE_SIM_S, separate_from=dict(phase=D.A42_PHASE, cap_sim_s=D.A42_CAP_SIM_S),
                 own_ledger_total_allocation=TOTAL_ALLOCATION_SIM_S)
 
 
-def charged_phase(final_root, phase=A45_PHASE):
+def charged_phase(final_root, phase=None):
+    phase = A45_PHASE if phase is None else phase       # looked up at call time (A50 reuses this module)
     return sum(r['sim_s'] for r in N.fe.ledger_rows(final_root) if r.get('phase') == phase)
 
 
@@ -92,7 +101,7 @@ def diverse_candidates(path=None, pinned=None):
         raise N.Blocked('candidates document has no registered A45 diverse list')
     cands = div['candidates']
     if len(cands) > MAX_DIVERSE:
-        raise N.Blocked('A45: more than 12 diverse candidates')
+        raise N.Blocked(f'{LABEL}: more than 12 diverse candidates')
     top = {c['key'] for c in doc['candidates']}
     for c in cands:
         if c['key'] in top:
@@ -140,9 +149,9 @@ def verify_waves(panel, final_root, *, check_files=True, cands=None):
     if not cands:
         return []
     entry = D._bank_entry(final_root, CANDS_BANK, check_files=check_files) or dict(path='', file_sha256='')
-    return [(f'A45V_{c["family"]}', 'episode',
+    return [(f'{VERIFY_WAVE_PREFIX}{c["family"]}', 'episode',
              D._a37_specs(D.RUNNER_ARM['PLAN'], panel, final_root, entry, family=c['family'],
-                          tag=f'a45v_{c["key"][:8]}'))
+                          tag=f'{VERIFY_TAG}_{c["key"][:8]}'))
             for c in cands]
 
 
@@ -171,7 +180,7 @@ def admit(final_root, panel, cands=None, top=None):
         raise N.Blocked(f'{ADMISSION_FILE} exists (one shot)')
     adm42 = D.admission(final_root)
     if adm42 is None:
-        raise N.Blocked('A42 ADMISSION missing (A45 admits after the A42 admission)')
+        raise N.Blocked(f'{D.LABEL} ADMISSION missing ({LABEL} admits after the {D.LABEL} admission)')
     worlds = [r['world_id'] for r in panel['worlds']]
     seed = {r['world_id']: r['world']['seed'] for r in panel['worlds']}
     bootstrap = dict(panel['contract']['bootstrap'])
@@ -205,7 +214,7 @@ def admit(final_root, panel, cands=None, top=None):
         p = D.C37.write_once(D.bank_path(final_root, DIVERSE_BANK_FILE), D.C37.bank_text(C.bank_doc(plans, CELL)))
         bank = dict(path=f'{D.HOST_ROOT}/{D.BANK_DIR}/{p.name}', file_sha256=N.file_sha(p))
     div_fams = {c['family'] for c in cands}
-    value = N.seal(dict(schema='coopmwm.a45.admission.v1', amendment='45', cell=CELL, rule=C.UNC_RULE,
+    value = N.seal(dict(schema=f'{SCHEMA_PREFIX}.admission.v1', amendment=AMENDMENT, cell=CELL, rule=C.UNC_RULE,
                         multiplicity=f'{len(rows)} diverse picks each tested at 95% (disclosed, as A37/A42)',
                         panel_sha256=panel['panel_sha256'], seeds=sorted(seed.values()), verdicts=rows,
                         u0_shared_from=dict(wave=u0_wave(panel, final_root)[0], receipt=sources['U0'].get('receipt_sha256')),
@@ -225,14 +234,14 @@ def admit(final_root, panel, cands=None, top=None):
 def confirm_specs(panel, final_root, *, check_files=True):
     adm = admission(final_root)
     if adm is None:
-        raise N.Blocked(f'no {ADMISSION_FILE} (run A45 verify + admit first)')
+        raise N.Blocked(f'no {ADMISSION_FILE} (run {LABEL} verify + admit first)')
     if not adm['diverse_bank_built']:
         return []
     entry = D._bank_entry(final_root, DIVERSE_BANK_FILE, check_files=check_files)
     if entry is not None and entry['file_sha256'] != adm['diverse_bank']['file_sha256']:
         raise N.Blocked('DIVERSE_BANK bank differs from the A45 admission receipt')
     entry = entry or dict(adm['diverse_bank'])
-    return D._a37_specs(D.RUNNER_ARM['BIG_BANK'], panel, final_root, entry, tag='a45c_diverse_bank')
+    return D._a37_specs(D.RUNNER_ARM['BIG_BANK'], panel, final_root, entry, tag=f'{CONFIRM_TAG}_diverse_bank')
 
 
 CONFIRM_WAVE = f'A45C_{ARM}'
@@ -259,11 +268,11 @@ class A45Runtime(N.PrerunRuntime):
 
     def check_capacity(self, amount):
         if charged_phase(self.final_root)+amount > A45_CAP_SIM_S:
-            raise N.Blocked(f'A45: {A45_PHASE} cap {A45_CAP_SIM_S} would be exceeded')
+            raise N.Blocked(f'{LABEL}: {A45_PHASE} cap {A45_CAP_SIM_S} would be exceeded')
 
     def reserve(self, cfg, jobs):
-        if any(not str(j['id']).startswith('a45') for j in jobs):
-            raise N.Blocked('A45: job ids are a45*')
+        if any(not str(j['id']).startswith(JOB_PREFIX) for j in jobs):
+            raise N.Blocked(f'{LABEL}: job ids are {JOB_PREFIX}*')
         self.check_capacity(sum(j['sim_s'] for j in jobs))
         N.own_reserve(self.final_root, jobs, A45_PHASE, cap=A45_CAP_SIM_S, calls=self.calls,
                       allocation=TOTAL_ALLOCATION_SIM_S)
@@ -274,7 +283,7 @@ def stage_fits(final_root, waves):
     need = sum(len(s) for _, _, s in waves)*N.HORIZON_S
     left = A45_CAP_SIM_S-charged_phase(final_root)
     if need > left:
-        raise N.Blocked(f'A45: stage needs {need} sim-s, {left} left in {A45_PHASE} (MAIN decides)')
+        raise N.Blocked(f'{LABEL}: stage needs {need} sim-s, {left} left in {A45_PHASE} (MAIN decides)')
     return dict(need=need, left=left)
 
 
@@ -302,7 +311,7 @@ def analyse(final_root, panel, cands=None, top=None):
     adm = admission(final_root)
     if adm is None:
         raise N.Blocked(f'{ADMISSION_FILE} missing')
-    base = dict(schema='coopmwm.a45.analysis.v1', amendment='45', authority=AUTHORITY, cell=CELL,
+    base = dict(schema=f'{SCHEMA_PREFIX}.analysis.v1', amendment=AMENDMENT, authority=AUTHORITY, cell=CELL,
                 admission=dict(receipt_sha256=adm['receipt_sha256'], admitted_diverse=adm['admitted_diverse'],
                                admitted_classes=adm['admitted_classes'], diverse_bank=adm['diverse_bank'],
                                diverse_bank_families=adm['diverse_bank_families']))
@@ -343,7 +352,7 @@ def analyse(final_root, panel, cands=None, top=None):
     return N.seal(dict(base, panel_sha256=panel['panel_sha256'], n_worlds=len(worlds), bootstrap=bootstrap,
                        primary=prim, contrasts=contrasts, arm=arm, admitted_diverse_plans=per_plan,
                        sources={k: v.get('receipt_sha256') for k, v in sources.items()}, root=str(final_root),
-                       label='amendment 45; exploratory row at 60% CAVs; never pooled; one shot'), 'analysis_sha256')
+                       label=RESULT_LABEL), 'analysis_sha256')
 
 
 # ------------------------------------------------------------------------------------------------ CLI
@@ -374,16 +383,16 @@ def main(argv=None):
     panel = D.setup(a.setting)
 
     def log(x):
-        line = json.dumps(dict(x, unix=time.time(), t=time.strftime('%F %T'), setting=a.setting, amendment='45'),
+        line = json.dumps(dict(x, unix=time.time(), t=time.strftime('%F %T'), setting=a.setting, amendment=AMENDMENT),
                           sort_keys=True, default=str)
         print(line, flush=True)
-        with (root/'A45_LOG.jsonl').open('a', encoding='utf-8') as f:
+        with (root/LOG_FILE).open('a', encoding='utf-8') as f:
             f.write(line+'\n')
     if a.command == 'prepare':
         print(json.dumps(prepare(root), indent=1))
     elif a.command == 'dry':
         c = 'verify' if a.setting == D.VERIFY_SETTING else 'confirm'
-        out = dict(setting=a.setting, budget=budget_plan(), charged_a45=charged_phase(root))
+        out = {'setting': a.setting, 'budget': budget_plan(), f'charged_{JOB_PREFIX}': charged_phase(root)}
         try:
             ws = stage_waves(c, a.setting, panel, root)
         except N.Blocked as e:
@@ -402,7 +411,7 @@ def main(argv=None):
                 log(dict(done=a.command, status='SKIPPED_NOTHING_TO_RUN'))
                 return
             log(dict(start=a.command, waves=[(w[0], len(w[2])) for w in waves], workers=a.workers, chunk=a.chunk,
-                     pid=os.getpid(), charged_a45_before=charged_phase(root), fits=stage_fits(root, waves)))
+                     pid=os.getpid(), fits=stage_fits(root, waves), **{f'charged_{JOB_PREFIX}_before': charged_phase(root)}))
             res = run_stage(root, waves, workers=a.workers, chunk=a.chunk, log=log, panel=panel)
             log(dict(done=a.command, **res))
     elif a.command == 'admit':
@@ -417,10 +426,11 @@ def main(argv=None):
         v = analyse(root, panel)
         out = Path(a.out)
         out.mkdir(parents=True, exist_ok=True)
-        N.publish(out/f'A45_RESULTS_{CELL}.json', v, replace=True)
+        N.publish(out/RESULTS_FILE, v, replace=True)
         print(json.dumps(dict(analysis_sha256=v['analysis_sha256'], verdict=v['primary']['verdict'])))
     elif a.command == 'status':
-        out = {D.A42_PHASE: charged_phase(root, D.A42_PHASE), A45_PHASE: charged_phase(root), 'a45_cap': A45_CAP_SIM_S}
+        out = {D.A42_PHASE: charged_phase(root, D.A42_PHASE), A45_PHASE: charged_phase(root),
+               f'{JOB_PREFIX}_cap': A45_CAP_SIM_S}
         for c in ('verify', 'confirm'):
             try:
                 for n, _, s in stage_waves(c, a.setting, panel, root, check_files=False):

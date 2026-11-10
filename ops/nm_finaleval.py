@@ -512,6 +512,31 @@ BANK_SETTINGS = BANK_SETTINGS + tuple(c[0] for c in A42_CELLS)
 #: amendment 42 blocks (proposed after the seed audit, before any amendment-42 episode; MAIN records them)
 SETTINGS_PINS['a42v_D2800_p60'] = dict(PANEL_SHA256='58a0118430b8b91b6e0eca2a2e6904bd352af2dfd57a18e9aa8fa821ed63407e', PANEL_3C_SHA256=None)
 SETTINGS_PINS['a42c_D2800_p60'] = dict(PANEL_SHA256='0b42fd54790fc42d84a8f52e5cb74a78ccd41fa0450c410d1e349cd33bcb1adb', PANEL_3C_SHA256=None)
+#: amendment 50 (exact replication of the A42 + A45 chain with the full-size holds-only WM search as the candidate source;
+#: pre-outcome): FRESH audited verification block 992800-992823 (992824-992899 reserved unused) and confirmation panel
+#: 996800-996895 (996896-996899 reserved unused). Same plant / bindings as a35_D2800_p60 (= the A42 cells); executed
+#: through the eval runner (scope label only); never pooled with A42 / A45.
+A50_CELLS = (('a50v_D2800_p60', 992800, 24, 'verification', 'nm_eval_trainblock_wz3to2_a50v_D2800_p60.json'),
+             ('a50c_D2800_p60', 996800, 96, 'confirmation', 'nm_eval_panel_wz3to2_a50c_D2800_p60.json'))
+for _name, _lo, _n, _what, _file in A50_CELLS:
+    SETTINGS[_name] = dict(SETTINGS['a35_D2800_p60'],
+        N_WORLDS=_n, EVAL_RANGE=(_lo, _lo+99), EVAL_EXTRA_RANGE=(_lo, _lo+99), SEEDS_RESERVED=(_lo+_n, _lo+99),
+        PANEL_SIZE_REASON=(f'MAIN amendment 50: {_what} = {_n} fresh worlds {_lo}-{_lo+_n-1} (D2800_p60); '
+                           f'{_lo+_n}-{_lo+99} reserved unused'),
+        CELL_AUTHORITY=(f'MAIN amendment 50: D2800_p60 {_what} of the full-size holds-only WM search plans (exact '
+                        'replication of the A42 + A45 chain)'),
+        PANEL_AUTHORITY=(f'A50 amendment 50: fresh audited integers {_lo}-{_lo+_n-1} (D2800_p60) for the {_what} stage '
+                         'ONLY; executed through the eval runner (scope label only); never pooled'),
+        EXPOSURE_EXTRA=dict(
+            checked=('amendment-50 audit: 992800-992899 and 996800-996899 as standalone integers absent from '
+                     'REGISTRATION.md seed use, protocols/experiment_history.json, every c4/* branch tip, the a32-a47 run '
+                     'and agent dirs (ops/a50/SEED_AUDIT.json)',),
+            disclosed=f'; amendment 50: fresh integers ({_what}), registered at runtime by the runner'),
+        PANEL_FILE=HERE/_file, PANEL_3C_FILE=None)
+BANK_SETTINGS = BANK_SETTINGS + tuple(c[0] for c in A50_CELLS)
+#: amendment 50 blocks (proposed after the seed audit, before any amendment-50 episode; MAIN records them)
+SETTINGS_PINS['a50v_D2800_p60'] = dict(PANEL_SHA256='c7f1d46aa28406cb009dffdc5bef6caf5ce2843e69591357ed49728f3f5b2fc0', PANEL_3C_SHA256=None)
+SETTINGS_PINS['a50c_D2800_p60'] = dict(PANEL_SHA256='7ef0cfabab4a5fffbe209d7308139a8ab1f8445f1b51f46e957586f598df98b5', PANEL_3C_SHA256=None)
 MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'
 #: MAIN 2026-11-06 (N11 F4): the panel binds the staged probe network bytes (sha256 of wz3to2.net.xml)
 NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'
@@ -1073,7 +1098,31 @@ def mappo_binding(final_root, arm='MAPPO_SPEED'):
     value = verify(read(path), 'binding_sha256', f'{arm} binding')
     if value.get('arm') != arm or value['kind'] not in MAPPO_KINDS[arm]:
         raise Blocked(f'{arm} binding names another arm/kind')
-    return dict(value, binding_path=str(path))      # location only; the sealed record is unchanged
+    return dict(value, binding_path=binding_location(final_root, path))  # location only; sealed record unchanged
+
+
+HOST_FINAL_ROOT_ENV = 'NM_HOST_FINAL_ROOT'
+
+
+def binding_location(final_root, path):
+    """The binding's location string as the episode records name it. On the evaluating host: the file's own path.
+    Offline re-analysis of an OFFLOADED final root ($NM_HOST_FINAL_ROOT = the host's --final-root string): the same
+    file name under the host root, accepted only when the offloaded LAUNCHER.json shows the host ran with exactly that
+    --final-root. Only the location string is remapped: the binding CONTENT is self-verified above (binding_sha256)
+    and check_episode still compares the whole checkpoint descriptor (binding_sha256 included) exactly."""
+    host = os.environ.get(HOST_FINAL_ROOT_ENV)
+    if not host:
+        return str(path)
+    if not host.startswith('/') or host.endswith('/') or '\\' in host:
+        raise Blocked(f'{HOST_FINAL_ROOT_ENV} must be an absolute POSIX path without a trailing slash: {host!r}')
+    launcher = Path(final_root)/'LAUNCHER.json'
+    argv = read(launcher).get('argv', []) if launcher.is_file() else []
+    named = [argv[i+1] for i, x in enumerate(argv[:-1]) if x == '--final-root']
+    if named != [host]:
+        raise Blocked(f'{HOST_FINAL_ROOT_ENV}={host!r} is not the --final-root of the offloaded {launcher} ({named})')
+    if Path(path).parent.resolve() != Path(final_root).resolve():
+        raise Blocked(f'{path} is not a top-level file of the offloaded final root {final_root}')
+    return f'{host}/{Path(path).name}'
 
 
 def declared_unavailable(final_root, arm):

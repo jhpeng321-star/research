@@ -62,6 +62,15 @@ CANDS_FILE = A42_DIR/f'CANDIDATES_{CELL}.json'
 #: pinned when MAIN registers the candidates (before any A42 SUMO); None = not registered -> verify refuses
 CANDIDATES_DOC_SHA256 = None
 IDENT_WAVE = 'A42_IDENT_U0'
+#: amendment-specific names (amendment 50 reuses this driver with its own values; see ops/a50_fullp60.py)
+AMENDMENT, LABEL, JOB_PREFIX = '42', 'A42', 'a42'
+VERIFY_TAG, CONFIRM_TAG, IDENT_TAG = 'a42v', 'a42c', 'a42i'          # job id prefixes
+VERIFY_WAVE_PREFIX, CONFIRM_WAVE_PREFIX = 'A42V_', 'A42C_'
+CANDS_BANK_FILE, BIG_BANK_FILE = f'A42_CANDS_{CELL}.json', f'A42_BIG_BANK_{CELL}.json'
+ADMISSION_FILE, RESULTS_FILE, LOG_FILE = f'ADMISSION_{CELL}.json', f'A42_RESULTS_{CELL}.json', 'A42_LOG.jsonl'
+SCHEMA_PREFIX = 'coopmwm.a42'
+RUNNER_RANGES_ATTR = 'A42_RANGES'                                     # the runner's registered seed blocks
+RESULT_LABEL = 'amendment 42; exploratory row at 60% CAVs; never pooled; one shot'
 #: identity panels (A37/A41 pattern; no reference exists for an a35 D2800_p60 world, see PLAN note): tag, file, pin
 IDENT_PANELS = (('p20c', 'nm_eval_panel_wz3to2_p20c_D2800.json',
                  'd2ed7783ae9ea071f89aec4397d3ee155161878b44e1717b02188b16e7ff7fa2'),
@@ -93,7 +102,7 @@ def setup(setting):
 def budget_plan():
     total = IDENTITY_SIM_S+VERIFY_SIM_S+CONFIRM_SIM_S
     if total+RETRY_RESERVE_SIM_S != A42_CAP_SIM_S or RETRY_RESERVE_SIM_S < 0:
-        raise N.Blocked('A42 budget arithmetic')
+        raise N.Blocked(f'{LABEL} budget arithmetic')
     return dict(phase=A42_PHASE, cap_sim_s=A42_CAP_SIM_S, identity=IDENTITY_SIM_S, verification=VERIFY_SIM_S,
                 confirmation=CONFIRM_SIM_S, planned=total, retry_reserve=RETRY_RESERVE_SIM_S)
 
@@ -102,7 +111,7 @@ def check_total_cap(total_cap, committed):
     """Registration: 'total_cap checked before launch'. committed = sum of every other registered phase cap / charge
     (MAIN's ledger). Blocks when this phase does not fit."""
     if int(committed)+A42_CAP_SIM_S > int(total_cap):
-        raise N.Blocked(f'A42: {committed} + {A42_CAP_SIM_S} > total_cap {total_cap}')
+        raise N.Blocked(f'{LABEL}: {committed} + {A42_CAP_SIM_S} > total_cap {total_cap}')
     return dict(total_cap=int(total_cap), committed=int(committed), a42_cap=A42_CAP_SIM_S,
                 headroom=int(total_cap)-int(committed)-A42_CAP_SIM_S)
 
@@ -133,10 +142,10 @@ def candidates(path=None, pinned=None):
         raise N.Blocked(f'{path.name}: doc_sha256 differs (never edit a pre-outcome file)')
     if pinned is None or doc['doc_sha256'] != pinned:
         raise N.Blocked(f'{path.name}: not the registered selection (pin {pinned})')
-    if doc['cell'] != CELL or doc['k'] != B.K:
+    if doc['cell'] != CELL or doc['k'] != B.K or doc.get('amendment') != AMENDMENT:
         raise N.Blocked(f'{path.name}: not the registered cell / K')
     if doc['STOP']:
-        raise N.Blocked(f'A42 STOP: {doc["verdict"]} (no verification)')
+        raise N.Blocked(f'{LABEL} STOP: {doc["verdict"]} (no verification)')
     for c in doc['candidates']:
         if C.spec_sha(c['strategy']) != c['strategy_sha256']:
             raise N.Blocked(f'{c["family"]}: strategy sha differs')
@@ -151,7 +160,7 @@ def prepare(final_root, cands=None):
     from tools.coopmwm import a37_cellbank as C
     cands = candidates() if cands is None else cands
     doc = C.bank_doc([dict(family=c['family'], strategy=c['strategy'], lb95_veh_s=0.0) for c in cands], CELL)
-    p = C37.write_once(bank_path(final_root, f'A42_CANDS_{CELL}.json'), C37.bank_text(doc))
+    p = C37.write_once(bank_path(final_root, CANDS_BANK_FILE), C37.bank_text(doc))
     return dict(path=str(p), file_sha256=N.file_sha(p), families=[c['family'] for c in cands])
 
 
@@ -190,39 +199,40 @@ def verify_waves(panel, final_root, *, check_files=True, cands=None):
     """[(wave, 'episode', specs)]: U0 then every candidate (CANDIDATES order) on the 24-world TRAIN-type block."""
     u0, _ = A.bindings(final_root)
     cands = candidates() if cands is None else cands
-    waves = [('A42V_U0', 'episode', _retag(N.episode_specs('U0', panel, None, Path(final_root)/N.PRERUN_PLANT,
-                                                         'mappo_frozen', None, u0), 'a42v_u0'))]
-    entry = _bank_entry(final_root, f'A42_CANDS_{CELL}.json', check_files=check_files) or dict(path='', file_sha256='')
+    waves = [(f'{VERIFY_WAVE_PREFIX}U0', 'episode',
+              _retag(N.episode_specs('U0', panel, None, Path(final_root)/N.PRERUN_PLANT, 'mappo_frozen', None, u0),
+                     f'{VERIFY_TAG}_u0'))]
+    entry = _bank_entry(final_root, CANDS_BANK_FILE, check_files=check_files) or dict(path='', file_sha256='')
     for c in cands:
-        waves.append((f'A42V_{c["family"]}', 'episode',
+        waves.append((f'{VERIFY_WAVE_PREFIX}{c["family"]}', 'episode',
                       _a37_specs(RUNNER_ARM['PLAN'], panel, final_root, entry, family=c['family'],
-                                 tag=f'a42v_{c["key"][:8]}')))
+                                 tag=f'{VERIFY_TAG}_{c["key"][:8]}')))
     return waves
 
 
 def admission(final_root):
-    p = Path(final_root)/f'ADMISSION_{CELL}.json'
+    p = Path(final_root)/ADMISSION_FILE
     return N.verify(N.read(p), 'receipt_sha256', p.name) if p.is_file() else None
 
 
 def confirm_specs(arm, panel, final_root, *, check_files=True):
     if arm in ('U0', 'LEARNED_TRIGGER', 'DUO_HOLD'):
-        return _retag(T._arm_specs(arm, panel, final_root, check_files=check_files), f'a42c_{arm.lower()}')
+        return _retag(T._arm_specs(arm, panel, final_root, check_files=check_files), f'{CONFIRM_TAG}_{arm.lower()}')
     if arm == 'BIG_BANK':
         adm = admission(final_root)
         if adm is None:
             raise N.Blocked('no ADMISSION file (run verify + admit first)')
         if not adm['admitted']:
             return []                      # BIG_BANK := U0 by definition; no confirmation run
-        entry = _bank_entry(final_root, f'A42_BIG_BANK_{CELL}.json')
+        entry = _bank_entry(final_root, BIG_BANK_FILE)
         if entry['file_sha256'] != adm['big_bank']['file_sha256']:
             raise N.Blocked('BIG_BANK bank differs from the admission receipt')
-        return _a37_specs(RUNNER_ARM['BIG_BANK'], panel, final_root, entry, tag='a42c_big_bank')
-    raise N.Blocked(f'no A42 confirmation arm {arm!r}')
+        return _a37_specs(RUNNER_ARM['BIG_BANK'], panel, final_root, entry, tag=f'{CONFIRM_TAG}_big_bank')
+    raise N.Blocked(f'no {LABEL} confirmation arm {arm!r}')
 
 
 def confirm_wave(arm):
-    return f'A42C_{arm}'
+    return f'{CONFIRM_WAVE_PREFIX}{arm}'
 
 
 def ident_specs(final_root):
@@ -234,7 +244,7 @@ def ident_specs(final_root):
         if panel['panel_sha256'] != pin:
             raise N.Blocked(f'identity panel {name}: sha differs from the registered panel')
         specs = N.episode_specs('U0', panel, None, plant, 'mappo_frozen', None, u0)[:N.IDENTITY_WORLDS]
-        out += [dict(s, job_id=f'a42i_{tag}_u0_{i:04}') for i, s in enumerate(specs)]
+        out += [dict(s, job_id=f'{IDENT_TAG}_{tag}_u0_{i:04}') for i, s in enumerate(specs)]
     return out
 
 
@@ -251,11 +261,11 @@ class A42Runtime(N.PrerunRuntime):
 
     def check_capacity(self, amount):
         if charged(self.final_root)+amount > A42_CAP_SIM_S:
-            raise N.Blocked(f'A42: {A42_PHASE} cap {A42_CAP_SIM_S} would be exceeded')
+            raise N.Blocked(f'{LABEL}: {A42_PHASE} cap {A42_CAP_SIM_S} would be exceeded')
 
     def reserve(self, cfg, jobs):
-        if any(not str(j['id']).startswith('a42') for j in jobs):
-            raise N.Blocked('A42: job ids are a42*')
+        if any(not str(j['id']).startswith(JOB_PREFIX) for j in jobs):
+            raise N.Blocked(f'{LABEL}: job ids are {JOB_PREFIX}*')
         self.check_capacity(sum(j['sim_s'] for j in jobs))
         N.own_reserve(self.final_root, jobs, A42_PHASE, cap=A42_CAP_SIM_S, calls=self.calls, allocation=A42_CAP_SIM_S)
 
@@ -271,10 +281,10 @@ def execute(final_root, waves, *, workers, chunk, log, panel=None, runtime=None)
             raise N.Blocked('set COOPMWM_MAP_SPEC before physics')
         status = runtime.runner_status()
         if not status['ok'] or not status.get('learned'):
-            raise N.Blocked(f'runner cannot run the A42 arms: {status}')
+            raise N.Blocked(f'runner cannot run the {LABEL} arms: {status}')
         from tools.coopmwm import nm_eval_runner as R
-        if getattr(R, 'A37_ARMS', None) != C37.A37_ARMS or getattr(R, 'A42_RANGES', None) is None:
-            raise N.Blocked('runner lacks the amendment-37 executor arms / amendment-42 ranges')
+        if getattr(R, 'A37_ARMS', None) != C37.A37_ARMS or getattr(R, RUNNER_RANGES_ATTR, None) is None:
+            raise N.Blocked(f'runner lacks the amendment-37 executor arms / amendment-{AMENDMENT} ranges')
         if panel is not None:
             N.map_check(N.bind_map_api(None), panel)
     plan = N.prerun_plan(final_root)
@@ -331,7 +341,7 @@ def confirm_fits(final_root, n_arms):
     need = n_arms*96*N.HORIZON_S
     left = A42_CAP_SIM_S-charged(final_root)
     if need > left:
-        raise N.Blocked(f'A42: confirmation needs {need} sim-s, {left} left in {A42_PHASE} (MAIN decides)')
+        raise N.Blocked(f'{LABEL}: confirmation needs {need} sim-s, {left} left in {A42_PHASE} (MAIN decides)')
     return dict(need=need, left=left)
 
 
@@ -356,10 +366,10 @@ def identity_compare(final_root, refs_path=None):
     per = {}
     for x in rows:
         per[x['panel']] = per.get(x['panel'], True) and x['abs_diff'] <= 1e-6 and x['safety_equal']
-    return N.seal(dict(schema='coopmwm.a42.identity.v1', rule='|J diff| <= 1e-6 veh-s and identical safety, U0',
+    return N.seal(dict(schema=f'{SCHEMA_PREFIX}.identity.v1', rule='|J diff| <= 1e-6 veh-s and identical safety, U0',
                        verdict='PASS' if all(per.values()) else 'FAILED',
                        per_panel={k: 'PASS' if v else 'FAILED' for k, v in per.items()}, worlds=rows,
-                       consequence=('as A37: the chain continues either way; every A42 arm (verification and '
+                       consequence=(f'as A37: the chain continues either way; every {LABEL} arm (verification and '
                                     'confirmation) runs on this host and is analysed only among themselves')),
                   'receipt_sha256')
 
@@ -384,7 +394,7 @@ def admit(final_root, panel, cands=None):
     final_root = Path(final_root)
     cands = candidates() if cands is None else cands
     if admission(final_root) is not None:
-        raise N.Blocked(f'ADMISSION_{CELL}.json exists (one shot)')
+        raise N.Blocked(f'{ADMISSION_FILE} exists (one shot)')
     worlds = [r['world_id'] for r in panel['worlds']]
     seed = {r['world_id']: r['world']['seed'] for r in panel['worlds']}
     bootstrap = dict(panel['contract']['bootstrap'])
@@ -411,9 +421,9 @@ def admit(final_root, panel, cands=None):
     plans = C.admitted_plans(cands, verdicts)
     big = None
     if plans:
-        p = C37.write_once(bank_path(final_root, f'A42_BIG_BANK_{CELL}.json'), C37.bank_text(C.bank_doc(plans, CELL)))
+        p = C37.write_once(bank_path(final_root, BIG_BANK_FILE), C37.bank_text(C.bank_doc(plans, CELL)))
         big = dict(path=f'{HOST_ROOT}/{BANK_DIR}/{p.name}', file_sha256=N.file_sha(p))
-    value = N.seal(dict(schema='coopmwm.a42.admission.v1', amendment='42', cell=CELL, rule=C.UNC_RULE,
+    value = N.seal(dict(schema=f'{SCHEMA_PREFIX}.admission.v1', amendment=AMENDMENT, cell=CELL, rule=C.UNC_RULE,
                         multiplicity=f'{len(rows)} picks each tested at 95% (disclosed, as A37)',
                         panel_sha256=panel['panel_sha256'], seeds=sorted(seed.values()), verdicts=rows,
                         admitted=[p['family'] for p in plans], priority=[(p['family'], p['lb95_veh_s']) for p in plans],
@@ -423,7 +433,7 @@ def admit(final_root, panel, cands=None):
                         u0_safety_totals={k: int(sum(have['U0'][w]['safety'][k] for w in worlds)) for k in N.SAFETY},
                         sources={k: v.get('receipt_sha256') for k, v in sources.items()}),
                    'receipt_sha256')
-    N.publish(final_root/f'ADMISSION_{CELL}.json', value)
+    N.publish(final_root/ADMISSION_FILE, value)
     return value
 
 
@@ -465,8 +475,8 @@ def analyse(final_root, panel, cands=None):
     if adm is None:
         raise N.Blocked('ADMISSION missing')
     if adm['big_bank_is_u0']:
-        return N.seal(dict(schema='coopmwm.a42.analysis.v1', amendment='42', authority=AUTHORITY, cell=CELL,
-                           primary=dict(rule=PRIMARY_RULE, supported=False, verdict='NOT SUPPORTED',
+        return N.seal(dict(schema=f'{SCHEMA_PREFIX}.analysis.v1', amendment=AMENDMENT, authority=AUTHORITY,
+                           cell=CELL, primary=dict(rule=PRIMARY_RULE, supported=False, verdict='NOT SUPPORTED',
                                         note='no plan admitted: BIG_BANK := U0, reported as the outcome; no confirmation'),
                            admission=dict(admitted=[], receipt_sha256=adm['receipt_sha256'])), 'analysis_sha256')
     cands = candidates() if cands is None else cands
@@ -494,14 +504,14 @@ def analyse(final_root, panel, cands=None):
             arms[a]['activations'] = dict(worlds_with_any=sum(1 for r in rec if r.get('activations')),
                                           total=sum(int(r.get('activations') or 0) for r in rec), by_family=fam)
     arms['BIG_BANK']['realised_group_size'] = _group_sizes(have['BIG_BANK'], worlds, specs)
-    return N.seal(dict(schema='coopmwm.a42.analysis.v1', amendment='42', authority=AUTHORITY, cell=CELL,
+    return N.seal(dict(schema=f'{SCHEMA_PREFIX}.analysis.v1', amendment=AMENDMENT, authority=AUTHORITY, cell=CELL,
                        panel_sha256=panel['panel_sha256'], n_worlds=len(worlds), bootstrap=bootstrap,
                        primary=prim, contrasts=contrasts, arms=arms,
                        groups_vs_u0={r['treatment']: r['groups'] for r in contrasts if r['reference'] == 'U0'},
                        admission=dict(admitted=adm['admitted'], receipt_sha256=adm['receipt_sha256'],
                                       big_bank=adm['big_bank']),
                        sources={k: v.get('receipt_sha256') for k, v in sources.items()}, root=str(final_root),
-                       label='amendment 42; exploratory row at 60% CAVs; never pooled; one shot'), 'analysis_sha256')
+                       label=RESULT_LABEL), 'analysis_sha256')
 
 
 # ------------------------------------------------------------------------------------------------ CLI
@@ -554,7 +564,7 @@ def main(argv=None):
         line = json.dumps(dict(x, unix=time.time(), t=time.strftime('%F %T'), setting=a.setting), sort_keys=True,
                           default=str)
         print(line, flush=True)
-        with (root/'A42_LOG.jsonl').open('a', encoding='utf-8') as f:
+        with (root/LOG_FILE).open('a', encoding='utf-8') as f:
             f.write(line+'\n')
     if a.command == 'prepare':
         print(json.dumps(prepare(root), indent=1))
@@ -607,7 +617,7 @@ def main(argv=None):
         v = analyse(root, panel)
         out = Path(a.out)
         out.mkdir(parents=True, exist_ok=True)
-        N.publish(out/f'A42_RESULTS_{CELL}.json', v, replace=True)
+        N.publish(out/RESULTS_FILE, v, replace=True)
         print(json.dumps(dict(analysis_sha256=v['analysis_sha256'], verdict=v['primary']['verdict'])))
     elif a.command == 'status':
         out = dict(charged=charged(root), cap=A42_CAP_SIM_S)

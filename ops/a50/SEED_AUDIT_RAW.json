@@ -1,0 +1,126 @@
+{
+ "schema": "a50.seed_audit_raw.v1",
+ "blocks": {
+  "verification": [
+   992800,
+   992899
+  ],
+  "confirmation": [
+   996800,
+   996899
+  ]
+ },
+ "known_overlap": [],
+ "run_dirs": [
+  "a32_ablation",
+  "a33_combined",
+  "a34_horizon",
+  "a35_transfer",
+  "a36_analysis",
+  "a37_celltailor",
+  "a40_geomvar",
+  "wmc_strategy_v3",
+  "paper_data",
+  "paper_analysis_a32",
+  "paper_fairness",
+  "p20c_seed_audit",
+  "p20x_seedaudit",
+  "p20x_bank",
+  "nm_finaleval_p20c_confirm",
+  "nm_finaleval_p20x_r2_bank",
+  "regimeu0",
+  "wmc_p20",
+  "lowcav",
+  "multicrit",
+  "wmverify_cfd",
+  "wmverify_d3200p60",
+  "wmverify_mc",
+  "wmverify_p20",
+  "wmverify_pair",
+  "wmverify_r3",
+  "wmverify_r4",
+  "wmverify_r5",
+  "wmverify_r6",
+  "wmverify_r6c",
+  "wmverify_r7a",
+  "wmverify_r7b",
+  "wmverify_r7c",
+  "wmverify_rep",
+  "wmverify_sl",
+  "wmverify_unc"
+ ],
+ "agent_dirs": [
+  "a32",
+  "a33",
+  "a34",
+  "a35",
+  "a37",
+  "a38",
+  "a39",
+  "a40",
+  "distill",
+  "distill-eval",
+  "distill-rl",
+  "distill-train",
+  "a38-road2",
+  "a40-geomvar",
+  "a41-d3200bound",
+  "a42",
+  "a32-ablation",
+  "a33-combined",
+  "a34-horizon",
+  "a35-transfer",
+  "a37-celltailor",
+  "a40-geomvar-d3a",
+  "a41",
+  "a42-bigp60",
+  "a42-run",
+  "a42-build-tmp",
+  "a44-lcvariant",
+  "a47-relay",
+  "distill-eval-dry",
+  "distill-log"
+ ],
+ "forbidden_skipped": [
+  "sealed",
+  "holdout",
+  "heldout",
+  "cal_split",
+  "chunk5",
+  "j4b",
+  "inc1",
+  "hetdata_truth",
+  "driver_params"
+ ],
+ "skipped_files": "^(WAVE_|RESULT|A\\d+B?_RESULTS|vehicles|observable)",
+ "file_hits": {
+  "verification": [
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_00c5332e54071f7c07a4fb57db63925bb7c6a6019a518952294fef289db82fd1\\CLAIM.json",
+    "line": 1,
+    "token": "992869",
+    "context": "1f7c07a4fb57db63925bb7c6a6019a518952294fef289db82fd1\",\"pid\":992869} "
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_982a3b0027dd8835a8ca868be72fb10b9034194894d3d2e1dd9d3c63e510933e\\CLAIM.json",
+    "line": 1,
+    "token": "992874",
+    "context": "8835a8ca868be72fb10b9034194894d3d2e1dd9d3c63e510933e\",\"pid\":992874} "
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_d957559ca0e799911409212dbb335becdc019f9f2fe85b82a736b25b526c9e23\\CLAIM.json",
+    "line": 1,
+    "token": "992843",
+    "context": "99911409212dbb335becdc019f9f2fe85b82a736b25b526c9e23\",\"pid\":992843} "
+   }
+  ],
+  "confirmation": []
+ },
+ "git_hits": {
+  "verification": [],
+  "confirmation": []
+ },
+ "n_files": 148612,
+ "n_tips": 546,
+ "audited": "2026-11-11 01:48:20 +0800"
+}
