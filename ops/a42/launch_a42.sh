@@ -51,7 +51,7 @@ fi
 ID=$($SSH 'id -u' 2>/dev/null) || die "ssh $USR@$HOST:$PORT failed (key auth required; no passwords)"
 SUDO=""; [ "$ID" = 0 ] || { $SSH 'sudo -n true' >/dev/null 2>&1 || die "non-root user without passwordless sudo"; SUDO="sudo -n"; }
 log "host $HOST:$PORT user $USR uid $ID nproc $($SSH nproc) $($SSH "df -Ph / | tail -1")"
-$SSH "pgrep -f 'tools.wzprop strategy' >/dev/null" && die "the A42 WM search is still running on this host (wait for it; never share its cores)"
+$SSH "pgrep -f '[t]ools.wzprop strategy' >/dev/null" && die "the A42 WM search is still running on this host (wait for it; never share its cores)"
 if $SSH "$SUDO test -f /root/a42v/chain.out"; then
   log "chain.out already exists on the host: NOT relaunching (status only)"
   $SSH "$SUDO tail -5 /root/a42v/chain.out"
