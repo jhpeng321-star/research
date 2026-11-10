@@ -34,7 +34,7 @@ until a37_done || [ -f "$BASE/A40_GO" ]; do
 done
 if a37_done; then log "A37 finished: $(tail -1 /root/a37ct/chain.out)"; else log "A40_GO present (MAIN launch decision); A37 state: $(tail -1 /root/a37ct/chain.out 2>/dev/null)"; fi
 MEM_GB=$(awk '/MemAvailable/{print int($2/1048576)}' /proc/meminfo)
-W=$(( $(nproc) - 4 )); MW=$(( MEM_GB * 10 / 15 )); [ "$MW" -lt "$W" ] && W=$MW
+W=$(( $(nproc --all) - 4 )); MW=$(( MEM_GB * 10 / 15 )); [ "$MW" -lt "$W" ] && W=$MW
 [ "$W" -ge 4 ] || { log "too few workers ($W; mem_avail_gb $MEM_GB)"; exit 1; }
 echo "$W" > "$BASE/WORKERS"
 log "workers $W (mem_avail_gb $MEM_GB)"
