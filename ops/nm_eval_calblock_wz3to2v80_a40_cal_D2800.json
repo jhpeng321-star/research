@@ -1,0 +1,311 @@
+{
+ "authority": "A40 amendment 40: TRAIN-type integers 994200-994207 of the wz3to2v80 TRAIN block 994200-994399 for demand calibration ONLY (never evaluation, never pooled); executed through the eval runner (scope label only)",
+ "cell": {
+  "authority": "MAIN amendment 40: wz3to2v80 demand calibration cell D2800_p20 (TRAIN-type, never evaluation)",
+  "cell": 1,
+  "cell_key": "D2800_p20",
+  "demand_vph": {
+   "main": 2800
+  },
+  "depart_lane": "free",
+  "episode_s": [
+   0,
+   1200
+  ],
+  "newmap2_report_sha256": "70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05",
+  "penetration": 0.2,
+  "profile": "peak",
+  "rate_profile_s": [
+   [
+    0,
+    300,
+    0.8
+   ],
+   [
+    300,
+    1500,
+    1.0
+   ],
+   [
+    1500,
+    1800,
+    0.6
+   ]
+  ]
+ },
+ "contract": {
+  "arms": [
+   "A",
+   "B",
+   "R"
+  ],
+  "bootstrap": {
+   "level": 0.95,
+   "method": "paired_percentile",
+   "reps": 10000,
+   "seed": 20261104
+  },
+  "budget": {
+   "allocation_sim_s": 690000,
+   "authority": "MAIN decision 2026-11-06 for N6 (only clean4 final-evaluation runner)",
+   "ledger": "clean4 run root CHARGES.jsonl",
+   "phase": "v2v_final",
+   "quote_mappo_u0": 672000,
+   "quote_native": 556800
+  },
+  "comparators": {
+   "BASE": "clean4 base controller (N4 choice): mappo_u0 = frozen speed-only MAPPO u0 (A_checkpoint_000.pt == CONFIG common_checkpoint_sha256), or native (BASE aliases NATIVE)",
+   "NATIVE": "native SUMO CAV driving (no commands), same plant/runtime"
+  },
+  "comparisons": [
+   "B-A",
+   "R-A",
+   "B-R"
+  ],
+  "decisions": {
+   "arms": [
+    "B",
+    "R"
+   ],
+   "background": "BASE controller",
+   "branching": "clean3 sumo_verify decision snapshot + CRN prefix replay from t=0; charged t_s + 360 sim-s per branch (sumo_verify.branch_sim_s)",
+   "decomposition": "delta(all group new, background base) - max delta(one member new, background base) (clean3 ISOLATED_TEST)",
+   "higher_is_better": true,
+   "horizon_s": 360,
+   "labels": [
+    "all",
+    "background",
+    "solo<i>"
+   ],
+   "metrics": [
+    "delta_all_new_veh_s",
+    "delta_only_member_new_veh_s",
+    "best_solo_veh_s",
+    "policy_cooperation_gain_veh_s"
+   ],
+   "per_world": 1,
+   "rule": "first new cooperation plan with 2..3 members starting at 300 <= t <= 840 s in the evaluation episode; time order only (outcome-blind); none -> world has no decision",
+   "subset_rule": "panel repeat % 12 == 0",
+   "worlds": [
+    "wz3to2v80_994200"
+   ]
+  },
+  "deterministic": true,
+  "estimator": "tools.coopmwm.planner_eval._paired_ci (whole-world resampling, identical resample indices for every contrast)",
+  "higher_is_better": false,
+  "horizon_note": "= clean4 training episode length (MAIN; N1 EPISODE_S)",
+  "horizon_s": 1200,
+  "metric": "J_veh_s",
+  "metric_definition": "team delay veh-s over the window: on-road speed deficit dt*max(0, 1-v/31.29) + source waiting (requested, not yet inserted)",
+  "noise_seed": "world seed",
+  "primary": {
+   "contrast": "B-BASE",
+   "note": "descriptive generalisation check; the clean4 registered primary criterion (u24 replicated synergy test on TRAIN states, N4) is unchanged; never gates training",
+   "rule": "mean(J_B - J_BASE) paired CI95 entirely below 0 AND B total collisions+teleports <= BASE total"
+  },
+  "role": "final_test (N1 HELDOUT_ROLES)",
+  "safety_counters": [
+   "collisions",
+   "teleports",
+   "hard_brakes",
+   "ttc_events"
+  ],
+  "total_benefit": {
+   "arms": [
+    "B",
+    "A",
+    "R"
+   ],
+   "vs": [
+    "BASE",
+    "NATIVE"
+   ]
+  },
+  "update": 24,
+  "window": {
+   "end_s": 1200,
+   "start_s": 0
+  }
+ },
+ "exposure": {
+  "checked": [
+   "amendment-40 audit: 994000-994399 as standalone integers absent from REGISTRATION.md seed use, protocols/experiment_history.json, every c4/* branch tip and the a28-a38 panels / run dirs (E:/agent-work/a40/SEED_AUDIT.json)"
+  ],
+  "disclosed": "wz3to2v80 worlds are map-namespaced (streams newmap_requests_v1:wz3to2v80:...), so no wz3to2v80 traffic realisation shares draws with any wz3to2, wz2to1 or merge-map world; job/world ids carry the wz3to2v80_ prefix"
+ },
+ "map": "wz3to2v80",
+ "map_binding": {
+  "bottleneck": {
+   "adjacent_lane": 1,
+   "anchor_x_m": 2620.56,
+   "closing_lane": 2,
+   "drop_s_m": 75.44,
+   "drop_x_m": 2696.0,
+   "edge": "up",
+   "node_x_m": 2700.0,
+   "sumo_dropped_lane": 0,
+   "through_lanes": [
+    0,
+    1
+   ]
+  },
+  "descriptor_sha256_at_registration": "fefe9cd8ba768fdf978ba4715a25bb5aee20de400377d16aa12a3be19349861a",
+  "k_slots": 512,
+  "map_spec": "assets/research/newmap_candidates/wz3to2v80/MAP_SPEC.json",
+  "map_spec_file_sha256": "5ddc7080c6be78e71651d4ec5361b75f83ba3c2cae46ea594da18e51bcff90e4",
+  "n1_registered": {
+   "network_sha256": "777a2cc9cf004bf3ba5541b69236a49b58a1e0a2e38838a9e04ae2d22d4d1432",
+   "spec_sha256": "54a82bf06e242c8df5e4199d37957f3838c9fadef6443934291c9d37a6b8fdd5"
+  },
+  "net_file": "wz3to2v80.net.xml",
+  "net_rule": "sha256 of the staged probe network bytes (MAIN 2026-11-06, N11 F4)",
+  "net_sha256": "1fed6f59cfcfa63d2e30f1344eac5e59a1597eca77c7d9edbae3e0bc08161f03",
+  "network_semantic_sha256": "777a2cc9cf004bf3ba5541b69236a49b58a1e0a2e38838a9e04ae2d22d4d1432",
+  "spec_sha256": "54a82bf06e242c8df5e4199d37957f3838c9fadef6443934291c9d37a6b8fdd5",
+  "world_registry": "tools.coopmwm.map_scenarios (N1)"
+ },
+ "panel_sha256": "2d4b85f20265b7c8880b6c61d24da480c7096d03cae11986f1a2f51e200d5b78",
+ "power": {
+  "chosen": 8,
+  "decisions": "<= 8 decisions per arm -> MDE ~ 0.99 SD (~3,000 veh-s): descriptive only, sized by the 690,000 allocation with prefix-inclusive branch cost",
+  "episode_assumption": "1200 s = 3.33 x 360 s windows; if independent, per-world SD ~ 1.83 x 3,022 ~ 5,520 veh-s -> MDE(96) ~ 1,580 veh-s per world-episode",
+  "mde_sd_units": {
+   "100": 0.28,
+   "16": 0.7,
+   "48": 0.404,
+   "64": 0.35,
+   "8": 0.991,
+   "96": 0.286
+  },
+  "method": "paired two-sided normal approximation, alpha .05, power .80; MDE in SD units of the per-world paired difference = 2.8016/sqrt(N)",
+  "noise_basis": "newmap_probe SUMMARY_stage3 (wz3to2 2800 x 0.3, 7 worlds 989000-989006, H=360 s): paired SD solo-vs-base 3,022 veh-s (n=126), wall-vs-base T 3,633 (W2) - 5,259 (W1), synergy S 3,008 (n=42); the 3200 x 0.6 cell is more congested, SDs likely larger",
+  "reason": "MAIN amendment 40: wz3to2v80 CALIBRATION block D2800_p20, 8 TRAIN-type worlds 994200-994207 (same 8 seeds in each demand cell), U0 only; 994208-994399 reserved unused"
+ },
+ "registered_utc": "2026-11-10T10:20:50.103488+00:00",
+ "role": "evaluation only (registered by N6; never training, never selection)",
+ "schema": "coopmwm.nm.finaleval.v1.panel",
+ "seed_ranges": {
+  "evaluation": [
+   994200,
+   994207
+  ],
+  "training": [
+   994200,
+   994399
+  ]
+ },
+ "seeds_reserved_unused": [
+  994208,
+  994399
+ ],
+ "seeds_used": [
+  994200,
+  994207
+ ],
+ "stream_rule": "map-namespaced streams (N1 map_scenarios == newmap probe/NEWMAP2): requests newmap_requests_v1:{map}:{seed}:{stream}, CAV identity newmap_cav_v1:..., HDV parameters sample_driver(\"{map}:{seed}\", id)",
+ "supersedes": [
+  {
+   "panel_sha256": "b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1",
+   "reason": "v1 cell 2800 veh/h x 0.3 superseded by the 3200 x 0.6 clean4 cell (MAIN 2026-11-06)"
+  }
+ ],
+ "version": "2_a40_cal_D2800",
+ "worlds": [
+  {
+   "world": {
+    "cell": 1,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 0,
+    "seed": 994200
+   },
+   "world_id": "wz3to2v80_994200"
+  },
+  {
+   "world": {
+    "cell": 1,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 1,
+    "seed": 994201
+   },
+   "world_id": "wz3to2v80_994201"
+  },
+  {
+   "world": {
+    "cell": 1,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 2,
+    "seed": 994202
+   },
+   "world_id": "wz3to2v80_994202"
+  },
+  {
+   "world": {
+    "cell": 1,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 3,
+    "seed": 994203
+   },
+   "world_id": "wz3to2v80_994203"
+  },
+  {
+   "world": {
+    "cell": 1,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 4,
+    "seed": 994204
+   },
+   "world_id": "wz3to2v80_994204"
+  },
+  {
+   "world": {
+    "cell": 1,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 5,
+    "seed": 994205
+   },
+   "world_id": "wz3to2v80_994205"
+  },
+  {
+   "world": {
+    "cell": 1,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 6,
+    "seed": 994206
+   },
+   "world_id": "wz3to2v80_994206"
+  },
+  {
+   "world": {
+    "cell": 1,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 7,
+    "seed": 994207
+   },
+   "world_id": "wz3to2v80_994207"
+  }
+ ]
+}

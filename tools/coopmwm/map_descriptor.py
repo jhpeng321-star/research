@@ -207,6 +207,16 @@ REGISTERED = {
         k_slots=512, approach_lanes=2,
         rsu=dict(source='cav_reports', block_upstream_s_m=-100.0, block_downstream_m=100.0),
     ),
+    # A40 (MAIN 2026-11-10 amendment 40, feasibility/build): geometry variant of wz3to2 - identical 3-lane approach,
+    # lane drop and lane projection (3-lane frame, same WM lanes / anchor), only the 2-lane work zone (edge wz) is
+    # posted at 22.22 m/s instead of 31.29 (E:/agent-work/a40/VARIANT_CHOICE.md). wz3to2 entry above unchanged.
+    'wz3to2v80': dict(
+        spec_sha256='54a82bf06e242c8df5e4199d37957f3838c9fadef6443934291c9d37a6b8fdd5',
+        network_sha256='777a2cc9cf004bf3ba5541b69236a49b58a1e0a2e38838a9e04ae2d22d4d1432',
+        network_file_sha256='1fed6f59cfcfa63d2e30f1344eac5e59a1597eca77c7d9edbae3e0bc08161f03',
+        k_slots=512,
+        rsu=dict(source='cav_reports', block_upstream_s_m=-100.0, block_downstream_m=100.0),
+    ),
 }
 
 

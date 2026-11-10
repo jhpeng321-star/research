@@ -1,0 +1,35 @@
+{
+ "routes": [
+  [
+   "main",
+   "up wz"
+  ]
+ ],
+ "bottleneck": {
+  "edge": "up",
+  "x_m": 2700.0,
+  "dropped_lane": 0,
+  "through_lanes": [
+   1,
+   2
+  ]
+ },
+ "streams": {
+  "main": {
+   "route": "main",
+   "profile": "peak",
+   "depart_lane": "free"
+  }
+ },
+ "description": "A40 geometry variant of wz3to2: identical 3->2 work-zone lane drop (lane 0 of edge up ends at x=2700 m without a connection), but the 2-lane work zone (edge wz, 1300 m) is posted at 22.22 m/s (80 km/h) instead of 31.29 m/s.",
+ "name": "wz3to2v80",
+ "net_file": "wz3to2v80.net.xml",
+ "routes_file": "wz3to2v80.routes.xml",
+ "speed_limit_mps": 31.29,
+ "workzone_speed_limit_mps": 22.22,
+ "ramp_speed_mps": 22.22,
+ "base_map": "wz3to2",
+ "built_with": "netconvert (Eclipse SUMO 1.27.1)",
+ "builder": "tools/coopmwm/build_geomvar_a40.py",
+ "variant_choice": "E:/agent-work/a40/VARIANT_CHOICE.md"
+}

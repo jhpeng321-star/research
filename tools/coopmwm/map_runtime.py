@@ -41,7 +41,7 @@ def _world(job):
 def guard_world(world, role):
     """Registered map world for a role; the process map must be the world's map."""
     desc = md.for_world(world)
-    if desc.name in ('wz3to2', 'wz2to1'):  # A38: wz2to1 registry = map_scenarios MAP_PROFILES
+    if desc.name in ('wz3to2', 'wz2to1', 'wz3to2v80'):  # A38/A40: registry = map_scenarios MAP_PROFILES
         from . import map_scenarios
         return map_scenarios.guard(world, role)
     raise ValueError(f'no world registry for map {desc.name!r}')

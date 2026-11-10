@@ -62,6 +62,12 @@ SCHEMA = 'coopmwm.map_scenario.v1'
 MAP_PROFILES = {
     'wz2to1': dict(MAP='wz2to1', DEMANDS=(1000, 1200, 1400), SHARES=(0.2,), CANONICAL_CELL_KEY='D1200_p20',
                    TRAIN_RANGE=(996000, 996199), EXTRA_TRAIN_RANGES=(), HELDOUT_RANGE=(997000, 997099)),
+    # A40 (MAIN 2026-11-10 amendment 40, build): the wz3to2 geometry variant wz3to2v80 (work zone posted 22.22 m/s).
+    # Demands = the wz3to2 grid (2400, 2800, 3200) for the U0-only calibration; share 0.2 only (paper setting).
+    # Seeds (fresh audited, E:/agent-work/a40/SEED_AUDIT.json): TRAIN 994200-994399 (calibration 994200-994207,
+    # 994208-994399 reserved), HELD-OUT 994000-994099 (96-world panel 994000-994095, 994096-994099 reserved unused).
+    'wz3to2v80': dict(MAP='wz3to2v80', DEMANDS=(2400, 2800, 3200), SHARES=(0.2,), CANONICAL_CELL_KEY='D2800_p20',
+                      TRAIN_RANGE=(994200, 994399), EXTRA_TRAIN_RANGES=(), HELDOUT_RANGE=(994000, 994099)),
 }
 
 

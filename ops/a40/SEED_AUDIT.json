@@ -1,0 +1,300 @@
+{
+ "schema": "a40.seed_audit.v1",
+ "map": "wz3to2v80",
+ "train_seeds": [
+  994200,
+  994399
+ ],
+ "panel_seeds": [
+  [
+   994000,
+   994095
+  ]
+ ],
+ "reserved_unused": [
+  [
+   994096,
+   994099
+  ]
+ ],
+ "regex": "(?<![\\da-fA-F.])(994[0-3]\\d\\d)(?![\\da-fA-F.]) (standalone integers; hex/decimal fragments excluded)",
+ "checked": [
+  "REGISTRATION.md",
+  "protocols/experiment_history.json",
+  "29353 json/md/jsonl/txt/sha256/py/tsv files under E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a32_ablation, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a33_combined, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a35_transfer, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\p20c_seed_audit, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\p20x_seedaudit, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\newmap_probe, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\newmap2, E:\\agent-work\\a33, E:\\agent-work\\a35, E:\\agent-work\\a32-ablation\\_out, E:\\agent-work\\a37, E:\\agent-work\\a38, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a34_horizon, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a36_analysis, E:\\research-dense\\protocols, E:\\research-dense\\docs",
+  "git grep -P over 541 unique c4/* + main branch tips: 173 hit lines"
+ ],
+ "file_hits": [
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_15aa0e8ecd67c98dbcf69e7f692fa71d2c0d97df8da5b693c439569da4a1d9a9\\CLAIM.json",
+   "line": 1,
+   "token": "994149"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_186e92bd9a011ca9812f961b72054610b1d8ebb47254b5fa7bf702046c74e58a\\CLAIM.json",
+   "line": 1,
+   "token": "994157"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_38712f8af810aa71a33fbc2cc42b7e4091b47884c9efff0e33858eae13d20834\\CLAIM.json",
+   "line": 1,
+   "token": "994198"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_bf6268323adfafc79c849e314ef76f4d7863d24b7624510cf3fb31a9ffb255d0\\CLAIM.json",
+   "line": 1,
+   "token": "994133"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_cfdaf55ca6ed57ed5dd71f15472340570e4ced80c0e5b03722a5028a94b00a85\\CLAIM.json",
+   "line": 1,
+   "token": "994220"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_d912ddfb116f59146256bc8cd492e0853491a0a292d62c59b401694ac5b7e1ac\\CLAIM.json",
+   "line": 1,
+   "token": "994190"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5c\\DELETED_TRANSIENTS_20261109_075353.jsonl",
+   "line": 441,
+   "token": "994055"
+  },
+  {
+   "path": "E:\\agent-work\\a38\\A38_FEASIBILITY.md",
+   "line": 85,
+   "token": "994000"
+  },
+  {
+   "path": "E:\\agent-work\\a38\\A38_FEASIBILITY.md",
+   "line": 85,
+   "token": "994095"
+  }
+ ],
+ "git_hits": [
+  "01400d7f213f71c531fd418592987d94363b5157:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "036b83f68d87d117c4c7409cfb8f90c12a898e05:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "04108d37c41d886cd52f4814f4dd312e703f912d:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "049af484a5da1651509f5358dd5406d84a6bbdec:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "05636f16c182bfd876c4b2d232b890962e2bf172:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "079fbb3c2d9ca4eb4b0d4266ce68bbafc917f5af:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "0a08984a2c731ce33b6536a0dfe49e3471b890c7:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "0a2221558143b56c6042f2f469e5d01915a25d5b:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "0c28aa0470b72a07660b71f55bff3fccebce34d4:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "0fe9574e2fae0da3350cc66340d5ef0eb28f0328:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "128516c9fb11568c3805afda1d468bd2b46ba7bc:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "12aee752a28870e1cdb6eec3bb62c1663fc5c0cc:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "13f184b5a7e12be04aebf246ef8e4dbb81555545:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "149c84352bd878b0f91830e770ee288422dd505d:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "16f4147d1aafaf54b9e50e5ba53d98437ba3393d:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "1862431a9348507cff52809df840b0153ee7da0d:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "1b6ec3889cd416df724ba91b377fa0fb34602697:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "1bcaf014a1261eed2a940fd79fbc5734caa4e876:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "209a54e66f00d94f27b69b3dccab4c37cf808fa9:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "20a7fb766e0adbcc392b1431185d954f4af9f13b:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "224600a2a2297821f0660baf09542c4c077f3cd7:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "231e66958aa6760f5566075fa2fdad261116baa5:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "23b0fb62d1a2f2ee50d8c3cf49a94898095ba38e:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "23e03d1dead5dbf1bfe7f1a32d6ef4e45db49e7b:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "285df1aba9d927c18f3020ebd3d5e3dc69b4e552:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "2d7b24265e77cad5f83098e3b6ffd4c5831b6169:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "2f79ea8a7949b5bb299f8d0c092ac767e050de57:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "300ad0d6db2dc2aaf66d35761eb9338fd4f11e12:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "30f2b0a76af7fa4a5eb0bba603b3fe0c230c265d:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "3512e45f65c3c1a2e58be0541c99f790a70636c2:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "35b78de4b1816510fdc812bf80dd88cc24f3f6ad:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "3e3b12c7611a39fe9d9dc812db2ed92e7344bf95:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "40669eb6c24799191c6a99d323f896b08c22ab7a:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "4068b788844d013ab18183a217c6be3d29468345:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "41a23cdab13fc928e7b78df1b49b3347023f15c0:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "421ab5e98086536f01fa0452e6b7a76302bbea81:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "425e377af5fa89c3d33ca3a71ad36a040955ac8b:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "4352b04af63d092dcaf85eb30b7f690121e4eb9f:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "445fb4365c0aef4f6fc275ee49f06dedd8c8d7ea:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "44c61a8970b85ecc789f17ceb88b4e1b4d858622:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "466430779be40a2542cc751d580d43fce14bb04c:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "47d7b37678763d6b435417b8e6555a7d04a875c8:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "4a8ec3aff88eac6f8f1ca7d089c9703e864a9ac2:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "503ecc1c4706dfcef2ae3aad4c2181e090b1b870:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "50a4b7178f285c646e4ce1adb1243c29a045b85d:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "526465def66991f9eb471ec90d927b650b3ccc78:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "533cc13a57ed94ddad8d60ad094705339dd0993f:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "54f42da2d9e6a547017cafd76809c45117ade4c7:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "5510075782ce2525d19ffb65cbb431591af12244:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "576939fbe3a78c06bd89db5958095d48f69484db:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "59c7e019de48d71fb168be14751194aba6dc8327:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "59d8bace6648fe861a2031a756dc7d73c5c4aa68:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "5a13ab52b5035d12c672b98eb0abf4dea6e13e1e:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "5b48eeeafb674208e25bf495dbcadee20a1e8e47:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "5bc7c2aefa25ea3e50bbf0e509af24c665e6aad1:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "5cbd616e2462e05d293055e480f320bfdf364cfd:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "5d6067ff65af6eb37024eab036a7369a53efc964:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "5d71ff0168220c6abb5b3902eeb8ba74af5475f0:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "5e6eb9e4a426567d74dba042424c49568f434ab3:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "5ecc43587860374b6b729baece456e9df173b031:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "5fcaeed74547d3b97106e9059d4946d994700d6c:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "620eff34f6f783bc73631d0b0c36d169f7201913:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "62e0d83eef16a40bd512bce53f29756b915b619e:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "63fb615df9ee94c30cc9f36ee5bec37bb57b1694:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "640729415092f531531e95f32933c22d6cc65876:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "64afeb8eb6d9897eb1439bce8354b1322a6f9ac1:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "662b69ee0d452629a5d586b5be4e675e2a79d332:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "67a4874558915323968a0bed881bfb0099e61c4c:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "68815e6577f8fc9d5326f47c6c394cfe48e9756e:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "6908675a21fb42b26430d9a0da0e9b15143a7570:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "691e7302357542046586a947081e54fabe9a7f1a:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "69be2c3d6efafa3f16c294c46077e491c4b66bb7:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "7138ba9af9cef261abbe351a1118c841a88a3764:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "74f056c973b099a089272195bf3bff74333a1733:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "755e26434a6d34a56f80e032318a7b986231c5e0:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "762d469b28185a07a8da64116bc29664428b8e72:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "7a43e91a28a876c402ba9eff0d3b2bbd9356a024:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "7a46692a4a31dd78ba6b765753877b7365331eb4:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "7ace715b613b832fa197e3a932ad53fcf2868efc:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "7b49d1b0ec5b37b38ec188bace15f1e09e722aa2:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "7b7644f4b85ffe3869189f6166e5b4e1e19d004e:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "7c0dbce91fa6be9777f404c3bf2df4abd204fd7e:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "7da322c3adf592f3e78f589088f5889a8f5e2563:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "7ececa08564e8b8784201a3a5d728740d7b9a8f0:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "7ff1438a58c991fdb9d27694561eba92ab649fad:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "8265c5399375b73b77eded1e89f4165947fdc2ec:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "836eef04e5ab1dd37cdff89d050fc3e109e3a371:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "837271332130c7e90cd1b3299d202b2f992b951a:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "88d5f00a9ffa1b3b96524b18582fa53f17cba10b:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "8972891258792fa9a460c7bbfa252699e8f80f3a:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "8bc436dfc12e06a170fba501049edca22ed534cf:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "8db8622c13f4272ddebe2d059249a88492b41a8f:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "8ed0913aec5ad8e346c6da547988c7b70104b257:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "8f69135588ff79a08f3d848e0a1a983590734953:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "8ff759fd006090ea0ae467c2a3a60301fcfbe987:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "905a5a02d0ffefc84c8e6c6b1519d4b58ede3427:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "92d4decaaeaf5d8a1781a22cdefd7c6600b23f56:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "9621331916418501789b76abec3ec421d19e653d:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "98d20d04b5bbe0657b37600430ce1ff32cb3552b:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "992a1aa55c79f17df5c026bd4eae578afbb276d9:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "9bc6e20bb6cbf25389eff40296b3f0de643355f0:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "9e36b0bcaf07388475de3df8b417970ecf5edd76:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "9e6be80d53f31c1a552dd353700fe7d44bce2f53:docs/paper_results/coopmwm/WMSPEED2_gpuR_final_recovery_inventory.json:994238",
+  "9e6be80d53f31c1a552dd353700fe7d44bce2f53:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "9e6be80d53f31c1a552dd353700fe7d44bce2f53:docs/paper_results/coopmwm/WMSPEED2_gpuR_resume20261102_inventory.json:994238",
+  "9e6be80d53f31c1a552dd353700fe7d44bce2f53:docs/paper_results/coopmwm/WMSPEED2_gpuR_resume20261102b_inventory.json:994238",
+  "9e6be80d53f31c1a552dd353700fe7d44bce2f53:docs/paper_results/coopmwm/WMSPEED2_gpuR_resume20261102c_inventory.json:994238",
+  "9e6be80d53f31c1a552dd353700fe7d44bce2f53:docs/paper_results/coopmwm/WMSPEED2_gpuR_resume20261102d_inventory.json:994238",
+  "9e6be80d53f31c1a552dd353700fe7d44bce2f53:docs/paper_results/coopmwm/WMSPEED2_gpuR_resume20261103_inventory.json:994238",
+  "9e6be80d53f31c1a552dd353700fe7d44bce2f53:docs/paper_results/coopmwm/WMSPEED2_gpuR_resume20261103b_inventory.json:994238",
+  "9e6be80d53f31c1a552dd353700fe7d44bce2f53:docs/paper_results/coopmwm/WMSPEED2_gpuR_resume20261103c_inventory.json:994238",
+  "9e6be80d53f31c1a552dd353700fe7d44bce2f53:docs/paper_results/coopmwm/WMSPEED2_gpuR_resume20261103d_inventory.json:994238",
+  "9f3c6d7ffb80b0ab4e131867e743e002e58a37e0:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "9f3c6d7ffb80b0ab4e131867e743e002e58a37e0:ops/a38_box/A38_FEASIBILITY.md:994000",
+  "9f3c6d7ffb80b0ab4e131867e743e002e58a37e0:ops/a38_box/A38_FEASIBILITY.md:994095",
+  "9f6a6e4272a66a54f043596794c305c7dcc836f3:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "a123f938e9d3aea28dc67d60a81c3ebbff550a18:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "a2e38b743e27e52a37e8d1b7e156df442ece572d:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "a68174f4dcae8c5fadb0979e68185619ce7eb4d5:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "a7191f9375c2b87a1c33c1358b4f7f3e3cb2aaa7:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "a8eb522e98a55885fe706c91b7e92fc4d49fee41:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "ac0168648a7642742ed846baf9b2c15e7738631b:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "ad24354122d12feb7f641c8f7c3f86d63dbcc0c1:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "b030aeef911ae4404f546fd3cb8141a0edf9d137:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "b10327c5643f6804fc3eb9148d7b14771ad5ac60:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "b2f30091cda9728974f40e7e4bf0bd2a36962a61:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "b526840885e74fd2025226982361d4e60b2a293f:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "b76618a017b686b2747394579d32e9dff6a89a83:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "b7d6cde770e5801541e3fea711a905468cc4e524:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "b903c6c25da9906af65ff26e187d9984f42b7085:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "b918fcdb70aa9c24f5553a8f4eeed7b8d751aa75:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "bb24bd26d1aee1022b0e759537b20de85ed70b46:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "bcf79c8445b28e24622735c519b4f3b14c8b5184:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "bdecce768b223736752a2690a75e2568f1679056:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "beb3b6a26ea13fbd23592c6d0797a5d7e6d71e16:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "bf73db4ed64909fb0331a3accc1c668efdf0ee49:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "c08ff784a5db41b317a282f01864b2bef9426ffc:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "c28b068dbd612bfdc6894362e82f66c729c43a76:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "c95ace0f3f0df163204bcce2dc3b53dc03a98f40:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "cbb88e25b35a6cc06b6ad4f219afcc6f3952aa11:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "cc4e4f77212207f69ea61d628609c88698d7e61a:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "ce50f874d997b1bfc9913cebbed070c2db25d8a1:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "cf82ea196263f0914a4c074962a89a76311855ca:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "d27a8cb2c2545214c3408911dd9ae55433eecb7a:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "d587b5a99a7ce08faf0443ee44bc5c3cea2b4671:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "d689d6c9545d3b004ed92d14e42450667a8c3568:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "d82c74653cd9d8879d551d0e098452fecfbc049f:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "d82dc1e1ff80375d4d291d876fd340c7a2511800:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "d9d9d5f83cb57968b9ac2c3f086b26f381f32eb4:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "daf0869850a69e3adb797df233893f544b1a3c80:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "daf9b8c70ed18e98ec46a09d3133ec9447ae8f53:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "db01d43c0230dd770a98ac1960088fc0a99b5ccc:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "dc75eb71e2b811ef983d58933118edc1e1b09d95:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "dfb8a9d570843cc0dd0e4cbb387fb268f3f5c1c5:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "e6243ea5fe80ed6b5927e0597e142ef33b06b4b8:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "e8c61f36244901ccdf24a4ee5b7da041ccec8939:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "ea778959f94e3b8073fbc15051acbde0a0b1e818:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "ea8113b3b86a844520ee5a33bc279d0630087d35:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "eb6eb0cfb880c56edd2f7cf9f3c952d58a2d0a0c:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "ec578e9274394c6776b28847e5ca23e37223a785:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "eccb8a597887d5cfd5cd15a923ffb2b1773a2a89:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "f35b193aa539c7ddec1bb20acaa1f6b13ffb3d31:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "f36450419e4a529de67de929a54f4a2f368a4786:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "f4954bdb7a6250651a2e88f351de6739683b7b55:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "f497ae26f93d635b8755edd4149dcd6876d37281:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "f4a4e15f55770efc1ea090006682ad81fceb6d3f:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "f6d9863146ea5ed519ecb9371978d09877ce49fb:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "fa1876c8f11a41cd387e59446a24abec66cbe2c6:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "fc36f64692fb9ac17f814dbaf3c2468299de9d13:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "fd214af7bd80d4c028466b501ac841b473973a74:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "fd289de999a26d71d482dba9c11412d13a581156:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "ff05fbbf3611fac66f34fa5e49993e0c787b84d3:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238",
+  "ff98c9419de059b575a8996e5bd2d0b3475cf46e:docs/paper_results/coopmwm/WMSPEED2_gpuR_gpu120cold1.json:994238"
+ ],
+ "forbidden_skipped": [
+  "sealed",
+  "holdout",
+  "heldout",
+  "cal_split",
+  "chunk5",
+  "j4b",
+  "inc1"
+ ],
+ "audited": "2026-11-10 18:27:52 +08 by A40 (zero SUMO, no outcome read)",
+ "verdict": "UNUSED: 994000-994399 has no seed use anywhere checked",
+ "hit_review": [
+  "6 file hits: paper_data/train/coopmwm20261109_clean5c5b/jobs/*/CLAIM.json \"pid\" values (process ids, not seeds)",
+  "1 file hit: paper_data/train/coopmwm20261109_clean5c5c/DELETED_TRANSIENTS_*.jsonl \"bytes\": 994055 (a byte count)",
+  "2 file hits: E:/agent-work/a38/A38_FEASIBILITY.md line 85 lists 994000-994095 as an UNAUDITED candidate alternate for a merge-map panel (never used)",
+  "173 git hits: docs/paper_results/coopmwm/WMSPEED2_gpuR_* \"pid\": 994238 (process id) and ops/a38_box/A38_FEASIBILITY.md (same candidate mention); none a seed use",
+  "REGISTRATION.md and protocols/experiment_history.json: 0 hits",
+  "explicitly avoided blocks (brief): 964000-964199, 962xxx, 977xxx, 991600-991899, 993xxx, 995000-995199, 996000-996199, 997000-997099, 998000-998399, 999500-999699 - none overlaps 994000-994399"
+ ],
+ "allocation": {
+  "train_block": [
+   994200,
+   994399
+  ],
+  "calibration": [
+   994200,
+   994207
+  ],
+  "smoke_only": [
+   994399,
+   994399
+  ],
+  "reserved_unused": [
+   [
+    994208,
+    994398
+   ]
+  ],
+  "panel": [
+   994000,
+   994095
+  ],
+  "panel_reserved_unused": [
+   994096,
+   994099
+  ],
+  "unassigned": [
+   994100,
+   994199
+  ]
+ }
+}

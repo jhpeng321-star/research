@@ -1,0 +1,1374 @@
+{
+ "authority": "A40 amendment 40: fresh audited wz3to2v80 HELD-OUT integers 994000-994095 (the map registry HELD-OUT range 994000-994099); evaluation only",
+ "cell": {
+  "authority": "MAIN amendment 40: wz3to2v80 evaluation cell D2400_p20 (chosen by the registered U0 calibration)",
+  "cell": 0,
+  "cell_key": "D2400_p20",
+  "demand_vph": {
+   "main": 2400
+  },
+  "depart_lane": "free",
+  "episode_s": [
+   0,
+   1200
+  ],
+  "newmap2_report_sha256": "70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05",
+  "penetration": 0.2,
+  "profile": "peak",
+  "rate_profile_s": [
+   [
+    0,
+    300,
+    0.8
+   ],
+   [
+    300,
+    1500,
+    1.0
+   ],
+   [
+    1500,
+    1800,
+    0.6
+   ]
+  ]
+ },
+ "contract": {
+  "arms": [
+   "A",
+   "B",
+   "R"
+  ],
+  "bootstrap": {
+   "level": 0.95,
+   "method": "paired_percentile",
+   "reps": 10000,
+   "seed": 20261104
+  },
+  "budget": {
+   "allocation_sim_s": 690000,
+   "authority": "MAIN decision 2026-11-06 for N6 (only clean4 final-evaluation runner)",
+   "ledger": "clean4 run root CHARGES.jsonl",
+   "phase": "v2v_final",
+   "quote_mappo_u0": 672000,
+   "quote_native": 556800
+  },
+  "comparators": {
+   "BASE": "clean4 base controller (N4 choice): mappo_u0 = frozen speed-only MAPPO u0 (A_checkpoint_000.pt == CONFIG common_checkpoint_sha256), or native (BASE aliases NATIVE)",
+   "NATIVE": "native SUMO CAV driving (no commands), same plant/runtime"
+  },
+  "comparisons": [
+   "B-A",
+   "R-A",
+   "B-R"
+  ],
+  "decisions": {
+   "arms": [
+    "B",
+    "R"
+   ],
+   "background": "BASE controller",
+   "branching": "clean3 sumo_verify decision snapshot + CRN prefix replay from t=0; charged t_s + 360 sim-s per branch (sumo_verify.branch_sim_s)",
+   "decomposition": "delta(all group new, background base) - max delta(one member new, background base) (clean3 ISOLATED_TEST)",
+   "higher_is_better": true,
+   "horizon_s": 360,
+   "labels": [
+    "all",
+    "background",
+    "solo<i>"
+   ],
+   "metrics": [
+    "delta_all_new_veh_s",
+    "delta_only_member_new_veh_s",
+    "best_solo_veh_s",
+    "policy_cooperation_gain_veh_s"
+   ],
+   "per_world": 1,
+   "rule": "first new cooperation plan with 2..3 members starting at 300 <= t <= 840 s in the evaluation episode; time order only (outcome-blind); none -> world has no decision",
+   "subset_rule": "panel repeat % 12 == 0",
+   "worlds": [
+    "wz3to2v80_994000",
+    "wz3to2v80_994012",
+    "wz3to2v80_994024",
+    "wz3to2v80_994036",
+    "wz3to2v80_994048",
+    "wz3to2v80_994060",
+    "wz3to2v80_994072",
+    "wz3to2v80_994084"
+   ]
+  },
+  "deterministic": true,
+  "estimator": "tools.coopmwm.planner_eval._paired_ci (whole-world resampling, identical resample indices for every contrast)",
+  "higher_is_better": false,
+  "horizon_note": "= clean4 training episode length (MAIN; N1 EPISODE_S)",
+  "horizon_s": 1200,
+  "metric": "J_veh_s",
+  "metric_definition": "team delay veh-s over the window: on-road speed deficit dt*max(0, 1-v/31.29) + source waiting (requested, not yet inserted)",
+  "noise_seed": "world seed",
+  "primary": {
+   "contrast": "B-BASE",
+   "note": "descriptive generalisation check; the clean4 registered primary criterion (u24 replicated synergy test on TRAIN states, N4) is unchanged; never gates training",
+   "rule": "mean(J_B - J_BASE) paired CI95 entirely below 0 AND B total collisions+teleports <= BASE total"
+  },
+  "role": "final_test (N1 HELDOUT_ROLES)",
+  "safety_counters": [
+   "collisions",
+   "teleports",
+   "hard_brakes",
+   "ttc_events"
+  ],
+  "total_benefit": {
+   "arms": [
+    "B",
+    "A",
+    "R"
+   ],
+   "vs": [
+    "BASE",
+    "NATIVE"
+   ]
+  },
+  "update": 24,
+  "window": {
+   "end_s": 1200,
+   "start_s": 0
+  }
+ },
+ "exposure": {
+  "checked": [
+   "amendment-40 audit: 994000-994399 as standalone integers absent from REGISTRATION.md seed use, protocols/experiment_history.json, every c4/* branch tip and the a28-a38 panels / run dirs (E:/agent-work/a40/SEED_AUDIT.json)"
+  ],
+  "disclosed": "wz3to2v80 worlds are map-namespaced (streams newmap_requests_v1:wz3to2v80:...), so no wz3to2v80 traffic realisation shares draws with any wz3to2, wz2to1 or merge-map world; job/world ids carry the wz3to2v80_ prefix"
+ },
+ "map": "wz3to2v80",
+ "map_binding": {
+  "bottleneck": {
+   "adjacent_lane": 1,
+   "anchor_x_m": 2620.56,
+   "closing_lane": 2,
+   "drop_s_m": 75.44,
+   "drop_x_m": 2696.0,
+   "edge": "up",
+   "node_x_m": 2700.0,
+   "sumo_dropped_lane": 0,
+   "through_lanes": [
+    0,
+    1
+   ]
+  },
+  "descriptor_sha256_at_registration": "fefe9cd8ba768fdf978ba4715a25bb5aee20de400377d16aa12a3be19349861a",
+  "k_slots": 512,
+  "map_spec": "assets/research/newmap_candidates/wz3to2v80/MAP_SPEC.json",
+  "map_spec_file_sha256": "5ddc7080c6be78e71651d4ec5361b75f83ba3c2cae46ea594da18e51bcff90e4",
+  "n1_registered": {
+   "network_sha256": "777a2cc9cf004bf3ba5541b69236a49b58a1e0a2e38838a9e04ae2d22d4d1432",
+   "spec_sha256": "54a82bf06e242c8df5e4199d37957f3838c9fadef6443934291c9d37a6b8fdd5"
+  },
+  "net_file": "wz3to2v80.net.xml",
+  "net_rule": "sha256 of the staged probe network bytes (MAIN 2026-11-06, N11 F4)",
+  "net_sha256": "1fed6f59cfcfa63d2e30f1344eac5e59a1597eca77c7d9edbae3e0bc08161f03",
+  "network_semantic_sha256": "777a2cc9cf004bf3ba5541b69236a49b58a1e0a2e38838a9e04ae2d22d4d1432",
+  "spec_sha256": "54a82bf06e242c8df5e4199d37957f3838c9fadef6443934291c9d37a6b8fdd5",
+  "world_registry": "tools.coopmwm.map_scenarios (N1)"
+ },
+ "panel_sha256": "1f7f49e1b3d0493477ae08e9581b0728fc8be86c58c7dfed0578f826b9a7b9cc",
+ "power": {
+  "chosen": 96,
+  "decisions": "<= 8 decisions per arm -> MDE ~ 0.99 SD (~3,000 veh-s): descriptive only, sized by the 690,000 allocation with prefix-inclusive branch cost",
+  "episode_assumption": "1200 s = 3.33 x 360 s windows; if independent, per-world SD ~ 1.83 x 3,022 ~ 5,520 veh-s -> MDE(96) ~ 1,580 veh-s per world-episode",
+  "mde_sd_units": {
+   "100": 0.28,
+   "16": 0.7,
+   "48": 0.404,
+   "64": 0.35,
+   "8": 0.991,
+   "96": 0.286
+  },
+  "method": "paired two-sided normal approximation, alpha .05, power .80; MDE in SD units of the per-world paired difference = 2.8016/sqrt(N)",
+  "noise_basis": "newmap_probe SUMMARY_stage3 (wz3to2 2800 x 0.3, 7 worlds 989000-989006, H=360 s): paired SD solo-vs-base 3,022 veh-s (n=126), wall-vs-base T 3,633 (W2) - 5,259 (W1), synergy S 3,008 (n=42); the 3200 x 0.6 cell is more congested, SDs likely larger",
+  "reason": "MAIN amendment 40: a FRESH 96-world wz3to2v80 evaluation panel 994000-994095 (D2400_p20); 994096-994099 reserved unused"
+ },
+ "registered_utc": "2026-11-10T10:21:04.110723+00:00",
+ "role": "evaluation only (registered by N6; never training, never selection)",
+ "schema": "coopmwm.nm.finaleval.v1.panel",
+ "seed_ranges": {
+  "evaluation": [
+   994000,
+   994099
+  ],
+  "training": [
+   994200,
+   994399
+  ]
+ },
+ "seeds_reserved_unused": [
+  994096,
+  994099
+ ],
+ "seeds_used": [
+  994000,
+  994095
+ ],
+ "stream_rule": "map-namespaced streams (N1 map_scenarios == newmap probe/NEWMAP2): requests newmap_requests_v1:{map}:{seed}:{stream}, CAV identity newmap_cav_v1:..., HDV parameters sample_driver(\"{map}:{seed}\", id)",
+ "supersedes": [
+  {
+   "panel_sha256": "b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1",
+   "reason": "v1 cell 2800 veh/h x 0.3 superseded by the 3200 x 0.6 clean4 cell (MAIN 2026-11-06)"
+  }
+ ],
+ "version": "2_a40_D2400_p20",
+ "worlds": [
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 0,
+    "seed": 994000
+   },
+   "world_id": "wz3to2v80_994000"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 1,
+    "seed": 994001
+   },
+   "world_id": "wz3to2v80_994001"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 2,
+    "seed": 994002
+   },
+   "world_id": "wz3to2v80_994002"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 3,
+    "seed": 994003
+   },
+   "world_id": "wz3to2v80_994003"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 4,
+    "seed": 994004
+   },
+   "world_id": "wz3to2v80_994004"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 5,
+    "seed": 994005
+   },
+   "world_id": "wz3to2v80_994005"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 6,
+    "seed": 994006
+   },
+   "world_id": "wz3to2v80_994006"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 7,
+    "seed": 994007
+   },
+   "world_id": "wz3to2v80_994007"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 8,
+    "seed": 994008
+   },
+   "world_id": "wz3to2v80_994008"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 9,
+    "seed": 994009
+   },
+   "world_id": "wz3to2v80_994009"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 10,
+    "seed": 994010
+   },
+   "world_id": "wz3to2v80_994010"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 11,
+    "seed": 994011
+   },
+   "world_id": "wz3to2v80_994011"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 12,
+    "seed": 994012
+   },
+   "world_id": "wz3to2v80_994012"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 13,
+    "seed": 994013
+   },
+   "world_id": "wz3to2v80_994013"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 14,
+    "seed": 994014
+   },
+   "world_id": "wz3to2v80_994014"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 15,
+    "seed": 994015
+   },
+   "world_id": "wz3to2v80_994015"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 16,
+    "seed": 994016
+   },
+   "world_id": "wz3to2v80_994016"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 17,
+    "seed": 994017
+   },
+   "world_id": "wz3to2v80_994017"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 18,
+    "seed": 994018
+   },
+   "world_id": "wz3to2v80_994018"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 19,
+    "seed": 994019
+   },
+   "world_id": "wz3to2v80_994019"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 20,
+    "seed": 994020
+   },
+   "world_id": "wz3to2v80_994020"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 21,
+    "seed": 994021
+   },
+   "world_id": "wz3to2v80_994021"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 22,
+    "seed": 994022
+   },
+   "world_id": "wz3to2v80_994022"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 23,
+    "seed": 994023
+   },
+   "world_id": "wz3to2v80_994023"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 24,
+    "seed": 994024
+   },
+   "world_id": "wz3to2v80_994024"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 25,
+    "seed": 994025
+   },
+   "world_id": "wz3to2v80_994025"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 26,
+    "seed": 994026
+   },
+   "world_id": "wz3to2v80_994026"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 27,
+    "seed": 994027
+   },
+   "world_id": "wz3to2v80_994027"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 28,
+    "seed": 994028
+   },
+   "world_id": "wz3to2v80_994028"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 29,
+    "seed": 994029
+   },
+   "world_id": "wz3to2v80_994029"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 30,
+    "seed": 994030
+   },
+   "world_id": "wz3to2v80_994030"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 31,
+    "seed": 994031
+   },
+   "world_id": "wz3to2v80_994031"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 32,
+    "seed": 994032
+   },
+   "world_id": "wz3to2v80_994032"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 33,
+    "seed": 994033
+   },
+   "world_id": "wz3to2v80_994033"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 34,
+    "seed": 994034
+   },
+   "world_id": "wz3to2v80_994034"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 35,
+    "seed": 994035
+   },
+   "world_id": "wz3to2v80_994035"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 36,
+    "seed": 994036
+   },
+   "world_id": "wz3to2v80_994036"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 37,
+    "seed": 994037
+   },
+   "world_id": "wz3to2v80_994037"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 38,
+    "seed": 994038
+   },
+   "world_id": "wz3to2v80_994038"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 39,
+    "seed": 994039
+   },
+   "world_id": "wz3to2v80_994039"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 40,
+    "seed": 994040
+   },
+   "world_id": "wz3to2v80_994040"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 41,
+    "seed": 994041
+   },
+   "world_id": "wz3to2v80_994041"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 42,
+    "seed": 994042
+   },
+   "world_id": "wz3to2v80_994042"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 43,
+    "seed": 994043
+   },
+   "world_id": "wz3to2v80_994043"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 44,
+    "seed": 994044
+   },
+   "world_id": "wz3to2v80_994044"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 45,
+    "seed": 994045
+   },
+   "world_id": "wz3to2v80_994045"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 46,
+    "seed": 994046
+   },
+   "world_id": "wz3to2v80_994046"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 47,
+    "seed": 994047
+   },
+   "world_id": "wz3to2v80_994047"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 48,
+    "seed": 994048
+   },
+   "world_id": "wz3to2v80_994048"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 49,
+    "seed": 994049
+   },
+   "world_id": "wz3to2v80_994049"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 50,
+    "seed": 994050
+   },
+   "world_id": "wz3to2v80_994050"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 51,
+    "seed": 994051
+   },
+   "world_id": "wz3to2v80_994051"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 52,
+    "seed": 994052
+   },
+   "world_id": "wz3to2v80_994052"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 53,
+    "seed": 994053
+   },
+   "world_id": "wz3to2v80_994053"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 54,
+    "seed": 994054
+   },
+   "world_id": "wz3to2v80_994054"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 55,
+    "seed": 994055
+   },
+   "world_id": "wz3to2v80_994055"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 56,
+    "seed": 994056
+   },
+   "world_id": "wz3to2v80_994056"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 57,
+    "seed": 994057
+   },
+   "world_id": "wz3to2v80_994057"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 58,
+    "seed": 994058
+   },
+   "world_id": "wz3to2v80_994058"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 59,
+    "seed": 994059
+   },
+   "world_id": "wz3to2v80_994059"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 60,
+    "seed": 994060
+   },
+   "world_id": "wz3to2v80_994060"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 61,
+    "seed": 994061
+   },
+   "world_id": "wz3to2v80_994061"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 62,
+    "seed": 994062
+   },
+   "world_id": "wz3to2v80_994062"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 63,
+    "seed": 994063
+   },
+   "world_id": "wz3to2v80_994063"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 64,
+    "seed": 994064
+   },
+   "world_id": "wz3to2v80_994064"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 65,
+    "seed": 994065
+   },
+   "world_id": "wz3to2v80_994065"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 66,
+    "seed": 994066
+   },
+   "world_id": "wz3to2v80_994066"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 67,
+    "seed": 994067
+   },
+   "world_id": "wz3to2v80_994067"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 68,
+    "seed": 994068
+   },
+   "world_id": "wz3to2v80_994068"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 69,
+    "seed": 994069
+   },
+   "world_id": "wz3to2v80_994069"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 70,
+    "seed": 994070
+   },
+   "world_id": "wz3to2v80_994070"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 71,
+    "seed": 994071
+   },
+   "world_id": "wz3to2v80_994071"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 72,
+    "seed": 994072
+   },
+   "world_id": "wz3to2v80_994072"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 73,
+    "seed": 994073
+   },
+   "world_id": "wz3to2v80_994073"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 74,
+    "seed": 994074
+   },
+   "world_id": "wz3to2v80_994074"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 75,
+    "seed": 994075
+   },
+   "world_id": "wz3to2v80_994075"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 76,
+    "seed": 994076
+   },
+   "world_id": "wz3to2v80_994076"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 77,
+    "seed": 994077
+   },
+   "world_id": "wz3to2v80_994077"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 78,
+    "seed": 994078
+   },
+   "world_id": "wz3to2v80_994078"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 79,
+    "seed": 994079
+   },
+   "world_id": "wz3to2v80_994079"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 80,
+    "seed": 994080
+   },
+   "world_id": "wz3to2v80_994080"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 81,
+    "seed": 994081
+   },
+   "world_id": "wz3to2v80_994081"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 82,
+    "seed": 994082
+   },
+   "world_id": "wz3to2v80_994082"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 83,
+    "seed": 994083
+   },
+   "world_id": "wz3to2v80_994083"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 84,
+    "seed": 994084
+   },
+   "world_id": "wz3to2v80_994084"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 85,
+    "seed": 994085
+   },
+   "world_id": "wz3to2v80_994085"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 86,
+    "seed": 994086
+   },
+   "world_id": "wz3to2v80_994086"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 87,
+    "seed": 994087
+   },
+   "world_id": "wz3to2v80_994087"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 88,
+    "seed": 994088
+   },
+   "world_id": "wz3to2v80_994088"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 89,
+    "seed": 994089
+   },
+   "world_id": "wz3to2v80_994089"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 90,
+    "seed": 994090
+   },
+   "world_id": "wz3to2v80_994090"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 91,
+    "seed": 994091
+   },
+   "world_id": "wz3to2v80_994091"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 92,
+    "seed": 994092
+   },
+   "world_id": "wz3to2v80_994092"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 93,
+    "seed": 994093
+   },
+   "world_id": "wz3to2v80_994093"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 94,
+    "seed": 994094
+   },
+   "world_id": "wz3to2v80_994094"
+  },
+  {
+   "world": {
+    "cell": 0,
+    "cell_key": "D2400_p20",
+    "demand": 2400,
+    "map": "wz3to2v80",
+    "penetration": 0.2,
+    "repeat": 95,
+    "seed": 994095
+   },
+   "world_id": "wz3to2v80_994095"
+  }
+ ]
+}

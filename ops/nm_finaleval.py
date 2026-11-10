@@ -555,6 +555,74 @@ for _d in A38_DEMANDS:
                          f'HELD-OUT range {A38_HELDOUT_RANGE[0]}-{A38_HELDOUT_RANGE[1]}); evaluation only'),
         PANEL_FILE=HERE/f'nm_eval_panel_wz2to1_a38_D{_d}_p20.json')
 
+#: AMENDMENT 40 (MAIN 2026-11-10, feasibility + build; full-run registration pending): the wz3to2 GEOMETRY VARIANT
+#: wz3to2v80 (identical approach / lane drop / projection; the 2-lane work zone posted 22.22 m/s instead of 31.29;
+#: E:/agent-work/a40/VARIANT_CHOICE.md sha256 14c64b08). One process = one map: run in a process whose
+#: COOPMWM_MAP_SPEC names the wz3to2v80 MAP_SPEC. Frozen arms U0, LEARNED_TRIGGER and DUO_HOLD (bank rows under
+#: their source cell D2800_p20 via bank_cell_key, exactly the amendment-35 path) -> these are BANK settings.
+#: Seeds (fresh audited, E:/agent-work/a40/SEED_AUDIT.json): TRAIN 994200-994399, HELD-OUT 994000-994099.
+#:  * a40_cal_D<d>: U0-only demand calibration blocks (TRAIN-type, never evaluation, never pooled), the same 8 seeds
+#:    994200-994207 in each demand cell; 994208-994399 reserved unused.
+#:  * a40_D<d>_p20: the 96-world evaluation panel 994000-994095 (994096-994099 reserved unused) of the demand the
+#:    registered calibration rule picks; MAIN pins only that one in SETTINGS_PINS.
+A40_MAP = 'wz3to2v80'
+A40_MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2v80/MAP_SPEC.json'
+A40_NET_SHA256 = '1fed6f59cfcfa63d2e30f1344eac5e59a1597eca77c7d9edbae3e0bc08161f03'
+A40_TRAIN_RANGE = (994200, 994399)
+A40_HELDOUT_RANGE = (994000, 994099)
+A40_CAL_SEEDS = (994200, 994207)
+A40_DEMANDS = (2400, 2800, 3200)
+A40_SHARE = 0.2
+A40_CAL_SETTINGS = tuple(f'a40_cal_D{_d}' for _d in A40_DEMANDS)
+A40_EVAL_SETTINGS = tuple(f'a40_D{_d}_p20' for _d in A40_DEMANDS)
+_A40_EXPOSURE_BASE = dict(
+    checked=('amendment-40 audit: 994000-994399 as standalone integers absent from REGISTRATION.md seed use, '
+             'protocols/experiment_history.json, every c4/* branch tip and the a28-a38 panels / run dirs '
+             '(E:/agent-work/a40/SEED_AUDIT.json)',),
+    disclosed=('wz3to2v80 worlds are map-namespaced (streams newmap_requests_v1:wz3to2v80:...), so no wz3to2v80 '
+               'traffic realisation shares draws with any wz3to2, wz2to1 or merge-map world; job/world ids carry the '
+               'wz3to2v80_ prefix'))
+_A40_COMMON = dict(
+    MAP=A40_MAP, MAP_SPEC_REL=A40_MAP_SPEC_REL, NET_SHA256=A40_NET_SHA256, TRAIN_RANGE=A40_TRAIN_RANGE,
+    RUNNER_CONTRACT={k: (v.replace('wz3to2', A40_MAP) if isinstance(v, str) and A40_MAP not in v else v)
+                     for k, v in dict(RUNNER_CONTRACT, MAP=A40_MAP).items()},
+    CLAIM3C_CELL=None, CLAIM3C_KEY=None, CLAIM3C_WORLDS=0, CLAIM3C_SEED_START=None, PANEL_3C_FILE=None,
+    PANEL_SHA256=None, PANEL_3C_SHA256=None, EXPOSURE_BASE=_A40_EXPOSURE_BASE,
+    PRERUN_ARMS=('U0',), EXPOSURE_EXTRA=dict(checked=(), disclosed=''))
+for _d in A40_DEMANDS:
+    SETTINGS[f'a40_cal_D{_d}'] = dict(SETTINGS['p20c'], **_A40_COMMON,
+        CELL=dict(demand=_d, penetration=A40_SHARE), PARITY_CELL=dict(demand=_d, penetration=A40_SHARE),
+        N_WORLDS=A40_CAL_SEEDS[1]-A40_CAL_SEEDS[0]+1, EVAL_RANGE=A40_CAL_SEEDS, EVAL_EXTRA_RANGE=A40_CAL_SEEDS,
+        SEEDS_RESERVED=(A40_CAL_SEEDS[1]+1, A40_TRAIN_RANGE[1]), PANEL_TRAIN_TYPE=True,
+        PANEL_SIZE_REASON=(f'MAIN amendment 40: wz3to2v80 CALIBRATION block D{_d}_p20, 8 TRAIN-type worlds '
+                           f'{A40_CAL_SEEDS[0]}-{A40_CAL_SEEDS[1]} (same 8 seeds in each demand cell), U0 only; '
+                           f'{A40_CAL_SEEDS[1]+1}-{A40_TRAIN_RANGE[1]} reserved unused'),
+        CELL_AUTHORITY=f'MAIN amendment 40: wz3to2v80 demand calibration cell D{_d}_p20 (TRAIN-type, never evaluation)',
+        PANEL_AUTHORITY=(f'A40 amendment 40: TRAIN-type integers {A40_CAL_SEEDS[0]}-{A40_CAL_SEEDS[1]} of the wz3to2v80 '
+                         f'TRAIN block {A40_TRAIN_RANGE[0]}-{A40_TRAIN_RANGE[1]} for demand calibration ONLY (never '
+                         'evaluation, never pooled); executed through the eval runner (scope label only)'),
+        PANEL_FILE=HERE/f'nm_eval_calblock_wz3to2v80_a40_cal_D{_d}.json')
+    _lo = A40_HELDOUT_RANGE[0]
+    SETTINGS[f'a40_D{_d}_p20'] = dict(SETTINGS['p20c'], **_A40_COMMON,
+        CELL=dict(demand=_d, penetration=A40_SHARE), PARITY_CELL=dict(demand=_d, penetration=A40_SHARE),
+        N_WORLDS=96, EVAL_RANGE=A40_HELDOUT_RANGE, EVAL_EXTRA_RANGE=None, SEEDS_RESERVED=(_lo+96, _lo+99),
+        PANEL_TRAIN_TYPE=False,
+        PANEL_SIZE_REASON=(f'MAIN amendment 40: a FRESH 96-world wz3to2v80 evaluation panel {_lo}-{_lo+95} (D{_d}_p20); '
+                           f'{_lo+96}-{_lo+99} reserved unused'),
+        CELL_AUTHORITY=f'MAIN amendment 40: wz3to2v80 evaluation cell D{_d}_p20 (chosen by the registered U0 calibration)',
+        PANEL_AUTHORITY=(f'A40 amendment 40: fresh audited wz3to2v80 HELD-OUT integers {_lo}-{_lo+95} (the map registry '
+                         f'HELD-OUT range {A40_HELDOUT_RANGE[0]}-{A40_HELDOUT_RANGE[1]}); evaluation only'),
+        PANEL_FILE=HERE/f'nm_eval_panel_wz3to2v80_a40_D{_d}_p20.json')
+BANK_SETTINGS = BANK_SETTINGS + A40_EVAL_SETTINGS
+#: A40 panels registered 2026-11-10 (zero physics, before any wz3to2v80 episode; E:/agent-work/a40/PROGRESS.md)
+for _name, _sha in (('a40_cal_D2400', 'df02083c07de2eccc8f6da0a1ae3d2f607f5296bf2d0f318667804ba98c65e32'),
+                    ('a40_cal_D2800', '2d4b85f20265b7c8880b6c61d24da480c7096d03cae11986f1a2f51e200d5b78'),
+                    ('a40_cal_D3200', '864d5fab05182aacaa67ca94752c5df6136b5d33a4e942c7cdfcd0b895b15b08'),
+                    ('a40_D2400_p20', '1f7f49e1b3d0493477ae08e9581b0728fc8be86c58c7dfed0578f826b9a7b9cc'),
+                    ('a40_D2800_p20', '5f6a5efc4ae79c0d4816abe59beb4c0fb214f65f0f1a15ccb2837ecac3d0a151'),
+                    ('a40_D3200_p20', '3e2c37891693cc05d0d09f32639eaaa00fd15c3e0d8896b12ab942b3446fae18')):
+    SETTINGS_PINS[_name] = dict(PANEL_SHA256=_sha, PANEL_3C_SHA256=None)
+
 
 def _eval_tokens(text):
     """Six-digit tokens inside the setting's EVAL_RANGE (p60: exactly the SEED_TOKEN 9896xx hits; amendment 28: the

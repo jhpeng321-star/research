@@ -129,7 +129,12 @@ A35_BANK_CELL = 'D2800_p20'
 #: HELD-OUT range (no runtime registration). wz3to2 processes keep EVAL_HELDOUT_RANGES unchanged.
 A38_CAL_RANGE = (996000, 996007)
 A38_EVAL_RANGES = ((A38_CAL_RANGE[0], A38_CAL_RANGE[1], A38_CAL_RANGE[0]),)
-RANGES_BY_MAP = dict(wz2to1=A38_EVAL_RANGES)
+#: amendment 40 (MAIN 2026-11-10, build): in a wz3to2v80 process the runtime ranges are ONLY the calibration block
+#: 994200-994207 (TRAIN-type, scope label like a33t / A38); the 96-world panel 994000-994095 is the map's own HELD-OUT
+#: range. The wz3to2 EVAL_HELDOUT_RANGES and the wz2to1 ranges are unchanged.
+A40_CAL_RANGE = (994200, 994207)
+A40_EVAL_RANGES = ((A40_CAL_RANGE[0], A40_CAL_RANGE[1], A40_CAL_RANGE[0]),)
+RANGES_BY_MAP = dict(wz2to1=A38_EVAL_RANGES, wz3to2v80=A40_EVAL_RANGES)
 
 
 def bank_cell(ck, cell):
