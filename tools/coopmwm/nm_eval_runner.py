@@ -482,7 +482,13 @@ def a37_hook(ck, world, arm):
     family = ck.get('a37_family') if arm == 'A37_PLAN' else None
     if arm == 'A37_PLAN' and not family:
         raise ValueError('A37_PLAN needs ck a37_family')
-    return a37_cellbank.make_hook(arm, cell, bank=bank, family=family), loaded
+    hook = a37_cellbank.make_hook(arm, cell, bank=bank, family=family)
+    if 'a57_member_lane' in ck:        # amendment 57 PART_L<k>: member-lane filter (absent = the A42 path, unchanged)
+        from . import a57_partlane
+        if arm != 'CELL_BANK' or a57_partlane.a57_digest() != ck.get('a57_sha256'):
+            raise ValueError('A57: member-lane filter needs CELL_BANK and the registered a57_sha256')
+        hook = a57_partlane.apply_filter(hook, ck['a57_member_lane'])
+    return hook, loaded
 
 
 def a33_hook(ck, world):
