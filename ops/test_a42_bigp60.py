@@ -14,7 +14,10 @@ import a42_bigp60 as D  # noqa: E402
 import nm_finaleval as N  # noqa: E402
 import test_a37_celltailor as T37  # noqa: E402  (mirror discovery, FakeInner)
 
-FIX = Path(__file__).resolve().parents[1]/'tools'/'coopmwm'/'fixtures'/'a42_r7b_STRATEGY_SEARCH_D2800_p20.json'
+_FIXREL = Path('tools')/'coopmwm'/'fixtures'/'a42_r7b_STRATEGY_SEARCH_D2800_p20.json'
+_ROOT = Path(__file__).resolve().parents[1]
+# worktree layout: <root>/tools/...; run-host overlay layout: <root>/pytools/tools/...
+FIX = next((r/_FIXREL for r in (_ROOT, _ROOT/'pytools') if (r/_FIXREL).is_file()), _ROOT/_FIXREL)
 
 
 def fixture_cands():
