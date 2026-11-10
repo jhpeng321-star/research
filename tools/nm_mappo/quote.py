@@ -60,6 +60,9 @@ OPTIONS = {
     "mappowz167_u0": dict(iterations=167, init="u0",
                           purpose="S-MAPPOWZ production after the failed attempt-1 precharge (22,260) is kept "
                                   "charged: 167 iterations keep the phase <= 7,000,000"),
+    "mappo168_u0_d2800p60": dict(iterations=168, init="u0",
+                                 purpose="S-MAPPO60 (Amendment 51): the S-MAPPOWZ recipe (mappowz168_u0) with the "
+                                         "one declared delta demands_vph = [2800] (cell D2800_p60)"),
     "full169_scratch": dict(iterations=169, init="scratch",
                             purpose="same budget from a fresh actor (weaker: the original actor had ~14M sim-s "
                                     "of merge-map MAPPO history before its 169 speed-only iterations)"),

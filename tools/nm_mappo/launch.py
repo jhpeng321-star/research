@@ -272,7 +272,7 @@ def cmd_plan(a) -> int:
     run_dir.mkdir(parents=True, exist_ok=True)
     plan = make_plan(option=a.option, host=a.host, run_dir=run_dir, init=a.init,
                      python=a.python, sumo_home=a.sumo_home, workers=a.workers,
-                     allow_stub=a.allow_stub, wall_cap_h=a.wall_cap_h,
+                     config=Path(a.config), allow_stub=a.allow_stub, wall_cap_h=a.wall_cap_h,
                      phase_cap_sim_s=a.phase_cap_sim_s, other_charges_sim_s=a.other_charges_sim_s,
                      ledger=a.ledger)
     write_json_new(run_dir / "PLAN.json", plan)
@@ -460,6 +460,8 @@ def parse(argv=None):
     p.add_argument("--python", default=sys.executable)
     p.add_argument("--sumo-home", default=os.environ.get("SUMO_HOME"))
     p.add_argument("--workers", type=int, default=None)
+    p.add_argument("--config", default=str(CONFIG),
+                   help="run config (default: the S-MAPPOWZ config; A51 uses the D2800_p60 variant)")
     p.add_argument("--allow-stub", action="store_true")
     p.add_argument("--wall-cap-h", type=float, default=None)
     p.add_argument("--phase-cap-sim-s", type=float, default=None)

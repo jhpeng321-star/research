@@ -112,6 +112,43 @@ def test_config_equals_original_except_declared_deltas():
     assert prov["original_toml_sha256"].startswith("a7fc8e09")
 
 
+CONFIG_A51 = ROOT / "configs" / "c4_mappo_speed_wz3to2_d2800p60.toml"
+
+
+def test_a51_config_is_parent_plus_one_demand_delta(tmp_path):
+    """Amendment 51 (S-MAPPO60): the parent S-MAPPOWZ config with exactly one extra delta."""
+    parent = dict(_flat(wz_cfg()))
+    new_cfg = loads(CONFIG_A51.read_text(encoding="utf-8"))
+    assert new_cfg["map"]["api"] == "tools.nm_mappo.n1_adapter:descriptor"
+    new_cfg["map"]["api"] = ""                       # stub binding: no real N1 install in-process
+    new = dict(_flat(new_cfg))
+    deltas = {k for k in set(parent) | set(new) if parent.get(k, "<absent>") != new.get(k, "<absent>")}
+    assert deltas == {("rollout", "demands_vph")}, sorted(deltas)
+    assert new_cfg["rollout"]["demands_vph"] == [2800] and new_cfg["rollout"]["penetrations"] == [0.6]
+    # against the original S-MAPPOSPEED config the declared delta SET is unchanged (values differ)
+    orig = dict(_flat(json.loads(ORIGINAL.read_text())["speed_config"]))
+    vs_orig = {k for k in set(orig) | set(new) if orig.get(k, "<absent>") != new.get(k, "<absent>")}
+    assert {k[:1] if k[0] == "map" else k for k in vs_orig} == DECLARED
+    assert "Amendment 51" in CONFIG_A51.read_text(encoding="utf-8").splitlines()[0]
+    # D2800_p60 is a registered cell of the (stub) wz3to2 binding, same as the N1 descriptor cells
+    resolved, _ = M.apply_map(merge_override(new_cfg, new_cfg["smoke"]))
+    assert resolved["rollout"]["demands_vph"] == [2800] and resolved["rollout"]["penetrations"] == [0.6]
+    q = Q.option_quote("mappo168_u0_d2800p60")
+    assert q["iterations"] == 168 and q["planned_sim_s"] == 6_955_200 and q["init"] == "u0"
+    import re
+    stub = tmp_path / "a51.toml"
+    stub.write_text(re.sub(r'(?m)^api = "[^"]*"', 'api = ""', CONFIG_A51.read_text(encoding="utf-8"), count=1),
+                    encoding="utf-8")
+    plan = L.make_plan(option="mappo168_u0_d2800p60", host="cpuV", run_dir=tmp_path, init="u0.pt",
+                       python="py", sumo_home=None, workers=46, allow_stub=True, config=stub,
+                       wall_cap_h=60, phase_cap_sim_s=7_000_000, other_charges_sim_s=21_600)
+    argv = plan["argv"]["production"]
+    assert argv[argv.index("--config") + 1] == str(stub)
+    assert argv[argv.index("--iterations") + 1] == "168" and argv[argv.index("--workers") + 1] == "46"
+    assert L.parse(["plan", "--run-dir", "r", "--config", str(stub)]).config == str(stub)
+    assert L.parse(["plan", "--run-dir", "r"]).config == str(L.CONFIG)
+
+
 # ------------------------------------------------------------------ map binding
 def test_stub_binding_cells_and_seed_guards():
     b = M.resolve_binding({"name": "wz3to2"})
