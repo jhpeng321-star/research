@@ -115,11 +115,17 @@ A35_PANEL_RANGES = ((998000, 998099), (998100, 998199), (998200, 998299), (99830
 #: (D3200_p20) and 991800-991899 (D2400_p20) for the UNC-rule SUMO verification of the cell plans (never evaluation;
 #: repeat = seed - block start). Same physics-neutral runtime registration (labels only; TRAIN roles still refuse them).
 A37_VERIFY_RANGES = ((991700, 991799), (991800, 991899))
+#: amendment 41 (MAIN 2026-11-10, D3200_p20 bound follow-up): the stage-1 selection worlds 991724-991771 sit inside the
+#: A37 block 991700-991799 (already registered, repeat = seed - 991700); the stage-2 confirmation panel is the FRESH
+#: audited block 998400-998599 (192 worlds 998400-998591, 998592-998599 reserved unused; repeat = seed - 998400). Same
+#: physics-neutral runtime registration (labels only; TRAIN roles still refuse them).
+A41_CONFIRM_RANGE = (998400, 998599)
 EVAL_HELDOUT_RANGES = ((EVAL_HELDOUT_RANGE[0], EVAL_HELDOUT_RANGE[1], 993000),
                        (A33_PANEL_RANGE[0], A33_PANEL_RANGE[1], A33_PANEL_RANGE[0]),
                        (A33_TRAIN_RANGE[0], A33_TRAIN_RANGE[1], A33_TRAIN_RANGE[0])) + tuple(
                        (lo, hi, lo) for lo, hi in A35_PANEL_RANGES) + tuple(
-                       (lo, hi, lo) for lo, hi in A37_VERIFY_RANGES)
+                       (lo, hi, lo) for lo, hi in A37_VERIFY_RANGES) + (
+                       (A41_CONFIRM_RANGE[0], A41_CONFIRM_RANGE[1], A41_CONFIRM_RANGE[0]),)
 #: amendment 35: the frozen controllers' plans / classifier were built for D2800_p20; in a transfer cell they run
 #: as-is, i.e. the bank rows / templates are looked up under this source cell (ck['bank_cell_key']) while the world
 #: is the transfer cell. Absent key (every pre-a35 spec) -> the world cell, unchanged.

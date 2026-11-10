@@ -487,6 +487,46 @@ BANK_SETTINGS = BANK_SETTINGS + tuple(c[0] for c in A37_VERIFY_CELLS)
 #: amendment 37 verification blocks (registered 2026-11-10 after the seed audit, before any amendment-37 episode)
 SETTINGS_PINS['a37v_D3200_p20'] = dict(PANEL_SHA256='e4791cfcf1d9baee265c6a02cb78ac9092901f2fa24e513d7ed24963111a1d42', PANEL_3C_SHA256=None)
 SETTINGS_PINS['a37v_D2400_p20'] = dict(PANEL_SHA256='b8fb13143ede9f2437bef5a0a731832658d11728c5f81b06c100be9c94df08e1', PANEL_3C_SHA256=None)
+#: amendment 41 (MAIN 2026-11-10 ~21:15, D3200_p20 total-delay win inside the 10 s group bound; pre-outcome; exploratory
+#: follow-up at a non-design cell, never pooled). Stage 1 SELECTION: 48 fresh worlds 991724-991771 (reserved unused inside
+#: the A37-audited block 991700-991799; runner range 991700-991799 unchanged, repeat = seed - 991700; 991772-991799 stay
+#: unused). Stage 2 CONFIRMATION: 192 fresh worlds 998400-998591 (998592-998599 reserved unused; new runner range
+#: 998400-998599, repeat = seed - 998400). Same plant / bindings as the a35 / a37 D3200_p20 cell.
+A41_SELECT_SEEDS = (991724, 991771)
+A41_CONFIRM_SEEDS = (998400, 998591)
+SETTINGS['a41s_D3200_p20'] = dict(SETTINGS['a37v_D3200_p20'],
+    N_WORLDS=48, EVAL_RANGE=(991724, 991799), EVAL_EXTRA_RANGE=(991724, 991799), SEEDS_RESERVED=(991772, 991799),
+    PANEL_SIZE_REASON=('MAIN amendment 41: stage-1 SELECTION, 48 fresh worlds 991724-991771 (reserved unused in the A37 '
+                       'audit); 991772-991799 stay unused'),
+    CELL_AUTHORITY='MAIN amendment 41 (REGISTRATION 2026-11-10): D3200_p20 stage-1 selection among 8 subsets of the A37 bank',
+    PANEL_AUTHORITY=('A41 amendment 41: fresh audited integers 991724-991771 (D3200_p20) for the stage-1 SELECTION of '
+                     'one bank among S1..S5 / N2..N4 ONLY (never confirmation, never pooled); executed through the eval '
+                     'runner (scope label only)'),
+    EXPOSURE_EXTRA=dict(
+        checked=('amendment-41 audit: 991724-991771 as standalone integers absent from REGISTRATION.md seed use, '
+                 'protocols/experiment_history.json, every c4/* branch tip, the a32-a40 run / agent dirs '
+                 '(ops/a41/SEED_AUDIT.json)',),
+        disclosed='; amendment 41: fresh integers (selection only), registered at runtime by the runner (991700-991799)'),
+    PANEL_FILE=HERE/'nm_eval_panel_wz3to2_a41s_D3200_p20.json', PANEL_3C_FILE=None)
+SETTINGS['a41c_D3200_p20'] = dict(SETTINGS['a35_D3200_p20'],
+    N_WORLDS=192, EVAL_RANGE=(998400, 998599), EVAL_EXTRA_RANGE=(998400, 998599), SEEDS_RESERVED=(998592, 998599),
+    PANEL_SIZE_REASON=('MAIN amendment 41: stage-2 CONFIRMATION, 192 fresh worlds 998400-998591; 998592-998599 '
+                       'reserved unused'),
+    CELL_AUTHORITY='MAIN amendment 41 (REGISTRATION 2026-11-10): D3200_p20 confirmation of the stage-1 pick (one shot)',
+    PANEL_AUTHORITY=('A41 amendment 41: fresh audited held-out integers 998400-998591 (D3200_p20); eval-only range '
+                     '998400-998599; disjoint from 964000-964199, 962xxx, 977xxx, 998000-998399 (a35 panels) and every '
+                     'train/verify seed'),
+    EXPOSURE_EXTRA=dict(
+        checked=('amendment-41 audit: 998400-998599 as standalone integers absent from REGISTRATION.md seed use, '
+                 'protocols/experiment_history.json, every c4/* branch tip, the a32-a40 run / agent dirs '
+                 '(ops/a41/SEED_AUDIT.json)',),
+        disclosed=('; amendment 41: fresh integers, so no arrival stream is shared with any other panel; registered '
+                   'for evaluation only at runtime by the runner (TRAIN roles still refuse it)')),
+    PANEL_FILE=HERE/'nm_eval_panel_wz3to2_a41c_D3200_p20.json', PANEL_3C_FILE=None)
+BANK_SETTINGS = BANK_SETTINGS + ('a41s_D3200_p20', 'a41c_D3200_p20')
+#: amendment 41 panels (registered 2026-11-10 after the seed audit, before any amendment-41 episode)
+SETTINGS_PINS['a41s_D3200_p20'] = dict(PANEL_SHA256='1aa3280682b2ef0dec6538886a0c292ce0904e30efbe176b8fef7fa9d3f1dbcc', PANEL_3C_SHA256=None)
+SETTINGS_PINS['a41c_D3200_p20'] = dict(PANEL_SHA256='6d0fe91197fa1003192d3e076ea9ec57e1cf20ec99e84ee993b0b183279665fa', PANEL_3C_SHA256=None)
 MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'
 #: MAIN 2026-11-06 (N11 F4): the panel binds the staged probe network bytes (sha256 of wz3to2.net.xml)
 NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'

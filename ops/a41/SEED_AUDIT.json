@@ -1,0 +1,311 @@
+{
+ "schema": "a41.seed_audit.v1",
+ "amendment": "41",
+ "blocks": {
+  "stage1_selection": [
+   991724,
+   991771
+  ],
+  "stage2_confirmation": [
+   998400,
+   998599
+  ]
+ },
+ "used": {
+  "stage1_selection": [
+   991724,
+   991771
+  ],
+  "stage2_confirmation": [
+   998400,
+   998591
+  ]
+ },
+ "reserved_unused": {
+  "stage1_selection": [
+   991772,
+   991799
+  ],
+  "stage2_confirmation": [
+   998592,
+   998599
+  ]
+ },
+ "panels": {
+  "stage1_selection": {
+   "setting": "a41s_D3200_p20",
+   "file": "ops/nm_eval_panel_wz3to2_a41s_D3200_p20.json",
+   "n_worlds": 48,
+   "panel_sha256": "1aa3280682b2ef0dec6538886a0c292ce0904e30efbe176b8fef7fa9d3f1dbcc",
+   "file_sha256": "2335a6a4a6955acba0aca86f6439c1c7617492cde2f41f1c8ec486dc61e2f625",
+   "runner_range": "991700-991799 (A37, unchanged; repeat = seed - 991700)"
+  },
+  "stage2_confirmation": {
+   "setting": "a41c_D3200_p20",
+   "file": "ops/nm_eval_panel_wz3to2_a41c_D3200_p20.json",
+   "n_worlds": 192,
+   "panel_sha256": "6d0fe91197fa1003192d3e076ea9ec57e1cf20ec99e84ee993b0b183279665fa",
+   "file_sha256": "022b2901dc2f8fccf3efa7b18a3b3dc18ce4c2ec99f3aabab076b13fcdedd908",
+   "runner_range": "998400-998599 (new A41_CONFIRM_RANGE; repeat = seed - 998400)"
+  }
+ },
+ "never": [
+  "964000-964199",
+  "962xxx",
+  "977xxx",
+  "998100-998195",
+  "998000-998399 (all a35 panel blocks; 998200-998399 are the a35 D2800_p60 / D2800_p40 panels, so NOT unused)"
+ ],
+ "block_choice": "998200-998399 (suggested family) is USED by the a35 D2800_p60 / D2800_p40 panels (998200-998295, 998300-998395, partly run), so the next 200-integer block of the same 998xxx eval-label family, 998400-998599, was audited and chosen; 998700-998999 is S-DISTILLRL training",
+ "regex": "(?<![\\da-fA-F.])(\\d{6})(?![\\da-fA-F.]) filtered to the block (standalone integers; hex/decimal fragments excluded)",
+ "checked": [
+  "REGISTRATION.md",
+  "protocols/experiment_history.json",
+  "59346 text files under C4-V7FT-20261017 {a32..a40 run dirs, paper_data, paper_analysis_a32, paper_fairness, p20c_seed_audit, p20x_seedaudit, p20x_bank, nm_finaleval_p20c_confirm, nm_finaleval_p20x_r2_bank, regimeu0, wmc_p20, lowcav, multicrit, wmverify_*} and E:/agent-work {a32,a33,a34,a35,a37,a38,a39,a40,distill*,a38-road2,a40-geomvar} (evaluation dirs and outcome files WAVE_*/RESULT*/A*_RESULTS*/vehicles*/observable* skipped, never read)",
+  "git grep over 542 unique c4/* + main branch tips",
+  "A37 ledger (E:/agent-work/a37/offload/root/CHARGES.jsonl ids only): every a37v_d3200_p20_* job index <= 23 (seeds 991700-991723)"
+ ],
+ "forbidden_skipped": [
+  "sealed",
+  "holdout",
+  "heldout",
+  "cal_split",
+  "chunk5",
+  "j4b",
+  "inc1",
+  "hetdata_truth",
+  "driver_params"
+ ],
+ "file_hits": {
+  "stage1_selection": [
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
+    "line": 10617,
+    "token": "991724"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
+    "line": 10718,
+    "token": "991724"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
+    "line": 10718,
+    "token": "991771"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_54502d2fcba55145b20ec58121fc8fcd2267b37b479a83b4956c46f6f60c1f3f\\CLAIM.json",
+    "line": 1,
+    "token": "991769"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_72cdacaf315fc58c28e13a24f12a4bf7136938561db52aab7bb2f71ea9fb1918\\CLAIM.json",
+    "line": 1,
+    "token": "991753"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_9ef41ab233c882d646c6d0f78c811d6c2f47889b5c7e1893f3e67865fcf0670a\\CLAIM.json",
+    "line": 1,
+    "token": "991738"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5d\\offloaded\\OFFLOAD_u008.json",
+    "line": 275,
+    "token": "991742"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_f8v4b\\offloaded\\OFFLOAD_u008.json",
+    "line": 275,
+    "token": "991742"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\PROGRESS.md",
+    "line": 9,
+    "token": "991724"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\SEED_AUDIT.json",
+    "line": 50,
+    "token": "991769"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\SEED_AUDIT.json",
+    "line": 55,
+    "token": "991753"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\SEED_AUDIT.json",
+    "line": 60,
+    "token": "991738"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\SEED_AUDIT.json",
+    "line": 70,
+    "token": "991742"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\SEED_AUDIT.json",
+    "line": 75,
+    "token": "991742"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_762d469b2818\\overlay_src\\ops\\nm_eval_trainblock_wz3to2_a37v_D3200_p20.json",
+    "line": 186,
+    "token": "991724"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_762d469b2818\\overlay_src\\ops\\nm_eval_trainblock_wz3to2_a37v_D3200_p20.json",
+    "line": 202,
+    "token": "991724"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_762d469b2818\\overlay_src\\ops\\nm_finaleval.py",
+    "line": 467,
+    "token": "991724"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_762d469b2818\\overlay_src\\ops\\test_a37_celltailor.py",
+    "line": 118,
+    "token": "991724"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_762d469b2818\\overlay_src\\ops\\a37\\SEED_AUDIT.json",
+    "line": 50,
+    "token": "991769"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_762d469b2818\\overlay_src\\ops\\a37\\SEED_AUDIT.json",
+    "line": 55,
+    "token": "991753"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_762d469b2818\\overlay_src\\ops\\a37\\SEED_AUDIT.json",
+    "line": 60,
+    "token": "991738"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_762d469b2818\\overlay_src\\ops\\a37\\SEED_AUDIT.json",
+    "line": 70,
+    "token": "991742"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_762d469b2818\\overlay_src\\ops\\a37\\SEED_AUDIT.json",
+    "line": 75,
+    "token": "991742"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_762d469b2818\\overlay_src\\pytools\\tools\\coopmwm\\test_a37_cellbank_cpu.py",
+    "line": 150,
+    "token": "991724"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_b455bd282759\\overlay_src\\ops\\nm_eval_trainblock_wz3to2_a37v_D3200_p20.json",
+    "line": 186,
+    "token": "991724"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_b455bd282759\\overlay_src\\ops\\nm_eval_trainblock_wz3to2_a37v_D3200_p20.json",
+    "line": 202,
+    "token": "991724"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_b455bd282759\\overlay_src\\ops\\nm_finaleval.py",
+    "line": 467,
+    "token": "991724"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_b455bd282759\\overlay_src\\ops\\test_a37_celltailor.py",
+    "line": 118,
+    "token": "991724"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_b455bd282759\\overlay_src\\ops\\a37\\SEED_AUDIT.json",
+    "line": 50,
+    "token": "991769"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_b455bd282759\\overlay_src\\ops\\a37\\SEED_AUDIT.json",
+    "line": 55,
+    "token": "991753"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_b455bd282759\\overlay_src\\ops\\a37\\SEED_AUDIT.json",
+    "line": 60,
+    "token": "991738"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_b455bd282759\\overlay_src\\ops\\a37\\SEED_AUDIT.json",
+    "line": 70,
+    "token": "991742"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_b455bd282759\\overlay_src\\ops\\a37\\SEED_AUDIT.json",
+    "line": 75,
+    "token": "991742"
+   },
+   {
+    "path": "E:\\agent-work\\a37\\ship_b455bd282759\\overlay_src\\pytools\\tools\\coopmwm\\test_a37_cellbank_cpu.py",
+    "line": 150,
+    "token": "991724"
+   }
+  ],
+  "stage2_confirmation": [
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_617df9dc591b597fca283cb7a69d96a897fffc42855f0a4f401c97fcde3d8af2\\CLAIM.json",
+    "line": 1,
+    "token": "998585"
+   }
+  ]
+ },
+ "git_hits": {
+  "stage1_selection": [
+   {
+    "path_token": "ops/a37/SEED_AUDIT.json:991738",
+    "n_tips": 1,
+    "example_tip": "762d469b2818"
+   },
+   {
+    "path_token": "ops/a37/SEED_AUDIT.json:991742",
+    "n_tips": 1,
+    "example_tip": "762d469b2818"
+   },
+   {
+    "path_token": "ops/a37/SEED_AUDIT.json:991753",
+    "n_tips": 1,
+    "example_tip": "762d469b2818"
+   },
+   {
+    "path_token": "ops/a37/SEED_AUDIT.json:991769",
+    "n_tips": 1,
+    "example_tip": "762d469b2818"
+   },
+   {
+    "path_token": "ops/nm_eval_trainblock_wz3to2_a37v_D3200_p20.json:991724",
+    "n_tips": 1,
+    "example_tip": "762d469b2818"
+   },
+   {
+    "path_token": "ops/nm_finaleval.py:991724",
+    "n_tips": 1,
+    "example_tip": "762d469b2818"
+   },
+   {
+    "path_token": "ops/test_a37_celltailor.py:991724",
+    "n_tips": 1,
+    "example_tip": "762d469b2818"
+   },
+   {
+    "path_token": "tools/coopmwm/test_a37_cellbank_cpu.py:991724",
+    "n_tips": 1,
+    "example_tip": "762d469b2818"
+   }
+  ],
+  "stage2_confirmation": []
+ },
+ "audited": "2026-11-10 21:51:50 +0800 by A41 build agent (zero SUMO, no outcome read); tool ops/a41/seed_audit.py",
+ "classification": {
+  "verdict": "BOTH BLOCKS UNUSED (no hit is a seed use)",
+  "stage1_selection": "34 file hits: REGISTRATION.md / PROGRESS.md / A37 panel + code text naming the reserved range 991724-991799 or the registered A41 block; range(991700, 991724) end-exclusive bounds in A37 tests; 6 = process ids (\"pid\") in clean5c5b CLAIM.json; byte sizes 991742 in two OFFLOAD_u008.json manifests; copies of the A37 SEED_AUDIT listing those. 8 git hits = the same A37 files at tip 762d469b",
+  "stage2_confirmation": "1 file hit = process id (\"pid\": 998585) in a clean5c5b CLAIM.json; 0 git hits"
+ }
+}

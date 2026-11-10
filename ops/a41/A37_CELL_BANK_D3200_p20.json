@@ -1,0 +1,288 @@
+{
+ "clean5c": {
+  "templates": [
+   {
+    "cell": "D3200_p20",
+    "family": "mut_ad6205c9d248ab0f",
+    "offer_condition": {
+     "cooldown_s": 120,
+     "gate": null,
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "onset_s": 0,
+       "rank": 0,
+       "sumo_lane": 1,
+       "v_w": 18.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "onset_s": 0,
+       "rank": 0,
+       "sumo_lane": 2,
+       "v_w": 18.0
+      }
+     ],
+     "situation": {
+      "unconditional": true
+     },
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "wall",
+     "zone": "full"
+    },
+    "template": {
+     "source": {
+      "strategy_key": "ad6205c9d248ab0f"
+     }
+    }
+   },
+   {
+    "cell": "D3200_p20",
+    "family": "mut_b14f5c979f796e93",
+    "offer_condition": {
+     "cooldown_s": 90,
+     "gate": 5.0,
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 90,
+       "lc_target_sumo": null,
+       "onset_s": 0,
+       "rank": 0,
+       "sumo_lane": 2,
+       "v_w": 18.0
+      }
+     ],
+     "situation": {
+      "unconditional": true
+     },
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "wall",
+     "zone": "full"
+    },
+    "template": {
+     "source": {
+      "strategy_key": "b14f5c979f796e93"
+     }
+    }
+   },
+   {
+    "cell": "D3200_p20",
+    "family": "mut_82ad29f594da0373",
+    "offer_condition": {
+     "cooldown_s": 140,
+     "gate": 5.0,
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "onset_s": 20,
+       "rank": 0,
+       "sumo_lane": 1,
+       "v_w": 18.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "onset_s": 0,
+       "rank": 0,
+       "sumo_lane": 2,
+       "v_w": 18.0
+      }
+     ],
+     "situation": {
+      "unconditional": true
+     },
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "wall",
+     "zone": "full"
+    },
+    "template": {
+     "source": {
+      "strategy_key": "82ad29f594da0373"
+     }
+    }
+   },
+   {
+    "cell": "D3200_p20",
+    "family": "mut_a3534d24f4102ed1",
+    "offer_condition": {
+     "cooldown_s": 180,
+     "gate": null,
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "onset_s": 20,
+       "rank": 0,
+       "sumo_lane": 1,
+       "v_w": 22.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lc_target_sumo": null,
+       "onset_s": 0,
+       "rank": 0,
+       "sumo_lane": 2,
+       "v_w": 18.0
+      }
+     ],
+     "situation": {
+      "unconditional": true
+     },
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "wall",
+     "zone": "full"
+    },
+    "template": {
+     "source": {
+      "strategy_key": "a3534d24f4102ed1"
+     }
+    }
+   },
+   {
+    "cell": "D3200_p20",
+    "family": "mut_b1a94539f69c5715",
+    "offer_condition": {
+     "cooldown_s": 140,
+     "gate": null,
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "onset_s": 0,
+       "rank": 0,
+       "sumo_lane": 0,
+       "v_w": 19.0
+      },
+      {
+       "dmax": 1.5,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "onset_s": 20,
+       "rank": 1,
+       "sumo_lane": 1,
+       "v_w": 19.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "onset_s": 20,
+       "rank": 1,
+       "sumo_lane": 2,
+       "v_w": 19.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 90,
+       "lc_target_sumo": null,
+       "onset_s": 20,
+       "rank": 1,
+       "sumo_lane": 0,
+       "v_w": 18.0
+      }
+     ],
+     "situation": {
+      "unconditional": true
+     },
+     "slots": 1,
+     "spread_m": 300.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "far"
+    },
+    "template": {
+     "source": {
+      "strategy_key": "b1a94539f69c5715"
+     }
+    }
+   }
+  ]
+ },
+ "rows": [
+  {
+   "family": "mut_ad6205c9d248ab0f",
+   "lb95_veh_s": 9251.758628576397,
+   "plan_source": "wm_search",
+   "regime": "D3200_p20",
+   "row_class": "unconditional",
+   "situational": {
+    "unconditional": true
+   },
+   "strategy_key": "ad6205c9d248ab0f",
+   "template_sha256": null
+  },
+  {
+   "family": "mut_b14f5c979f796e93",
+   "lb95_veh_s": 8009.649834083812,
+   "plan_source": "wm_search",
+   "regime": "D3200_p20",
+   "row_class": "unconditional",
+   "situational": {
+    "unconditional": true
+   },
+   "strategy_key": "b14f5c979f796e93",
+   "template_sha256": null
+  },
+  {
+   "family": "mut_82ad29f594da0373",
+   "lb95_veh_s": 7701.144863461155,
+   "plan_source": "wm_search",
+   "regime": "D3200_p20",
+   "row_class": "unconditional",
+   "situational": {
+    "unconditional": true
+   },
+   "strategy_key": "82ad29f594da0373",
+   "template_sha256": null
+  },
+  {
+   "family": "mut_a3534d24f4102ed1",
+   "lb95_veh_s": 5338.083988139756,
+   "plan_source": "wm_search",
+   "regime": "D3200_p20",
+   "row_class": "unconditional",
+   "situational": {
+    "unconditional": true
+   },
+   "strategy_key": "a3534d24f4102ed1",
+   "template_sha256": null
+  },
+  {
+   "family": "mut_b1a94539f69c5715",
+   "lb95_veh_s": 2381.1255244953295,
+   "plan_source": "wm_search",
+   "regime": "D3200_p20",
+   "row_class": "unconditional",
+   "situational": {
+    "unconditional": true
+   },
+   "strategy_key": "b1a94539f69c5715",
+   "template_sha256": null
+  }
+ ],
+ "schema": "coopmwm.a37_cellbank.v1.bank"
+}

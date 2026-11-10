@@ -1,0 +1,144 @@
+{
+ "a37_bank": {
+  "admission_receipt_sha256": "6ee853cc072115da61abb4045b759caeece49de6a468c3f8cfb3d02f854802b7",
+  "file_sha256": "f96f8c8e16810ca5cea19ae7169a95013c8c091fb0fce718986525320edb32cd",
+  "host_path": "/root/a37ct/root/a37_banks/A37_CELL_BANK_D3200_p20.json",
+  "name": "A37_CELL_BANK_D3200_p20.json"
+ },
+ "amendment": "41",
+ "banks": {
+  "A37_CELL_BANK_D3200_p20.json": "f96f8c8e16810ca5cea19ae7169a95013c8c091fb0fce718986525320edb32cd",
+  "A41_N2_D3200_p20.json": "0fd7199fc3d0f7926bb5ff7f08d04807a4a65e399405817f13f4d5574f4f5a4e",
+  "A41_N3_D3200_p20.json": "40ee362245f39f22ba64ac3f609e1c4f53a041a84d5d2f8e60a6e6c10895ca7b",
+  "A41_N4_D3200_p20.json": "ec58a208c5674b12ef6098a1f04ecd2806d6a3a51151fbf197af008c29905381"
+ },
+ "candidates": [
+  {
+   "arm": "A37_PLAN",
+   "bank": "A37_CELL_BANK_D3200_p20.json",
+   "bank_file_sha256": "f96f8c8e16810ca5cea19ae7169a95013c8c091fb0fce718986525320edb32cd",
+   "families": [
+    "mut_ad6205c9d248ab0f"
+   ],
+   "family": "mut_ad6205c9d248ab0f",
+   "kind": "single",
+   "label": "S1",
+   "n_plans": 1,
+   "order": 0
+  },
+  {
+   "arm": "A37_PLAN",
+   "bank": "A37_CELL_BANK_D3200_p20.json",
+   "bank_file_sha256": "f96f8c8e16810ca5cea19ae7169a95013c8c091fb0fce718986525320edb32cd",
+   "families": [
+    "mut_b14f5c979f796e93"
+   ],
+   "family": "mut_b14f5c979f796e93",
+   "kind": "single",
+   "label": "S2",
+   "n_plans": 1,
+   "order": 1
+  },
+  {
+   "arm": "A37_PLAN",
+   "bank": "A37_CELL_BANK_D3200_p20.json",
+   "bank_file_sha256": "f96f8c8e16810ca5cea19ae7169a95013c8c091fb0fce718986525320edb32cd",
+   "families": [
+    "mut_82ad29f594da0373"
+   ],
+   "family": "mut_82ad29f594da0373",
+   "kind": "single",
+   "label": "S3",
+   "n_plans": 1,
+   "order": 2
+  },
+  {
+   "arm": "A37_PLAN",
+   "bank": "A37_CELL_BANK_D3200_p20.json",
+   "bank_file_sha256": "f96f8c8e16810ca5cea19ae7169a95013c8c091fb0fce718986525320edb32cd",
+   "families": [
+    "mut_a3534d24f4102ed1"
+   ],
+   "family": "mut_a3534d24f4102ed1",
+   "kind": "single",
+   "label": "S4",
+   "n_plans": 1,
+   "order": 3
+  },
+  {
+   "arm": "A37_PLAN",
+   "bank": "A37_CELL_BANK_D3200_p20.json",
+   "bank_file_sha256": "f96f8c8e16810ca5cea19ae7169a95013c8c091fb0fce718986525320edb32cd",
+   "families": [
+    "mut_b1a94539f69c5715"
+   ],
+   "family": "mut_b1a94539f69c5715",
+   "kind": "single",
+   "label": "S5",
+   "n_plans": 1,
+   "order": 4
+  },
+  {
+   "arm": "CELL_BANK",
+   "bank": "A41_N2_D3200_p20.json",
+   "bank_file_sha256": "0fd7199fc3d0f7926bb5ff7f08d04807a4a65e399405817f13f4d5574f4f5a4e",
+   "families": [
+    "mut_ad6205c9d248ab0f",
+    "mut_b14f5c979f796e93"
+   ],
+   "family": null,
+   "kind": "nested_prefix",
+   "label": "N2",
+   "n_plans": 2,
+   "order": 5
+  },
+  {
+   "arm": "CELL_BANK",
+   "bank": "A41_N3_D3200_p20.json",
+   "bank_file_sha256": "40ee362245f39f22ba64ac3f609e1c4f53a041a84d5d2f8e60a6e6c10895ca7b",
+   "families": [
+    "mut_ad6205c9d248ab0f",
+    "mut_b14f5c979f796e93",
+    "mut_82ad29f594da0373"
+   ],
+   "family": null,
+   "kind": "nested_prefix",
+   "label": "N3",
+   "n_plans": 3,
+   "order": 6
+  },
+  {
+   "arm": "CELL_BANK",
+   "bank": "A41_N4_D3200_p20.json",
+   "bank_file_sha256": "ec58a208c5674b12ef6098a1f04ecd2806d6a3a51151fbf197af008c29905381",
+   "families": [
+    "mut_ad6205c9d248ab0f",
+    "mut_b14f5c979f796e93",
+    "mut_82ad29f594da0373",
+    "mut_a3534d24f4102ed1"
+   ],
+   "family": null,
+   "kind": "nested_prefix",
+   "label": "N4",
+   "n_plans": 4,
+   "order": 7
+  }
+ ],
+ "cell": "D3200_p20",
+ "doc_sha256": "f671b264a3c468772f0303ee66d2987ead61482bc72c71df938879bb12e2f821",
+ "executor": {
+  "a32_sha256": "1c51f22c1a0fc29b90a263504f97bd8f0bdc8ad3c4c5d84eb6c015ef46aa12cf",
+  "a37_sha256": "0a9024371e0ea0686df8ac8ccdfa189fcceb1b413fb2604b31c0cf3a169707cf",
+  "learned_trigger_sha256": "41fc8d1a2fb0ef547524a9d36488b7bbb4bc9f0e8c1e2d06f5fe85eb5903b54d",
+  "start_rule": "BANK_ALWAYS (a32_arms.AlwaysCore._gate)"
+ },
+ "priority_order_P": [
+  "mut_ad6205c9d248ab0f",
+  "mut_b14f5c979f796e93",
+  "mut_82ad29f594da0373",
+  "mut_a3534d24f4102ed1",
+  "mut_b1a94539f69c5715"
+ ],
+ "rule": "S1..S5 = each plan of P alone; N2, N3, N4 = the first 2, 3, 4 plans of P as a bank (same priority order); the 5-plan bank is A37 CELL_BANK itself (not a candidate). No new plan, no parameter change, no start cap or hand-set threshold.",
+ "schema": "coopmwm.a41.candidates.v1"
+}
