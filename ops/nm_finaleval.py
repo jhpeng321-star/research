@@ -462,6 +462,31 @@ SETTINGS_PINS['a35_D2400_p20'] = dict(PANEL_SHA256='456c5f3f9721b679b16132ffeea2
 SETTINGS_PINS['a35_D3200_p20'] = dict(PANEL_SHA256='152dbfe93017f4b5c97f8925c832b332578fd66c53037208f4ad157733a6b280', PANEL_3C_SHA256=None)
 SETTINGS_PINS['a35_D2800_p60'] = dict(PANEL_SHA256='425e8a8d0a15dd93bb915e7d49f58d427e807f18e3f523e3fd77df24d3dd2995', PANEL_3C_SHA256=None)
 SETTINGS_PINS['a35_D2800_p40'] = dict(PANEL_SHA256='b9ad776dd866c6a4dd38f45520331ded5958a9202dd8d2ae8fdb9f416d358272', PANEL_3C_SHA256=None)
+#: amendment 37 (MAIN 2026-11-10, condition tailoring; pre-outcome): the UNC-rule SUMO verification of the cell-searched
+#: plans on FRESH audited TRAIN-type blocks (24 worlds each; never evaluation, never pooled): D3200_p20 991700-991723
+#: (991724-991799 reserved unused) and D2400_p20 991800-991823 (991824-991899 reserved unused); executed through the
+#: same eval runner (scope label only), same plant / bindings as the a35 transfer cells. The evaluation itself reuses
+#: the amendment-35 panels (settings a35_D3200_p20 / a35_D2400_p20, pins unchanged).
+A37_VERIFY_CELLS = (('a37v_D3200_p20', 'a35_D3200_p20', 991700), ('a37v_D2400_p20', 'a35_D2400_p20', 991800))
+for _name, _src, _lo in A37_VERIFY_CELLS:
+    SETTINGS[_name] = dict(SETTINGS[_src],
+        N_WORLDS=24, EVAL_RANGE=(_lo, _lo+99), EVAL_EXTRA_RANGE=(_lo, _lo+99), SEEDS_RESERVED=(_lo+24, _lo+99),
+        PANEL_SIZE_REASON=(f'MAIN amendment 37: UNC rule = 24 fresh TRAIN-type seeds {_lo}-{_lo+23} per cell; '
+                           f'{_lo+24}-{_lo+99} reserved unused'),
+        CELL_AUTHORITY=f'MAIN amendment 37 (REGISTRATION 2026-11-10): verification block of the cell plans ({_src[4:]})',
+        PANEL_AUTHORITY=(f'A37 amendment 37: fresh audited TRAIN-type integers {_lo}-{_lo+23} ({_src[4:]}) for the UNC '
+                         'verification of the cell-searched plans ONLY (never evaluation); executed through the eval '
+                         'runner (scope label only)'),
+        EXPOSURE_EXTRA=dict(
+            checked=('amendment-37 audit: 991700-991899 as standalone integers absent from REGISTRATION.md seed use, '
+                     'protocols/experiment_history.json, every c4/* branch tip, the wmverify / a32-a35 run dirs '
+                     '(E:/agent-work/a37/SEED_AUDIT.json)',),
+            disclosed='; amendment 37: fresh TRAIN-type integers (verification only), registered at runtime by the runner'),
+        PANEL_FILE=HERE/f'nm_eval_trainblock_wz3to2_{_name}.json', PANEL_3C_FILE=None)
+BANK_SETTINGS = BANK_SETTINGS + tuple(c[0] for c in A37_VERIFY_CELLS)
+#: amendment 37 verification blocks (registered 2026-11-10 after the seed audit, before any amendment-37 episode)
+SETTINGS_PINS['a37v_D3200_p20'] = dict(PANEL_SHA256='e4791cfcf1d9baee265c6a02cb78ac9092901f2fa24e513d7ed24963111a1d42', PANEL_3C_SHA256=None)
+SETTINGS_PINS['a37v_D2400_p20'] = dict(PANEL_SHA256='b8fb13143ede9f2437bef5a0a731832658d11728c5f81b06c100be9c94df08e1', PANEL_3C_SHA256=None)
 MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'
 #: MAIN 2026-11-06 (N11 F4): the panel binds the staged probe network bytes (sha256 of wz3to2.net.xml)
 NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'

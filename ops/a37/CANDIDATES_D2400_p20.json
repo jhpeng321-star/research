@@ -1,0 +1,742 @@
+{
+ "amendment": "37",
+ "candidates": [
+  {
+   "family": "mut_a857168d4aae7b79",
+   "key": "a857168d4aae7b79",
+   "name": "mut_a857168d4aae7b79",
+   "score": 62.93,
+   "selected_rank": 1,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 120,
+    "gate": null,
+    "name": "mut_a857168d4aae7b79",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   },
+   "strategy_sha256": "c6b231163ac492269397549f1e3b5025e1bc3ea4297ef576277d27ee9ee020db",
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": -1.224,
+    "fair_cal": true,
+    "feasible": 0.26666666666666666,
+    "gain_vs_base": 117.9,
+    "gain_vs_base_lcb": 87.95,
+    "gain_vs_inc": 24.54,
+    "n_states": 15,
+    "worst_group_inc": 0.44
+   },
+   "wm_rank": 1
+  },
+  {
+   "family": "duo12_v21",
+   "key": "375834125c98163a",
+   "name": "duo12_v21",
+   "score": 59.22,
+   "selected_rank": 2,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 120,
+    "gate": null,
+    "name": "duo12_v21",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   },
+   "strategy_sha256": "c8a3957222228705d08342cdd8072eff741d2a1d82fc8ecae9178ca9f1c38318",
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": -1.397,
+    "fair_cal": true,
+    "feasible": 0.26666666666666666,
+    "gain_vs_base": 123.7,
+    "gain_vs_base_lcb": 79.73,
+    "gain_vs_inc": 30.34,
+    "n_states": 15,
+    "worst_group_inc": 0.407
+   },
+   "wm_rank": 2
+  },
+  {
+   "family": "solo2_v20_h120",
+   "key": "18b105b0dc074011",
+   "name": "solo2_v20_h120",
+   "score": 50.87,
+   "selected_rank": 3,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 120,
+    "gate": null,
+    "name": "solo2_v20_h120",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   },
+   "strategy_sha256": "59e918470f9ac8d609f22a96f17ed6f393de6e51822883ce6d61db8732b7e291",
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": -1.116,
+    "fair_cal": true,
+    "feasible": 0.26666666666666666,
+    "gain_vs_base": 125.92,
+    "gain_vs_base_lcb": 70.56,
+    "gain_vs_inc": 32.56,
+    "n_states": 15,
+    "worst_group_inc": 0.528
+   },
+   "wm_rank": 3
+  },
+  {
+   "family": "mut_62e9d6ccfa482266",
+   "key": "62e9d6ccfa482266",
+   "name": "mut_62e9d6ccfa482266",
+   "score": 41.39,
+   "selected_rank": 4,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 120,
+    "gate": null,
+    "name": "mut_62e9d6ccfa482266",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   },
+   "strategy_sha256": "4f3e7a45cea9059b0b473946e8e29d092ccae4f59a8ab4e4b302d9f71cf2c072",
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": -1.54,
+    "fair_cal": true,
+    "feasible": 0.26666666666666666,
+    "gain_vs_base": 116.4,
+    "gain_vs_base_lcb": 59.46,
+    "gain_vs_inc": 23.04,
+    "n_states": 15,
+    "worst_group_inc": 0.668
+   },
+   "wm_rank": 4
+  },
+  {
+   "family": "mut_d964f49fab144787",
+   "key": "d964f49fab144787",
+   "name": "mut_d964f49fab144787",
+   "score": 40.31,
+   "selected_rank": 5,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "mut_d964f49fab144787",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "far"
+   },
+   "strategy_sha256": "53ea45f40058da3d2e0adfb662a2bb4841b36a19a952b85db6cbb5bfa7995a95",
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": -0.915,
+    "fair_cal": true,
+    "feasible": 0.26666666666666666,
+    "gain_vs_base": 88.72,
+    "gain_vs_base_lcb": 55.25,
+    "gain_vs_inc": -4.63,
+    "n_states": 15,
+    "worst_group_inc": 0.257
+   },
+   "wm_rank": 5
+  },
+  {
+   "family": "mut_fd73f0eab0e4fc39",
+   "key": "fd73f0eab0e4fc39",
+   "name": "mut_fd73f0eab0e4fc39",
+   "score": 30.7,
+   "selected_rank": 6,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "mut_fd73f0eab0e4fc39",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   },
+   "strategy_sha256": "403b3f9f09495650bff7b762454f6678ef3e7d256cba8962d2bae4d2bbdbf652",
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": -1.145,
+    "fair_cal": true,
+    "feasible": 0.26666666666666666,
+    "gain_vs_base": 110.07,
+    "gain_vs_base_lcb": 53.66,
+    "gain_vs_inc": 16.72,
+    "n_states": 15,
+    "worst_group_inc": 0.429
+   },
+   "wm_rank": 6
+  },
+  {
+   "family": "mut_1857ceb0537425f5",
+   "key": "1857ceb0537425f5",
+   "name": "mut_1857ceb0537425f5",
+   "score": 29.17,
+   "selected_rank": 7,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 90,
+    "gate": 15.0,
+    "name": "mut_1857ceb0537425f5",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   },
+   "strategy_sha256": "7162fe158547997e2fb5d9a1524f1148d62c8b40e6902691610ea2f04e07d7b7",
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": -0.879,
+    "fair_cal": true,
+    "feasible": 0.2,
+    "gain_vs_base": 87.49,
+    "gain_vs_base_lcb": 49.38,
+    "gain_vs_inc": -5.87,
+    "n_states": 15,
+    "worst_group_inc": 0.445
+   },
+   "wm_rank": 7
+  },
+  {
+   "family": "solo2_v20_h90",
+   "key": "5c6a8d5685300bc0",
+   "name": "solo2_v20_h90",
+   "score": 27.07,
+   "selected_rank": 8,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 90,
+    "gate": null,
+    "name": "solo2_v20_h90",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   },
+   "strategy_sha256": "2f5c2b4cc2c9b1648fa3b050d62f4df4aa444d0d804d0f63969284f18645c9d6",
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": -0.99,
+    "fair_cal": true,
+    "feasible": 0.26666666666666666,
+    "gain_vs_base": 102.04,
+    "gain_vs_base_lcb": 49.38,
+    "gain_vs_inc": 8.69,
+    "n_states": 15,
+    "worst_group_inc": 0.491
+   },
+   "wm_rank": 8
+  },
+  {
+   "family": "mut_e61e09262d304800",
+   "key": "e61e09262d304800",
+   "name": "mut_e61e09262d304800",
+   "score": 25.09,
+   "selected_rank": 9,
+   "skip": null,
+   "strategy": {
+    "cooldown_s": 120,
+    "gate": null,
+    "name": "mut_e61e09262d304800",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "far"
+   },
+   "strategy_sha256": "6eb621d6149ae97789f350ba2de02584115e70c48b54826f00a104376b2f068c",
+   "wm": {
+    "bounded": true,
+    "cvar90_inc": -1.255,
+    "fair_cal": true,
+    "feasible": 0.26666666666666666,
+    "gain_vs_base": 103.47,
+    "gain_vs_base_lcb": 43.57,
+    "gain_vs_inc": 10.12,
+    "n_states": 15,
+    "worst_group_inc": 0.342
+   },
+   "wm_rank": 9
+  }
+ ],
+ "cell": "D2400_p20",
+ "created": "2026-11-10 16:35:56 +08",
+ "doc_sha256": "64fd279d3a209b9efba366f056da2f0ef20725900f52e5f627da8657157fd2a6",
+ "k": 9,
+ "ranking": [
+  {
+   "key": "a857168d4aae7b79",
+   "name": "mut_a857168d4aae7b79",
+   "score": 62.93,
+   "skip": null,
+   "wm_rank": 1
+  },
+  {
+   "key": "375834125c98163a",
+   "name": "duo12_v21",
+   "score": 59.22,
+   "skip": null,
+   "wm_rank": 2
+  },
+  {
+   "key": "18b105b0dc074011",
+   "name": "solo2_v20_h120",
+   "score": 50.87,
+   "skip": null,
+   "wm_rank": 3
+  },
+  {
+   "key": "62e9d6ccfa482266",
+   "name": "mut_62e9d6ccfa482266",
+   "score": 41.39,
+   "skip": null,
+   "wm_rank": 4
+  },
+  {
+   "key": "d964f49fab144787",
+   "name": "mut_d964f49fab144787",
+   "score": 40.31,
+   "skip": null,
+   "wm_rank": 5
+  },
+  {
+   "key": "fd73f0eab0e4fc39",
+   "name": "mut_fd73f0eab0e4fc39",
+   "score": 30.7,
+   "skip": null,
+   "wm_rank": 6
+  },
+  {
+   "key": "1857ceb0537425f5",
+   "name": "mut_1857ceb0537425f5",
+   "score": 29.17,
+   "skip": null,
+   "wm_rank": 7
+  },
+  {
+   "key": "5c6a8d5685300bc0",
+   "name": "solo2_v20_h90",
+   "score": 27.07,
+   "skip": null,
+   "wm_rank": 8
+  },
+  {
+   "key": "e61e09262d304800",
+   "name": "mut_e61e09262d304800",
+   "score": 25.09,
+   "skip": null,
+   "wm_rank": 9
+  },
+  {
+   "key": "5bbd19e292524d75",
+   "name": "mut_5bbd19e292524d75",
+   "score": 24.3,
+   "skip": null,
+   "wm_rank": 10
+  },
+  {
+   "key": "66eb3e129f3c0c71",
+   "name": "mut_66eb3e129f3c0c71",
+   "score": 22.91,
+   "skip": null,
+   "wm_rank": 11
+  },
+  {
+   "key": "535d4bd2823a0973",
+   "name": "mut_535d4bd2823a0973",
+   "score": 19.05,
+   "skip": null,
+   "wm_rank": 12
+  },
+  {
+   "key": "61f10ea0b6daa6d3",
+   "name": "mut_61f10ea0b6daa6d3",
+   "score": 14.94,
+   "skip": null,
+   "wm_rank": 13
+  },
+  {
+   "key": "9992c4d4385b1841",
+   "name": "mut_9992c4d4385b1841",
+   "score": 13.49,
+   "skip": null,
+   "wm_rank": 14
+  },
+  {
+   "key": "b2603fffb7e93023",
+   "name": "mut_b2603fffb7e93023",
+   "score": 12.97,
+   "skip": null,
+   "wm_rank": 15
+  },
+  {
+   "key": "c6b176478af8c50c",
+   "name": "wall_g_solo2",
+   "score": 10.7,
+   "skip": "comparator",
+   "wm_rank": 16
+  },
+  {
+   "key": "1e19bf210d0916c8",
+   "name": "mut_1e19bf210d0916c8",
+   "score": 9.52,
+   "skip": null,
+   "wm_rank": 17
+  },
+  {
+   "key": "ce425c8a2c2203ea",
+   "name": "mut_ce425c8a2c2203ea",
+   "score": 4.99,
+   "skip": null,
+   "wm_rank": 18
+  },
+  {
+   "key": "6105e11016e6e235",
+   "name": "mut_6105e11016e6e235",
+   "score": -1.78,
+   "skip": "gate_or_phases",
+   "wm_rank": 19
+  },
+  {
+   "key": "670e1e9a1d724bde",
+   "name": "mut_670e1e9a1d724bde",
+   "score": -4.65,
+   "skip": null,
+   "wm_rank": 20
+  },
+  {
+   "key": "6b892792abde17dd",
+   "name": "mut_6b892792abde17dd",
+   "score": -5.62,
+   "skip": "gate_or_phases",
+   "wm_rank": 21
+  },
+  {
+   "key": "48a313b5433b1b47",
+   "name": "rand_48a313b5433b1b47",
+   "score": -9.97,
+   "skip": null,
+   "wm_rank": 22
+  },
+  {
+   "key": "6126295794cde7a6",
+   "name": "mut_6126295794cde7a6",
+   "score": -15.76,
+   "skip": null,
+   "wm_rank": 23
+  },
+  {
+   "key": "5a7ca64a85d6128b",
+   "name": "mut_5a7ca64a85d6128b",
+   "score": -20.29,
+   "skip": null,
+   "wm_rank": 24
+  },
+  {
+   "key": "c81aca4bf1cbb893",
+   "name": "mut_c81aca4bf1cbb893",
+   "score": -25.56,
+   "skip": null,
+   "wm_rank": 25
+  },
+  {
+   "key": "1a281d86a4562974",
+   "name": "mut_1a281d86a4562974",
+   "score": -33.15,
+   "skip": null,
+   "wm_rank": 26
+  },
+  {
+   "key": "a09ca3391c747a95",
+   "name": "mut_a09ca3391c747a95",
+   "score": -34.54,
+   "skip": null,
+   "wm_rank": 27
+  },
+  {
+   "key": "5c5d0008bb6138b7",
+   "name": "mut_5c5d0008bb6138b7",
+   "score": -36.56,
+   "skip": null,
+   "wm_rank": 28
+  },
+  {
+   "key": "fcb4426d5e87877b",
+   "name": "mut_fcb4426d5e87877b",
+   "score": -38.17,
+   "skip": null,
+   "wm_rank": 29
+  },
+  {
+   "key": "afb8951c22093572",
+   "name": "mut_afb8951c22093572",
+   "score": -39.15,
+   "skip": null,
+   "wm_rank": 30
+  },
+  {
+   "key": "b4d7c24f9baf2e89",
+   "name": "mut_b4d7c24f9baf2e89",
+   "score": -44.92,
+   "skip": null,
+   "wm_rank": 31
+  },
+  {
+   "key": "288934229d90cfa4",
+   "name": "mut_288934229d90cfa4",
+   "score": -52.93,
+   "skip": null,
+   "wm_rank": 32
+  },
+  {
+   "key": "ed6c0dd5bceb249c",
+   "name": "mut_ed6c0dd5bceb249c",
+   "score": -59.72,
+   "skip": null,
+   "wm_rank": 33
+  },
+  {
+   "key": "d31c47f0d71f9499",
+   "name": "mut_d31c47f0d71f9499",
+   "score": -68.83,
+   "skip": null,
+   "wm_rank": 34
+  },
+  {
+   "key": "e80b1fe91adde13f",
+   "name": "mut_e80b1fe91adde13f",
+   "score": -82.42,
+   "skip": null,
+   "wm_rank": 35
+  },
+  {
+   "key": "f345f814e774b22a",
+   "name": "mut_f345f814e774b22a",
+   "score": -112.02,
+   "skip": null,
+   "wm_rank": 36
+  },
+  {
+   "key": "ea0b38be56472846",
+   "name": "mut_ea0b38be56472846",
+   "score": -113.78,
+   "skip": null,
+   "wm_rank": 37
+  },
+  {
+   "key": "6146cc2c7da3ce59",
+   "name": "solo2",
+   "score": -127.97,
+   "skip": "comparator",
+   "wm_rank": 38
+  },
+  {
+   "key": "9b31537374d7ad5a",
+   "name": "rand_9b31537374d7ad5a",
+   "score": -131.64,
+   "skip": "gate_or_phases",
+   "wm_rank": 39
+  }
+ ],
+ "rule": "WM ranking only (zero SUMO, written before any A37 SUMO outcome): search final list sorted by WM score desc (tie strategy_key); skip comparator/banned rows and plans the registered executor refuses (oracle_plan.bank_plans: lane roles, phases, gate/start_gate outside the registered sets); top K. K = 9 = min(12, floor((600,000 - 24,000 retry reserve) / (2 cells x 24 seeds x 1,200 s)) - 1 [U0])",
+ "schema": "coopmwm.a37.candidates.v1",
+ "search": {
+  "checkpoint": "WM-E ft_r1 (search already run; no new search)",
+  "file_sha256": "9fa5fa53bbe1343d4053c082a8ec63e35880a6db8be4292b24db84aa1648d75e",
+  "path": "tmp/wmc_p20_r3/fetched/STRATEGY_SEARCH_D2400_p20.json"
+ },
+ "skipped": [
+  {
+   "key": "c6b176478af8c50c",
+   "name": "wall_g_solo2",
+   "score": 10.7,
+   "skip": "comparator",
+   "wm_rank": 16
+  },
+  {
+   "key": "6105e11016e6e235",
+   "name": "mut_6105e11016e6e235",
+   "score": -1.78,
+   "skip": "gate_or_phases",
+   "wm_rank": 19
+  },
+  {
+   "key": "6b892792abde17dd",
+   "name": "mut_6b892792abde17dd",
+   "score": -5.62,
+   "skip": "gate_or_phases",
+   "wm_rank": 21
+  },
+  {
+   "key": "6146cc2c7da3ce59",
+   "name": "solo2",
+   "score": -127.97,
+   "skip": "comparator",
+   "wm_rank": 38
+  },
+  {
+   "key": "9b31537374d7ad5a",
+   "name": "rand_9b31537374d7ad5a",
+   "score": -131.64,
+   "skip": "gate_or_phases",
+   "wm_rank": 39
+  }
+ ]
+}
