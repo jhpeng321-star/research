@@ -480,7 +480,8 @@ def main(argv=None):
                 waves = waves_a(panel, root)
             if a.limit:
                 waves = [(n, k, s[:a.limit]) for n, k, s in waves]
-            need = sum(len(s) for _, _, s in waves)*N.HORIZON_S
+            # unpublished episodes only (published receipts are reused by execute, never re-run or re-charged)
+            need = sum(len(s)-N.published(root, n, s, D.C37.check_a37)[2] for n, _, s in waves)*N.HORIZON_S
             if D.charged(root)+need > D.A42_CAP_SIM_S:
                 raise N.Blocked(f'{D.A42_PHASE}: {D.charged(root)} + {need} > cap {D.A42_CAP_SIM_S}')
             log(dict(start=a.command, waves=[(w[0], len(w[2])) for w in waves], workers_max=a.workers_max,
