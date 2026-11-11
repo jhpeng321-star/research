@@ -1,0 +1,72 @@
+{
+ "clean5c": {
+  "templates": [
+   {
+    "cell": "D2800_p60",
+    "family": "HAND3",
+    "offer_condition": {
+     "cooldown_s": 120,
+     "gate": null,
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "onset_s": 0,
+       "rank": 0,
+       "sumo_lane": 1,
+       "v_w": 20.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "onset_s": 0,
+       "rank": 0,
+       "sumo_lane": 2,
+       "v_w": 26.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "onset_s": 0,
+       "rank": 0,
+       "sumo_lane": 0,
+       "v_w": 20.0
+      }
+     ],
+     "situation": {
+      "unconditional": true
+     },
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "wall",
+     "zone": "full"
+    },
+    "template": {
+     "source": {
+      "strategy_key": "8e8f79cc0a58a74e"
+     }
+    }
+   }
+  ]
+ },
+ "rows": [
+  {
+   "family": "HAND3",
+   "lb95_veh_s": 0.0,
+   "plan_source": "wm_search",
+   "regime": "D2800_p60",
+   "row_class": "unconditional",
+   "situational": {
+    "unconditional": true
+   },
+   "strategy_key": "8e8f79cc0a58a74e",
+   "template_sha256": null
+  }
+ ],
+ "schema": "coopmwm.a37_cellbank.v1.bank"
+}
