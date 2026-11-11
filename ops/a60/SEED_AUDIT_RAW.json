@@ -1,0 +1,461 @@
+{
+ "schema": "a60.seed_audit_raw.v1",
+ "blocks": {
+  "a60a": [
+   995200,
+   995299
+  ]
+ },
+ "known_overlap": [],
+ "roots": [
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a32_ablation",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a33_combined",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a34_horizon",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a35_transfer",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a36_analysis",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a37_celltailor",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a40_geomvar",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a41_d3200bound",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a42_a45_host_results",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a50_host_results",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a52_mappo60",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a53_plandiff",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a55_saveonset",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a56_randctrl",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a58_famaconf",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a59_hand5",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a60_wmvalue",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\accel_probe",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\analysis_mechanism_20261110",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\astra_insight",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\blocking_diag",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\blowup_diag",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\brake_diag",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\c4_wm_pairdiff_final",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\c4_wm_v8ft2_full_final",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\c4_wm_v8ft2_heavy_final",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\c4_wm_v8ft_short2_r2_final",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\c4_wm_v8ft_short2_s202_final",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\c4_wm_v8ft_short3_final",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\c4_wm_v8ft_short4_final",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\c4_wm_v8ft_short7_final",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\c4_wm_v8ft_short_r2_final",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\c4_wm_v8lane_short3_final",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\clean4_verify",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\clean5bf8s",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\coop_metrics",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\coop_probe",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\coop_suite",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\coop_v10",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\coopkinds",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\cpuv_migration",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\delaydisc",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\discharge",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\dryrun_s2400",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\entblock_suite",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\entrance_mask",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\entry_diag2",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\entry_fix",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\fidelity_suite",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\finaleval_dryrun_20261106",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\gpuR_ckpt_20261029",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\hicav_probe",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\imitreplay",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\imp_sweep",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\imp_sweep2",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\lane_diag",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\lane_fix",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\lane_redesign",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\lcmoves",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\learned_merge",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\lowcav",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\lowshare_u0",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\lssearch",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\mappo_p60",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\mappo_wz",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\mappo_wzl",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\merge_calib",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\merge_sumo_diag",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\merge_sumo_diag_wide",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\multicrit",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\newmap2",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\newmap_probe",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\nm_finaleval_p20c_confirm",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\nm_finaleval_p20x_r2_bank",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\onroad_diag",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\oracle_smoke",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\p20c_seed_audit",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\p20x_bank",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\p20x_seedaudit",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\pair_audit",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_analysis_a32",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_fairness",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_novelty",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\pc_diag",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\plangen",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\plangen2",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\policy_gap",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\policy_v10entzone",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\policy_v9clear",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\policy_v9coop",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\policy_v9entry",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\policy_v9entry_crit",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\policy_v9noyield",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\pulse",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\r8diag",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\ramp_diag",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\rank_diag",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\regime",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\regimeu0",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\relaunch_speed",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\scores",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\scores_c4_wm_v8ft_short2_r2",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\scores_c4_wm_v8ft_short3",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\scores_c4_wm_v8ft_short4",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\scores_c4_wm_v8ft_short4_r2",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\scores_c4_wm_v8ft_short_r2",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\scores_heavy",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\scores_pairdiff",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\scores_r67",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\scores_v7ft",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\scores_v8full2",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\stuck_diag",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\sumo_check_u100",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\sumo_check_u160",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\upper_bound",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10aggloss",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10brakewave",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10cavfollow",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10cavlane",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10courtesy",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10delaycheck",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10envfix",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10horizon",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10insert",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10lanecal",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10laneflow",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10laneopt",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10loop",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10nativecav",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10negot",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10persist",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10r5inputs",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10r5merge",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10r5smoke",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10r5thr",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10r5tools",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10r5wall",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10r5yield",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10unblock",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v10wave",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v5m_ref",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v7_ckpt_s2400",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v7_final",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v7ft_final",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v8wm2_check",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\v8wm3_check",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wallmine",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wm_diag",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmc_calib",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmc_p20",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmc_rankcheck",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmc_strategy_v3",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmcheck",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmqual",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_cfd",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_d3200p60",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_mc",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_p20",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_pair",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r3",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r4",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r5",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r6",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r6c",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r7a",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r7b",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r7c",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_rep",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_sl",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_unc",
+  "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\yield_diag",
+  "E:\\agent-work\\a32",
+  "E:\\agent-work\\a32-ablation",
+  "E:\\agent-work\\a33",
+  "E:\\agent-work\\a33-combined",
+  "E:\\agent-work\\a34",
+  "E:\\agent-work\\a34-horizon",
+  "E:\\agent-work\\a35",
+  "E:\\agent-work\\a35-transfer",
+  "E:\\agent-work\\a37",
+  "E:\\agent-work\\a37-celltailor",
+  "E:\\agent-work\\a38",
+  "E:\\agent-work\\a38-road2",
+  "E:\\agent-work\\a39",
+  "E:\\agent-work\\a40",
+  "E:\\agent-work\\a40-geomvar",
+  "E:\\agent-work\\a40-geomvar-d3a",
+  "E:\\agent-work\\a41",
+  "E:\\agent-work\\a41-d3200bound",
+  "E:\\agent-work\\a42",
+  "E:\\agent-work\\a42-bigp60",
+  "E:\\agent-work\\a42-build-tmp",
+  "E:\\agent-work\\a42-run",
+  "E:\\agent-work\\a44-lcvariant",
+  "E:\\agent-work\\a47-relay",
+  "E:\\agent-work\\a50-fullp60",
+  "E:\\agent-work\\a50-run",
+  "E:\\agent-work\\a50-scratch",
+  "E:\\agent-work\\a51-mappo60",
+  "E:\\agent-work\\a51-mappo60-wt",
+  "E:\\agent-work\\a51-stage",
+  "E:\\agent-work\\a52-mappo60",
+  "E:\\agent-work\\a56-randctrl",
+  "E:\\agent-work\\a56-run",
+  "E:\\agent-work\\a57-coopsyn",
+  "E:\\agent-work\\a57-ship",
+  "E:\\agent-work\\a58-famaconf",
+  "E:\\agent-work\\a58-stage",
+  "E:\\agent-work\\a60-scratch",
+  "E:\\agent-work\\a60-wmvalue"
+ ],
+ "forbidden_skipped": [
+  "sealed",
+  "holdout",
+  "heldout",
+  "cal_split",
+  "chunk5",
+  "j4b",
+  "inc1",
+  "hetdata_truth",
+  "driver_params"
+ ],
+ "skipped_files": "^(WAVE_|RESULT|A\\d+B?_RESULTS|vehicles|observable)",
+ "file_hits": {
+  "a60a": [
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
+    "line": 11139,
+    "token": "995200",
+    "context": "an bank, plus U0, on 96 FRESH worlds. Seed block: candidate 995200-995295; before launch the executo"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
+    "line": 11139,
+    "token": "995295",
+    "context": ", plus U0, on 96 FRESH worlds. Seed block: candidate 995200-995295; before launch the executor audit"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_f29afe8e9743e99dbcc0ae5d3fc3fe99f7f8b71999e4c460b5afca10f2a2c75b\\CLAIM.json",
+    "line": 1,
+    "token": "995298",
+    "context": "e99dbcc0ae5d3fc3fe99f7f8b71999e4c460b5afca10f2a2c75b\",\"pid\":995298} "
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\a60_wmvalue.py",
+    "line": 18,
+    "token": "995200",
+    "context": "AND_BANK - DUO_HOLD (sealed)  60A (setting a60a_D2800_p60 = 995200-995295; root <base>/rootA, phase "
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\a60_wmvalue.py",
+    "line": 18,
+    "token": "995295",
+    "context": "K - DUO_HOLD (sealed)  60A (setting a60a_D2800_p60 = 995200-995295; root <base>/rootA, phase wmprop_"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\a60_wmvalue.py",
+    "line": 22,
+    "token": "995200",
+    "context": "      the 96 worlds (--limit 1 = the one-world smoke: world 995200 of every wave)   reduce-a     zer"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 540,
+    "token": "995200",
+    "context": "dment 60 (60A S-WMPROP96, pre-outcome): FRESH audited block 995200-995295 (995296-995299 reserved un"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 540,
+    "token": "995295",
+    "context": "0 (60A S-WMPROP96, pre-outcome): FRESH audited block 995200-995295 (995296-995299 reserved unused), "
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 540,
+    "token": "995296",
+    "context": "-WMPROP96, pre-outcome): FRESH audited block 995200-995295 (995296-995299 reserved unused), #: same "
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 540,
+    "token": "995299",
+    "context": "96, pre-outcome): FRESH audited block 995200-995295 (995296-995299 reserved unused), #: same plant /"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 544,
+    "token": "995200",
+    "context": "ict(SETTINGS['a35_D2800_p60'],     N_WORLDS=96, EVAL_RANGE=(995200, 995299), EVAL_EXTRA_RANGE=(99520"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 544,
+    "token": "995299",
+    "context": "INGS['a35_D2800_p60'],     N_WORLDS=96, EVAL_RANGE=(995200, 995299), EVAL_EXTRA_RANGE=(995200, 99529"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 544,
+    "token": "995200",
+    "context": "N_WORLDS=96, EVAL_RANGE=(995200, 995299), EVAL_EXTRA_RANGE=(995200, 995299), SEEDS_RESERVED=(995296,"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 544,
+    "token": "995299",
+    "context": "=96, EVAL_RANGE=(995200, 995299), EVAL_EXTRA_RANGE=(995200, 995299), SEEDS_RESERVED=(995296, 995299)"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 544,
+    "token": "995296",
+    "context": "995299), EVAL_EXTRA_RANGE=(995200, 995299), SEEDS_RESERVED=(995296, 995299),     PANEL_SIZE_REASON='"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 544,
+    "token": "995299",
+    "context": " EVAL_EXTRA_RANGE=(995200, 995299), SEEDS_RESERVED=(995296, 995299),     PANEL_SIZE_REASON='MAIN ame"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 545,
+    "token": "995200",
+    "context": "PANEL_SIZE_REASON='MAIN amendment 60 (60A): 96 fresh worlds 995200-995295 (D2800_p60); 995296-995299"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 545,
+    "token": "995295",
+    "context": "IZE_REASON='MAIN amendment 60 (60A): 96 fresh worlds 995200-995295 (D2800_p60); 995296-995299 reserv"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 545,
+    "token": "995296",
+    "context": "ndment 60 (60A): 96 fresh worlds 995200-995295 (D2800_p60); 995296-995299 reserved unused',     CELL"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 545,
+    "token": "995299",
+    "context": "60 (60A): 96 fresh worlds 995200-995295 (D2800_p60); 995296-995299 reserved unused',     CELL_AUTHOR"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 548,
+    "token": "995200",
+    "context": " PANEL_AUTHORITY=('A60 amendment 60: fresh audited integers 995200-995295 (D2800_p60) for 60A ONLY; "
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 548,
+    "token": "995295",
+    "context": "AUTHORITY=('A60 amendment 60: fresh audited integers 995200-995295 (D2800_p60) for 60A ONLY; execute"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 551,
+    "token": "995200",
+    "context": " EXPOSURE_EXTRA=dict(         checked=('amendment-60 audit: 995200-995299 as standalone integers abs"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\nm_finaleval.py",
+    "line": 551,
+    "token": "995299",
+    "context": "RE_EXTRA=dict(         checked=('amendment-60 audit: 995200-995299 as standalone integers absent fro"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\a60\\seed_audit.py",
+    "line": 1,
+    "token": "995200",
+    "context": "PROP96), zero SUMO, no outcome read: is the candidate block 995200-995299 (96 used: 995200-995295) u"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\a60\\seed_audit.py",
+    "line": 1,
+    "token": "995299",
+    "context": ", zero SUMO, no outcome read: is the candidate block 995200-995299 (96 used: 995200-995295) unused? "
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\a60\\seed_audit.py",
+    "line": 2,
+    "token": "995200",
+    "context": "utcome read: is the candidate block 995200-995299 (96 used: 995200-995295) unused?  Same method as o"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\a60\\seed_audit.py",
+    "line": 2,
+    "token": "995295",
+    "context": "read: is the candidate block 995200-995299 (96 used: 995200-995295) unused?  Same method as ops/a50/"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\a60\\seed_audit.py",
+    "line": 26,
+    "token": "995200",
+    "context": "FT-20261017' AW = Path('E:/agent-work') BLOCKS = dict(a60a=(995200, 995299)) FORBIDDEN = ('sealed', "
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\a60\\seed_audit.py",
+    "line": 26,
+    "token": "995299",
+    "context": "017' AW = Path('E:/agent-work') BLOCKS = dict(a60a=(995200, 995299)) FORBIDDEN = ('sealed', 'holdout"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\ops\\a60\\host\\run_a60.sh",
+    "line": 6,
+    "token": "995200",
+    "context": "PASS required -> one-world smoke (U0 + 18 #        plans on 995200) -> full 19 x 96 -> reduce-a # Wo"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\tools\\coopmwm\\nm_eval_runner.py",
+    "line": 127,
+    "token": "995200",
+    "context": "899)) #: amendment 60 (60A S-WMPROP96): FRESH audited block 995200-995299 (96 used; repeat = seed - "
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\tools\\coopmwm\\nm_eval_runner.py",
+    "line": 127,
+    "token": "995299",
+    "context": ": amendment 60 (60A S-WMPROP96): FRESH audited block 995200-995299 (96 used; repeat = seed - block s"
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\tools\\coopmwm\\nm_eval_runner.py",
+    "line": 129,
+    "token": "995200",
+    "context": " still refuse them); same A37 executor arms. A60_RANGES = ((995200, 995299),) EVAL_HELDOUT_RANGES = "
+   },
+   {
+    "path": "E:\\agent-work\\a60-wmvalue\\tools\\coopmwm\\nm_eval_runner.py",
+    "line": 129,
+    "token": "995299",
+    "context": "efuse them); same A37 executor arms. A60_RANGES = ((995200, 995299),) EVAL_HELDOUT_RANGES = ((EVAL_H"
+   }
+  ]
+ },
+ "git_hits": {
+  "a60a": [
+   {
+    "path_token": "docs/paper_results/selmappo2/COLLECTION_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29_1793525084353376800_1c382a5072b74e3fb0080392b1c9f416.json:995200",
+    "n_tips": 1,
+    "example_tip": "b808aadef552"
+   }
+  ]
+ },
+ "n_files": 186697,
+ "n_tips": 553,
+ "audited": "2026-11-11 08:52:30 +0800"
+}

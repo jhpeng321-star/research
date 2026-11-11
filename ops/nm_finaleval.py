@@ -537,6 +537,25 @@ BANK_SETTINGS = BANK_SETTINGS + tuple(c[0] for c in A50_CELLS)
 #: amendment 50 blocks (proposed after the seed audit, before any amendment-50 episode; MAIN records them)
 SETTINGS_PINS['a50v_D2800_p60'] = dict(PANEL_SHA256='c7f1d46aa28406cb009dffdc5bef6caf5ce2843e69591357ed49728f3f5b2fc0', PANEL_3C_SHA256=None)
 SETTINGS_PINS['a50c_D2800_p60'] = dict(PANEL_SHA256='7ef0cfabab4a5fffbe209d7308139a8ab1f8445f1b51f46e957586f598df98b5', PANEL_3C_SHA256=None)
+#: amendment 60 (60A S-WMPROP96, pre-outcome): FRESH audited block 995200-995295 (995296-995299 reserved unused),
+#: same plant / bindings as a35_D2800_p60 (= the A42 cells); executed through the eval runner (scope label only);
+#: never pooled.
+SETTINGS['a60a_D2800_p60'] = dict(SETTINGS['a35_D2800_p60'],
+    N_WORLDS=96, EVAL_RANGE=(995200, 995299), EVAL_EXTRA_RANGE=(995200, 995299), SEEDS_RESERVED=(995296, 995299),
+    PANEL_SIZE_REASON='MAIN amendment 60 (60A): 96 fresh worlds 995200-995295 (D2800_p60); 995296-995299 reserved unused',
+    CELL_AUTHORITY=('MAIN amendment 60 (60A S-WMPROP96): D2800_p60 single-plan banks of the six A42 WM-ranked plans and '
+                    'the twelve A56 random plans plus U0'),
+    PANEL_AUTHORITY=('A60 amendment 60: fresh audited integers 995200-995295 (D2800_p60) for 60A ONLY; executed through '
+                     'the eval runner (scope label only); never pooled'),
+    EXPOSURE_EXTRA=dict(
+        checked=('amendment-60 audit: 995200-995299 as standalone integers absent from REGISTRATION.md seed use, '
+                 'protocols/experiment_history.json, every c4/* branch tip, every C4 run dir and a32-a60 agent dir, and '
+                 'the Box 1 host run roots (ops/a60/SEED_AUDIT.json)',),
+        disclosed='; amendment 60: fresh integers (60A), registered at runtime by the runner'),
+    PANEL_FILE=HERE/'nm_eval_panel_wz3to2_a60a_D2800_p60.json', PANEL_3C_FILE=None)
+BANK_SETTINGS = BANK_SETTINGS + ('a60a_D2800_p60',)
+#: amendment 60 block (pinned after the seed audit, before any amendment-60 episode)
+SETTINGS_PINS['a60a_D2800_p60'] = dict(PANEL_SHA256='d5d1c35e4db9b3dc09ca73937953479df01f047c290b522b9932ef9d3e5ad346', PANEL_3C_SHA256=None)
 MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'
 #: MAIN 2026-11-06 (N11 F4): the panel binds the staged probe network bytes (sha256 of wz3to2.net.xml)
 NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'
