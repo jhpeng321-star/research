@@ -17,8 +17,8 @@ run() { nice -n 19 "$PY" $D "$@" --final-root "$R"; }
 echo $$ > "$BASE/chain.pid"
 log "chain start pid $$"
 L=$(cut -d' ' -f1 /proc/loadavg | cut -d. -f1)
-W=$((44 - L - 12))
-[ "$W" -gt 20 ] && W=20
+W=$((44 - L - 4))
+[ "$W" -gt 16 ] && W=16
 [ "$W" -lt 8 ] && W=8
 log "workers $W; load $(cut -d' ' -f1-3 /proc/loadavg)"
 [ -f "$R/STOP_A63" ] && { log "STOP_A63 before identity"; exit 3; }
