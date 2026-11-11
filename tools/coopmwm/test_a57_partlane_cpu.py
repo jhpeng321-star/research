@@ -112,3 +112,49 @@ def test_runner_hook_filter_switch(tmp_path):
 
 def test_a37_digest_untouched_by_a57():
     assert 'a57' not in ' '.join(C.EXECUTED) and len(P.a57_digest()) == 64
+
+
+# ---- amendment 63: lane SET (e.g. [0, 1]); an int keeps the A57 behaviour
+@pytest.mark.parametrize('lanes', ([0, 1], [2], [1, 2], [0, 2]))
+def test_lane_set_commands_only_members_on_the_set(lanes):
+    c, outs = drive(make(lanes))
+    _, ref = drive(make())
+    want = {v for v, s in SUMO_OF.items() if s in lanes}
+    assert plan_commanded(outs) == want
+    for out, r in zip(outs, ref):
+        for vid in SUMO_OF:
+            assert out[vid] == (r[vid] if vid in want else dict(u0=0.3))
+    assert set(getattr(c, 'g5_lane_targets', {}) or {}) == want
+
+
+def test_lane_set_receipt_and_eligibility():
+    h = make([1, 0])
+    drive(h)
+    ref = make()
+    drive(ref)
+    r = h.receipts()['a57_part']
+    assert r['member_lane'] == [0, 1] and r['member_lanes'] == [0, 1] and h.a57_member_lane == [0, 1]
+    assert r['members_on_lane_total'] == 2 and r['acts'][0]['on_lane'] == ['c2', 'c1']
+    assert r['commanded_lanes'] == {'c1': 1, 'c2': 0} and r['vehicles_with_accel_command'] == 2
+    assert h.core.receipts() == ref.core.receipts()
+
+
+def test_single_lane_list_equals_int_and_bad_sets_refused():
+    a, b = make([2]), make(2)
+    _, oa = drive(a)
+    _, ob = drive(b)
+    assert oa == ob
+    ra, rb = a.receipts()['a57_part'], b.receipts()['a57_part']
+    assert ra == rb and ra['member_lane'] == 2 and ra['member_lanes'] == [2]
+    for bad in ([], [0, 3], [-1]):
+        with pytest.raises(ValueError):
+            make(bad)
+
+
+def test_runner_hook_lane_set(tmp_path):
+    bank = tmp_path/'bank.json'
+    bank.write_text(json.dumps(C.bank_doc(plans(TRIO), CELL)), encoding='utf-8')
+    ck = dict(a37_arm='CELL_BANK', cell_key=CELL, a37_sha256=C.a37_digest(),
+              a37_bank=dict(path=str(bank), file_sha256=hashlib.sha256(bank.read_bytes()).hexdigest()))
+    on, _ = R.a37_hook(dict(ck, a57_member_lane=[0, 1], a57_sha256=P.a57_digest()), dict(cell_key=CELL), 'CELL_BANK')
+    assert on.a57_member_lane == [0, 1] and plan_commanded(drive(on)[1]) == {'c1', 'c2'}
