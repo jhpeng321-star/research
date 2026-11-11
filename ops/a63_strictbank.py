@@ -59,7 +59,7 @@ A42_ADMISSION = 'ADMISSION_D2800_p60.json'
 A42_ADMISSION_RECEIPT = '5fa2a7015fb4ae9a95e1d17456e5caacb6114405cc197831d2c3d674f1b332d5'
 BIG_BANK_SHA256 = '7e7dc76b8a0cd5c158205a0e3f6ef96d73a36a483c46d03ac422428dc8c573ff'
 #: pinned after build-strict (recorded in REGISTRATION.md before any SUMO); None -> identity / smoke / run refuse
-STRICT_BANK_SHA256 = None
+STRICT_BANK_SHA256 = 'e2e341afbfbee87334500743c1cf9e456cb1966418c6fce87199c9bfd91e90ae'
 STRICT_FAMILIES = ('rand_2c80042490ec698f', 'rand_bb1cb39d47f0a524', 'rand_cfa9b70a3782d48e', 'mut_2922c89d0b31d4c8')
 #: the plan sources (host paths, read-only) and their sha256, pinned before the build
 SOURCES = dict(
