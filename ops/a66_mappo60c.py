@@ -336,8 +336,23 @@ def analyse(pk, final_root, panel, refs):
         ref_root_copies={k: str(v) for k, v in refs.items() if v}, label=D.RESULT_LABEL), 'analysis_sha256')
 
 
-def selfcheck(panel, refs, a54_results):
-    """p2, zero physics: this analysis path on the STORED MAPPO60B arm reproduces the published A54 contrasts."""
+def _max_rel(a, b):
+    """Largest relative numeric difference between two JSON values; inf on any structural / non-numeric difference."""
+    if isinstance(a, bool) or isinstance(b, bool) or a is None or b is None or isinstance(a, str) or isinstance(b, str):
+        return 0.0 if a == b else float('inf')
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return 0.0 if a == b else abs(a-b)/max(abs(a), abs(b))
+    if isinstance(a, dict) and isinstance(b, dict):
+        return float('inf') if set(a) != set(b) else max([_max_rel(a[k], b[k]) for k in a] or [0.0])
+    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
+        return float('inf') if len(a) != len(b) else max([_max_rel(x, y) for x, y in zip(a, b)] or [0.0])
+    return float('inf')
+
+
+def selfcheck(panel, refs, a54_results, tol=1e-9):
+    """p2, zero physics: this analysis path on the STORED MAPPO60B arm reproduces the published A54 contrasts
+    (structure and non-numeric fields identical; numbers within ``tol`` relative - a different CPU changes the
+    last bits of float sums; the largest difference is reported)."""
     have, roots, sources = load_refs('p2', panel, refs)
     want = N.read(a54_results)
     cons = tuple((c['treatment'], c['reference'], False) for c in want['contrasts'])
@@ -346,10 +361,13 @@ def selfcheck(panel, refs, a54_results):
     for got, ref in zip(rows, want['contrasts']):
         g = {k: v for k, v in got.items() if k != 'descriptive'}
         r = {k: v for k, v in ref.items() if k != 'descriptive'}
-        out.append(dict(contrast=f'{got["treatment"]}-{got["reference"]}', equal=g == r,
-                        total=got['total_minus_ref'].get('mean'), ci95=got['total_minus_ref']['ci95']))
-    return dict(all_equal=all(x['equal'] for x in out) and len(out) == len(want['contrasts']), contrasts=out,
-                a54_analysis_sha256=want.get('analysis_sha256'))
+        rel = _max_rel(g, r)
+        out.append(dict(contrast=f'{got["treatment"]}-{got["reference"]}', exact=g == r, max_rel_diff=rel,
+                        within_tol=rel <= tol, total_exact=got['total_minus_ref'] == ref['total_minus_ref'],
+                        total_max_rel_diff=_max_rel(got['total_minus_ref'], ref['total_minus_ref']),
+                        ci95=got['total_minus_ref']['ci95'], ci95_a54=ref['total_minus_ref']['ci95']))
+    return dict(all_within_tol=all(x['within_tol'] for x in out) and len(out) == len(want['contrasts']), tol=tol,
+                contrasts=out, a54_analysis_sha256=want.get('analysis_sha256'))
 
 
 # ------------------------------------------------------------------------------------------------ CLI
