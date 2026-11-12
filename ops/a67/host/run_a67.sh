@@ -3,8 +3,8 @@
 #   identity (4 episodes, empty plan set on MAPPO60C) -> identity-compare (FAILED: the chain STOPS, nothing else runs)
 #   -> confirm (BIG_BANK_60C, DUO_HOLD_60C on the 96 panel-1 worlds) -> analysis against the read-only stored roots.
 # Only /root/a67 is written. Stop between stages: touch /root/a67/root/STOP_A67.
-BASE=/root/a67
 source /root/a66/env_a66.sh
+BASE=/root/a67   # after the env file: it sets BASE=/root/a66
 export A67_HOST_BASE=$BASE
 R=$BASE/root
 W=${A67_WORKERS:?set A67_WORKERS}
