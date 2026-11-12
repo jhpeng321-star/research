@@ -1,0 +1,20 @@
+{
+ "amendment": "70",
+ "audited": "2026-11-13 03:24:45 +0800",
+ "blocks": {
+  "a70c": [
+   996300,
+   996399
+  ]
+ },
+ "classification": "55 file hits, all inside the A70 files written for this amendment (driver, table edits, host scripts, this audit script and their ship copies); 0 git hits. No prior use as a world seed.",
+ "file_hits": 55,
+ "git_hits": 0,
+ "known_overlap": [],
+ "limits": "host run roots were not scanned by this script (the Box 3 root /root/a70 is new; the runner range table rejects overlapping ranges at import); paths with forbidden tokens were never opened",
+ "n_files": 206373,
+ "n_tips": 558,
+ "raw_sha256": "36dae771875eef6097ff9c87368f1b47dc7127cb3655c1714df91acbd7ced5d5",
+ "schema": "a70.seed_audit.v1",
+ "verdict": "UNUSED: no prior use of 996300-996399 as world seeds was found; no overlap with a known taken or forbidden block"
+}

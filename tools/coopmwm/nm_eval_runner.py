@@ -128,6 +128,9 @@ A50_RANGES = ((992800, 992899), (996800, 996899))
 #: 996200-996299 (96 used; repeat = seed - block start). Same physics-neutral runtime registration (labels only; TRAIN
 #: roles still refuse them); same A37 executor arms.
 A68_RANGES = ((992500, 992599), (996200, 996299))
+#: amendment 70 (S-SMALLBANK60C, post-hoc): FRESH audited panel block 996300-996399 (96 used; repeat = seed - block
+#: start). Same physics-neutral runtime registration (labels only; TRAIN roles still refuse them); same A37 executor arms.
+A70_RANGES = ((996300, 996399),)
 #: amendment 44 (MAIN 2026-11-10 22:50, lane-change executor variant; mechanics only, never evaluation): PROPOSED
 #: TRAIN-type block 992400-992499 (ops/a44/SEED_AUDIT.json; repeat = seed - 992400). MAIN records the audited block in
 #: REGISTRATION.md before any SUMO; if MAIN registers a different block, this constant is the one line to change.
@@ -139,7 +142,8 @@ EVAL_HELDOUT_RANGES = ((EVAL_HELDOUT_RANGE[0], EVAL_HELDOUT_RANGE[1], 993000),
                        (lo, hi, lo) for lo, hi in A37_VERIFY_RANGES) + tuple(
                        (lo, hi, lo) for lo, hi in A42_RANGES) + tuple(
                        (lo, hi, lo) for lo, hi in A50_RANGES) + tuple(
-                       (lo, hi, lo) for lo, hi in A68_RANGES) + (
+                       (lo, hi, lo) for lo, hi in A68_RANGES) + tuple(
+                       (lo, hi, lo) for lo, hi in A70_RANGES) + (
                        (A44_MECH_RANGE[0], A44_MECH_RANGE[1], A44_MECH_RANGE[0]),)
 #: amendment 35: the frozen controllers' plans / classifier were built for D2800_p20; in a transfer cell they run
 #: as-is, i.e. the bank rows / templates are looked up under this source cell (ck['bank_cell_key']) while the world
