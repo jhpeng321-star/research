@@ -57,7 +57,7 @@ import a54_mappo60b as A54  # noqa: E402  (stored A52 / A54 arms; never runs her
 AMENDMENT = '66'
 CELL = 'D2800_p60'
 #: the Amendment 65 final policy (run84 production policy_00084.pt); pinned after training ends, before bind
-MAPPO60C_SHA256 = None
+MAPPO60C_SHA256 = "2abed31707b61121569af2936c23689827b52b28422df162751b230aa6a93de8"  # A65 policy_00084.pt (fixed final iteration)
 PINS = dict(MAPPO60C=MAPPO60C_SHA256, MAPPO60=A52.MAPPO60_SHA256, MAPPO60B=A54.MAPPO60B_SHA256,
             IDENT_U0=N.FROZEN_MAPPO_SHA)
 LABELS = dict(
