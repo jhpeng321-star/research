@@ -128,6 +128,10 @@ A50_RANGES = ((992800, 992899), (996800, 996899))
 #: 996200-996299 (96 used; repeat = seed - block start). Same physics-neutral runtime registration (labels only; TRAIN
 #: roles still refuse them); same A37 executor arms.
 A68_RANGES = ((992500, 992599), (996200, 996299))
+#: amendment 44 (MAIN 2026-11-10 22:50, lane-change executor variant; mechanics only, never evaluation): PROPOSED
+#: TRAIN-type block 992400-992499 (ops/a44/SEED_AUDIT.json; repeat = seed - 992400). MAIN records the audited block in
+#: REGISTRATION.md before any SUMO; if MAIN registers a different block, this constant is the one line to change.
+A44_MECH_RANGE = (992400, 992499)
 EVAL_HELDOUT_RANGES = ((EVAL_HELDOUT_RANGE[0], EVAL_HELDOUT_RANGE[1], 993000),
                        (A33_PANEL_RANGE[0], A33_PANEL_RANGE[1], A33_PANEL_RANGE[0]),
                        (A33_TRAIN_RANGE[0], A33_TRAIN_RANGE[1], A33_TRAIN_RANGE[0])) + tuple(
@@ -135,7 +139,8 @@ EVAL_HELDOUT_RANGES = ((EVAL_HELDOUT_RANGE[0], EVAL_HELDOUT_RANGE[1], 993000),
                        (lo, hi, lo) for lo, hi in A37_VERIFY_RANGES) + tuple(
                        (lo, hi, lo) for lo, hi in A42_RANGES) + tuple(
                        (lo, hi, lo) for lo, hi in A50_RANGES) + tuple(
-                       (lo, hi, lo) for lo, hi in A68_RANGES)
+                       (lo, hi, lo) for lo, hi in A68_RANGES) + (
+                       (A44_MECH_RANGE[0], A44_MECH_RANGE[1], A44_MECH_RANGE[0]),)
 #: amendment 35: the frozen controllers' plans / classifier were built for D2800_p20; in a transfer cell they run
 #: as-is, i.e. the bank rows / templates are looked up under this source cell (ck['bank_cell_key']) while the world
 #: is the transfer cell. Absent key (every pre-a35 spec) -> the world cell, unchanged.
@@ -490,6 +495,33 @@ def a37_hook(ck, world, arm):
     return a37_cellbank.make_hook(arm, cell, bank=bank, family=family), loaded
 
 
+A44_ARMS = ('A44_PLAN', 'A44_BANK')     # amendment 44 (MAIN 2026-11-10): lane-change-capable variant of the A37 executor
+
+
+def a44_hook(ck, world, arm):
+    """Amendment 44: a44_lcvariant.make_hook (the A37 BANK_ALWAYS executor + adjacent-lane lc roles through the G5 lane
+    path) for this world's cell_key; bank doc file sha re-verified; executed code == registration (a44_sha256).
+    A44_PLAN runs the single family ck['a44_family']; A44_BANK every row of the cell. Returns (hook, digest)."""
+    from . import a44_lcvariant
+    if arm not in A44_ARMS or ck.get('a44_arm') != arm:
+        raise ValueError(f'A44: ck a44_arm {ck.get("a44_arm")!r} is not the arm {arm!r}')
+    cell = world.get('cell_key')
+    if not cell or cell != ck.get('cell_key') or 'bank_cell_key' in ck:
+        raise ValueError('A44: world cell_key missing / not the bound cell_key (cell plans run in their own cell)')
+    loaded = a44_lcvariant.a44_digest()
+    if loaded != ck.get('a44_sha256'):
+        raise ValueError('A44: a44_lcvariant differs from its registration (a44_sha256)')
+    entry = ck.get('a44_bank') or {}
+    path = Path(entry.get('path', ''))
+    if not path.is_file() or _sha(path) != entry.get('file_sha256'):
+        raise ValueError('A44: a44_bank changed after registration')
+    bank = json.loads(path.read_text(encoding='utf-8'))
+    family = ck.get('a44_family') if arm == 'A44_PLAN' else None
+    if arm == 'A44_PLAN' and not family:
+        raise ValueError('A44_PLAN needs ck a44_family')
+    return a44_lcvariant.make_hook(arm, cell, bank=bank, family=family), loaded
+
+
 def a33_hook(ck, world):
     """Amendment 33 COMBINED: a33_combined.make_hook on the WM-only bank fd385a2b + the duo12_v20 rule row of UNION_UNC
     39f384a2 (both file shas re-verified) with the retrained classifier model doc (file sha re-verified) for this
@@ -631,10 +663,11 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     ck = spec['checkpoint']
     arm, update = ck['arm'], int(ck['update'])
     executor, loaded, rule, oracle = native['checkpoint'], None, None, None
-    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS + A32_ARMS + A33_ARMS             + A37_ARMS:
+    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS + A32_ARMS + A33_ARMS             + A37_ARMS + A44_ARMS:
         kind = dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator', MAPPO_CT='mappo_comparator',
                     ORACLE='oracle', ORACLE_WM='oracle', LEARNED_TRIGGER='learned_trigger',
-                    **{a: 'a32' for a in A32_ARMS}, COMBINED='a33', **{a: 'a37' for a in A37_ARMS})[spec['arm']]
+                    **{a: 'a32' for a in A32_ARMS}, COMBINED='a33', **{a: 'a37' for a in A37_ARMS},
+                    **{a: 'a44' for a in A44_ARMS})[spec['arm']]
         if ck.get('kind') != kind or (arm, update) != ('A', 0):
             raise ValueError(f'{spec["arm"]} arm = its bound executor + the bound common u0 (zero residual)')
         # the bound zero-residual u0 (A_checkpoint_000.pt, sha re-verified), loaded by the SAME
@@ -660,6 +693,9 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
             rule = oracle
         if spec['arm'] in A37_ARMS:
             oracle = a37_hook(ck, world, spec['arm'])
+            rule = oracle
+        if spec['arm'] in A44_ARMS:
+            oracle = a44_hook(ck, world, spec['arm'])
             rule = oracle
     else:
         path = Path(native['run_root'])/f'{arm}_checkpoint_{update:03}.pt'
@@ -697,7 +733,10 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     if loaded is not None:
         extra['executor_sha256_loaded'] = loaded
     extra['vehicle_log'] = vehicle_log
-    if oracle is not None and spec['arm'] in A37_ARMS:
+    if oracle is not None and spec['arm'] in A44_ARMS:
+        extra['a44_sha256_loaded'] = oracle[1]
+        extra['a44'] = oracle[0].receipts()
+    elif oracle is not None and spec['arm'] in A37_ARMS:
         extra['a37_sha256_loaded'] = oracle[1]
         extra['a37'] = oracle[0].receipts()
     elif oracle is not None and spec['arm'] in A33_ARMS:
@@ -1293,7 +1332,7 @@ def episode(spec, cfg, work):
         return _native_episode(spec, cfg, work)
     if spec['arm'] == 'MAPPO_LANE':
         return _mappo_lane_episode(spec, cfg, work)
-    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS             + A32_ARMS + A33_ARMS + A37_ARMS:
+    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS             + A32_ARMS + A33_ARMS + A37_ARMS + A44_ARMS:
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
 

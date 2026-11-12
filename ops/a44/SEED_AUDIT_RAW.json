@@ -1,0 +1,37 @@
+{
+ "schema": "a44.seed_audit_raw.v1",
+ "blocks": {
+  "a44_mechanics": [
+   992400,
+   992499
+  ]
+ },
+ "forbidden_skipped": [
+  "sealed",
+  "holdout",
+  "heldout",
+  "cal_split",
+  "chunk5",
+  "j4b",
+  "inc1",
+  "hetdata_truth",
+  "driver_params"
+ ],
+ "skipped_files": "^(WAVE_|RESULT|A\\d+B?_RESULTS|vehicles|observable)",
+ "file_hits": {
+  "a44_mechanics": [
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_820e2e3699ef738a28822ddbf36c90cb5131fbc9601beecdb9a1cd550cdc72c6\\CLAIM.json",
+    "line": 1,
+    "token": "992474",
+    "context": "738a28822ddbf36c90cb5131fbc9601beecdb9a1cd550cdc72c6\",\"pid\":992474} "
+   }
+  ]
+ },
+ "git_hits": {
+  "a44_mechanics": []
+ },
+ "n_files": 70353,
+ "n_tips": 544,
+ "audited": "2026-11-10 23:40:15 +0800"
+}
