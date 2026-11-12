@@ -537,6 +537,30 @@ BANK_SETTINGS = BANK_SETTINGS + tuple(c[0] for c in A50_CELLS)
 #: amendment 50 blocks (proposed after the seed audit, before any amendment-50 episode; MAIN records them)
 SETTINGS_PINS['a50v_D2800_p60'] = dict(PANEL_SHA256='c7f1d46aa28406cb009dffdc5bef6caf5ce2843e69591357ed49728f3f5b2fc0', PANEL_3C_SHA256=None)
 SETTINGS_PINS['a50c_D2800_p60'] = dict(PANEL_SHA256='7ef0cfabab4a5fffbe209d7308139a8ab1f8445f1b51f46e957586f598df98b5', PANEL_3C_SHA256=None)
+#: amendment 68 (S-RESEARCH60C, pre-outcome): FRESH audited verification block 992500-992523 (992524-992599 reserved
+#: unused) and confirmation panel 996200-996295 (996296-996299 reserved unused). Same plant / bindings as a35_D2800_p60
+#: (= the A42 / A50 cells); executed through the eval runner (scope label only); never pooled.
+A68_CELLS = (('a68v_D2800_p60', 992500, 24, 'verification', 'nm_eval_trainblock_wz3to2_a68v_D2800_p60.json'),
+             ('a68c_D2800_p60', 996200, 96, 'confirmation', 'nm_eval_panel_wz3to2_a68c_D2800_p60.json'))
+for _name, _lo, _n, _what, _file in A68_CELLS:
+    SETTINGS[_name] = dict(SETTINGS['a35_D2800_p60'],
+        N_WORLDS=_n, EVAL_RANGE=(_lo, _lo+99), EVAL_EXTRA_RANGE=(_lo, _lo+99), SEEDS_RESERVED=(_lo+_n, _lo+99),
+        PANEL_SIZE_REASON=(f'MAIN amendment 68: {_what} = {_n} fresh worlds {_lo}-{_lo+_n-1} (D2800_p60); '
+                           f'{_lo+_n}-{_lo+99} reserved unused'),
+        CELL_AUTHORITY=(f'MAIN amendment 68 (S-RESEARCH60C): D2800_p60 {_what} of the holds-only WM search plans on '
+                        'top of MAPPO60C'),
+        PANEL_AUTHORITY=(f'A68 amendment 68: fresh audited integers {_lo}-{_lo+_n-1} (D2800_p60) for the {_what} stage '
+                         'ONLY; executed through the eval runner (scope label only); never pooled'),
+        EXPOSURE_EXTRA=dict(
+            checked=('amendment-68 audit: 992500-992599 and 996200-996299 as standalone integers absent from '
+                     'REGISTRATION.md seed use, protocols/experiment_history.json, every c4/* branch tip, the a32-a67 run '
+                     'and agent dirs (ops/a68/SEED_AUDIT.json)',),
+            disclosed=f'; amendment 68: fresh integers ({_what}), registered at runtime by the runner'),
+        PANEL_FILE=HERE/_file, PANEL_3C_FILE=None)
+BANK_SETTINGS = BANK_SETTINGS + tuple(c[0] for c in A68_CELLS)
+#: amendment 68 blocks (pinned after the panel build, before any amendment-68 episode)
+SETTINGS_PINS['a68v_D2800_p60'] = dict(PANEL_SHA256='989248f9d449b234724d74cd569e324e1be7bc1038529947429f336652412ea4', PANEL_3C_SHA256=None)
+SETTINGS_PINS['a68c_D2800_p60'] = dict(PANEL_SHA256='37197aa25e53d98efed3d5b8886c0748c7f0f35a6dc258632b11af5a9270baa4', PANEL_3C_SHA256=None)
 MAP_SPEC_REL = 'assets/research/newmap_candidates/wz3to2/MAP_SPEC.json'
 #: MAIN 2026-11-06 (N11 F4): the panel binds the staged probe network bytes (sha256 of wz3to2.net.xml)
 NET_SHA256 = 'b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa'

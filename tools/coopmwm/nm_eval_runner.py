@@ -124,13 +124,18 @@ A42_RANGES = ((992000, 992099), (998600, 998699))
 #: verification block 992800-992899 (24 used) and confirmation block 996800-996899 (96 used; repeat = seed - block
 #: start). Same physics-neutral runtime registration (labels only; TRAIN roles still refuse them); same A37 executor arms.
 A50_RANGES = ((992800, 992899), (996800, 996899))
+#: amendment 68 (S-RESEARCH60C): FRESH audited verification block 992500-992599 (24 used) and confirmation block
+#: 996200-996299 (96 used; repeat = seed - block start). Same physics-neutral runtime registration (labels only; TRAIN
+#: roles still refuse them); same A37 executor arms.
+A68_RANGES = ((992500, 992599), (996200, 996299))
 EVAL_HELDOUT_RANGES = ((EVAL_HELDOUT_RANGE[0], EVAL_HELDOUT_RANGE[1], 993000),
                        (A33_PANEL_RANGE[0], A33_PANEL_RANGE[1], A33_PANEL_RANGE[0]),
                        (A33_TRAIN_RANGE[0], A33_TRAIN_RANGE[1], A33_TRAIN_RANGE[0])) + tuple(
                        (lo, hi, lo) for lo, hi in A35_PANEL_RANGES) + tuple(
                        (lo, hi, lo) for lo, hi in A37_VERIFY_RANGES) + tuple(
                        (lo, hi, lo) for lo, hi in A42_RANGES) + tuple(
-                       (lo, hi, lo) for lo, hi in A50_RANGES)
+                       (lo, hi, lo) for lo, hi in A50_RANGES) + tuple(
+                       (lo, hi, lo) for lo, hi in A68_RANGES)
 #: amendment 35: the frozen controllers' plans / classifier were built for D2800_p20; in a transfer cell they run
 #: as-is, i.e. the bank rows / templates are looked up under this source cell (ck['bank_cell_key']) while the world
 #: is the transfer cell. Absent key (every pre-a35 spec) -> the world cell, unchanged.
