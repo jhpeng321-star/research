@@ -200,11 +200,15 @@ def _episode(root, job, seed=992500, wave='A75V_x'):
     d = root/'evaluation'/job
     d.mkdir(parents=True)
     vl = N._fake_vehicle_log(d/N.VEHICLE_LOG, seed, 'U0')
-    raw = gzip.compress(json.dumps(dict(job=job, steps=list(range(50)))).encode())
-    (d/'RESULT.json.gz').write_bytes(raw)
+    # real runner layout (copied from /root/a75/root/evaluation/a75v_daf014365ac5d5e4_0000 on Box 4): RESULT.json is a
+    # pointer whose sha256 / uncompressed_bytes describe the DECOMPRESSED content of RESULT.json.gz, not the .gz file
     import hashlib
+    body = json.dumps(dict(job=job, steps=list(range(50)))).encode()
+    (d/'RESULT.json.gz').write_bytes(gzip.compress(body))
     (d/'RESULT.json').write_text(json.dumps(dict(encoding='coopmwm-lossless-gzip-v1', file='RESULT.json.gz',
-                                                sha256=hashlib.sha256(raw).hexdigest(), uncompressed_bytes=1)))
+                                                sha256=hashlib.sha256(body).hexdigest(), uncompressed_bytes=len(body)),
+                                           sort_keys=True))
+    (d/'CLAIM.json').write_text('{"job_id": "%s"}' % job)
     (d/'observable.jsonl.gz').write_bytes(gzip.compress(b'{"t": 1}\n'))
     (d/'CLOSE.json').write_text('{"actual_sim_s":1200.0,"charged_sim_s":1200}')
     (d/'scenarios').mkdir()
@@ -239,7 +243,7 @@ def test_drop_raw_removes_only_raw_files_after_the_report_is_verified(droproot):
             rec = N.verify(N.read(d/D.DROP_FILE), 'receipt_sha256', 'x')
             assert [x['file'] for x in rec['removed']] == list(D.RAW_FILES)
             assert rec['removed'][1]['sha256'] == r['vehicle_log']['sha256'] == rec['vehicle_log_sha256_sealed']
-            assert rec['removed'][0]['sha256'] == N.read(d/'RESULT.json')['sha256']
+            assert rec['result_content']['sha256'] == N.read(d/'RESULT.json')['sha256'] != rec['removed'][0]['sha256']
             c = N.read(d/'vehicles_report.json')
             assert c['log_sha256'] == r['vehicle_log']['sha256'] and c['version'] == N.REPORT_VERSION
             from a32_ablation import report_of
@@ -268,6 +272,51 @@ def test_drop_raw_keeps_everything_when_result_pointer_mismatches(droproot):
     with pytest.raises(N.Blocked, match='RESULT.json'):
         D.drop_raw(root, waves, None)
     assert all((d/f).is_file() for f in D.RAW_FILES) and not (d/D.DROP_FILE).exists()
+
+
+def _repoint(d, **kw):
+    ptr = json.loads((d/'RESULT.json').read_text())
+    ptr.update(kw)
+    (d/'RESULT.json').write_text(json.dumps(ptr, sort_keys=True))
+
+
+@pytest.mark.parametrize('how', ['gz_file_sha', 'bytes', 'encoding', 'file', 'other_content', 'truncated'])
+def test_drop_raw_checks_the_pointer_against_the_decompressed_result(droproot, how):
+    import hashlib
+    root, recs, state, waves = droproot
+    d = root/'evaluation'/recs['A75V_x'][1]['job_id']
+    gz = d/'RESULT.json.gz'
+    if how == 'gz_file_sha':                          # the 13:45 defect: the pointer is NOT the sha of the .gz file
+        _repoint(d, sha256=hashlib.sha256(gz.read_bytes()).hexdigest())
+    elif how == 'bytes':
+        _repoint(d, uncompressed_bytes=1)
+    elif how == 'encoding':
+        _repoint(d, encoding='plain')
+    elif how == 'file':
+        _repoint(d, file='RESULT.json')
+    elif how == 'other_content':
+        gz.write_bytes(gzip.compress(b'{"job": "someone else"}'))
+    else:
+        gz.write_bytes(gz.read_bytes()[:-9])
+    before = {f: (d/f).read_bytes() for f in D.RAW_FILES}
+    with pytest.raises(N.Blocked, match='RESULT.json'):
+        D.drop_raw(root, waves, None)
+    assert {f: (d/f).read_bytes() for f in D.RAW_FILES} == before and not (d/D.DROP_FILE).exists()
+
+
+def test_drop_raw_receipt_records_the_decompressed_result(droproot):
+    import hashlib
+    root, recs, state, waves = droproot
+    d = root/'evaluation'/recs['A75V_x'][0]['job_id']
+    body = gzip.decompress((d/'RESULT.json.gz').read_bytes())
+    gzsha = hashlib.sha256((d/'RESULT.json.gz').read_bytes()).hexdigest()
+    assert D.drop_raw(root, waves, None)["dropped"] == 3
+    v = json.loads((d/D.DROP_FILE).read_text())
+    assert v['result_content'] == dict(sha256=hashlib.sha256(body).hexdigest(), bytes=len(body))
+    assert v['result_pointer']['sha256'] == v['result_content']['sha256'] != gzsha
+    assert {x['file']: x['sha256'] for x in v['removed']}['RESULT.json.gz'] == gzsha
+    assert (d/'RESULT.json').is_file() and (d/'CLAIM.json').is_file() and (d/'CLOSE.json').is_file()
+    assert not any((d/f).exists() for f in D.RAW_FILES)
 
 
 def test_drop_raw_refuses_other_episodes(droproot, monkeypatch):

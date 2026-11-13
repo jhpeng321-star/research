@@ -434,7 +434,25 @@ def _report_job(args):
     N = _mods()[0]
     root, rec = args
     rep = N.episode_log_report(root, rec)
-    return rec['job_id'], bool(rep and rep.get('ok'))
+    return rec['job_id'], (bool(rep and rep.get('ok')), _gz_content(Path(root)/'evaluation'/rec.get('work_dir', rec['job_id'])
+                                                                    / 'RESULT.json.gz'))
+
+
+def _gz_content(path):
+    """-> [sha256, bytes] of the DECOMPRESSED content (what the runner's RESULT.json pointer records), or None."""
+    import gzip
+    import zlib
+    if not Path(path).is_file():
+        return None
+    h, n = hashlib.sha256(), 0
+    try:
+        with gzip.open(path, 'rb') as f:
+            for block in iter(lambda: f.read(1 << 20), b''):
+                h.update(block)
+                n += len(block)
+    except (OSError, EOFError, zlib.error):
+        return None                                   # unreadable / truncated -> the caller keeps the raw files
+    return [h.hexdigest(), n]
 
 
 def drop_raw(root, waves, check, *, procs=1, log=None):
@@ -469,7 +487,8 @@ def drop_raw(root, waves, check, *, procs=1, log=None):
     n = freed = 0
     for name, r, d in todo:
         job = d.name
-        if done.get(r['job_id']) is not True:
+        ok, content = done.get(r['job_id']) or (False, None)
+        if ok is not True:
             raise N.Blocked(f'{job}: no valid vehicle-log report; raw files kept')
         cache = d/'vehicles_report.json'
         c = N.read(cache)
@@ -483,13 +502,16 @@ def drop_raw(root, waves, check, *, procs=1, log=None):
             if (d/f).is_file() and not (d/f).is_symlink():
                 files.append(dict(file=f, bytes=(d/f).stat().st_size, sha256=log_sha if f == N.VEHICLE_LOG else _sha(d/f)))
         got = {x['file']: x['sha256'] for x in files}
-        if ptr.get('file') != 'RESULT.json.gz' or got.get('RESULT.json.gz') != ptr.get('sha256'):
+        # the runner's pointer (coopmwm-lossless-gzip-v1) records sha256 + size of the DECOMPRESSED result
+        if (ptr.get('file') != 'RESULT.json.gz' or ptr.get('encoding') != 'coopmwm-lossless-gzip-v1' or content is None
+                or 'RESULT.json.gz' not in got or content != [ptr.get('sha256'), ptr.get('uncompressed_bytes')]):
             raise N.Blocked(f'{job}: RESULT.json does not point at the RESULT.json.gz on disk; raw files kept')
         value = N.seal(dict(schema='coopmwm.a75.dropped_raw.v1', amendment=AMENDMENT, rule=DROP_RULE, job_id=r['job_id'],
                             work_dir=job, wave=name, world_id=r['world_id'], seed=r['world']['seed'],
                             vehicle_log_sha256_sealed=r['vehicle_log']['sha256'],
                             report=dict(file='vehicles_report.json', sha256=_sha(cache), version=c['version']),
-                            result_pointer=dict(ptr), removed=files, unix=time.time()), 'receipt_sha256')
+                            result_pointer=dict(ptr), result_content=dict(sha256=content[0], bytes=content[1]),
+                            removed=files, unix=time.time()), 'receipt_sha256')
         N.publish(d/DROP_FILE, value)
         N.verify(N.read(d/DROP_FILE), 'receipt_sha256', DROP_FILE)
         if N.read(cache).get('log_sha256') != r['vehicle_log']['sha256']:
