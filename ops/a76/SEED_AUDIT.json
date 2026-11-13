@@ -1,0 +1,75 @@
+{
+ "amendment": "76",
+ "audited": "2026-11-13 15:20:31 +0800",
+ "blocks": {
+  "a76m": [
+   997100,
+   997199
+  ],
+  "a76v": [
+   997200,
+   997299
+  ],
+  "a76c": [
+   997300,
+   997399
+  ]
+ },
+ "known_overlap": [],
+ "n_files": 206623,
+ "n_tips": 558,
+ "n_blobs": 33253,
+ "raw": {
+  "files": {
+   "file": "SEED_AUDIT_RAW_FILES.json",
+   "sha256": "26a7864937e83fea6e3059e1db744d28f23edac23f940f72144019d0f1008015"
+  },
+  "git": {
+   "file": "SEED_AUDIT_RAW_GIT.json",
+   "sha256": "e42271cf0c2ee5d404756402a588bdc59e4af0fac57220129bd33403f980216e"
+  }
+ },
+ "file_hits": {
+  "a76m": 43,
+  "a76v": 43,
+  "a76c": 46
+ },
+ "git_hits": {
+  "a76m": 0,
+  "a76v": 0,
+  "a76c": 0
+ },
+ "other_file_hits": {
+  "a76m": [],
+  "a76v": [
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_b1e143f4cf62d85153e049377268300ad8218400ef0cffea7429a0e9a40ee50b\\CLAIM.json",
+    "line": 1,
+    "token": "997295",
+    "context": "d85153e049377268300ad8218400ef0cffea7429a0e9a40ee50b\",\"pid\":997295} "
+   }
+  ],
+  "a76c": [
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_5d507aa41eae0bbbbf19743c2744b455f44aca0cea39fde67ffb3fe893f63638\\CLAIM.json",
+    "line": 1,
+    "token": "997348",
+    "context": "0bbbbf19743c2744b455f44aca0cea39fde67ffb3fe893f63638\",\"pid\":997348} "
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_b7bfb7f2de518099c20cb5f8aa2733751d6a092da8cc54d0bf14c45af506e9c2\\CLAIM.json",
+    "line": 1,
+    "token": "997358",
+    "context": "8099c20cb5f8aa2733751d6a092da8cc54d0bf14c45af506e9c2\",\"pid\":997358} "
+   }
+  ]
+ },
+ "other_git_hits": {
+  "a76m": [],
+  "a76v": [],
+  "a76c": []
+ },
+ "verdict": "UNUSED",
+ "limits": "scanned: REGISTRATION.md, protocols/experiment_history.json, every run dir of C4-V7FT-20261017 and every E:/agent-work/a* tree (text files <40 MB, evaluation/ dirs skipped), git blobs of the c4/* and main tips of the a54 repo; Box 3 roots grepped separately (depth 4, evaluation skipped): 0 hits; not scanned: Box 4, GPU boxes, Drive, sealed/holdout paths (never opened)",
+ "classification": "the only hits outside the A76 files are 3 process ids (\"pid\": 997295, 997348, 997358) in paper_data/train/coopmwm20261109_clean5c5b job CLAIM.json files (OS pids, not world seeds); 0 git hits. No world 997100-997399 used anywhere scanned."
+}
