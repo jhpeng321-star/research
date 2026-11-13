@@ -1,0 +1,96 @@
+{
+ "amendment": "77",
+ "audited": "2026-11-13 15:19:50 +0800 (files) / 2026-11-13 15:22:13 +0800 (git)",
+ "blocks": {
+  "a77t": [
+   987200,
+   987599
+  ],
+  "a77c": [
+   997600,
+   997699
+  ]
+ },
+ "verdict": {
+  "a77t": "UNUSED",
+  "a77c": "UNUSED"
+ },
+ "classification": {
+  "a77t": "23 file hits: 14 in the A77 files written for this amendment (seed audit script, training config, map adapter); 9 others = 8 process ids (pid 9875xx) in paper_data/train/coopmwm20261109_clean5c5b jobs/*/CLAIM.json and one byte count (987450) in paper_data/train/coopmwm20261108_clean5bf8u/offloaded/OFFLOAD_u003.json. 0 git hits. No seed / world use.",
+  "a77c": "6 file hits, all 6 in the A77 seed audit script. 0 git hits. No prior use."
+ },
+ "other_hits": {
+  "a77t": [
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261108_clean5bf8u\\offloaded\\OFFLOAD_u003.json",
+    "line": 315,
+    "token": "987450"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\t2c_warm_u001_R_989220\\CLAIM.json",
+    "line": 1,
+    "token": "987514"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\t2c_warm_u001_R_989221\\CLAIM.json",
+    "line": 1,
+    "token": "987509"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\t2c_warm_u001_R_989222\\CLAIM.json",
+    "line": 1,
+    "token": "987513"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\t2c_warm_u001_R_989223\\CLAIM.json",
+    "line": 1,
+    "token": "987517"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\t2c_warm_u001_R_989224\\CLAIM.json",
+    "line": 1,
+    "token": "987519"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\t2c_warm_u001_R_989225\\CLAIM.json",
+    "line": 1,
+    "token": "987515"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\t2c_warm_u001_R_989226\\CLAIM.json",
+    "line": 1,
+    "token": "987518"
+   },
+   {
+    "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\t2c_warm_u001_R_989227\\CLAIM.json",
+    "line": 1,
+    "token": "987512"
+   }
+  ],
+  "a77c": []
+ },
+ "file_hits": {
+  "a77t": 23,
+  "a77c": 6
+ },
+ "git_hits": {
+  "a77t": 0,
+  "a77c": 0
+ },
+ "known_overlap": [],
+ "n_files": 206623,
+ "n_tips": 558,
+ "n_blobs": 33253,
+ "method": "ops/a73/seed_audit.py code (copied as ops/a77/seed_audit.py; only blocks / known / schema changed): file scan of REGISTRATION.md, protocols/experiment_history.json, every run dir of runs/active/C4-V7FT-20261017 and every E:/agent-work/a* dir (paths with forbidden tokens never opened); git scan = every unique blob of the 558 c4/* + main branch tips",
+ "limits": "host run roots (Box 3 / Box 4 / older boxes) were not scanned; the A77 panel file and driver were written after the scan (they are the registration of these blocks); the scan ran before any A77 file was committed, so the git part has no A77 self-hits",
+ "raw": {
+  "files": {
+   "file": "SEED_AUDIT_RAW_FILES.json",
+   "sha256": "de0573bd56a8ea04194b94fcd7f348c83f44edbded39f90f257395c2cd54fe36"
+  },
+  "git": {
+   "file": "SEED_AUDIT_RAW_GIT.json",
+   "sha256": "5f3ee35cf9fab69de67c7da3cc9b5d1cd13fb18482e526d0b428db6ebcd0dd75"
+  }
+ }
+}

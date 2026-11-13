@@ -1,0 +1,154 @@
+{
+ "schema": "nm_mappo.plan.v1",
+ "task": "N7",
+ "option": "ft84_u0",
+ "host": "cpuV",
+ "run_dir": "/home/ubuntu/a77/run84",
+ "code_root": "/home/ubuntu/a77/code",
+ "source_commit": null,
+ "config": {
+  "path": "/home/ubuntu/a77/code/configs/c4_mappo_speed_wz3to2_d2800p20_a77.toml",
+  "sha256_lf": "76dc251b9d12a6372b31a283c4b21b29773855d93bcf2e849ab32432f1b4283f"
+ },
+ "init": {
+  "kind": "u0",
+  "path": "/home/ubuntu/a77/inputs/mappo_u0_policy_00169.pt",
+  "sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca"
+ },
+ "binding": {
+  "name": "wz3to2",
+  "env_name": "tools.nm_mappo.n1_adapter_a77.make_env",
+  "env_kwargs": {
+   "map_name": "wz3to2"
+  },
+  "train_seeds": "987200-987599",
+  "heldout_seeds": "989600-989699",
+  "demands_vph": [
+   2400,
+   2800,
+   3200
+  ],
+  "penetrations": [
+   0.2,
+   0.4,
+   0.6
+  ],
+  "is_stub": false,
+  "api": "tools.nm_mappo.n1_adapter_a77:descriptor",
+  "spec_sha256": "6fc6be652176948efdf594fdc48b564c2041d8ab3e0f3b15f6c7792cf02da20f",
+  "extra": {
+   "network_file_sha256": "b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa",
+   "k_slots": 512,
+   "install_record": {
+    "map": "wz3to2",
+    "descriptor_sha256": "6fc6be652176948efdf594fdc48b564c2041d8ab3e0f3b15f6c7792cf02da20f",
+    "env_module": "/home/ubuntu/a77/code/traffic_shepherd/c4/env.py",
+    "g5_overlay": null,
+    "lane_table_rebound": [
+     "traffic_shepherd.c4.env",
+     "traffic_shepherd.c4.geometry"
+    ],
+    "here_offsets_rebound": [
+     "traffic_shepherd.c4.geometry"
+    ],
+    "env_class_rebound": [
+     "traffic_shepherd.c4.env"
+    ],
+    "rsu_field_rebound": [
+     "wms.control.rsu_field"
+    ],
+    "rows": "cav_reports"
+   }
+  }
+ },
+ "sumo_allowed": true,
+ "seeds": "987200-987599",
+ "workers": 46,
+ "iterations": 84,
+ "episodes_per_iteration": 46,
+ "max_sumo_seconds_controlled": 2318400.0,
+ "budget_sim_s": {
+  "planned": 3477600.0,
+  "smoke": 660.0,
+  "planned_total": 3478260.0,
+  "hard_cap": 6956520.0
+ },
+ "quote_wall_h": [
+  3.22,
+  4.19
+ ],
+ "wall_cap_s": 108000,
+ "snapshots_preregistered": [
+  24,
+  42,
+  84
+ ],
+ "phase_cap_sim_s": 3560000.0,
+ "other_charges_sim_s": 54000.0,
+ "per_iteration_sim_s": 41400.0,
+ "ledger": "/home/ubuntu/a77/ledger/CHARGES.jsonl",
+ "disk_floor_bytes": 1000000000,
+ "python": "/home/ubuntu/a77/venv/bin/python",
+ "sumo_home": "/home/ubuntu/a77/venv/lib/python3.12/site-packages/sumo",
+ "argv": {
+  "smoke": [
+   "/home/ubuntu/a77/venv/bin/python",
+   "-u",
+   "-m",
+   "wms.control.mappo.train",
+   "--config",
+   "/home/ubuntu/a77/code/configs/c4_mappo_speed_wz3to2_d2800p20_a77.toml",
+   "--out",
+   "/home/ubuntu/a77/run84/smoke",
+   "--init-from",
+   "/home/ubuntu/a77/inputs/mappo_u0_policy_00169.pt",
+   "--update-threads",
+   "16",
+   "--workers",
+   "2",
+   "--iterations",
+   "1",
+   "--episodes-per-iteration",
+   "2",
+   "--horizon-s",
+   "30",
+   "--max-sumo-seconds",
+   "60"
+  ],
+  "production": [
+   "/home/ubuntu/a77/venv/bin/python",
+   "-u",
+   "-m",
+   "wms.control.mappo.train",
+   "--config",
+   "/home/ubuntu/a77/code/configs/c4_mappo_speed_wz3to2_d2800p20_a77.toml",
+   "--out",
+   "/home/ubuntu/a77/run84/production",
+   "--init-from",
+   "/home/ubuntu/a77/inputs/mappo_u0_policy_00169.pt",
+   "--update-threads",
+   "16",
+   "--workers",
+   "46",
+   "--iterations",
+   "84",
+   "--episodes-per-iteration",
+   "46",
+   "--max-sumo-seconds",
+   "2318400"
+  ]
+ },
+ "env": {
+  "OMP_NUM_THREADS": "1",
+  "MKL_NUM_THREADS": "1",
+  "OPENBLAS_NUM_THREADS": "1",
+  "CUDA_VISIBLE_DEVICES": "",
+  "PYTHONDONTWRITEBYTECODE": "1"
+ },
+ "rules": [
+  "no HELD-OUT 989600-989699 seed",
+  "never 964000-964199/962xxx/977xxx",
+  "own PIDs only",
+  "no checkpoint selection by evaluation outcomes"
+ ]
+}
