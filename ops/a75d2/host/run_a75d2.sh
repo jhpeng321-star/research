@@ -8,11 +8,11 @@
 #   run_a75d2.sh admit    : 36 plans x 24 worlds (1,036,800 sim-s; reference NOT re-run; raw archives dropped per round)
 #   run_a75d2.sh bank     : zero physics: admission rule + bank rule -> A75D2_ADMISSION_D2800_p60.json + bank file
 #   run_a75d2.sh confirm  : A75D2_BANK_60C on the 96 A70 worlds (115,200 sim-s) -> analyse
-# Only /root/a75d2 (and /dev/shm for the tests) is written. Stop between dispatch rounds: touch /root/a75d2/root/STOP_A75D2.
+# Only /root/a75d2b (and /dev/shm for the tests) is written. Stop between dispatch rounds: touch /root/a75d2b/root/STOP_A75D2.
 # A75D2_KEEP_RAW=1 keeps the raw archives of admit / confirm (needs ~20 GB per 1,000 episodes; default: dropped).
 STAGE=${1:?stage: setup | test | dry | mech | admit | bank | confirm}
 HERE=$(cd "$(dirname "$0")" && pwd)
-BASE=/root/a75d2
+BASE=/root/a75d2b
 if [ "$STAGE" = setup ]; then
   [ -f "$BASE/SETUP_OK" ] && { echo "setup already done: not rerunning"; exit 1; }
   exec bash "$HERE/setup_a75d2.sh" "${2:-}"

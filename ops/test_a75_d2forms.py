@@ -200,7 +200,13 @@ def test_caps():
 
 # ------------------------------------------------------------------------------------------------ mechanics checks
 
-T44 = pytest.importorskip('tools.coopmwm.test_a44_lcvariant_cpu')
+class _T44:
+    """tools.coopmwm.test_a44_lcvariant_cpu, imported lazily (a host tree without it skips only these tests)."""
+    def __getattr__(self, name):
+        return getattr(pytest.importorskip('tools.coopmwm.test_a44_lcvariant_cpu'), name)
+
+
+T44 = _T44()
 
 
 def _run(fam, seed=11, arm='A75_PLAN'):
@@ -320,3 +326,20 @@ def test_a75_from_a37_only_changes_the_executor_fields():
     assert base[0]['checkpoint']['kind'] == 'a37'                       # input untouched
     assert M.a75_from_a37(base, 'A75_BANK', entry, family=None, tag='t')[0]['checkpoint']['a75_family'] is None
     assert 2*M.IDENT_N + sum(n for _, _, n in M.FORM_WAVES) == M.MECH_EPISODES == 20
+
+
+def test_drop_pointer_is_the_decompressed_result(tmp_path):
+    import gzip
+    import hashlib
+    body = b'{"x": 1}' * 100
+    p = tmp_path/'RESULT.json.gz'
+    with gzip.open(p, 'wb') as f:
+        f.write(body)
+    c = M._gz_content(p)
+    assert c == [hashlib.sha256(body).hexdigest(), len(body)]
+    ptr = dict(file='RESULT.json.gz', encoding='coopmwm-lossless-gzip-v1', sha256=c[0], uncompressed_bytes=c[1])
+    assert M.pointer_ok(ptr, c, {'RESULT.json.gz': 'gzsha'})
+    assert not M.pointer_ok(dict(ptr, sha256=M._sha(p)), c, {'RESULT.json.gz': 'gzsha'})   # the gzip-container sha
+    assert not M.pointer_ok(ptr, None, {'RESULT.json.gz': 'gzsha'}) and not M.pointer_ok(ptr, c, {})
+    p.write_bytes(p.read_bytes()[:20])
+    assert M._gz_content(p) is None
