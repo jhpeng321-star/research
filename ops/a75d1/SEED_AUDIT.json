@@ -1,0 +1,23 @@
+{
+ "schema": "coopmwm.a75d1.seed_audit.v1",
+ "amendment": "75-D1",
+ "new_world_seeds": [],
+ "statement": "A75-D1 introduces NO new world seed. Admission reuses the 24 A68 admission worlds 992500-992523 (panel sha 989248f9..., audited in ops/a68/SEED_AUDIT.json); confirmation reuses the 96 A70 worlds 996300-996395 (panel sha 1b4b59ee..., audited with A70). 20261113 seeds only the candidate draw RNG (random.Random), never a simulator; identity re-runs 992500 and 992501 (already-used admission worlds).",
+ "admission_seeds": [
+  992500,
+  992523
+ ],
+ "confirmation_seeds": [
+  996300,
+  996395
+ ],
+ "forbidden_ranges_checked": [
+  "989600-989699",
+  "964000-964199",
+  "962000-962999",
+  "977000-977999"
+ ],
+ "overlap": 0,
+ "exposure": "both panels were already viewed (A68/A71 admission; A70 SMALL1/SMALL2/WIDE_BANK): disclosed in DISCLOSURE",
+ "doc_sha256": "20734c5c72c6dfe64f875407616c98b0b61c36ef5844087bed0f105013e80522"
+}
