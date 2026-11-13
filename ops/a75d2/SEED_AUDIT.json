@@ -1,0 +1,255 @@
+{
+ "amendment": "75",
+ "date": "2026-11-13",
+ "forbidden": [
+  [
+   964000,
+   964199
+  ],
+  [
+   962000,
+   962999
+  ],
+  [
+   977000,
+   977999
+  ],
+  [
+   989600,
+   989699
+  ]
+ ],
+ "hundreds_with_hits_in_head_ops": "dense (>= 5 hits): 962000-962999, 964000-964199, 977000-977999, 989000-990099, 991000-993299, 995200, 996200-996499, 996800, 998000-998999, 999500-999699; single incidental hits elsewhere; 997000-997999: 0 hits",
+ "limits": "grep only: other branch tips, Drive archives and box-only roots were NOT scanned (the A73 full blob scan was not repeated); the coordinator registers the block",
+ "method": "grep only, zero SUMO, no outcome read: (1) every (lo, hi) pair in the runner seed-range table of tools/coopmwm/nm_eval_runner.py at HEAD 921a850e (c4/a66-mappo60c); (2) git grep of 6-digit 9xxxxx integers over HEAD ops/ + runner + map_scenarios, bucketed per 100; (3) ripgrep of seed-context patterns (\"seed|world\" within 12 chars of 9974xx, or \"9974xx - 9974xx\" ranges) over E:/research-dense/{protocols,docs,runs/active,experiments} and E:/agent-work/a54-mappo60b/{ops,tools}, excluding *.gz/*.xml/*.pt, evaluation/ and every path containing sealed/holdout/heldout/cal_split/chunk5/j4b/inc1/hetdata_truth/driver_params",
+ "ops_scripts": {
+  "A73 KNOWN list (ops/a73/seed_audit.py)": {
+   "A41": [
+    [
+     991724,
+     991771
+    ],
+    [
+     998400,
+     998591
+    ]
+   ],
+   "A60A": [
+    995200,
+    995299
+   ],
+   "DISTILLRL": [
+    998700,
+    998999
+   ],
+   "N1_train_heldout": [
+    [
+     989000,
+     989099
+    ],
+    [
+     989200,
+     989699
+    ]
+   ],
+   "finaleval_trainblock": [
+    991000,
+    991999
+   ]
+  },
+  "a42 seed_audit": [
+   [
+    992000,
+    992099
+   ],
+   [
+    998600,
+    998699
+   ]
+  ],
+  "a44 seed_audit": [
+   [
+    992400,
+    992499
+   ]
+  ],
+  "a50 seed_audit": [
+   [
+    992800,
+    992899
+   ],
+   [
+    996800,
+    996899
+   ]
+  ],
+  "a67/a68/a70 i panel": [
+   [
+    998600,
+    998695
+   ]
+  ],
+  "a68 seed_audit": [
+   [
+    992500,
+    992599
+   ],
+   [
+    996200,
+    996299
+   ]
+  ],
+  "a69/a44 mech": [
+   [
+    992400,
+    992407
+   ]
+  ],
+  "a70 seed_audit": [
+   [
+    996300,
+    996399
+   ]
+  ],
+  "a71 / a75 D1": [
+   [
+    992500,
+    992523
+   ],
+   [
+    996300,
+    996395
+   ]
+  ],
+  "a73": [
+   [
+    992408,
+    992415
+   ],
+   [
+    992524,
+    992547
+   ],
+   [
+    996400,
+    996499
+   ]
+  ],
+  "nm_finaleval": {
+   "A33_SEEDS": [
+    999500,
+    999691
+   ],
+   "CONFIRM_SEEDS": [
+    993100,
+    993291
+   ],
+   "EVAL_RANGE": [
+    989600,
+    989699
+   ],
+   "TRAIN_RANGE": [
+    989200,
+    989599
+   ]
+  }
+ },
+ "proposed": {
+  "block": [
+   997400,
+   997499
+  ],
+  "evidence": "no entry in the runner table or any ops script; 0 git-grep hits for 9970xx-9979xx in HEAD ops / runner / map_scenarios; 0 seed-context hits for 9974xx in the scanned E: dirs (bare 9974xx tokens do occur in SUMO route xml and hash-like job ids under runs/active, not as seeds)",
+  "use": "A75 D2 mechanics worlds 997400-997403 (4 used, rest reserved unused)"
+ },
+ "runner_table": {
+  "A33_PANEL_RANGE": [
+   999500,
+   999699
+  ],
+  "A33_TRAIN_RANGE": [
+   991600,
+   991699
+  ],
+  "A35_PANEL_RANGES": [
+   [
+    998000,
+    998099
+   ],
+   [
+    998100,
+    998199
+   ],
+   [
+    998200,
+    998299
+   ],
+   [
+    998300,
+    998399
+   ]
+  ],
+  "A37_VERIFY_RANGES": [
+   [
+    991700,
+    991799
+   ],
+   [
+    991800,
+    991899
+   ]
+  ],
+  "A42_RANGES": [
+   [
+    992000,
+    992099
+   ],
+   [
+    998600,
+    998699
+   ]
+  ],
+  "A44_MECH_RANGE": [
+   992400,
+   992499
+  ],
+  "A50_RANGES": [
+   [
+    992800,
+    992899
+   ],
+   [
+    996800,
+    996899
+   ]
+  ],
+  "A68_RANGES": [
+   [
+    992500,
+    992599
+   ],
+   [
+    996200,
+    996299
+   ]
+  ],
+  "A70_RANGES": [
+   [
+    996300,
+    996399
+   ]
+  ],
+  "A73_RANGES": [
+   [
+    996400,
+    996499
+   ]
+  ],
+  "EVAL_HELDOUT_RANGE": [
+   993000,
+   993299
+  ]
+ },
+ "schema": "coopmwm.a75d2.seed_audit.v1",
+ "stage": "D2"
+}

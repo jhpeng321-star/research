@@ -1,0 +1,37 @@
+draw_rank,family,form,stratum,n_roles,zone,zone_d,spread_m,cooldown_s,roles
+1,d2_430107f055ecdcfc,gap,gap_plus2,3,merge,,300,120,L1r0 v_w=18 dmax=1.5 hold=90 onset=0 | L1r1 v_w=20 dmax=1.5 hold=15 onset=10 gap_arm_s=60 gap_dx_hi=60.0 gap_dx_lo=-10.0 start=gap | L2r0 v_w=18 dmax=1.5 hold=30 onset=40
+2,d2_33258c3f47132bad,pulse,pulse,1,far,,200,30,L2r0 v_w=8 dmax=1 hold=30 onset=0 pulse_off_s=10 pulse_on_s=20
+3,d2_e3c3242ada83d9cc,gap,gap_alone,1,merge,,300,120,L1r1 v_w=18 dmax=1.5 hold=5 onset=0 dv_rel=6.0 gap_arm_s=60 gap_drop_m=150.0 gap_dx_hi=60.0 gap_dx_lo=-10.0 gap_release=clear start=gap
+4,d2_98bc565e09b99056,gap,gap_plus1,2,near,,200,120,L1r1 v_w=22 dmax=1 hold=10 onset=0 dv_rel=6.0 gap_arm_s=30 gap_dx_hi=60.0 gap_dx_lo=-10.0 start=gap | L2r1 v_w=12 dmax=1.5 hold=180 onset=90
+5,d2_6694c2ec4fb09905,zone,zone_custom,3,custom,1400/400,200,150,L0r0 v_w=12 dmax=1 hold=120 onset=60 | L2r0 v_w=18 dmax=1.5 hold=45 onset=0 | L2r1 v_w=10 dmax=1 hold=30 onset=90
+6,d2_43b366572270e2c1,gap,gap_alone,1,mid,,300,40,L1r0 v_w=10 dmax=1.5 hold=10 onset=0 dv_rel=6.0 gap_arm_s=120 gap_drop_m=300.0 gap_dx_hi=60.0 gap_dx_lo=0.0 start=gap
+7,d2_ac6d2fd82480aaf2,taper,taper,1,full,,300,60,L1r0 v_w=24 dmax=1.5 hold=10 onset=0 taper_out_s=5
+8,d2_d8a18f20cb11daa3,rolling,rolling,3,far,,200,120,L0r0 v_w=8 dmax=1.5 hold=60 onset=0 | L0r1 v_w=24 dmax=1 hold=5 onset=10 | L2r0 v_w=8 dmax=1 hold=120 onset=40
+9,d2_b5fb46c0bc659861,pulse,pulse,1,far,,200,120,L2r1 v_w=14 dmax=1.5 hold=120 onset=0 pulse_off_s=5 pulse_on_s=5
+10,d2_5e8d5074435a53de,taper,taper,3,near,,300,120,L0r0 v_w=24 dmax=1 hold=45 onset=0 taper_in_s=5 | L1r1 v_w=24 dmax=1.5 hold=90 onset=90 taper_out_s=20 | L2r1 v_w=18 dmax=1.5 hold=20 onset=20
+11,d2_4595667dc3cefc0a,short,short,3,far,,300,60,L0r1 v_w=8 dmax=1.5 hold=10 onset=20 | L1r0 v_w=16 dmax=1.5 hold=30 onset=0 | L2r1 v_w=16 dmax=1 hold=20 onset=90
+12,d2_afe83d9b768bcd00,zone,zone_merge,3,merge,,200,60,L1r0 v_w=16 dmax=1 hold=90 onset=0 | L1r1 v_w=14 dmax=1.5 hold=90 onset=40 | L2r0 v_w=22 dmax=1.5 hold=180 onset=10
+13,d2_fd3f15c8377e2fd0,gap,gap_plus1,2,mid,,300,120,L1r0 v_w=12 dmax=1.5 hold=10 onset=0 gap_arm_s=120 gap_dx_hi=40.0 gap_dx_lo=-20.0 start=gap | L1r1 v_w=8 dmax=1.5 hold=30 onset=40
+14,d2_8bd51df26ef1f9a8,taper,taper,3,near,,300,120,L0r0 v_w=22 dmax=1 hold=90 onset=0 taper_in_s=5 taper_out_s=10 | L0r1 v_w=24 dmax=1 hold=5 onset=10 | L1r0 v_w=10 dmax=1.5 hold=30 onset=90 taper_in_s=20 taper_out_s=10
+15,d2_c1f9900c79b3cb8f,rolling,rolling,2,near,,300,60,L0r1 v_w=18 dmax=1 hold=120 onset=0 | L1r1 v_w=24 dmax=1 hold=20 onset=60
+16,d2_d9fa65fded53ba6b,gap,gap_alone,1,mid,,300,40,L1r1 v_w=14 dmax=1.5 hold=10 onset=0 gap_arm_s=30 gap_drop_m=600.0 gap_dx_hi=40.0 gap_dx_lo=-10.0 start=gap
+17,d2_8c7e458e24a65a0e,gap,gap_plus1,2,near,,300,40,L1r0 v_w=24 dmax=1.5 hold=5 onset=0 | L1r1 v_w=12 dmax=1 hold=10 onset=40 dv_rel=8.0 gap_arm_s=60 gap_drop_m=150.0 gap_dx_hi=40.0 gap_dx_lo=0.0 gap_events=3 gap_release=clear start=gap
+18,d2_6668bd039f5df5d0,pulse,pulse,2,far,,300,120,L0r0 v_w=10 dmax=1 hold=180 onset=0 pulse_off_s=5 pulse_on_s=20 | L0r1 v_w=24 dmax=1 hold=45 onset=0 pulse_off_s=10 pulse_on_s=20
+19,d2_c1009e71f7c518e9,gap,gap_plus1,2,merge,,300,120,L1r0 v_w=14 dmax=1.5 hold=10 onset=0 dv_rel=2.0 gap_arm_s=120 gap_drop_m=300.0 gap_dx_hi=40.0 gap_dx_lo=-10.0 start=gap | L1r1 v_w=16 dmax=1.5 hold=180 onset=40
+20,d2_62c34644970766f4,gap,gap_alone,1,mid,,200,60,L1r0 v_w=10 dmax=1.5 hold=5 onset=0 gap_arm_s=60 gap_drop_m=600.0 gap_dx_hi=40.0 gap_dx_lo=0.0 start=gap
+21,d2_d86b1d6ac653e8ad,rolling,rolling,2,far,,200,30,L0r1 v_w=24 dmax=1 hold=30 onset=0 | L2r0 v_w=16 dmax=1.5 hold=20 onset=20
+22,d2_452f71c6e9295eb9,short,short,2,near,,300,60,L0r1 v_w=20 dmax=1 hold=45 onset=0 | L2r0 v_w=14 dmax=1 hold=10 onset=10
+23,d2_ea305bf2b8b96dea,zone,zone_mid,2,mid,,200,60,L1r1 v_w=18 dmax=1.5 hold=20 onset=40 | L2r0 v_w=20 dmax=1.5 hold=5 onset=0
+24,d2_0dee3c5c2501ab15,pulse,pulse,1,far,,300,120,L1r0 v_w=18 dmax=1 hold=60 onset=0 pulse_off_s=20 pulse_on_s=20
+25,d2_fad4a0a6a062ecf7,taper,taper,1,near,,300,120,L0r1 v_w=14 dmax=1.5 hold=20 onset=0 taper_out_s=5
+26,d2_89f6d0d5decb2d97,zone,zone_mid,2,mid,,300,120,L1r0 v_w=24 dmax=1 hold=45 onset=60 | L1r1 v_w=20 dmax=1.5 hold=180 onset=0
+27,d2_36ba26d1a5acd1a6,gap,gap_plus2,3,merge,,300,60,L1r0 v_w=16 dmax=1.5 hold=5 onset=0 dv_rel=8.0 gap_arm_s=30 gap_drop_m=600.0 gap_dx_hi=60.0 gap_dx_lo=-10.0 gap_events=3 start=gap | L1r1 v_w=24 dmax=1 hold=10 onset=60 | L2r0 v_w=12 dmax=1 hold=90 onset=60
+28,d2_81bfb49cedc8503b,short,short,2,far,,300,75,L0r1 v_w=14 dmax=1 hold=45 onset=0 | L2r1 v_w=8 dmax=1.5 hold=45 onset=60
+29,d2_5133de88abae0172,gap,gap_plus2,3,mid,,200,45,L1r0 v_w=14 dmax=1 hold=45 onset=0 | L1r1 v_w=0 dmax=1.5 hold=5 onset=10 dv_rel=8.0 gap_arm_s=60 gap_drop_m=300.0 gap_dx_hi=20.0 gap_dx_lo=0.0 gap_events=3 gap_release=clear start=gap | L2r0 v_w=20 dmax=1 hold=45 onset=90
+30,d2_36f847f696438dfa,short,short,2,near,,200,120,L0r0 v_w=14 dmax=1 hold=45 onset=0 | L2r1 v_w=24 dmax=1.5 hold=30 onset=40
+31,d2_50629a3d56a79bd6,rolling,rolling,4,far,,300,120,L0r1 v_w=10 dmax=1.5 hold=20 onset=0 | L1r1 v_w=16 dmax=1.5 hold=180 onset=10 | L2r0 v_w=20 dmax=1 hold=10 onset=40 | L2r1 v_w=14 dmax=1.5 hold=5 onset=60
+32,d2_6c491df84f3c025e,short,short,3,full,,200,75,L0r0 v_w=16 dmax=1 hold=45 onset=0 | L1r0 v_w=22 dmax=1.5 hold=45 onset=60 | L2r0 v_w=10 dmax=1.5 hold=20 onset=90
+33,d2_d94a6e6608fc1c9b,zone,zone_custom,3,custom,1000/100,200,150,L0r1 v_w=14 dmax=1 hold=45 onset=0 | L1r0 v_w=8 dmax=1.5 hold=120 onset=40 | L2r0 v_w=8 dmax=1 hold=60 onset=90
+34,d2_822724b175e8d72e,zone,zone_merge,1,merge,,200,60,L1r1 v_w=18 dmax=1.5 hold=180 onset=0
+35,d2_2241870d9d3fa206,gap,gap_plus2,3,mid,,200,210,L1r0 v_w=12 dmax=1.5 hold=180 onset=0 | L1r1 v_w=18 dmax=1.5 hold=20 onset=20 dv_rel=6.0 gap_arm_s=30 gap_drop_m=300.0 gap_dx_hi=60.0 gap_dx_lo=-10.0 gap_release=clear start=gap | L2r1 v_w=12 dmax=1.5 hold=120 onset=10
+36,d2_1d96d967e4df7df6,short,short,3,full,,200,50,L0r1 v_w=22 dmax=1.5 hold=20 onset=0 | L1r0 v_w=24 dmax=1.5 hold=10 onset=20 | L2r0 v_w=10 dmax=1.5 hold=20 onset=20
