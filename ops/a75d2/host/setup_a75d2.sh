@@ -1,9 +1,13 @@
 #!/bin/bash
-# AMENDMENT 75 stage D2 host setup v2 (run as root; zero SUMO; never deletes; writes only /root/a75d2b).
+# AMENDMENT 75 stage D2 host setup v3 (run as root; zero SUMO; never deletes; writes only /root/a75d2c).
 # usage: A75D2_MECH_SEED0=<block start> bash setup_a75d2.sh [ref68_reports.tar]
 # v2 (2026-11-13): the v1 base /root/a68/src has no A44 executor / runner, so the source tree is now a HARD-LINK clone
 #   (cp -al) of /root/a69/src (= /root/a68/src + the A44 variant files + the merged A68+A44 runner 62496e86). New base dir
 #   /root/a75d2b (the partial v1 /root/a75d2 is never read, changed or removed).
+# v3: new base /root/a75d2c (v2 /root/a75d2b untouched). The A69 tree lacks A68 run-time files written into
+#   /root/a68/src after the A69 copy (e.g. ops/a68/CANDIDATES_D2800_p60.json): EVERY file present in /root/a68/src and
+#   absent from the clone is hard-linked in (listed in A68_SYNC.list); every file in both must be byte-identical except
+#   the runner (A69 merged runner) -> A68 candidate files pinned (json bff1a7bb, pin file be1a5df3, doc 194610bd).
 # Changed files: pytools/tools/coopmwm/nm_eval_runner.py and ops/nm_finaleval.py, each copied to a NEW inode, patched
 #   additively, then renamed over the link (the A69 / A68 inodes keep their bytes; checked): runner = the registered A70
 #   table edit (ops/a70/host/patch_tables.py) + A75 arms (patch_runner_a75.py) + the D2 mechanics block
@@ -12,7 +16,7 @@
 # Worlds / panels / bindings / references stay the A68 ones (root = the A68 root binding files, hard links).
 set -uo pipefail
 SHIP=$(cd "$(dirname "$0")" && pwd)
-BASE=/root/a75d2b
+BASE=/root/a75d2c
 FROM=/root/a69
 A68=/root/a68
 S=$BASE/src
@@ -52,6 +56,20 @@ if [ ! -d "$S" ]; then cp -al $FROM/src "$S" || die "link tree"; fi
 [ -L "$S" ] && die "$S is a symlink"
 [ "$(readlink -f $S)" = "$S" ] || die "$S does not resolve to itself"
 T=$S/pytools/tools/coopmwm
+# A68 run-time files missing from the A69 copy: hard-link in (never overwrite), then everything shared must match
+( cd $A68/src && find . -type f ! -path '*/__pycache__/*' | sort ) > "$BASE/a68_files.list"
+: > "$BASE/A68_SYNC.list.new"
+while read -r f; do
+  if [ ! -e "$S/$f" ]; then mkdir -p "$S/$(dirname "$f")" && ln "$A68/src/$f" "$S/$f" || die "link $f"; echo "$f" >> "$BASE/A68_SYNC.list.new"; fi
+done < "$BASE/a68_files.list"
+[ -f "$BASE/A68_SYNC.list" ] || mv "$BASE/A68_SYNC.list.new" "$BASE/A68_SYNC.list"
+echo "A68 files linked into the clone: $(wc -l < "$BASE/A68_SYNC.list")"; head -40 "$BASE/A68_SYNC.list"
+while read -r f; do
+  case "$f" in ./$RT|./$ST) continue ;; esac
+  cmp -s "$A68/src/$f" "$S/$f" || die "A68 file differs in the clone: $f"
+done < "$BASE/a68_files.list"
+pin "$S/ops/a68/CANDIDATES_D2800_p60.json" bff1a7bbf0212bbbcbbee8de3f9b7de7f0e1c58708ed4d31dc0fbbb9c0d79b22
+pin "$S/ops/a68/CANDIDATES_D2800_p60.sha256" be1a5df3585dd66f08556fed54f8ddf1eb0b8f4a5eccc60dad6f2505960ad69a
 mkdir -p "$S/ops/a75d2/host" "$S/ops/a75"
 put "$SHIP/a75_holdforms.py" "$T/a75_holdforms.py"
 put "$SHIP/a75_specs.py" "$S/ops/a75/a75_specs.py"
@@ -130,6 +148,10 @@ s0 = M.mech_seed0()
 assert tuple(R.A75D2_MECH_RANGE) == (s0, s0+99) and M.check_block_free(s0, R.EVAL_HELDOUT_RANGES)
 assert len(M.candidates()) == 36
 M.examples()
+import a68_research60c as A68
+c68 = A68.candidates()
+assert c68 and A68.CANDS_PIN.read_text().split()[0] == '194610bd3efe8168c852b04819025e878cbe5d3b59718abe1898ccc289b77186'
+print('A68 candidates ok:', len(c68), 'first', c68[0]['family'])
 print('code identity ok: a75', H.a75_digest()[:8], 'block', s0, s0+99)
 EOF
 ) || die "code identity check"

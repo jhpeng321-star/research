@@ -712,7 +712,7 @@ def core(which):
     N, A50 = _mods()[:2]
     over = dict(
         A42_PHASE=PHASE, A42_CAP_SIM_S=CAP_SIM_S, STOP_A42='STOP_A75D2',
-        HOST_BASE=os.environ.get('A75D2_HOST_BASE', '/root/a75d2b'),
+        HOST_BASE=os.environ.get('A75D2_HOST_BASE', '/root/a75d2c'),
         VERIFY_SETTING=SETTINGS[which], CONFIRM_SETTING=SETTINGS[which],
         BANK_DIR=BANK_DIR, IDENT_WAVE='A75D2_IDENT_UNUSED', AMENDMENT=AMENDMENT, LABEL='A75D2', JOB_PREFIX='a75d2',
         VERIFY_TAG='a75d2v', CONFIRM_TAG='a75d2c', IDENT_TAG='a75d2i',

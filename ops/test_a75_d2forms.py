@@ -200,13 +200,57 @@ def test_caps():
 
 # ------------------------------------------------------------------------------------------------ mechanics checks
 
-class _T44:
-    """tools.coopmwm.test_a44_lcvariant_cpu, imported lazily (a host tree without it skips only these tests)."""
-    def __getattr__(self, name):
-        return getattr(pytest.importorskip('tools.coopmwm.test_a44_lcvariant_cpu'), name)
+class T44:
+    """Synthetic traffic driver, vendored verbatim from tools/coopmwm/test_a44_lcvariant_cpu.py (Ctl / traffic / drive)
+    so these tests run on host trees that do not carry that test module (v3: a lazy import there made pytest skip the
+    whole file during fixture discovery)."""
+
+    class Ctl:
+        def __init__(self):
+            self.g5_lane_targets = {}
+
+        def apply(self, rows, commands, now):
+            self.g5_lane_targets = {}
+            return {vid: dict(requested_raw=a, base=True) for vid, a in commands.items()}
+
+    @staticmethod
+    def traffic(seed, t0=280, t1=1000):
+        import random
+        rng = random.Random(seed)
+        veh, n = {}, 0
+        for t in range(t0, t1):
+            for _ in range(rng.choice((0, 1, 1, 2))):
+                n += 1
+                veh[f'{"c" if rng.random() < .6 else "h"}{n}'] = dict(s_m=-2700.0+rng.uniform(0, 400),
+                                                                      v=rng.uniform(14, 30), lane=rng.choice((0, 1, 2)))
+            for vid, x in list(veh.items()):
+                x['v'] = min(31.0, max(2.0, x['v']+rng.uniform(-1.2, 1.0)))
+                x['s_m'] += x['v']
+                if rng.random() < .01:
+                    x['lane'] = min(2, max(0, x['lane']+rng.choice((-1, 1))))
+                if x['s_m'] > 600:
+                    veh.pop(vid)
+            rows = [dict(vid=vid, s_m=x['s_m'], v_mps=x['v'], lane=x['lane'], is_cav=vid.startswith('c'), length_m=5.0)
+                    for vid, x in sorted(veh.items())]
+            yield t, rows, {r['vid']: round(rng.uniform(-1.5, 1.0), 3) for r in rows if r['is_cav']}
+
+    @staticmethod
+    def drive(hook, stream):
+        c = T44.Ctl()
+        hook(c, None, None)
+        out = []
+        for t, rows, cmds in stream:
+            desired = c.apply(rows, cmds, t)
+            out.append((t, json.dumps(desired, sort_keys=True), json.dumps(c.g5_lane_targets, sort_keys=True)))
+        return out
 
 
-T44 = _T44()
+def test_vendored_traffic_equals_the_a44_helpers():
+    try:
+        from tools.coopmwm import test_a44_lcvariant_cpu as R
+    except Exception:          # noqa: BLE001  (host tree without the A44 test module: nothing to compare)
+        return
+    assert list(T44.traffic(3, t1=400)) == list(R.traffic(3, t1=400))
 
 
 def _run(fam, seed=11, arm='A75_PLAN'):

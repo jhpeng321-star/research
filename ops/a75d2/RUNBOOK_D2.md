@@ -12,6 +12,11 @@ A70 table / a70c setting edit (needed by confirm, same edit as D1's confirm tree
 runner sha for 997400 is `ec095e50...` (checked off-box: equal to the HEAD runner except the seed tables). Plus
 `a70_smallbank.py` (72af622e) and the A70 panel (835e423a). Worlds, panels, bindings and the stored A68 MAPPO60C
 reference are unchanged; the mech identity stage still proves A75_PLAN on a plain plan == the stored A68 record.
+**v3:** new base `/root/a75d2c` (v2 `/root/a75d2b` untouched). Setup hard-links every file of `/root/a68/src` missing
+from the A69 clone (A68 run-time files such as `ops/a68/CANDIDATES_D2800_p60.json`, list in `A68_SYNC.list`), requires
+every shared file byte-identical (runner excepted), pins the A68 candidates (json bff1a7bb, pin be1a5df3, doc 194610bd)
+and checks `A68.candidates()` loads. Test file: the synthetic-traffic helpers are vendored (v2's lazy import made pytest
+skip the whole file during fixture discovery on a tree without test_a44_lcvariant_cpu); `test` runs with `-rs`.
 Also v2: drop-raw pointer check = sha256 + size of the DECOMPRESSED RESULT (D1 fix 498f273c).
 
 ## Before launch (coordinator)
@@ -24,20 +29,20 @@ Also v2: drop-raw pointer check = sha256 + size of the DECOMPRESSED RESULT (D1 f
 
 ## Commands (as root; each stage runs ONCE: its chain file exists -> refuse)
 ```
-mkdir -p /root/a75d2b_ship && tar -xzf a75d2_ship_v2.tgz -C /root/a75d2b_ship && cd /root/a75d2b_ship
+mkdir -p /root/a75d2c_ship && tar -xzf a75d2_ship_v3.tgz -C /root/a75d2c_ship && cd /root/a75d2c_ship
 sha256sum -c SHIP_FILES.sha256
 export A75D2_MECH_SEED0=997400 A75D2_WORKERS=46          # workers: box cores - 2
-bash run_a75d2.sh setup [ref68_reports.tar]               # zero SUMO, ~1 min, writes /root/a75d2b only
-B=/root/a75d2b/run_a75d2.sh
-$B test                                                   # unit tests (expect 24 passed), ~1 min
+bash run_a75d2.sh setup [ref68_reports.tar]               # zero SUMO, ~1 min, writes /root/a75d2c only
+B=/root/a75d2c/run_a75d2.sh
+$B test                                                   # unit tests (expect 25 passed, 0 skipped), ~1 min
 $B dry                                                    # banks, mech panel (997400-997403), dry i/m/v + reference binding
-setsid nohup $B mech    > /root/a75d2b/nohup_mech.out 2>&1 &     # 20 ep, 24,000 sim-s
-setsid nohup $B admit   > /root/a75d2b/nohup_admit.out 2>&1 &    # 864 ep, 1,036,800 sim-s (needs MECH PASS)
+setsid nohup $B mech    > /root/a75d2c/nohup_mech.out 2>&1 &     # 20 ep, 24,000 sim-s
+setsid nohup $B admit   > /root/a75d2c/nohup_admit.out 2>&1 &    # 864 ep, 1,036,800 sim-s (needs MECH PASS)
 $B bank                                                   # zero physics: admission + bank rule, < 2 min
-setsid nohup $B confirm > /root/a75d2b/nohup_confirm.out 2>&1 &  # 96 ep, 115,200 sim-s + analyse
+setsid nohup $B confirm > /root/a75d2c/nohup_confirm.out 2>&1 &  # 96 ep, 115,200 sim-s + analyse
 ```
-Progress: `tail /root/a75d2b/chain_<stage>.out`; status: `cd /root/a75d2b/src && $PY ops/a75_d2forms.py status --stage
-v --final-root /root/a75d2b/root ...`. Stop between rounds: `touch /root/a75d2b/root/STOP_A75D2`.
+Progress: `tail /root/a75d2c/chain_<stage>.out`; status: `cd /root/a75d2c/src && $PY ops/a75_d2forms.py status --stage
+v --final-root /root/a75d2c/root ...`. Stop between rounds: `touch /root/a75d2c/root/STOP_A75D2`.
 
 ## Durations at ~13,000 sim-s/min (throughput-bound; mech is parallelism-bound)
 | stage | episodes | sim-s (cap, enforced in code) | expected |
@@ -63,7 +68,7 @@ v --final-root /root/a75d2b/root ...`. Stop between rounds: `touch /root/a75d2b/
 ## Disk
 Default: after each dispatch round, every published admit/confirm episode gets its per-vehicle report written and
 re-verified, a sealed DROPPED_RAW.json, then RESULT.json.gz / vehicles.jsonl.gz / observable.jsonl.gz of THAT episode
-are removed (only `a75d2v_*` / `a75d2c_*` dirs directly under /root/a75d2b/root/evaluation). Peak ~2-3 GB (one round
+are removed (only `a75d2v_*` / `a75d2c_*` dirs directly under /root/a75d2c/root/evaluation). Peak ~2-3 GB (one round
 of 96 episodes). Mechanics episodes are never dropped (~0.4 GB). `A75D2_KEEP_RAW=1` disables (needs ~20 GB/1,000 ep).
 
 ## sha256 (files in the bundle; SHIP_FILES.sha256 is authoritative)
