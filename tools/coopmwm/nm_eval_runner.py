@@ -531,6 +531,33 @@ def a44_hook(ck, world, arm):
     return a44_lcvariant.make_hook(arm, cell, bank=bank, family=family), loaded
 
 
+A75_ARMS = ('A75_PLAN', 'A75_BANK')     # amendment 75 (MAIN 2026-11-13): hold-form variant of the A44 executor
+
+
+def a75_hook(ck, world, arm):
+    """Amendment 75: a75_holdforms.make_hook (the A44 executor; plain plans unchanged, extended hold forms: short /
+    gap-start / zone / relative / taper / pulse) for this world's cell_key; bank doc file sha re-verified; executed
+    code == registration (a75_sha256). A75_PLAN runs the single family ck['a75_family']; A75_BANK every row."""
+    from . import a75_holdforms
+    if arm not in A75_ARMS or ck.get('a75_arm') != arm:
+        raise ValueError(f'A75: ck a75_arm {ck.get("a75_arm")!r} is not the arm {arm!r}')
+    cell = world.get('cell_key')
+    if not cell or cell != ck.get('cell_key') or 'bank_cell_key' in ck:
+        raise ValueError('A75: world cell_key missing / not the bound cell_key (cell plans run in their own cell)')
+    loaded = a75_holdforms.a75_digest()
+    if loaded != ck.get('a75_sha256'):
+        raise ValueError('A75: a75_holdforms differs from its registration (a75_sha256)')
+    entry = ck.get('a75_bank') or {}
+    path = Path(entry.get('path', ''))
+    if not path.is_file() or _sha(path) != entry.get('file_sha256'):
+        raise ValueError('A75: a75_bank changed after registration')
+    bank = json.loads(path.read_text(encoding='utf-8'))
+    family = ck.get('a75_family') if arm == 'A75_PLAN' else None
+    if arm == 'A75_PLAN' and not family:
+        raise ValueError('A75_PLAN needs ck a75_family')
+    return a75_holdforms.make_hook(arm, cell, bank=bank, family=family), loaded
+
+
 def a33_hook(ck, world):
     """Amendment 33 COMBINED: a33_combined.make_hook on the WM-only bank fd385a2b + the duo12_v20 rule row of UNION_UNC
     39f384a2 (both file shas re-verified) with the retrained classifier model doc (file sha re-verified) for this
@@ -672,11 +699,11 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     ck = spec['checkpoint']
     arm, update = ck['arm'], int(ck['update'])
     executor, loaded, rule, oracle = native['checkpoint'], None, None, None
-    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS + A32_ARMS + A33_ARMS             + A37_ARMS + A44_ARMS:
+    if spec['arm'] in ('U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS + A32_ARMS + A33_ARMS             + A37_ARMS + A44_ARMS + A75_ARMS:
         kind = dict(U0='u0', RULE='rule', RULE_FAIR='rule', MAPPO_SPEED='mappo_comparator', MAPPO_CT='mappo_comparator',
                     ORACLE='oracle', ORACLE_WM='oracle', LEARNED_TRIGGER='learned_trigger',
                     **{a: 'a32' for a in A32_ARMS}, COMBINED='a33', **{a: 'a37' for a in A37_ARMS},
-                    **{a: 'a44' for a in A44_ARMS})[spec['arm']]
+                    **{a: 'a44' for a in A44_ARMS}, **{a: 'a75' for a in A75_ARMS})[spec['arm']]
         if ck.get('kind') != kind or (arm, update) != ('A', 0):
             raise ValueError(f'{spec["arm"]} arm = its bound executor + the bound common u0 (zero residual)')
         # the bound zero-residual u0 (A_checkpoint_000.pt, sha re-verified), loaded by the SAME
@@ -705,6 +732,9 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
             rule = oracle
         if spec['arm'] in A44_ARMS:
             oracle = a44_hook(ck, world, spec['arm'])
+            rule = oracle
+        if spec['arm'] in A75_ARMS:
+            oracle = a75_hook(ck, world, spec['arm'])
             rule = oracle
     else:
         path = Path(native['run_root'])/f'{arm}_checkpoint_{update:03}.pt'
@@ -742,7 +772,10 @@ def _policy_run(spec, cfg, work, *, world, stop, role):
     if loaded is not None:
         extra['executor_sha256_loaded'] = loaded
     extra['vehicle_log'] = vehicle_log
-    if oracle is not None and spec['arm'] in A44_ARMS:
+    if oracle is not None and spec['arm'] in A75_ARMS:
+        extra['a75_sha256_loaded'] = oracle[1]
+        extra['a75'] = oracle[0].receipts()
+    elif oracle is not None and spec['arm'] in A44_ARMS:
         extra['a44_sha256_loaded'] = oracle[1]
         extra['a44'] = oracle[0].receipts()
     elif oracle is not None and spec['arm'] in A37_ARMS:
@@ -1341,7 +1374,7 @@ def episode(spec, cfg, work):
         return _native_episode(spec, cfg, work)
     if spec['arm'] == 'MAPPO_LANE':
         return _mappo_lane_episode(spec, cfg, work)
-    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS             + A32_ARMS + A33_ARMS + A37_ARMS + A44_ARMS:
+    if spec['arm'] not in ('A', 'B', 'R', 'U0', 'RULE', 'RULE_FAIR', 'MAPPO_SPEED', 'MAPPO_CT') + ORACLE_ARMS + LEARNED_ARMS             + A32_ARMS + A33_ARMS + A37_ARMS + A44_ARMS + A75_ARMS:
         raise ValueError(f'unknown evaluation arm {spec["arm"]!r}')
     return _policy_episode(spec, cfg, work)
 
