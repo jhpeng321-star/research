@@ -7,3 +7,4 @@ tests/golden/data/*.npz PATH-BINARY-EXT  # reviewed: 9 golden fixtures (0.3-3 MB
 tests/golden/data/c1/wm_s.pt PATH-BINARY-EXT  # reviewed: 5.4 MB golden C1 model checkpoint needed by the golden/equivalence tests
 archive/pre_circles/manifest.json SIZE-BLOCK  # reviewed: 53 MB (50.8 MiB), under GitHub's 100 MB hard limit; needed for historical path resolution (AGENTS.md archive manifest)
 tests/fixtures/v6merge_off_golden.pt PATH-BINARY-EXT  # reviewed 2026-11-14: 8 KB golden output tensor loaded by tests/unit/test_v6merge.py; not a trained model checkpoint
+experiments/a75_holdforms/_testenv/tools/coopmwm/map_api.py:18 SEC-ENV-ASSIGN  # reviewed 2026-11-14: re-export of a map cell-name constant (CANONICAL_CELL_KEY = ms.CANONICAL_CELL_KEY), no credential
