@@ -1,0 +1,612 @@
+{
+ "seed": 20261114,
+ "generator": "strategy_search.random_strategy patched by a75ss.install(S4 cfg)",
+ "cfg_sha256": "0a80c0f4c6a8858faf4430c8e55be04a9abc77779337cd91921e1df873b82f5e",
+ "code": {
+  "a75ss.py": "cae54dc11be5f5220f19eb7399efac2699c7cdf363a90b7fa202766d5b906bc0",
+  "a85s4.py": "7ca82976e7183ce205d0591470a60281b553c2d03e8643d479d739b86c419261",
+  "strategy_search.py": "02e119c11a056c13bc54309c5f71e0ca8dd73aeb3c49c5a901e008fda36f54fc",
+  "A85S4_SEARCH_CFG.json": "0a80c0f4c6a8858faf4430c8e55be04a9abc77779337cd91921e1df873b82f5e"
+ },
+ "n_draws": 50,
+ "draws": [
+  {
+   "draw": 1,
+   "name": "rand_84f2b34a3563c9b5",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 2,
+   "name": "rand_e91dd62846b9f65f",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "2b84ba100dca39c9",
+   "uncond_name": "rand_2b84ba100dca39c9",
+   "status": "pass",
+   "pass_rank": 1
+  },
+  {
+   "draw": 3,
+   "name": "rand_f48526f5527aee64",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "f48526f5527aee64",
+   "uncond_name": "rand_f48526f5527aee64",
+   "status": "pass",
+   "pass_rank": 2
+  },
+  {
+   "draw": 4,
+   "name": "rand_f1f3c30f83d035fe",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "f1f3c30f83d035fe",
+   "uncond_name": "rand_f1f3c30f83d035fe",
+   "status": "pass",
+   "pass_rank": 3
+  },
+  {
+   "draw": 5,
+   "name": "rand_98770a4a7f3cd262",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 6,
+   "name": "rand_b9a542e05b0287be",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "b9a542e05b0287be",
+   "uncond_name": "rand_b9a542e05b0287be",
+   "status": "pass",
+   "pass_rank": 4
+  },
+  {
+   "draw": 7,
+   "name": "rand_fdba7617dbd1c41e",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 8,
+   "name": "rand_83663075cd92fb5f",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "3426823506bdb95f",
+   "uncond_name": "rand_3426823506bdb95f",
+   "status": "pass",
+   "pass_rank": 5
+  },
+  {
+   "draw": 9,
+   "name": "rand_324930af7618b8aa",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "324930af7618b8aa",
+   "uncond_name": "rand_324930af7618b8aa",
+   "status": "pass",
+   "pass_rank": 6
+  },
+  {
+   "draw": 10,
+   "name": "rand_954827ee338796cd",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "954827ee338796cd",
+   "uncond_name": "rand_954827ee338796cd",
+   "status": "pass",
+   "pass_rank": 7
+  },
+  {
+   "draw": 11,
+   "name": "rand_8743ae43679c772a",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "a4404139342ec3ad",
+   "uncond_name": "rand_a4404139342ec3ad",
+   "status": "pass",
+   "pass_rank": 8
+  },
+  {
+   "draw": 12,
+   "name": "rand_e60ee926d34eb631",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "e60ee926d34eb631",
+   "uncond_name": "rand_e60ee926d34eb631",
+   "status": "pass",
+   "pass_rank": 9
+  },
+  {
+   "draw": 13,
+   "name": "rand_2f6d9d40335d68ac",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "752ec63f1e216873",
+   "uncond_name": "rand_752ec63f1e216873",
+   "status": "pass",
+   "pass_rank": 10
+  },
+  {
+   "draw": 14,
+   "name": "rand_ba031ab8d27791c4",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "ac77454ba4dc3772",
+   "uncond_name": "rand_ac77454ba4dc3772",
+   "status": "pass",
+   "pass_rank": 11
+  },
+  {
+   "draw": 15,
+   "name": "rand_0351f0fd6ef5a767",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 16,
+   "name": "rand_ced30ccf1f2c930b",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "855593233fe40415",
+   "uncond_name": "rand_855593233fe40415",
+   "status": "pass",
+   "pass_rank": 12
+  },
+  {
+   "draw": 17,
+   "name": "rand_1c02775bf0da169b",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "743f602e76618ac9",
+   "uncond_name": "rand_743f602e76618ac9",
+   "status": "pass",
+   "pass_rank": 13
+  },
+  {
+   "draw": 18,
+   "name": "rand_b9fef8a43a5c8020",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "0b56eb4e706bcb16",
+   "uncond_name": "rand_0b56eb4e706bcb16",
+   "status": "pass",
+   "pass_rank": 14
+  },
+  {
+   "draw": 19,
+   "name": "rand_1bfca8d9dc4ffabf",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 20,
+   "name": "rand_56171bb776566604",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "56171bb776566604",
+   "uncond_name": "rand_56171bb776566604",
+   "status": "pass",
+   "pass_rank": 15
+  },
+  {
+   "draw": 21,
+   "name": "rand_f5820239aa1305ab",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "f5820239aa1305ab",
+   "uncond_name": "rand_f5820239aa1305ab",
+   "status": "pass",
+   "pass_rank": 16
+  },
+  {
+   "draw": 22,
+   "name": "rand_ec459730ebc203b1",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 23,
+   "name": "rand_11de12569680c37f",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 24,
+   "name": "rand_2369c7cf5357bd36",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "2a2e4633f55d3959",
+   "uncond_name": "rand_2a2e4633f55d3959",
+   "status": "pass",
+   "pass_rank": 17
+  },
+  {
+   "draw": 25,
+   "name": "rand_b58c829f259a9178",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 26,
+   "name": "rand_8457bf72e7e8807b",
+   "lanes": [
+    0
+   ],
+   "key": "8457bf72e7e8807b",
+   "uncond_name": "rand_8457bf72e7e8807b",
+   "status": "pass",
+   "pass_rank": 18
+  },
+  {
+   "draw": 27,
+   "name": "rand_670010c64bbfaa54",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "feac66e17e2e215b",
+   "uncond_name": "rand_feac66e17e2e215b",
+   "status": "pass",
+   "pass_rank": 19
+  },
+  {
+   "draw": 28,
+   "name": "rand_516236019623812c",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "33671559cece50d7",
+   "uncond_name": "rand_33671559cece50d7",
+   "status": "pass",
+   "pass_rank": 20
+  },
+  {
+   "draw": 29,
+   "name": "rand_1341824acd895003",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "1341824acd895003",
+   "uncond_name": "rand_1341824acd895003",
+   "status": "pass",
+   "pass_rank": 21
+  },
+  {
+   "draw": 30,
+   "name": "rand_08e88dfb9ef32acf",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 31,
+   "name": "rand_a7b53deddebe3301",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "a7b53deddebe3301",
+   "uncond_name": "rand_a7b53deddebe3301",
+   "status": "pass",
+   "pass_rank": 22
+  },
+  {
+   "draw": 32,
+   "name": "rand_6b4099279393c201",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "855ca28e1d093562",
+   "uncond_name": "rand_855ca28e1d093562",
+   "status": "pass",
+   "pass_rank": 23
+  },
+  {
+   "draw": 33,
+   "name": "rand_eb93d460e3739dd5",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "463e105e213837c0",
+   "uncond_name": "rand_463e105e213837c0",
+   "status": "pass",
+   "pass_rank": 24
+  },
+  {
+   "draw": 34,
+   "name": "rand_6ed1fc8b0aaf39dd",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "6ed1fc8b0aaf39dd",
+   "uncond_name": "rand_6ed1fc8b0aaf39dd",
+   "status": "pass",
+   "pass_rank": 25
+  },
+  {
+   "draw": 35,
+   "name": "rand_5f7b705222922b01",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "5f7b705222922b01",
+   "uncond_name": "rand_5f7b705222922b01",
+   "status": "pass",
+   "pass_rank": 26
+  },
+  {
+   "draw": 36,
+   "name": "rand_e2cc9cfd7cf6da1c",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "a9a5ce21607af093",
+   "uncond_name": "rand_a9a5ce21607af093",
+   "status": "pass",
+   "pass_rank": 27
+  },
+  {
+   "draw": 37,
+   "name": "rand_9f4eb6562059fa56",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 38,
+   "name": "rand_1e4a1fd67e7d288f",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "1e4a1fd67e7d288f",
+   "uncond_name": "rand_1e4a1fd67e7d288f",
+   "status": "pass",
+   "pass_rank": 28
+  },
+  {
+   "draw": 39,
+   "name": "rand_ee2fce15f7df7f20",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "ee2fce15f7df7f20",
+   "uncond_name": "rand_ee2fce15f7df7f20",
+   "status": "pass",
+   "pass_rank": 29
+  },
+  {
+   "draw": 40,
+   "name": "rand_57ee0213fbe24816",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "0d1e45106ec6f8eb",
+   "uncond_name": "rand_0d1e45106ec6f8eb",
+   "status": "pass",
+   "pass_rank": 30
+  },
+  {
+   "draw": 41,
+   "name": "rand_1d1db919e4a396ac",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "af64779854593d77",
+   "uncond_name": "rand_af64779854593d77",
+   "status": "pass",
+   "pass_rank": 31
+  },
+  {
+   "draw": 42,
+   "name": "rand_f1d51d3c505a6867",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "f657fd1094e3170c",
+   "uncond_name": "rand_f657fd1094e3170c",
+   "status": "pass",
+   "pass_rank": 32
+  },
+  {
+   "draw": 43,
+   "name": "rand_b90aa6df0db05ea1",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "b90aa6df0db05ea1",
+   "uncond_name": "rand_b90aa6df0db05ea1",
+   "status": "pass",
+   "pass_rank": 33
+  },
+  {
+   "draw": 44,
+   "name": "rand_b531a7dcccaa8cd6",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "af550df346c563e8",
+   "uncond_name": "rand_af550df346c563e8",
+   "status": "pass",
+   "pass_rank": 34
+  },
+  {
+   "draw": 45,
+   "name": "rand_4652dfb650556fa5",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "88651600fb64dfcf",
+   "uncond_name": "rand_88651600fb64dfcf",
+   "status": "pass",
+   "pass_rank": 35
+  },
+  {
+   "draw": 46,
+   "name": "rand_c633866869ec0b7e",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "c633866869ec0b7e",
+   "uncond_name": "rand_c633866869ec0b7e",
+   "status": "pass",
+   "pass_rank": 36
+  },
+  {
+   "draw": 47,
+   "name": "rand_a48474a0522d2a57",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "a48474a0522d2a57",
+   "uncond_name": "rand_a48474a0522d2a57",
+   "status": "pass",
+   "pass_rank": 37
+  },
+  {
+   "draw": 48,
+   "name": "rand_8da0f8f0d23a9596",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "8da0f8f0d23a9596",
+   "uncond_name": "rand_8da0f8f0d23a9596",
+   "status": "pass",
+   "pass_rank": 38
+  },
+  {
+   "draw": 49,
+   "name": "rand_25279244b2a3641a",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "25279244b2a3641a",
+   "uncond_name": "rand_25279244b2a3641a",
+   "status": "pass",
+   "pass_rank": 39
+  },
+  {
+   "draw": 50,
+   "name": "rand_6199de66d7d9f04b",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "6199de66d7d9f04b",
+   "uncond_name": "rand_6199de66d7d9f04b",
+   "status": "pass",
+   "pass_rank": 40
+  }
+ ]
+}

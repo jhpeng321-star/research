@@ -27,6 +27,128 @@
   },
   "entries": [
     {
+      "id": "N6-CONFIRM-A30-20261109",
+      "date": "2026-11-09",
+      "family": "PL",
+      "name": "N6 amendment-30 MAPPO_CT ablation: U0 MAPPO speed policy + 96 episodes of its original objective vs U0 and LEARNED_TRIGGER on the 192-world p20c panel",
+      "status": "completed",
+      "question": "Does simply continuing U0's MAPPO training (same budget of episodes as the cooperative runs, original objective) reduce delay vs U0, and does LEARNED_TRIGGER still beat it?",
+      "controller": "MAPPO_CT = S-MAPPOCT policy_00012 (sha 069a4f85; continues policy_00169 d9042cc5 with the original S-MAPPOWZ trainer, 12 updates x 8 episodes at D2800_p20 on wz3to2, training seeds 989200-989587, fresh critic/optimisers; c4/mappoct a123f938; export receipt MAPPO_CT_EXPORT.json 5f5cf37b) swapped in for d9042cc5 under the same zero-residual u0 as U0.",
+      "changed_vars": "Executor actor only (d9042cc5 -> MAPPO_CT); plant, panel, residual, U0 and LEARNED_TRIGGER episodes as amendment 28.",
+      "comparators": "Registered contrasts: MAPPO_CT-U0 (PRIMARY: 95% CI upper < 0), LEARNED_TRIGGER-MAPPO_CT (SECONDARY). diff = treatment - reference in total delay veh-s per world (paired, same 192 worlds 993100-993291, CRN); negative = treatment has less delay. CVaR90 diff in s/veh, same sign. Group fairness: per-group mean per-vehicle delay increase (treatment - reference) <= 10 s. Bootstrap paired percentile 10000 reps seed 20261104.",
+      "matching_reuse": "U0 and LEARNED_TRIGGER waves reused from the sealed amendment-28 bank root nm_finaleval_p20c_bank (gpuA); MAPPO_CT bound there (bind-mappo --arm MAPPO_CT, binding b9cd5cd8) and run alone.",
+      "budget_registered": "Amendment 30: line mappo_ct 450,000 (training about 150,000 + eval 230,400); eval cap 230,400 under phase mappo_ct; bank-root allocation 693,000 + 230,400.",
+      "budget_actual": "Eval 230,400 sim-s (192 episodes, gpuA 18 workers, 16:09-16:32, PASS, no resume or retry). Training (MAPPOCT) 87,060 sim-s. Analysis zero physics.",
+      "criteria_verdict": "MAPPO_CT-U0 PRIMARY +604 [-1071,+2274] veh-s (+1.4%, p=0.47): FAIL; CVaR90 +4.6 [-5.0,+14.3]; groups pass (worst +0.9 s/veh origin:L0). LEARNED_TRIGGER-MAPPO_CT -2434 [-4034,-938] (-5.7%, p=0.002); CVaR90 -41.6 [-51.0,-32.7]; groups pass (worst +7.1 s/veh origin:L2). Safety: 0 collisions/teleports; hard brakes MAPPO_CT 5051 / U0 4861 / LEARNED_TRIGGER 3314, TTC events 451 / 432 / 389.",
+      "limitations": "DISCLOSED: MAPPO_CT training episodes were 900 s while the sealed eval episodes are 1200 s (the same 1200 s horizon as every other arm). Snapshots u4 289f1795 and u8 5dd67cbe recorded only, not evaluated. One continued-training run (no seed replication).",
+      "answers": "Extra MAPPO training with the original objective does not improve on U0 (point estimate slightly worse); the WM-based LEARNED_TRIGGER beats the continued MAPPO in total delay and tail with fairness intact, so its gain over U0 is not explained by additional training episodes alone.",
+      "paths": [
+        "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A30.json",
+        "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/a30.out",
+        "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/run_mappo_ct.log"
+      ],
+      "structured": {
+        "record_kind": "experiment",
+        "execution_status": "completed",
+        "evidence_validity": "Registered amendment-30 confirm-analyse (ops/nm_finaleval.py c4/nm-finaleval 5ecc4358) on sealed waves; analysis_sha256 4aee6ce433abc83f91edacdc7bddae3496ca7739ecdb7d94d5060edb93a1add1 (CONFIRM_TABLES_A30.json).",
+        "scientific_verdict": "Primary MAPPO_CT-U0 FAIL (CI crosses 0, point +1.4%). LEARNED_TRIGGER beats MAPPO_CT (-5.7%, CI excludes 0).",
+        "evidence_status": "integrity_receipt_verified",
+        "review_status": "CONFIRM_TABLES_A30 sealed by the registered tool; numbers transcribed from it. Independent review pending.",
+        "outcomes": []
+      }
+    },
+    {
+      "id": "N6-CONFIRM-A28-20261109",
+      "date": "2026-11-09",
+      "family": "PL",
+      "name": "N6 amendment-28 confirmation (u12): bank arms, CLEAN5C5D-B (C5D), CLEAN5C5D-R (C5DR), F8V4B-B (F8B) vs U0 on the 192-world p20c panel",
+      "status": "completed",
+      "question": "On the sealed 192-world confirmation panel, does ORACLE_WM beat U0 (primary), and how do LEARNED_TRIGGER, the u12 WM-guided policy C5D, its unguided twin C5DR and F8B compare (delay CI, group fairness, CVaR90)?",
+      "controller": "U0 (frozen MAPPO); ORACLE_WM, LEARNED_TRIGGER (bank arms); C5D = CLEAN5C5D-B u12 (WM-guided continued training); C5DR = CLEAN5C5D-R u12 (unguided continued training, same run); F8B = F8V4B-B u12.",
+      "changed_vars": "Arm (policy/overlay) only; same plant, panel and U0 comparator. Trained roots registered with confirm-register --update 12 (config C5D/C5DR 29ff0c49, F8B 83eb0ad5).",
+      "comparators": "Registered contrasts: ORACLE_WM-U0 (PRIMARY), LEARNED_TRIGGER-U0, C5D-U0, C5D-F8B, C5D-C5DR. diff = treatment - reference in total delay veh-s per world (paired, same 192 worlds 993100-993291, CRN); negative = treatment has less delay. CVaR90 diff in s/veh, same sign. Group fairness: per-group mean per-vehicle delay increase (treatment - reference) <= 10 s. Bootstrap paired percentile.",
+      "matching_reuse": "Bank arms (U0, ORACLE_WM, LEARNED_TRIGGER) from gpuA root nm_finaleval_p20c_bank (PASS 10:47); trained roots run on cpuZ (C5D, C5DR) and cpuW (F8B). Plant identity: each trained root re-ran U0 on the identity worlds, |J diff| <= 1e-6 and equal safety vs bank U0: PASS for C5D and F8B; C5DR inherits C5D's u12 identity root (same CONFIG): PASS.",
+      "budget_registered": "Amendments 28/28b (registrations b71061e0, 07cda5be): trained roots cap 232800 sim-s each (C5D, F8B; incl. identity wave) and 230400 (C5DR); final-eval allocation 5,000,000.",
+      "budget_actual": "C5D 232800 (194 charges), C5DR 230400 (192), F8B 232800 (194); all PASS, no resume or retry. Analysis zero physics on gpuA (receipts + vehicle logs copied).",
+      "criteria_verdict": "ORACLE_WM-U0 PRIMARY -2290 [-3924,-696] veh-s (-5.5%), CVaR90 -37.6 [-47.6,-28.0], groups pass: MEETS. LEARNED_TRIGGER-U0 -1829 [-3411,-300] (-4.4%), CVaR90 -36.9 [-46.9,-27.4]: meets. C5D-U0 -405 [-2006,+1198] (-1.0%), CVaR90 -9.5 [-19.1,-0.03]: does not meet (CI crosses 0). C5D-C5DR -1112 [-2742,+434] (-2.6%), CVaR90 -12.4 [-21.8,-2.9]. C5D-F8B +1330 [-149,+2808] (+3.3%), CVaR90 +10.0 [+1.2,+18.9] (C5D tail worse). Fairness passes in every contrast (worst +6.9 s/veh, LEARNED_TRIGGER origin:L2). Unregistered descriptive means vs U0: F8B -1735 (-4.1%), C5DR +707 (+1.7%), no CI.",
+      "limitations": "ORACLE_WM is privileged. C5D/C5DR/F8B unregistered-vs-U0 means are descriptive only. First a28 call omitted the C5DR identity root (C5DR UNAVAILABLE; CONFIRM_TABLES_a28_noident.json kept); rerun with --identity-roots C5DR=<C5D u12 root> gives identical contrasts and C5DR PASS.",
+      "answers": "WM bank arms beat frozen MAPPO on the confirmation panel; the WM-guided trained policy at u12 is not significantly better than U0 in total delay but has a lower tail and lower delay than its unguided twin's tail; F8B is directionally better than C5D.",
+      "paths": [
+        "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A28.json",
+        "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_a28_noident.json",
+        "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/a28b.out"
+      ],
+      "structured": {
+        "record_kind": "experiment",
+        "execution_status": "completed",
+        "evidence_validity": "Registered amendment-28 confirm-analyse (ops/nm_finaleval.py, c4/nm-finaleval fb1af64b; a28 code path unchanged by b68c2c60) on sealed waves; analysis_sha256 5cbaa63e60f585020956b7e51e5dfb4dc2fd9d571eb73d884f9e7a451d8dd3a7.",
+        "scientific_verdict": "Primary (ORACLE_WM-U0) PASS. C5D-U0 does not meet (total CI crosses 0; CVaR90 lower).",
+        "evidence_status": "integrity_receipt_verified",
+        "review_status": "CONFIRM_TABLES sealed by the registered tool; numbers transcribed from it. Independent review pending.",
+        "outcomes": []
+      }
+    },
+    {
+      "id": "N6-CONFIRM-A29-20261109",
+      "date": "2026-11-09",
+      "family": "PL",
+      "name": "N6 amendment-29 confirmation at the disk-safety-stop updates: C5D u17, C5DR u17, F8B u19 vs U0 on the 192-world p20c panel",
+      "status": "completed",
+      "question": "Pre-registered amendment 29 (u24) as amended by the MAIN 12:23 disk-safety stop rule: does the WM-guided policy at its last sealed update beat U0 (primary), and how does it compare with F8B and the unguided twin?",
+      "controller": "C5D = CLEAN5C5D-B u17, C5DR = CLEAN5C5D-R u17 (stop at 13:02, k=17), F8B = F8V4B-B u19 (k=19); U0 from the bank root.",
+      "changed_vars": "Evaluated update: u24 replaced by each run's last sealed update (disclosed: C5D=u17, C5DR=u17, F8B=u19). Everything else as amendment 28.",
+      "comparators": "Registered contrasts: C5D-U0 (PRIMARY: 95% CI upper < 0), C5D-F8B, C5D-C5DR. diff = treatment - reference in total delay veh-s per world (paired, same 192 worlds 993100-993291, CRN); negative = treatment has less delay. CVaR90 diff in s/veh, same sign. Group fairness: per-group mean per-vehicle delay increase (treatment - reference) <= 10 s. Bootstrap paired percentile.",
+      "matching_reuse": "U0 reused from amendment 28 bank root; identity rows inherited from the u12 identity roots (C5D, C5DR <- C5D u12; F8B <- F8B u12): all PASS. Roots registered by run_trained_final.sh after the stop (confirm-register --update k).",
+      "budget_registered": "Amendment 29: about 460,800 + 230,400 (C5DR) sim-s within final-eval allocation 5,000,000; cap 230400 per root.",
+      "budget_actual": "C5D_u17 230400, C5DR_u17 230400, F8B_u19 230400 sim-s (192 charges each); all PASS, no resume or retry.",
+      "criteria_verdict": "C5D-U0 PRIMARY -941 [-2591,+683] veh-s (-2.2%), CVaR90 -12.8 [-22.3,-3.5]: FAIL (CI crosses 0). C5D-C5DR -1381 [-3035,+321] (-3.3%), CVaR90 -13.7 [-24.3,-3.4]. C5D-F8B +1029 [-462,+2483] (+2.6%), CVaR90 +6.7 [-1.8,+15.3]. Fairness passes in all contrasts (worst +1.8 s/veh).",
+      "limitations": "Not u24: the disk-safety stop fixed different k per run (u17 vs u19), so C5D-F8B compares unequal training lengths. ANALYSIS-CODE FIX DISCLOSED: the first amendment-29 call blocked (F8B u19 vs C5D u17) because the stop-rule patch (fb1af64b) assumed one k for all runs; commit b68c2c60 (made after the stop rule fired and the runs finished, before any amendment-29 table existed) lets each run use its own last sealed k (C5D and C5DR must be equal) and records them in update/stop_rule. Contrast arithmetic unchanged; deployed to gpuA/cpuZ/cpuW stage envs.",
+      "answers": "Continued WM-guided training to u17 does not significantly reduce total delay vs frozen MAPPO; it does reduce tail delay (CVaR90) vs U0 and vs the unguided twin.",
+      "paths": [
+        "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A29.json",
+        "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/a29.out"
+      ],
+      "structured": {
+        "record_kind": "experiment",
+        "execution_status": "completed",
+        "evidence_validity": "Registered amendment-29 confirm-analyse (ops/nm_finaleval.py c4/nm-finaleval b68c2c60) on sealed waves; analysis_sha256 ccb4e84e5e80cc640f38633bd633219fccbabc0a1b0d3210788ea6c73f9a8eb5.",
+        "scientific_verdict": "Primary C5D-U0 FAIL (total CI crosses 0); CVaR90 lower vs U0 and vs C5DR.",
+        "evidence_status": "integrity_receipt_verified",
+        "review_status": "CONFIRM_TABLES_A29 sealed by the registered tool; numbers transcribed from it. Independent review pending.",
+        "outcomes": []
+      }
+    },
+    {
+      "id": "N6-BANK-A27-20261109",
+      "date": "2026-11-09",
+      "family": "PL",
+      "name": "N6 amendment-27 bank arms (ORACLE, ORACLE_WM, LEARNED_TRIGGER) vs U0 and MAPPO_LANE on the p20x panel",
+      "status": "completed",
+      "question": "On the 96-world p20x primary panel, do the bank arms reduce total delay vs U0 (primary, applicable worlds) and vs MAPPO_LANE (secondary) while meeting the group-fairness (<=10 s/veh) and CVaR90 co-criteria?",
+      "controller": "ORACLE (U0 + every admitted verified bank plan, WM+rule; privileged upper bound), ORACLE_WM (WM-sourced plans only; privileged upper bound), LEARNED_TRIGGER (ORACLE_WM plans admitted by frozen CAV-observable classifier; insurance/deployability arm)",
+      "changed_vars": "Bank arm overlay on U0; everything else the registered p20x plant (SRC src_p20x_b5268408_df3a2994 = c87791e5 overlay + df3a2994 nm_applicability).",
+      "comparators": "U0 (primary) and MAPPO_LANE (secondary), same worlds/CRN. diff = treatment - reference in total delay veh-s per world; negative = treatment has less delay. Bootstrap paired percentile 10000 reps seed 20261104.",
+      "matching_reuse": "Reuses the bound U0 and MAPPO_LANE episodes of root nm_finaleval_p20x_r2 (prerun); ORACLE_BINDING 9b7f5cc1, applicability labels receipt 1577bba1.",
+      "budget_registered": "Amendment 27: v2v_final_bank cap 345600 sim-s.",
+      "budget_actual": "v2v_final_bank charged 345600 (= cap); root total 923400 = prerun 576000 + logcheck 720 + seqcheck 1080 + bank 345600. gpuA, 18 workers, 8 rounds, PASS sealed, no resume. bank-analyse zero physics; outputs synced to cpuW r2 root (6354-file manifest equal).",
+      "criteria_verdict": "Applicability 96/96 worlds (rate 1.0), vehicle-time 0.334; so applicable = all worlds, non_applicable empty. vs U0: ORACLE -3474 [-5879,-1101] (-8.0%, p=0.003) MEETS primary (groups pass, worst origin:L2 +6.1 s/veh; CVaR90 -43.6 [-58.4,-28.9] passes); ORACLE_WM -1967 [-4412,+432] (-4.5%, p=0.11) does not meet (CI crosses 0; groups/CVaR90 pass); LEARNED_TRIGGER -1585 [-3838,+616] (-3.6%, p=0.16) does not meet (groups/CVaR90 pass). vs MAPPO_LANE: ORACLE -4251 [-6552,-1937], ORACLE_WM -2744 [-5102,-426], LEARNED_TRIGGER -2362 [-4548,-150]; all fail the group co-criterion on origin:L2 (+14.8/+16.2/+16.6 s/veh > 10); CVaR90 passes. Breakdown split: not computable: 0 worlds met the registered rule (U0 stop_and_go >= 1). Safety: 0 collisions/teleports all arms.",
+      "limitations": "ORACLE and ORACLE_WM use privileged bins and are not deployable bounds. Applicability labelled every world applicable, so the applicable-world test is not a sub-population test. Breakdown secondary unavailable. The deployable LEARNED_TRIGGER CI includes zero vs U0.",
+      "answers": "Bank upper bound (ORACLE) significantly beats U0 with fairness and tail co-criteria; WM-only and learned-trigger arms are directionally better but not significant vs U0. Against MAPPO_LANE all arms have lower delay but violate the L2 per-group fairness co-criterion.",
+      "paths": [
+        "runs/active/C4-V7FT-20261017/nm_finaleval_p20x_r2_bank/BANK_TABLES.json",
+        "runs/active/C4-V7FT-20261017/nm_finaleval_p20x_r2_bank/BANK_ANALYSIS.txt"
+      ],
+      "structured": {
+        "record_kind": "experiment",
+        "execution_status": "completed",
+        "evidence_validity": "Registered amendment-27 analysis (ops/nm_finaleval.py bank-analyse) on the sealed bank waves; analysis_sha256 1e8bdea0073ae30cfe3283eaac286f737401d7c1d453b8bd16d4f1a0282de71e.",
+        "scientific_verdict": "ORACLE meets the primary vs U0; ORACLE_WM and LEARNED_TRIGGER do not (CI crosses 0). All arms fail fairness vs MAPPO_LANE on origin:L2. Breakdown split not computable: 0 worlds met the registered rule.",
+        "evidence_status": "integrity_receipt_verified",
+        "review_status": "BANK_TABLES.json sealed by the registered tool; numbers transcribed from it. Independent review pending.",
+        "outcomes": []
+      }
+    },
+    {
       "id": "S-GROUPDIAG",
       "date": "2026-11-06",
       "family": "PL",
@@ -79,6 +201,32 @@
       }
     },
     {
+      "id": "S-MINING-20261106",
+      "date": "2026-11-06",
+      "family": "PL",
+      "name": "Owner-approved executable complementary two-CAV merge-move mining",
+      "status": "blocked_before_physics_gpuA_access",
+      "question": "Can executable complementary lane-yield/gap-open/ramp-merge or merge-timed wall pairs beat EACH member solo on this road under matched common-window two-CRN SUMO verification?",
+      "changed_vars": "Prospective complementary two-role actions including safe CAV-only lane changes and observable merge-conflict opportunities; no candidates executed while access blocked.",
+      "comparators": "Base MAPPO continuation, exact group macro, solo member0 and solo member1, common state/background/CRN/full horizon on both verification seeds. Synergy = min(J_solo)-J_group, positive better; total benefit = J_base-J_group.",
+      "matching_reuse": "Read CLEAN2_GROUP_COOP_RESEARCH.md and existing registered cpuV P3/P4 parity PASS reference receipts. Do not infer gpuA parity or reuse native-plan gains as certificates of a newly executable macro. Separate PLANFIX still independently owned.",
+      "budget_registered": "REGISTRATION.md owner2026-11-06 00:27: phase mining <=500000 sim-s INSIDE total6500000; includes new parity, full-prefix collection and all verification/failed/interrupted branches. Existing reservations protected.",
+      "budget_actual": "0 charged / 0 actual sim-s; own cpuV metadata-only root and empty ledger; no GPU/model/SUMO/process dispatch.",
+      "criteria_verdict": "NOT TESTED. Six bounded laptop gpuA connections close before SSH key exchange. cpuV environment1.27.1 and existing reference parity independently confirmed; gpuA environment/parity NOT RUN and required real GPU WM ranking unavailable. No candidates ranked/verified/admitted; empty output is not a zero-survivor efficacy finding.",
+      "limitations": "Infrastructure blocker; no actual executable-source/G5 ABI/WM/grid qualification, no mining-host resource admission or physical outcome. cpuV is prospective SUMO fallback with <=14/48cores, initial1 nice19/threads1 and mandatory no-slowdown guard, not a substitute for required GPU WM pre-screen.",
+      "answers": "unanswered; blocked in progress; restore gpuA SSH access before mining can continue",
+      "paths": ["runs/active/C4-V7FT-20261017/MINING_REPORT.md", "runs/active/C4-V7FT-20261017/MINING_REGISTRATION.json", "runs/active/C4-V7FT-20261017/MINING_HOST_DECISION.json", "runs/active/C4-V7FT-20261017/MINED_MOVES.jsonl", "runs/active/C4-V7FT-20261017/MINING_TRANSFER_RECEIPT.json"],
+      "structured": {
+        "record_kind": "engineering_preparation",
+        "execution_status": "blocked_before_physics",
+        "evidence_validity": "Actual SSH failure, cpuV package metadata and historical reference receipt only; no new physical-effect evidence",
+        "scientific_verdict": "Unanswered. No verified executable group-over-best-single moves produced.",
+        "evidence_status": "integrity_receipt_verified",
+        "review_status": "Physics pins/parity hashes cross-checked against captured cpuV evidence; remote file hashes and repeated idempotent sync passed. MINING_RECORD_CHECKS.json: scoped source identity zero mismatches; zero new ledger errors versus174 pre-existing missing-path errors. Two metadata ledger tests passed. No scientific efficacy or independent review claim.",
+        "outcomes": []
+      }
+    },
+    {
       "id": "S-WMCHECK",
       "date": "2026-11-05",
       "family": "PL",
@@ -101,6 +249,31 @@
         "scientific_verdict": "Positive WM gain is a weak signal on recovered selected candidates; >=80%-confidence error remains unresolved. No universal correction or probability calibration inferred.",
         "evidence_status": "integrity_receipt_verified",
         "review_status": "Prior-session independent arithmetic, Spearman, 32 seed rows and 10 unavailable probability deciles PASS, preserved on resume. Close-out: zero new validation errors (pre-existing missing paths remain); generated summary PASS; scoped receipt identity zero mismatches, zero physical-effect metric checks. Ledger tests 18 passed/5 skipped/7 failed: six restricted-path guard refusals and one pre-existing missing source. No restricted bytes read.",
+        "outcomes": []
+      }
+    },
+    {
+      "id": "S-W78SCORE",
+      "date": "2026-10-30",
+      "family": "WM",
+      "name": "W7/W8 failed scoring-tail completion and PANEL120 best-checkpoint scoring",
+      "status": "completed",
+      "question": "Do either registered best or final EMA candidates improve on WM2 under the existing W5/W6 verdict contract?",
+      "changed_vars": "Supply missing exact scorer modules; scoring only, no retraining or reselection.",
+      "comparators": "Frozen WM2 b8797242; W5/W6 verdict contract and previously completed validation rollouts reused after checkpoint hash checks.",
+      "budget_registered": "MAIN 2026-10-30 11:35: zero SUMO and optimizer steps; two candidates/run; validation+pairs300, CCT-1/CCT-2, accept.py; PANEL120 best only. W7 fraction <=0.9, W8 <=0.4.",
+      "budget_actual": "Scoring-only allocations and preserved retry are recorded in docs/paper_results/W78_SCORING_RECORD.json; zero simulation and training.",
+      "criteria_verdict": "All four candidates: original/amended does_not_help on both panels, CCT-1 H_C=0, CCT-2 H_G=300, accept.py ACCEPT. Every candidate regresses in pairs300 correlation; W8 final also regresses in sign. Both best checkpoints are step 0 with 171 WM2 tensors unchanged plus two zero jam offsets. PANEL120 best rows identical, no significant 120 s improvement; retain WM2.",
+      "limitations": "Existing exposed validation/development panels; PANEL120 exploratory; no automatic adoption.",
+      "answers": "fully under registered panels; external generalization remains open",
+      "paths": ["docs/paper_results/W78_SCORING_RECORD.json", "docs/paper_results/W7_VERDICT.md", "docs/paper_results/W8_VERDICT.md", "docs/paper_results/W5_VERDICT.md", "docs/paper_results/W6CAP_VERDICT.md"],
+      "structured": {
+        "record_kind": "analysis",
+        "execution_status": "completed",
+        "evidence_validity": "registered development/validation scoring; PANEL120 exploratory",
+        "scientific_verdict": "Retain WM2; do not adopt either W7/W8 candidate. Best is initialization; final candidates fail registered improvement and pairs300 non-regression.",
+        "evidence_status": "integrity_receipt_verified",
+        "review_status": "Checkpoint/source hashes, eight matched-row comparisons, four acceptance decisions, no-training hash proofs and both PANEL120 scores independently checked. Ledger: 11 pre-existing missing-path errors, zero new errors; summary check passes; guarded ledger tests 18 passed/7 blocked at restricted-path guard/5 skipped.",
         "outcomes": []
       }
     },
@@ -26702,6 +26875,8 @@
     }
   ],
   "coverage": {
+    "n6_bank_a27_closeout": "2026-11-09 N6-BANK-A27: amendment-27 bank arms on p20x; ORACLE meets primary vs U0 (-3474 veh-s/world); ORACLE_WM and LEARNED_TRIGGER CI cross 0; all fail L2 fairness vs MAPPO_LANE; breakdown split not computable (0 worlds met rule).",
+    "s_w78score_closeout": "2026-10-30 S-W78SCORE: scoring-only W7/W8 completion; all four candidates does_not_help/ACCEPT, H_C=0/H_G=300; best is initialization and PANEL120 best scores identical. Retain WM2; long-horizon improvement remains open. Zero new simulation/training.",
     "included_families": [
       "CUR",
       "LC",
@@ -46198,6 +46373,10 @@
   "source_verification": {
     "purpose": "Registered allowed sources for the separate source-verification mode. Consistency validation (validate) never reads these contents; verify-sources reads ONLY these registered paths, compares stored costs/differences/verdicts to the source fields, and writes protocols/source_verification_report.json with path, sha256, field locations and verification time. Sealed outcomes are never traversed.",
     "allowed_sources": [
+      {"source_id": "SRC-N6-CONFIRM-A30", "path": "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A30.json", "entries": ["N6-CONFIRM-A30-20261109"], "field_map": "Integrity/report binding only; contrast values transcribed from contrasts[].total_minus_ref / tail_cvar90 / groups of the sealed analysis", "sha256_registered": "7347ed80aa85955ef6c065a76b1bd550952be8cfc37f1de916869eaf8c11ffe8"},
+      {"source_id": "SRC-N6-CONFIRM-A28", "path": "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A28.json", "entries": ["N6-CONFIRM-A28-20261109"], "field_map": "Integrity/report binding only; contrast values transcribed from contrasts[].total_minus_ref / tail_cvar90 / groups of the sealed analysis", "sha256_registered": "fe014898b143e891ab62cfe4fcd70ddc24b7607eadeac57e3294be00c2e9ef90"},
+      {"source_id": "SRC-N6-CONFIRM-A29", "path": "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A29.json", "entries": ["N6-CONFIRM-A29-20261109"], "field_map": "Integrity/report binding only; contrast values transcribed from contrasts[].total_minus_ref / tail_cvar90 / groups of the sealed analysis", "sha256_registered": "ffee5897eb960b7be3d09c683d20c1205b4f2239f848bb5c9fa965ff7e6af924"},
+      {"source_id": "SRC-N6-BANK-A27", "path": "runs/active/C4-V7FT-20261017/nm_finaleval_p20x_r2_bank/BANK_TABLES.json", "entries": ["N6-BANK-A27-20261109"], "field_map": "Integrity/report binding only; arm-vs-reference delay, group and CVaR90 values transcribed from arms.<ARM>.vs_<REF>.<subset> of the sealed analysis", "sha256_registered": "738244bb71df705f5ca135812a0fbb0abfac996a865387dc603e41dccc16af18"},
       {
         "source_id": "SRC-SGROUPDIAG-RESUME",
         "path": "runs/active/C4-V7FT-20261017/S_GROUPDIAG_RESUME_RECEIPT_20261106.json",

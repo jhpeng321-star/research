@@ -1,0 +1,21 @@
+{
+ "amendment": 4,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend3.json",
+  "registration_sha256": "56bf566c9ad920aadf569f7ddd93b29ef4c9062311f301de71dbc263f2795f0d"
+ },
+ "authority": [
+  "MAIN decision 2026-11-06 (to N6): do NOT build the F7 per-decision branches; under the registered framing claims 3a/3c rest on B vs A/U0/RULE/R on the held-out panels and decision-level attribution is not required; report decisions as \"unavailable (not built)\" and record it in the spec"
+ ],
+ "f7": {
+  "budget": "the 96,000 sim-s decision ceiling in the quote is never spent (no nmdec_ job is ever reserved)",
+  "reported_as": "unavailable (not built): MAIN decision 2026-11-06 - F7 per-decision synergy branches are not built; claims 3a/3c rest on B vs A/U0/RULE/R on the held-out panels (decision-level attribution not required); B/R decision activity is reported descriptively",
+  "status": "not built (closed by MAIN decision)",
+  "still_reported": "descriptive B/R decision activity on every seed (no branches, no synergy decomposition)"
+ },
+ "registered_utc": "2026-11-06T14:55:08.052857+00:00",
+ "registration_sha256": "59bf91bf5a0772a9811bcd04d8477a8bc7517dba0a2a9f90c061fe5bafc14d8a",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: no clean5a, pre-run or parity result exists or has been opened",
+ "unchanged": "arms, panels, claims 3a/3b/3c, F11 parity, F12 sealing, pre-run, allocation 1,340,000"
+}

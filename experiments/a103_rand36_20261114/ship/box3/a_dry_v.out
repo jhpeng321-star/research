@@ -1,0 +1,133 @@
+{
+ "stage": "v",
+ "panel_sha256": "989248f9d449b234724d74cd569e324e1be7bc1038529947429f336652412ea4",
+ "n_waves": 12,
+ "waves": [
+  [
+   "A80V_rand_8b349e4e21de2104",
+   24,
+   "A75_PLAN",
+   "a80v_8b349e4e21de2104_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_248e417088ca5bca",
+   24,
+   "A75_PLAN",
+   "a80v_248e417088ca5bca_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_362b1c090017333d",
+   24,
+   "A75_PLAN",
+   "a80v_362b1c090017333d_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_426b1e24398af1e1",
+   24,
+   "A75_PLAN",
+   "a80v_426b1e24398af1e1_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_ce70dd9cd94958ee",
+   24,
+   "A75_PLAN",
+   "a80v_ce70dd9cd94958ee_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_76356c2101305101",
+   24,
+   "A75_PLAN",
+   "a80v_76356c2101305101_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_6fcc79151f336ee3",
+   24,
+   "A75_PLAN",
+   "a80v_6fcc79151f336ee3_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_aa089de181d7575e",
+   24,
+   "A75_PLAN",
+   "a80v_aa089de181d7575e_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_5eed2f91a929939a",
+   24,
+   "A75_PLAN",
+   "a80v_5eed2f91a929939a_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_55a62d9652f4bf15",
+   24,
+   "A75_PLAN",
+   "a80v_55a62d9652f4bf15_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_10fef05aff5844cc",
+   24,
+   "A75_PLAN",
+   "a80v_10fef05aff5844cc_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_2d89591c984cfd37",
+   24,
+   "A75_PLAN",
+   "a80v_2d89591c984cfd37_0000",
+   992500,
+   992523
+  ]
+ ],
+ "sim_s": 345600,
+ "charged": 0,
+ "cap": 460800,
+ "a75_sha256": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+ "mech": {
+  "n_waves": 12,
+  "sim_s": 28800,
+  "plans": [
+   "A80V_rand_8b349e4e21de2104",
+   "A80V_rand_248e417088ca5bca",
+   "A80V_rand_362b1c090017333d",
+   "A80V_rand_426b1e24398af1e1",
+   "A80V_rand_ce70dd9cd94958ee",
+   "A80V_rand_76356c2101305101",
+   "A80V_rand_6fcc79151f336ee3",
+   "A80V_rand_aa089de181d7575e",
+   "A80V_rand_5eed2f91a929939a",
+   "A80V_rand_55a62d9652f4bf15",
+   "A80V_rand_10fef05aff5844cc",
+   "A80V_rand_2d89591c984cfd37"
+  ]
+ },
+ "reference": {
+  "wave": "A68V_MAPPO60C",
+  "receipt_sha256": [
+   "1a6d31ddb386f0130ee05f755d73992a8716e8f45bfa2d26a30b337d5ca0e0a0"
+  ],
+  "n": 24,
+  "reports_ok": true
+ }
+}

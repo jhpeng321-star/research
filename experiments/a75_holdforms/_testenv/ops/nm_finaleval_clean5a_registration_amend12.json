@@ -1,0 +1,25 @@
+{
+ "amendment": 12,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend11.json",
+  "registration_sha256": "6e0a8335498cda17a282c18c20aab546d0a3e053fc8243c58dd6baf103f41d34"
+ },
+ "authority": [
+  "MAIN: repeat the plant-identity and training-parity checks on the clean5b-F deploy head before its waves"
+ ],
+ "deploy": "u12 main run: SRC = the clean5b-F deploy 1caf5c1c + the N6 overlay (launcher/runner files unchanged since 7d485dc2)",
+ "plant_identity": {
+  "diff": "b58daad8..1caf5c1c plant files: accel_plant (+ opt-in eval-only vehicle log when job[\"vehicle_log\"]; the N6 runner never sets it and logs through its own read-only cf.tick wrapper) and track2_backend (EpisodePolicy clean5_ev.fair slate for B/R; ArmRuntime training-only fairness reward); nothing else in the plant changed",
+  "evidence": "test_lc_runtime_cpu (no-stash byte identity) passes on 1caf5c1c",
+  "head": "c4/clean5b 1caf5c1c (clean5b-F)",
+  "verdict": "IDENTICAL for NATIVE/U0/RULE/RULE_FAIR"
+ },
+ "registered_utc": "2026-11-06T21:01:43.608182+00:00",
+ "registration_sha256": "b0fd0e1beb8065074c9fef2aaa4c0fb11ab021e5d23497708f84ba6b37501cf9",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: zero-SUMO checks; pre-run COMPLETE 04:56 (NATIVE/U0/RULE/RULE_FAIR 96+24 each, 654,600 / 660,000), nothing opened",
+ "training_parity": {
+  "tests": "9 passed (A, B/R lane-drop, RSU, N9, LCEXEC B and R, hold_lane_pin, clean5b-F fairness slate + hold pins); runner + LC runtime: 156 passed",
+  "tree": "1caf5c1c + N6 overlay"
+ }
+}

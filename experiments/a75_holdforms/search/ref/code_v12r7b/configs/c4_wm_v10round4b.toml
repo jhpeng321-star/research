@@ -1,0 +1,37 @@
+# V10 round 4b (2026-10-20 ~15:50): braking-only control on the clean paired-ranking anchor. Continue from round 2
+# (wm_s_stage240.pt; no negotiation block) with the learned braking-wave terms (V10WAVE) and the post-merge
+# acceleration-consistency loss (V10R5MERGE) + identity-at-load residual-head rescale. Keeps the GPU busy while the
+# merge redesign (round 5) is built; candidate init for round 5 if it preserves round 2's held-out ranking.
+schema_version = 2
+name = "WM-S-C4-V10ROUND4B"
+extends = "c4_wm_v10round2.toml"
+
+[model]
+residual_head_rescale = true
+
+[loss.brake_wave]
+weight = 0.5
+residual_weight = 0.25
+spurious_weight = 0.5
+window_s = 4.0
+onset_decel_mps2 = 1.0
+spurious_decel_mps2 = 1.5
+
+[loss.post_merge]
+weight = 0.5
+residual_weight = 0.5
+window_s = 10.0
+huber_delta_mps2 = 0.5
+
+[curriculum]
+unroll_s = [120.0, 300.0]
+stage_steps = [30, 60]
+truncation_steps_per_stage = [120, 60]
+max_hours = 2.5
+
+[optim]
+lr_per_stage = [5.0e-5, 3.0e-5]
+batch_size_per_stage = [4, 2]
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10_round4b"

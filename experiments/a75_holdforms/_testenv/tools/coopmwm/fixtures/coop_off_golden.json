@@ -1,0 +1,29 @@
+{
+ "base_commit": "b20bec2f",
+ "base_module": "tools/coopmwm/mppi_search.py",
+ "base_module_sha256": "f2faeeeecf06eb74d22df56300dae39ec31d7afabb664d25a47f5a0650567c77",
+ "digests": {
+  "n1_m2": {
+   "calls": "04070e5c91f0b05ddf3c31558bc015c28e6775198d6bc7d786a680ad41d147f8",
+   "coop_key": false,
+   "result": "8be2b45cbb57e0e489609371e2659811ba298ab246b719e1ae56e2a33b871a43"
+  },
+  "n1_m3_live": {
+   "calls": "a9519c1851e721cbe17d9d5804cb331774d65a8b9a990e93183367273ff73938",
+   "coop_key": false,
+   "result": "a2fd3d8f980c6be6d7411f3345a71c40fd8acaf98141064c315ec871e21ea158"
+  },
+  "n4_m2": {
+   "calls": "ba1fff673f5399cf2d5bed4fe5cd3beb57ecf109a3ee8b2d9039e88f32081931",
+   "coop_key": false,
+   "result": "cd306644fbf29f6cb109053cc6dbeb0316063116da1865914c751663cd103590"
+  },
+  "n4_m3_live": {
+   "calls": "e7f1100eb3ecc0f8301de5f2354a6dad5a79b6305473197780450ec52247d543",
+   "coop_key": false,
+   "result": "0082e4ffd46a8b77a4ac8970df34fcb358ba9c878a7a7658e4fe2daf72070d13"
+  }
+ },
+ "generated_with": "base module, Windows rl_driving numpy; Linux: set COOPMWM_COOP_BASELINE",
+ "schema": "coopmwm.coop_off_golden.v1"
+}

@@ -1,0 +1,8 @@
+# Smoke gate: the R3 recipe with six optimizer steps per curriculum stage
+# (SMOKE_STAGE_STEPS of the chain). Must run on the real data path.
+schema_version = 2
+name = "WM-S-SMOKE"
+extends = "r3.toml"
+
+[curriculum]
+stage_steps = [6, 6, 6, 6]

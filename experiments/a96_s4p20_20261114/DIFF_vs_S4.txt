@@ -1,0 +1,94 @@
+2c2
+< # A85 S4 (MPS env, 14 workers) copy of: A79 S2b launcher /root/autodl-tmp/a75/run_search_s2b.sh (f6c4afeb).
+---
+> # A96 S4-p20: exact copy of the A85 S4 launcher /root/autodl-tmp/a85/run_search_s4.sh (293ed036), cell D2800_p20.
+4,7c4,7
+< #   run_search_s4.sh <cfg.json> <outdir>     one launch per out dir; refuses an existing dir
+< # Same as run_search_s2b.sh except: own bundle copy A=/root/autodl-tmp/a85/a75 (a75_search_box.tgz 9eb32080,
+< # like a75p20/a75), PYTHONPATH ship = /root/autodl-tmp/a85/a85ship (a75ss/a75_wmforms/wm_fix_crn unchanged + a85s4.py),
+< # module a85s4 (a75ss.main routed through the S4 lane-set filter) instead of a75ss.
+---
+> #   run_search_s4p20.sh <cfg.json> <outdir>     one launch per out dir; refuses an existing dir
+> # Same as run_search_s4.sh except: own bundle copy A=/root/autodl-tmp/a96_s4p20/a75 (a75_search_box.tgz 9eb32080),
+> # ship /root/autodl-tmp/a96_s4p20/a85ship (byte copy of a85/a85ship), --states = registered p20 file (7860a5d1,
+> # read only from a75p20, sha-checked and recorded as in run_search_s3b.sh), --cell D2800_p20.
+9,10c9,11
+< A=/root/autodl-tmp/a85/a75
+< SHIP=/root/autodl-tmp/a85/a85ship
+---
+> A=/root/autodl-tmp/a96_s4p20/a75
+> SHIP=/root/autodl-tmp/a96_s4p20/a85ship
+> STATES=/root/autodl-tmp/a75p20/p20/regime_STATES_p20.json
+13a15,16
+> [ "$(sha256sum "$STATES" | cut -c1-64)" = 7860a5d194fa95bec102b8f113c4565606c09a5cde523a42a996ae20e67d4f8a ] \
+>   || { echo "REFUSE: states sha"; exit 4; }
+18a22
+> sha256sum "$STATES" > "$M/STATES_SHA256"
+20c24
+< PYTHONPATH=src:.:$SHIP /root/miniconda3/bin/python -B -m a85s4 --states data/regime_STATES.json --cell D2800_p60 \
+---
+> PYTHONPATH=src:.:$SHIP /root/miniconda3/bin/python -B -m a85s4 --states "$STATES" --cell D2800_p20 \
+2,4c2,5
+< # A85 S4 queue: wait for the A79 chain's "S3b rc" line, then run S4 ONCE (no retry). Zero SUMO, never trains.
+< # Starts S4 even if S3b rc != 0 (independent run; logged). Refuses if out_s4 / out_s4.meta exist or another queue
+< # holds the lock. Never signals any process. Log: /root/autodl-tmp/a85/chain_s4.log
+---
+> # A96 S4-p20 queue (modelled on a85/queue_s4.sh 58389938): run S4-p20 ONCE (no retry). Zero SUMO, never trains.
+> # No predecessor to wait for (S4 finished 01:25 rc 0); instead it waits while another search python (a75ss/a85s4)
+> # is running, so the GPU is free. Refuses if out_s4p20 / out_s4p20.meta exist or another queue holds the lock.
+> # Never signals any process. Log: /root/autodl-tmp/a96_s4p20/chain_s4p20.log
+6,12c7,11
+< B=/root/autodl-tmp/a85
+< CHAINLOG=/root/autodl-tmp/a75/chain_s2b.log
+< CHAINPID=5708                      # bash /root/autodl-tmp/a75/chain_s2b.sh (identity-checked, read only)
+< OUT=$B/out_s4
+< exec >> $B/chain_s4.log 2>&1
+< mkdir $B/queue_s4.lock 2>/dev/null || { echo "REFUSE: queue lock $B/queue_s4.lock exists $(date)"; exit 3; }
+< echo "$$" > $B/queue_s4.lock/pid
+---
+> B=/root/autodl-tmp/a96_s4p20
+> OUT=$B/out_s4p20
+> exec >> $B/chain_s4p20.log 2>&1
+> mkdir $B/queue_s4p20.lock 2>/dev/null || { echo "REFUSE: queue lock $B/queue_s4p20.lock exists $(date)"; exit 3; }
+> echo "$$" > $B/queue_s4p20.lock/pid
+14,26c13,14
+< echo "S4 queue pid $$ waiting for 'S3b rc' in $CHAINLOG $(date)"
+< while ! grep -q '^S3b rc' "$CHAINLOG" 2>/dev/null; do
+<   if ! tr '\0' ' ' < /proc/$CHAINPID/cmdline 2>/dev/null | grep -q 'chain_s2b.sh'; then
+<     sleep 5
+<     grep -q '^S3b rc' "$CHAINLOG" 2>/dev/null && break
+<     echo "S4 NOT STARTED: chain pid $CHAINPID gone without an 'S3b rc' line $(date)"; exit 2
+<   fi
+<   sleep 60
+< done
+< echo "seen: $(grep '^S3b rc' "$CHAINLOG" | tail -1)"
+< S3RC=$(grep '^S3b rc' "$CHAINLOG" | tail -1 | awk '{print $3}')
+< [ "$S3RC" = "0" ] || echo "NOTE: S3b rc=$S3RC (not 0); S4 is independent and starts anyway"
+< sleep 30                           # let the S3b workers release the GPU
+---
+> echo "S4p20 queue pid $$ $(date)"
+> while pgrep -f 'python -B -m (a75ss|a85s4) --states' > /dev/null; do sleep 60; done
+28c16,18
+< # same MPS client env as chain_s2b.sh (daemon started by the A79 swap; not started or stopped here)
+---
+> # same MPS client env as queue_s4.sh / chain_s2b.sh (daemon not started or stopped here). queue_s4.sh checked with
+> # pgrep -x on the full 23-char name, which cannot match (comm is truncated to 15 chars), so S4 logged "no MPS"
+> # while daemon pid 5702 was up. Logging only; the env is identical.
+30c20
+< pgrep -x nvidia-cuda-mps-control > /dev/null && echo "mps control daemon alive" || echo "NOTE: no MPS control daemon (CUDA runs without MPS)"
+---
+> pgrep -f '^nvidia-cuda-mps-control' > /dev/null && echo "mps control daemon alive" || echo "NOTE: no MPS control daemon (CUDA runs without MPS)"
+32,34c22,24
+< echo "S4 start $(date)"
+< bash $B/run_search_s4.sh $B/cfg/A85S4_SEARCH_CFG.json $OUT; rc=$?
+< echo "S4 rc $rc $(date)"
+---
+> echo "S4p20 start $(date)"
+> bash $B/run_search_s4p20.sh $B/cfg/A96S4P20_SEARCH_CFG.json $OUT; rc=$?
+> echo "S4p20 rc $rc $(date)"
+cfg: cmp A85S4 vs A96S4P20:
+IDENTICAL (sha 0a80c0f4...)
+a75ss.py IDENTICAL
+a75_wmforms.py IDENTICAL
+wm_fix_crn.py IDENTICAL
+a85s4.py IDENTICAL

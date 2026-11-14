@@ -1,0 +1,51 @@
+# V10 round 7 (2026-10-21 night, owner-approved learned merge core; astra MERGE_CORE_ADVICE): round 2 stage240 + learned
+# LC2013-like secure-gap merge decision (anticipated two-sided secure gaps with learned s0/T/b/tau_a fitted on recorded
+# TRAIN-val ramp rows, per-driver assertiveness latent, bounded residual) + learned follower yield. Training: teacher-forced
+# acceptance likelihood on recorded states (tf_weight) dominant, on-policy censored survival (weight) secondary (~0.8:0.2);
+# mainline lane head frozen; reduced lr on shared dynamics to protect round 2's paired ranking. No braking change
+# (slow residual stays a separate candidate for attribution). Learned insertion OFF.
+schema_version = 2
+name = "WM-S-C4-V10ROUND7"
+extends = "c4_wm_v10round2.toml"
+
+[model]
+merge_decision = "secure_gap"
+
+[loss.merge_core]
+weight = 0.2
+tf_weight = 0.8
+yield_weight = 0.4
+n_quad = 8
+metrics = true
+pos_tol_m = 50.0
+speed_tol_mps = 8.0
+gap_tol_m = 40.0
+gap_speed_tol_mps = 8.0
+
+[loss.merge_survival]
+weight = 0.0
+negative_weight = 0.0
+
+[curriculum]
+unroll_s = [120.0, 300.0]
+stage_steps = [30, 60]
+truncation_steps_per_stage = [120, 60]
+max_hours = 2.5
+
+[optim]
+lr_per_stage = [5.0e-5, 3.0e-5]
+batch_size_per_stage = [4, 2]
+
+[optim.lr_scale]
+"lane_v5" = 0.05            # near-frozen mainline lane head (freezing breaks the unroll-level lane-flow term: no grad)
+"driver_encoder" = 0.3
+"driver_updater" = 0.3
+"residual_net" = 0.5
+"k_embedding" = 0.5
+"history_proj" = 0.5
+
+[selection]
+val_max_windows = 256
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10_round7"

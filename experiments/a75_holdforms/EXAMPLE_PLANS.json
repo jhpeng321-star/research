@@ -1,0 +1,504 @@
+{
+ "a75_digest": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+ "bank": {
+  "clean5c": {
+   "templates": [
+    {
+     "cell": "D2800_p60",
+     "family": "ex_short",
+     "offer_condition": {
+      "cooldown_s": 30,
+      "gate": null,
+      "phases": null,
+      "roles": [
+       {
+        "dmax": 1.5,
+        "hold_s": 10,
+        "lc_target_sumo": null,
+        "onset_s": 0,
+        "rank": 0,
+        "sumo_lane": 2,
+        "v_w": 18.0
+       }
+      ],
+      "situation": {
+       "unconditional": true
+      },
+      "slots": 1,
+      "spread_m": 300.0,
+      "start_gate": null,
+      "trigger": "lanes",
+      "zone": "far"
+     },
+     "template": {
+      "source": {
+       "strategy_key": "0435551630eb1c1b"
+      }
+     }
+    },
+    {
+     "cell": "D2800_p60",
+     "family": "ex_gap",
+     "offer_condition": {
+      "cooldown_s": 60,
+      "gate": null,
+      "phases": null,
+      "roles": [
+       {
+        "dmax": 1.5,
+        "dv_rel": 4.0,
+        "gap_arm_s": 60,
+        "gap_drop_m": 300.0,
+        "gap_dx_hi": 40.0,
+        "gap_dx_lo": -10.0,
+        "gap_events": 3,
+        "gap_release": "clear",
+        "hold_s": 10,
+        "lc_target_sumo": null,
+        "onset_s": 0,
+        "rank": 0,
+        "start": "gap",
+        "sumo_lane": 1,
+        "v_w": 0.0
+       }
+      ],
+      "situation": {
+       "unconditional": true
+      },
+      "slots": 1,
+      "spread_m": 300.0,
+      "start_gate": null,
+      "trigger": "lanes",
+      "zone": "merge"
+     },
+     "template": {
+      "source": {
+       "strategy_key": "38a8a4c8889053e1"
+      }
+     }
+    },
+    {
+     "cell": "D2800_p60",
+     "family": "ex_zone",
+     "offer_condition": {
+      "cooldown_s": 60,
+      "gate": null,
+      "phases": null,
+      "roles": [
+       {
+        "dmax": 1.0,
+        "hold_s": 60,
+        "lc_target_sumo": null,
+        "onset_s": 0,
+        "rank": 0,
+        "sumo_lane": 2,
+        "v_w": 19.0
+       },
+       {
+        "dmax": 1.0,
+        "hold_s": 60,
+        "lc_target_sumo": null,
+        "onset_s": 0,
+        "rank": 0,
+        "sumo_lane": 1,
+        "v_w": 20.0
+       }
+      ],
+      "situation": {
+       "unconditional": true
+      },
+      "slots": 1,
+      "spread_m": 300.0,
+      "start_gate": null,
+      "trigger": "lanes",
+      "zone": "custom",
+      "zone_d": [
+       1000.0,
+       400.0
+      ]
+     },
+     "template": {
+      "source": {
+       "strategy_key": "cf1d62bde3a042c0"
+      }
+     }
+    },
+    {
+     "cell": "D2800_p60",
+     "family": "ex_pulse",
+     "offer_condition": {
+      "cooldown_s": 60,
+      "gate": null,
+      "phases": null,
+      "roles": [
+       {
+        "dmax": 1.0,
+        "hold_s": 60,
+        "lc_target_sumo": null,
+        "onset_s": 0,
+        "pulse_off_s": 10,
+        "pulse_on_s": 10,
+        "rank": 0,
+        "sumo_lane": 2,
+        "v_w": 16.0
+       }
+      ],
+      "situation": {
+       "unconditional": true
+      },
+      "slots": 1,
+      "spread_m": 300.0,
+      "start_gate": null,
+      "trigger": "lanes",
+      "zone": "mid"
+     },
+     "template": {
+      "source": {
+       "strategy_key": "c8b2845f23776131"
+      }
+     }
+    },
+    {
+     "cell": "D2800_p60",
+     "family": "ex_taper",
+     "offer_condition": {
+      "cooldown_s": 60,
+      "gate": null,
+      "phases": null,
+      "roles": [
+       {
+        "dmax": 1.0,
+        "hold_s": 60,
+        "lc_target_sumo": null,
+        "onset_s": 0,
+        "rank": 0,
+        "sumo_lane": 2,
+        "taper_in_s": 10,
+        "taper_out_s": 10,
+        "v_w": 16.0
+       }
+      ],
+      "situation": {
+       "unconditional": true
+      },
+      "slots": 1,
+      "spread_m": 300.0,
+      "start_gate": null,
+      "trigger": "lanes",
+      "zone": "far"
+     },
+     "template": {
+      "source": {
+       "strategy_key": "88f27d4f918decd2"
+      }
+     }
+    },
+    {
+     "cell": "D2800_p60",
+     "family": "ex_rolling",
+     "offer_condition": {
+      "cooldown_s": 120,
+      "gate": null,
+      "phases": null,
+      "roles": [
+       {
+        "dmax": 1.0,
+        "hold_s": 60,
+        "lc_target_sumo": null,
+        "onset_s": 0,
+        "rank": 0,
+        "sumo_lane": 2,
+        "v_w": 18.0
+       },
+       {
+        "dmax": 1.0,
+        "hold_s": 60,
+        "lc_target_sumo": null,
+        "onset_s": 30,
+        "rank": 1,
+        "sumo_lane": 2,
+        "v_w": 18.0
+       },
+       {
+        "dmax": 1.0,
+        "hold_s": 60,
+        "lc_target_sumo": null,
+        "onset_s": 60,
+        "rank": 0,
+        "sumo_lane": 1,
+        "v_w": 18.0
+       }
+      ],
+      "situation": {
+       "unconditional": true
+      },
+      "slots": 1,
+      "spread_m": 300.0,
+      "start_gate": null,
+      "trigger": "lanes",
+      "zone": "full"
+     },
+     "template": {
+      "source": {
+       "strategy_key": "8f662382b55dbc68"
+      }
+     }
+    }
+   ]
+  },
+  "rows": [
+   {
+    "family": "ex_short",
+    "lb95_veh_s": 10.0,
+    "plan_source": "wm_search",
+    "regime": "D2800_p60",
+    "row_class": "unconditional",
+    "situational": {
+     "unconditional": true
+    },
+    "strategy_key": "0435551630eb1c1b",
+    "template_sha256": null
+   },
+   {
+    "family": "ex_gap",
+    "lb95_veh_s": 9.0,
+    "plan_source": "wm_search",
+    "regime": "D2800_p60",
+    "row_class": "unconditional",
+    "situational": {
+     "unconditional": true
+    },
+    "strategy_key": "38a8a4c8889053e1",
+    "template_sha256": null
+   },
+   {
+    "family": "ex_zone",
+    "lb95_veh_s": 8.0,
+    "plan_source": "wm_search",
+    "regime": "D2800_p60",
+    "row_class": "unconditional",
+    "situational": {
+     "unconditional": true
+    },
+    "strategy_key": "cf1d62bde3a042c0",
+    "template_sha256": null
+   },
+   {
+    "family": "ex_pulse",
+    "lb95_veh_s": 7.0,
+    "plan_source": "wm_search",
+    "regime": "D2800_p60",
+    "row_class": "unconditional",
+    "situational": {
+     "unconditional": true
+    },
+    "strategy_key": "c8b2845f23776131",
+    "template_sha256": null
+   },
+   {
+    "family": "ex_taper",
+    "lb95_veh_s": 6.0,
+    "plan_source": "wm_search",
+    "regime": "D2800_p60",
+    "row_class": "unconditional",
+    "situational": {
+     "unconditional": true
+    },
+    "strategy_key": "88f27d4f918decd2",
+    "template_sha256": null
+   },
+   {
+    "family": "ex_rolling",
+    "lb95_veh_s": 5.0,
+    "plan_source": "wm_search",
+    "regime": "D2800_p60",
+    "row_class": "unconditional",
+    "situational": {
+     "unconditional": true
+    },
+    "strategy_key": "8f662382b55dbc68",
+    "template_sha256": null
+   }
+  ],
+  "schema": "coopmwm.a75_holdforms.v1.bank"
+ },
+ "note": "unit-test examples (tools/coopmwm/test_a75_holdforms_cpu.example_specs); NOT verified in SUMO; lb95 values are placeholders",
+ "schema": "a75.example_plans.v1",
+ "strategies": [
+  {
+   "cooldown_s": 30,
+   "gate": null,
+   "name": "ex_short",
+   "phases": null,
+   "roles": [
+    {
+     "dmax": 1.5,
+     "hold_s": 10,
+     "lane": 2,
+     "lc_target": null,
+     "onset_s": 0,
+     "rank": 0,
+     "v_w": 18.0
+    }
+   ],
+   "slots": 1,
+   "spread_m": 300.0,
+   "start_gate": null,
+   "trigger": "lanes",
+   "zone": "far"
+  },
+  {
+   "cooldown_s": 60,
+   "gate": null,
+   "name": "ex_gap",
+   "phases": null,
+   "roles": [
+    {
+     "dmax": 1.5,
+     "dv_rel": 4.0,
+     "gap_arm_s": 60,
+     "gap_drop_m": 300.0,
+     "gap_dx_hi": 40.0,
+     "gap_dx_lo": -10.0,
+     "gap_events": 3,
+     "gap_release": "clear",
+     "hold_s": 10,
+     "lane": 1,
+     "lc_target": null,
+     "onset_s": 0,
+     "rank": 0,
+     "start": "gap",
+     "v_w": 0.0
+    }
+   ],
+   "slots": 1,
+   "spread_m": 300.0,
+   "start_gate": null,
+   "trigger": "lanes",
+   "zone": "merge"
+  },
+  {
+   "cooldown_s": 60,
+   "gate": null,
+   "name": "ex_zone",
+   "phases": null,
+   "roles": [
+    {
+     "dmax": 1.0,
+     "hold_s": 60,
+     "lane": 2,
+     "lc_target": null,
+     "onset_s": 0,
+     "rank": 0,
+     "v_w": 19.0
+    },
+    {
+     "dmax": 1.0,
+     "hold_s": 60,
+     "lane": 1,
+     "lc_target": null,
+     "onset_s": 0,
+     "rank": 0,
+     "v_w": 20.0
+    }
+   ],
+   "slots": 1,
+   "spread_m": 300.0,
+   "start_gate": null,
+   "trigger": "lanes",
+   "zone": "custom",
+   "zone_d": [
+    1000.0,
+    400.0
+   ]
+  },
+  {
+   "cooldown_s": 60,
+   "gate": null,
+   "name": "ex_pulse",
+   "phases": null,
+   "roles": [
+    {
+     "dmax": 1.0,
+     "hold_s": 60,
+     "lane": 2,
+     "lc_target": null,
+     "onset_s": 0,
+     "pulse_off_s": 10,
+     "pulse_on_s": 10,
+     "rank": 0,
+     "v_w": 16.0
+    }
+   ],
+   "slots": 1,
+   "spread_m": 300.0,
+   "start_gate": null,
+   "trigger": "lanes",
+   "zone": "mid"
+  },
+  {
+   "cooldown_s": 60,
+   "gate": null,
+   "name": "ex_taper",
+   "phases": null,
+   "roles": [
+    {
+     "dmax": 1.0,
+     "hold_s": 60,
+     "lane": 2,
+     "lc_target": null,
+     "onset_s": 0,
+     "rank": 0,
+     "taper_in_s": 10,
+     "taper_out_s": 10,
+     "v_w": 16.0
+    }
+   ],
+   "slots": 1,
+   "spread_m": 300.0,
+   "start_gate": null,
+   "trigger": "lanes",
+   "zone": "far"
+  },
+  {
+   "cooldown_s": 120,
+   "gate": null,
+   "name": "ex_rolling",
+   "phases": null,
+   "roles": [
+    {
+     "dmax": 1.0,
+     "hold_s": 60,
+     "lane": 2,
+     "lc_target": null,
+     "onset_s": 0,
+     "rank": 0,
+     "v_w": 18.0
+    },
+    {
+     "dmax": 1.0,
+     "hold_s": 60,
+     "lane": 2,
+     "lc_target": null,
+     "onset_s": 30,
+     "rank": 1,
+     "v_w": 18.0
+    },
+    {
+     "dmax": 1.0,
+     "hold_s": 60,
+     "lane": 1,
+     "lc_target": null,
+     "onset_s": 60,
+     "rank": 0,
+     "v_w": 18.0
+    }
+   ],
+   "slots": 1,
+   "spread_m": 300.0,
+   "start_gate": null,
+   "trigger": "lanes",
+   "zone": "full"
+  }
+ ]
+}

@@ -1,0 +1,52 @@
+{
+ "amendment": 3,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend2.json",
+  "registration_sha256": "0cf2382c1fe63be74c30ebf30d10db0c7dd5c52107eccbfbe4471faa44fb75f3"
+ },
+ "authority": [
+  "MAIN F6/F11 (FAIRAUDIT): registered parity check of each MAPPO comparator, eval plant vs its training env path, on 2 TRAIN worlds, setup plus short rollout; report action/trajectory agreement; same for MAPPO-lane",
+  "MAIN order: F12 sealing -> F11 parity -> F7 branches"
+ ],
+ "code": {
+  "commit": "see N6_READY.json",
+  "launcher": "ops/nm_finaleval.py",
+  "runner": "tools/coopmwm/nm_eval_runner.py"
+ },
+ "f11": {
+  "arms": [
+   "MAPPO_SPEED",
+   "MAPPO_LANE"
+  ],
+  "budget": {
+   "jobs": "nmparity_<arm>_<path>_<seed>",
+   "ledger": "clean5a v2v_final",
+   "sim_s": 3360
+  },
+  "compare": {
+   "tolerances": {
+    "command_mps2": 0.0001,
+    "s_m": 0.001,
+    "v_mps": 0.001
+   },
+   "verdict": "IDENTICAL iff the same ticks, the same CAV sets every tick and every pair within tolerance with equal lanes/targets; else DIFFERS with first divergence, maxima, agreement fraction"
+  },
+  "paths": {
+   "plant": "the evaluation episode code of the arm (MAPPO_SPEED: accel_plant.episode with the bound executor + the bound common u0, comparator pin shim; MAPPO_LANE: the lane-on loop) with a read-only recorder",
+   "train": "N7's training env path in a fresh interpreter: tools.nm_mappo.sanity_eval resolve(config) -> wms.control.mappo.rollout.build_env -> reset(seed, demand, penetration, 300, 120) -> load_actor (deterministic PolicyExecutor) -> step; config = the comparator binding --train-config (path + sha256)"
+  },
+  "recorded": "per tick, per CAV: s_m, v_mps, lane, MAPPO command (pre-safety mean), lane target",
+  "role": "check (TRAIN seeds only)",
+  "rule": "descriptive (reported in PARITY_<arm>.json and in the claim-3b sources); never a gate, never re-run",
+  "when": "standalone `parity --arm <arm>` as soon as the comparator is bound with --train-config (after register), or automatically before its 3b wave; a published PARITY wave is reused",
+  "window": "native 0-300 s warmup + 120 s controlled",
+  "worlds": [
+   "N1 world(989598, 3200, 0.6)",
+   "N1 world(989599, 3200, 0.6)"
+  ]
+ },
+ "registered_utc": "2026-11-06T13:06:15.968233+00:00",
+ "registration_sha256": "56bf566c9ad920aadf569f7ddd93b29ef4c9062311f301de71dbc263f2795f0d",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: no parity trace, clean5a or pre-run result exists or has been opened"
+}

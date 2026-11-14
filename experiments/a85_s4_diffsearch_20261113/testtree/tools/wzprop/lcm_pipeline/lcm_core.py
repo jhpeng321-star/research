@@ -1,0 +1,652 @@
+"""LCMOVES (phase lcmoves, S-LCMOVES) core for wz3to2 = PLANGEN2 pg2_core.py (sha fb00fe48) verbatim except:
+  * new CAV-only role 'prog' (per-member short program: optional lane change [target lane, from el / from x,
+    give-up x, lcMode 513], optional own time gap (setTau, restored on release)
+    + one speed action [hold v_w | track a reference slot | match the target lane speed | accelerate at amax];
+    lane requests are persistent (changeLane(target, 2 s) every second while active before the give-up x)
+    bounded by amax/dmax, release at hold end / drop / merge / partner merge); every lane-change / lcMode
+    command is logged in `commands`, speed commands in `issued` (same conventions as pg2);
+  * Recorder adds read-only TTC exposure (veh-s with TTC < 3 s to the leader within 100 m, all / HDV) and
+    min TTC; lane changes per vehicle are not altered;
+  * native snapshots add all vehicles on 'up' as compact [lane, x, v] rows (no ids/types; geometry only);
+  * branch jobs track the ids in `track_ref` / partner params of acting members (solo arms observe them).
+
+(original pg2_core docstring follows)
+PLANGEN2 (phase plangen2) core for wz3to2 = newmap2 nm2_core.py (sha ad6b4bd6) verbatim except:
+  * Arm adds the COOPKINDS (ck_core.py sha 003311cb) CAV-only roles lane_to (lane_balance), merge_early +
+    tau room-maker (early_merge), zip_merge + zip_yield (zipper_order), with ck_core semantics; 'hold' and
+    'pulse' are unchanged nm2 roles.  Speed commands stay 2-tuples in `issued` (el, a); lane-change / tau /
+    lcMode commands are logged in `commands` [(el, vid, kind, value)];
+  * every acting member and dither vehicle is asserted to be a CAV (HDVs are never commanded);
+  * zip_yield partners are tracked like pair_t anchors; Recorder adds hdv_hard_brake_vs (as ck_core).
+
+One job per process (libsumo):  python pg2_core.py JOB.json  -> JOB out_dir/RESULT.json
+
+(original nm2_core docstring follows)
+NEWMAP2 (phase newmap2) core for wz3to2: native prefixes with saved states, branch arms, extensions.
+
+Derived from newmap_probe/probe_core.py (same scenario streams, conventions and J definition):
+  * 0.5 s physics, 1 s control, time-to-teleport -1, collision.action warn, departSpeed max;
+  * HDVs: one textbook vType per vehicle (population.sample_driver, map-namespaced seed), NEVER commanded;
+    CAVs: cav_typical, speedMode 27 on insertion / after loadState;
+  * CAV commands: slowDown(v, clip(v + a*1 s, 0, allowed), 1 s); release = setSpeed(-1);
+    acting members use laneChangeMode 513 (restored on release);
+  * J = team delay veh-s per 1 s bin: on-road dt*max(0, 1 - v/31.29) + source waiting dt.
+Changes vs probe_core (newmap2 design): control ticks at whole seconds el = t - t0 = 0, 1, ...;
+members release at the drop (x >= X_B), at hold end, or when an anchor member passes anchor_release_x;
+optional start delay; per-second member tracks and issued commands; state save at el in save_at;
+'extend' jobs continue a branch from its saved state without control.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import random
+import sys
+import time
+from bisect import bisect_right
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import population as pop  # noqa: E402  (verbatim copy of traffic_shepherd/c4/population.py, sha 6af5ee23)
+
+MAP = "wz3to2"
+DT = 0.5
+SPEED_LIMIT = 31.29
+LC_MODE_POLICY = 513
+LC_MODE_TRACI_ONLY = 512
+CAV_SPEED_MODE = 27
+EPISODE_END = 1800.0
+DEMAND_END = 1800.0
+X_B = 2696.0                                   # end of lane 0 on edge 'up' (lane drop)
+EDGE_OFFSET = {"up": 0.0, ":n1_0": 2696.0, "wz": 2704.0}
+
+
+def xglob(edge: str, pos: float) -> float:
+    return EDGE_OFFSET.get(edge, float("nan")) + pos
+
+
+# ----------------------------------------------------------------------------- scenario
+def rate_profile(kind: str, d: float):
+    if kind == "flat":
+        return [(0.0, DEMAND_END, d)]
+    return [(0.0, 300.0, 0.8 * d), (300.0, 1500.0, d), (1500.0, DEMAND_END, 0.6 * d)]
+
+
+def requests(spec: dict, seed: int, demand: dict, penetration: float):
+    """Poisson departures per stream; identical RNG strings to probe_core (map-namespaced)."""
+    out = []
+    for stream, sdef in spec["streams"].items():
+        rng = random.Random(f"newmap_requests_v1:{MAP}:{seed}:{stream}")
+        ordinal = 0
+        for begin, end, rate in rate_profile(sdef["profile"], float(demand[stream])):
+            t = begin
+            while True:
+                t += rng.expovariate(rate / 3600.0)
+                if t >= end:
+                    break
+                ident = f"{stream}.{ordinal}"
+                cav = random.Random(f"newmap_cav_v1:{MAP}:{seed}:{ident}").random() < penetration
+                out.append(dict(id=ident, depart=round(t, 6), route=sdef["route"], cav=cav,
+                                lane=sdef.get("depart_lane", "best"), pos=sdef.get("depart_pos", "base")))
+                ordinal += 1
+    return sorted(out, key=lambda r: (r["depart"], r["id"]))
+
+
+def write_scenario(root: Path, map_dir: Path, spec: dict, seed: int, demand: dict, penetration: float):
+    import xml.etree.ElementTree as ET
+    reqs = requests(spec, seed, demand, penetration)
+    routes = ET.Element("routes")
+    ET.SubElement(routes, "vType", pop.vtype_attrs(pop.TEXTBOOK_CAV_VTYPE, dict(pop.TEXTBOOK_CAV_PARAMS)))
+    for r in reqs:
+        if not r["cav"]:
+            # per-vehicle draw written only into the SUMO route file; no truth table produced or read
+            ET.SubElement(routes, "vType", pop.vtype_attrs(
+                pop.hdv_vtype_id(r["id"]), pop.sample_driver(f"{MAP}:{seed}", r["id"])))
+    for rid, edges in spec["routes"]:
+        ET.SubElement(routes, "route", {"id": rid, "edges": edges})
+    for r in reqs:
+        ET.SubElement(routes, "vehicle", {
+            "id": r["id"], "type": pop.TEXTBOOK_CAV_VTYPE if r["cav"] else pop.hdv_vtype_id(r["id"]),
+            "route": r["route"], "depart": str(r["depart"]), "departLane": r["lane"],
+            "departPos": r["pos"], "departSpeed": "max"})
+    ET.indent(routes)
+    root.mkdir(parents=True, exist_ok=True)
+    rou = root / "requests.rou.xml"
+    rou.write_text(ET.tostring(routes, encoding="unicode"), encoding="utf-8")
+    cfg = ET.Element("configuration")
+    inp = ET.SubElement(cfg, "input")
+    ET.SubElement(inp, "net-file", value=str((map_dir / spec["net_file"]).resolve()))
+    ET.SubElement(inp, "route-files", value=rou.name)
+    proc = ET.SubElement(cfg, "processing")
+    ET.SubElement(proc, "time-to-teleport", value="-1")
+    ET.SubElement(proc, "collision.action", value="warn")
+    ET.indent(cfg)
+    scene = root / "scenario.sumocfg"
+    scene.write_text(ET.tostring(cfg, encoding="unicode"), encoding="utf-8")
+    return scene, reqs
+
+
+# ----------------------------------------------------------------------------- sumo
+def api_module():
+    import libsumo as api
+    return api
+
+
+def start(api, scene: Path, seed: int):
+    cmd = ["sumo", "-c", str(scene), "--seed", str(seed), "--step-length", str(DT),
+           "--end", str(EPISODE_END + 1), "--no-step-log", "true", "--duration-log.disable", "true",
+           "--no-warnings", "true", "--save-state.rng", "true", "--save-state.precision", "17"]
+    api.start(cmd)
+    return cmd
+
+
+class Recorder:
+    """Per-second team delay, source wait, safety counters (probe_core.Recorder)."""
+
+    def __init__(self, api, reqs, cav_ids, t_start: float, inserted0: int = 0):
+        self.api = api
+        self.times = sorted(r["depart"] for r in reqs)
+        self.cav_ids = cav_ids
+        self.inserted = inserted0
+        self.road, self.src, self.arr = [], [], []
+        self._r = self._s = 0.0
+        self._a = 0
+        self.collisions = 0
+        self.collision_ids = []
+        self.teleports = 0
+        self.hard_brake_vs = 0.0
+        self.hdv_hard_brake_vs = 0.0
+        self.min_accel = 0.0
+        self.emergency = 0
+        self.ttc3_vs = 0.0
+        self.hdv_ttc3_vs = 0.0
+        self.min_ttc = None
+        self.t = t_start
+
+    def step(self):
+        api = self.api
+        api.simulationStep()
+        self.t = round(api.simulation.getTime(), 3)
+        new = list(api.simulation.getDepartedIDList())
+        self.inserted += len(new)
+        for v in new:
+            if v in self.cav_ids:
+                api.vehicle.setSpeedMode(v, CAV_SPEED_MODE)
+        road = 0.0
+        for v in api.vehicle.getIDList():
+            sp = api.vehicle.getSpeed(v)
+            if sp < SPEED_LIMIT:
+                road += 1.0 - sp / SPEED_LIMIT
+            a = api.vehicle.getAcceleration(v)
+            if a < -3.0:
+                self.hard_brake_vs += DT
+                if v not in self.cav_ids:
+                    self.hdv_hard_brake_vs += DT
+            if a < -4.5:
+                self.emergency += 1
+            if a < self.min_accel:
+                self.min_accel = a
+            if sp > 0.1:                                   # read-only TTC to the leader (<=100 m)
+                ld = api.vehicle.getLeader(v, 100.0)
+                if ld and ld[0]:
+                    dv = sp - api.vehicle.getSpeed(ld[0])
+                    if dv > 1e-6:
+                        ttc = max(0.0, ld[1]) / dv
+                        if self.min_ttc is None or ttc < self.min_ttc:
+                            self.min_ttc = ttc
+                        if ttc < 3.0:
+                            self.ttc3_vs += DT
+                            if v not in self.cav_ids:
+                                self.hdv_ttc3_vs += DT
+        due = bisect_right(self.times, self.t)
+        backlog = max(0, due - self.inserted)
+        self._r += DT * road
+        self._s += DT * backlog
+        self._a += api.simulation.getArrivedNumber()
+        col = list(api.simulation.getCollidingVehiclesIDList())
+        if col:
+            self.collisions += len(col)
+            self.collision_ids.extend(col[:4])
+        self.teleports += api.simulation.getStartingTeleportNumber()
+        if abs(self.t - round(self.t)) < 1e-6:
+            self.road.append(round(self._r, 5))
+            self.src.append(round(self._s, 5))
+            self.arr.append(self._a)
+            self._r = self._s = 0.0
+            self._a = 0
+
+    def summary(self):
+        return dict(J_road=self.road, J_src=self.src, arrivals=self.arr,
+                    J_total=round(sum(self.road) + sum(self.src), 4),
+                    collisions=self.collisions, collision_ids=self.collision_ids[:20],
+                    teleports=self.teleports, hard_brake_vs=self.hard_brake_vs,
+                    hdv_hard_brake_vs=self.hdv_hard_brake_vs,
+                    min_accel=round(self.min_accel, 3), emergency_steps=self.emergency,
+                    ttc3_vs=self.ttc3_vs, hdv_ttc3_vs=self.hdv_ttc3_vs,
+                    min_ttc=None if self.min_ttc is None else round(self.min_ttc, 3))
+
+
+def snapshot(api, cav_ids):
+    rows = []
+    veh = []
+    lane_counts = {}
+    sp = []
+    q0 = 0
+    for v in api.vehicle.getIDList():
+        edge = api.vehicle.getRoadID(v)
+        lane = api.vehicle.getLaneIndex(v)
+        lane_counts[f"{edge}_{lane}"] = lane_counts.get(f"{edge}_{lane}", 0) + 1
+        x = xglob(edge, api.vehicle.getLanePosition(v))
+        s = api.vehicle.getSpeed(v)
+        if edge == "up":
+            veh.append([lane, round(x, 1), round(s, 2)])
+        if v in cav_ids:
+            rows.append(dict(id=v, edge=edge, lane=lane, x=round(x, 2), v=round(s, 3)))
+        if edge in EDGE_OFFSET and X_B - 300 <= x <= X_B:
+            sp.append(s)
+        if edge == "up" and lane == 0 and X_B - 500 <= x <= X_B and s < 5.0:
+            q0 += 1
+    return dict(cavs=rows, veh_up=veh if cav_ids else None, lane_counts=lane_counts,
+                approach_speed=round(sum(sp) / len(sp), 3) if sp else None, approach_n=len(sp),
+                closing_lane_slow=q0)
+
+
+# ----------------------------------------------------------------------------- jobs
+def run_native(job: dict) -> dict:
+    api = api_module()
+    out = Path(job["out_dir"])
+    out.mkdir(parents=True, exist_ok=True)
+    spec = json.loads(Path(job["map_spec"]).read_text())
+    scene, reqs = write_scenario(out / "scenario", Path(job["map_spec"]).parent, spec, job["seed"],
+                                 job["demand"], job["penetration"])
+    cav_ids = frozenset(r["id"] for r in reqs if r["cav"])
+    cmd = start(api, scene, job["seed"])
+    rec = Recorder(api, reqs, cav_ids, 0.0)
+    saves = sorted(float(t) for t in job.get("save_times", []))
+    snaps = {}
+    states = out / "states"
+    states.mkdir(exist_ok=True)
+    wall0 = time.time()
+    t_end = float(job["t_end"])
+    diag = []
+    while rec.t < t_end - 1e-9:
+        rec.step()
+        if abs(rec.t / 10.0 - round(rec.t / 10.0)) < 1e-9:
+            s = snapshot(api, frozenset())
+            diag.append((rec.t, s["approach_speed"], s["approach_n"], s["closing_lane_slow"]))
+        if saves and abs(rec.t - saves[0]) < 1e-6:
+            tag = f"t{int(saves[0])}"
+            api.simulation.saveState(str(states / f"{tag}.xml.gz"))
+            s = snapshot(api, cav_ids)
+            s["inserted"] = rec.inserted
+            snaps[tag] = s
+            saves.pop(0)
+    res = rec.summary()
+    api.close()
+    res.update(kind="native", job=job, sumo_cmd=cmd, n_requests=len(reqs), n_cav=len(cav_ids),
+               snapshots=snaps, diag=diag, sim_s=t_end, wall_s=round(time.time() - wall0, 2),
+               routes_sha256=hashlib.sha256((out / "scenario" / "requests.rou.xml").read_bytes()).hexdigest())
+    return res
+
+
+class Arm:
+    """Rule-based CAV member actions.  nm2 roles: hold (wall/pair member), pulse (dither);
+    COOPKINDS roles (ck_core semantics): tau, merge_early, zip_merge, zip_yield, lane_to."""
+
+    def __init__(self, api, members):
+        self.api = api
+        self.members = [dict(m) for m in members]
+        self.lc_saved = {}
+        self.tau_saved = {}
+        self.events = []
+        self.issued = {m["id"]: [] for m in self.members}
+        self.commands = []
+
+    def _cmd(self, vid, a):
+        api = self.api
+        v = api.vehicle.getSpeed(vid)
+        allowed = api.vehicle.getAllowedSpeed(vid)
+        target = min(max(0.0, v + a * 1.0), allowed)
+        api.vehicle.slowDown(vid, target, 1.0)
+
+    def _lc(self, vid, mode):
+        if vid not in self.lc_saved:
+            self.lc_saved[vid] = self.api.vehicle.getLaneChangeMode(vid)
+        self.api.vehicle.setLaneChangeMode(vid, mode)
+
+    def _tau(self, vid, tau):
+        if vid not in self.tau_saved:
+            self.tau_saved[vid] = self.api.vehicle.getTau(vid)
+        self.api.vehicle.setTau(vid, float(tau))
+
+    def _untau(self, vid):
+        if vid in self.tau_saved:
+            try:
+                self.api.vehicle.setTau(vid, self.tau_saved.pop(vid))
+            except Exception:
+                self.tau_saved.pop(vid, None)
+
+    def _release(self, m, el, why):
+        vid = m["id"]
+        if m.get("released"):
+            return
+        m["released"] = True
+        m["release_el"] = el
+        try:
+            self.api.vehicle.setSpeed(vid, -1)
+            if vid in self.lc_saved:
+                self.api.vehicle.setLaneChangeMode(vid, self.lc_saved[vid])
+            self._untau(vid)
+        except Exception:
+            pass
+        self.events.append((el, vid, "release", why))
+
+    def control(self, el: int, live: set, pos: dict):
+        api = self.api
+        for m in self.members:
+            vid = m["id"]
+            if m.get("released"):
+                continue
+            if vid not in live:
+                m["released"] = True
+                m["release_el"] = el
+                self.tau_saved.pop(vid, None)
+                self.events.append((el, vid, "left", ""))
+                continue
+            p = m["params"]
+            st = int(p.get("start_s", 0))
+            if el < st:
+                continue
+            role = m["role"]
+            if role == "pulse":
+                if el >= st + int(p["dur_s"]):
+                    self._release(m, el, "pulse_end")
+                    continue
+                self._cmd(vid, p["a"])
+                self.issued[vid].append((el, p["a"]))
+                continue
+            if role == "hold":                                   # nm2 'hold' (unchanged)
+                x = pos.get(vid, (None, None, float("nan")))[2]
+                if el >= st + int(p["hold_s"]):
+                    self._release(m, el, "hold_end")
+                    continue
+                if x >= float(p.get("release_x", X_B)):
+                    self._release(m, el, "at_drop")
+                    continue
+                anc = p.get("anchor")
+                if anc is not None:
+                    ax = pos.get(anc)
+                    if ax is None or ax[0] != "up" or ax[2] >= float(p["anchor_release_x"]):
+                        self._release(m, el, "anchor")
+                        continue
+                if vid not in self.lc_saved:
+                    self.lc_saved[vid] = api.vehicle.getLaneChangeMode(vid)
+                    api.vehicle.setLaneChangeMode(vid, LC_MODE_POLICY)
+                v = api.vehicle.getSpeed(vid)
+                a = max(-float(p["dmax"]), min(float(p["amax"]), (float(p["v_w"]) - v) / 1.0))
+                self._cmd(vid, a)
+                self.issued[vid].append((el, round(a, 4)))
+                continue
+            # ---- COOPKINDS roles (ck_core semantics)
+            edge, lane, x, v = pos[vid]
+            if el >= st + int(p.get("hold_s", 10 ** 6)):
+                self._release(m, el, "hold_end")
+                continue
+            if x >= float(p.get("release_x", 10 ** 9)):
+                self._release(m, el, "release_x")
+                continue
+            if role == "tau":
+                zone = p.get("zone")
+                if zone is not None:
+                    if x < zone[0]:                       # not yet in its zone: no command
+                        continue
+                    if x > zone[1]:
+                        self._release(m, el, "zone_end")
+                        continue
+                if not m.get("tau_on"):
+                    self._lc(vid, int(p.get("lc_mode", LC_MODE_POLICY)))
+                    self._tau(vid, p["tau"])
+                    m["tau_on"] = True
+                    self.commands.append((el, vid, "tau", p["tau"]))
+            elif role == "merge_early":
+                if not m.get("lc_on"):
+                    self._lc(vid, LC_MODE_POLICY)
+                    m["lc_on"] = True
+                if edge == "up" and lane == 0 and x >= float(p["trigger_x"]):
+                    api.vehicle.changeLane(vid, int(p.get("target_lane", 1)), 2.0)
+                    self.commands.append((el, vid, "changeLane", int(p.get("target_lane", 1))))
+            elif role == "zip_merge":
+                if edge != "up" or lane != 0:
+                    self._release(m, el, "merged")
+                    continue
+                if x >= float(p["fallback_x"]):
+                    self._release(m, el, "fallback")           # restore native lane-change mode
+                    continue
+                if not m.get("lc_on"):
+                    self._lc(vid, LC_MODE_TRACI_ONLY)
+                    m["lc_on"] = True
+                    self.commands.append((el, vid, "lcMode", LC_MODE_TRACI_ONLY))
+                if x >= float(p["merge_x"]):
+                    api.vehicle.changeLane(vid, 1, 2.0)
+                    self.commands.append((el, vid, "changeLane", 1))
+            elif role == "zip_yield":
+                partner = pos.get(p["partner"])
+                if partner is None or partner[0] != "up" or partner[1] != 0:
+                    self._release(m, el, "partner_merged")
+                    continue
+                if not m.get("lc_on"):
+                    self._lc(vid, LC_MODE_POLICY)
+                    m["lc_on"] = True
+                err = (partner[2] - float(p["gap"])) - x
+                a = float(p["kp"]) * err + float(p["kv"]) * (partner[3] - v)
+                a = max(-float(p["dmax"]), min(float(p["amax"]), a))
+                self._cmd(vid, a)
+                self.issued[vid].append((el, round(a, 4)))
+            elif role == "lane_to":
+                if not m.get("lc_on"):
+                    self._lc(vid, LC_MODE_POLICY)
+                    m["lc_on"] = True
+                tl = int(p["target_lane"])
+                if edge == "up" and lane < tl and x < float(p["giveup_x"]):
+                    api.vehicle.changeLane(vid, tl, 2.0)
+                    self.commands.append((el, vid, "changeLane", tl))
+            elif role == "prog":
+                self._prog(m, el, pos, edge, lane, x, v)
+            else:
+                raise ValueError(role)
+
+    # ---- LCMOVES per-member program (CAV only)
+    def _lane_speed(self, lane_idx, x, vid, rng=100.0):
+        """Mean speed of vehicles on 'up' lane lane_idx within +-rng m of x (V2V 100 m sensing), else None."""
+        api = self.api
+        sp = []
+        for o in api.lane.getLastStepVehicleIDs(f"up_{int(lane_idx)}"):
+            if o == vid:
+                continue
+            if abs(api.vehicle.getLanePosition(o) - x) <= rng:
+                sp.append(api.vehicle.getSpeed(o))
+        return sum(sp) / len(sp) if sp else None
+
+    def _prog(self, m, el, pos, edge, lane, x, v):
+        api = self.api
+        vid = m["id"]
+        p = m["params"]
+        pm = p.get("release_on_partner_merge")
+        if pm is not None:                                  # gap maker: stop once the merger left lane 0
+            q = pos.get(pm)
+            if q is None or q[0] != "up" or q[1] != 0:
+                self._release(m, el, "partner_merged")
+                return
+        if p.get("merger"):
+            if edge == "up" and lane == 0:
+                m["was_lane0"] = True
+            elif m.get("was_lane0"):
+                self._release(m, el, "merged")
+                return
+            if x >= float(p.get("fallback_x", X_B - 15.0)):
+                self._release(m, el, "fallback")
+                return
+        mode = int(p.get("lc_mode", LC_MODE_POLICY))
+        if p.get("tau") is not None and not m.get("tau_on") and el >= int(p.get("tau_from", 0)):
+            self._tau(vid, float(p["tau"]))                    # own time-gap knob (restored on release)
+            m["tau_on"] = True
+            self.commands.append((el, vid, "tau", float(p["tau"])))
+        tl = p.get("lc_target")
+        if tl is not None and el >= int(p.get("lc_from", 0)) and x >= float(p.get("lc_from_x", -1e9)):
+            # persistent lane request with hold: changeLane(tl, 2 s) every second while active on 'up' before the
+            # give-up point (first change logged per request; afterwards one 'laneHold' command + re-entry events)
+            if not m.get("lc_on"):
+                self._lc(vid, mode)
+                m["lc_on"] = True
+                self.commands.append((el, vid, "lcMode", mode))
+            if edge == "up" and lane == int(tl) and m.get("lc_done") is None:
+                m["lc_done"] = el
+                self.events.append((el, vid, "lc_done", int(tl)))
+            elif edge == "up" and lane != int(tl) and m.get("lc_done") is not None and not m.get("lc_out"):
+                m["lc_out"] = True                             # pushed out of the held lane (logged, re-requested)
+                self.events.append((el, vid, "lc_left", lane))
+            elif edge == "up" and lane == int(tl):
+                m["lc_out"] = False
+            if edge == "up" and x < float(p.get("lc_giveup_x", X_B - 300.0)):
+                api.vehicle.changeLane(vid, int(tl), 2.0)
+                if m.get("lc_done") is None:
+                    self.commands.append((el, vid, "changeLane", int(tl)))
+                elif not m.get("hold_logged"):
+                    m["hold_logged"] = True
+                    self.commands.append((el, vid, "laneHold", int(tl)))
+        lc_ok = tl is None or m.get("lc_done") is not None
+        kind = p.get("speed")
+        if not kind or el < int(p.get("sp_from", 0)):
+            return
+        if kind == "match" and (lc_ok or edge != "up"):
+            return                                             # speed matching only until the change is made
+        if not m.get("lc_on"):                                 # speed program also fixes lcMode 513 (nm2 hold)
+            self._lc(vid, mode)
+            m["lc_on"] = True
+            self.commands.append((el, vid, "lcMode", mode))
+        amax, dmax = float(p.get("amax", 1.0)), float(p["dmax"])
+        if kind == "track" and not m.get("settled"):
+            refs = [pos[r] for r in p["track_ref"] if r in pos]
+            if not refs:
+                m["settled"] = el
+                self.events.append((el, vid, "settled", "refs_gone"))
+            else:
+                xr = sum(r[2] for r in refs) / len(refs) + float(p.get("track_off", 0.0))
+                vr = sum(r[3] for r in refs) / len(refs)
+                err = xr - x
+                sg = p.get("settle_gap")
+                if sg is not None and lc_ok and abs(err) <= float(sg):
+                    m["settled"] = el
+                    self.events.append((el, vid, "settled", round(err, 2)))
+                else:
+                    a = float(p.get("kp", 0.15)) * err + float(p.get("kv", 0.6)) * (vr - v)
+                    a = max(-dmax, min(amax, a))
+                    self._cmd(vid, a)
+                    self.issued[vid].append((el, round(a, 4)))
+                    return
+        if kind == "match":
+            vt = self._lane_speed(int(tl), x, vid)
+            if vt is None:
+                return
+            a = max(-dmax, min(amax, (vt - v) / 1.0))
+        elif kind == "accel":                                  # accelerate at amax (IDM / safe speed caps it)
+            a = amax
+        else:                                                  # hold (or a settled track): drive toward v_w
+            a = max(-dmax, min(amax, (float(p["v_w"]) - v) / 1.0))
+        self._cmd(vid, a)
+        self.issued[vid].append((el, round(a, 4)))
+
+
+def _positions(api, ids, live):
+    out = {}
+    for vid in ids:
+        if vid in live:
+            e = api.vehicle.getRoadID(vid)
+            out[vid] = (e, api.vehicle.getLaneIndex(vid), round(xglob(e, api.vehicle.getLanePosition(vid)), 2),
+                        round(api.vehicle.getSpeed(vid), 4))
+    return out
+
+
+def run_branch(job: dict) -> dict:
+    """Load the saved state (native t0 state, or an arm's saved state for 'extend') and run H s."""
+    api = api_module()
+    out = Path(job["out_dir"])
+    out.mkdir(parents=True, exist_ok=True)
+    native = Path(job["native_dir"])
+    spec = json.loads(Path(job["map_spec"]).read_text())
+    scene = native / "scenario" / "scenario.sumocfg"
+    reqs = requests(spec, job["seed"], job["demand"], job["penetration"])
+    cav_ids = frozenset(r["id"] for r in reqs if r["cav"])
+    cmd = start(api, scene, job["seed"])
+    t_load = float(job["t_load"])
+    api.simulation.loadState(str(job["state_file"]))
+    assert abs(api.simulation.getTime() - t_load) < 1e-6, api.simulation.getTime()
+    live = set(api.vehicle.getIDList())
+    for v in live & cav_ids:
+        api.vehicle.setSpeedMode(v, CAV_SPEED_MODE)
+    rec = Recorder(api, reqs, cav_ids, t_load, inserted0=int(job["inserted_load"]))
+    acting = list(job.get("members") or []) + list(job.get("dither") or [])
+    for m in acting:
+        assert m["id"] in cav_ids, ("non-CAV member", m["id"])   # HDVs are never commanded
+    arm = Arm(api, acting)
+    anchors = [m["params"]["anchor"] for m in acting if m["params"].get("anchor")]
+    anchors += [m["params"]["partner"] for m in acting if m["params"].get("partner")]
+    anchors += [r for m in acting for r in (m["params"].get("track_ref") or [])]
+    anchors += [m["params"]["release_on_partner_merge"] for m in acting
+                if m["params"].get("release_on_partner_merge")]
+    track = list(dict.fromkeys(list(job.get("track_ids") or []) + [m["id"] for m in acting] + anchors))
+    track_s = int(job.get("track_s", 200))
+    t0 = float(job.get("t0", t_load))
+    saves = sorted(int(e) for e in job.get("save_at", []))
+    saved = {}
+    tracks = {vid: [] for vid in track}
+    wall0 = time.time()
+    t_end = t_load + float(job["H"])
+    (out / "states").mkdir(exist_ok=True)
+    while rec.t < t_end - 1e-9:
+        if abs(rec.t - round(rec.t)) < 1e-6:                    # whole second: observe, act
+            el = int(round(rec.t - t0))
+            live = set(api.vehicle.getIDList())
+            pos = _positions(api, track, live)
+            if el <= track_s:
+                for vid in track:
+                    if vid in pos:
+                        tracks[vid].append((el,) + pos[vid])
+            if saves and el == saves[0] and rec.t > t_load:
+                api.simulation.saveState(str(out / "states" / f"e{el}.xml.gz"))
+                saved[f"e{el}"] = dict(t=rec.t, inserted=rec.inserted)
+                saves.pop(0)
+            if acting:
+                arm.control(el, live, pos)
+        rec.step()
+    if saves and abs(rec.t - (t0 + saves[0])) < 1e-6:            # save at the very end
+        api.simulation.saveState(str(out / "states" / f"e{saves[0]}.xml.gz"))
+        saved[f"e{saves[0]}"] = dict(t=rec.t, inserted=rec.inserted)
+    res = rec.summary()
+    api.close()
+    res.update(kind=job["kind"], job=job, sim_s=float(job["H"]), wall_s=round(time.time() - wall0, 2),
+               arm_events=arm.events, issued=arm.issued, commands=arm.commands,
+               release_el={m["id"]: m.get("release_el") for m in arm.members},
+               lc_done={m["id"]: m.get("lc_done") for m in arm.members},
+               tracks=tracks, saved=saved)
+    return res
+
+
+def main(path: str) -> None:
+    job = json.loads(Path(path).read_text())
+    t = time.time()
+    try:
+        res = run_native(job) if job["kind"] == "native" else run_branch(job)
+        res["status"] = "ok"
+    except Exception as exc:  # failure receipt, never silently retried
+        import traceback
+        res = dict(status="failed", job=job, error=repr(exc), tb=traceback.format_exc())
+    res["elapsed_s"] = round(time.time() - t, 2)
+    Path(job["out_dir"]).mkdir(parents=True, exist_ok=True)
+    (Path(job["out_dir"]) / "RESULT.json").write_text(json.dumps(res))
+
+
+if __name__ == "__main__":
+    main(sys.argv[1])

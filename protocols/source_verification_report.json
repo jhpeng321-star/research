@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-10T06:49:37+00:00",
+ "generated_at": "2026-11-09T08:35:23+00:00",
  "scope": "registered allowed sources only (exposed development artifacts); sealed outcomes never traversed",
  "convention": "cost difference = treatment - reference; negative = improvement",
  "status_definitions": {
@@ -10,6 +10,102 @@
  },
  "sources": [
   {
+   "source_id": "SRC-N6-CONFIRM-A30",
+   "path": "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A30.json",
+   "sha256_registered": "7347ed80aa85955ef6c065a76b1bd550952be8cfc37f1de916869eaf8c11ffe8",
+   "entries": [
+    "N6-CONFIRM-A30-20261109"
+   ],
+   "field_map": "Integrity/report binding only; contrast values transcribed from contrasts[].total_minus_ref / tail_cvar90 / groups of the sealed analysis",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "7347ed80aa85955ef6c065a76b1bd550952be8cfc37f1de916869eaf8c11ffe8",
+   "verified_at": "2026-11-09T08:35:23+00:00"
+  },
+  {
+   "source_id": "SRC-N6-CONFIRM-A28",
+   "path": "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A28.json",
+   "sha256_registered": "fe014898b143e891ab62cfe4fcd70ddc24b7607eadeac57e3294be00c2e9ef90",
+   "entries": [
+    "N6-CONFIRM-A28-20261109"
+   ],
+   "field_map": "Integrity/report binding only; contrast values transcribed from contrasts[].total_minus_ref / tail_cvar90 / groups of the sealed analysis",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "fe014898b143e891ab62cfe4fcd70ddc24b7607eadeac57e3294be00c2e9ef90",
+   "verified_at": "2026-11-09T08:35:23+00:00"
+  },
+  {
+   "source_id": "SRC-N6-CONFIRM-A29",
+   "path": "runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A29.json",
+   "sha256_registered": "ffee5897eb960b7be3d09c683d20c1205b4f2239f848bb5c9fa965ff7e6af924",
+   "entries": [
+    "N6-CONFIRM-A29-20261109"
+   ],
+   "field_map": "Integrity/report binding only; contrast values transcribed from contrasts[].total_minus_ref / tail_cvar90 / groups of the sealed analysis",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "ffee5897eb960b7be3d09c683d20c1205b4f2239f848bb5c9fa965ff7e6af924",
+   "verified_at": "2026-11-09T08:35:23+00:00"
+  },
+  {
+   "source_id": "SRC-N6-BANK-A27",
+   "path": "runs/active/C4-V7FT-20261017/nm_finaleval_p20x_r2_bank/BANK_TABLES.json",
+   "sha256_registered": "738244bb71df705f5ca135812a0fbb0abfac996a865387dc603e41dccc16af18",
+   "entries": [
+    "N6-BANK-A27-20261109"
+   ],
+   "field_map": "Integrity/report binding only; arm-vs-reference delay, group and CVaR90 values transcribed from arms.<ARM>.vs_<REF>.<subset> of the sealed analysis",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "738244bb71df705f5ca135812a0fbb0abfac996a865387dc603e41dccc16af18",
+   "verified_at": "2026-11-09T08:35:23+00:00"
+  },
+  {
+   "source_id": "SRC-SGROUPDIAG-RESUME",
+   "path": "runs/active/C4-V7FT-20261017/S_GROUPDIAG_RESUME_RECEIPT_20261106.json",
+   "sha256_registered": "9a223a85cd8d6b123ed4285b453f1abe8a8c8bd0963084f4bc07ae60a060ae19",
+   "entries": [
+    "S-GROUPDIAG"
+   ],
+   "field_map": "Integrity/report binding only; group/solo arithmetic and physical exposure independently reconciled by saved task verifier, not generic physical outcome mapping",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "9a223a85cd8d6b123ed4285b453f1abe8a8c8bd0963084f4bc07ae60a060ae19",
+   "verified_at": "2026-11-09T08:35:23+00:00"
+  },
+  {
+   "source_id": "SRC-SDIAG-CLEAN1-RESUME",
+   "path": "runs/active/C4-V7FT-20261017/S_DIAG_RESUME_RECEIPT_20261106.json",
+   "sha256_registered": "48e963ae6c28a3834fb73dc8b57c735308904042b41886f801edb73d6b0c759f",
+   "entries": [
+    "S-DIAG-CLEAN1-20261105"
+   ],
+   "field_map": "Integrity/report binding only; physical and sensitivity arithmetic checked by the task-specific verification scripts, not generic outcome-field mapping",
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [],
+   "mismatches": [],
+   "status": "complete",
+   "sha256_current": "48e963ae6c28a3834fb73dc8b57c735308904042b41886f801edb73d6b0c759f",
+   "verified_at": "2026-11-09T08:35:23+00:00"
+  },
+  {
    "source_id": "SRC-NAT",
    "path": "output/escalation_execution/natural_final_decision.json",
    "sha256_registered": "d83027cc668a72bb4c05cbdd1b885bfd96f11712cd2d8bfb444bc5f0a60e227a",
@@ -17,13 +113,18 @@
     "CUR-09"
    ],
    "field_map": "cases[].case_id -> effect/benefit",
-   "expected_checks": 240,
-   "performed_checks": 240,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "d83027cc668a72bb4c05cbdd1b885bfd96f11712cd2d8bfb444bc5f0a60e227a",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "SRC-NAT: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "SRC-CHAR",
@@ -33,13 +134,18 @@
     "CUR-04"
    ],
    "field_map": "paired_effects[] seed/mainline_vph -> effect",
-   "expected_checks": 100,
-   "performed_checks": 100,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "e51dac8a494cb5ecab9ba0d301b5233cb890321616b516ee275462e3379d4de3",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "SRC-CHAR: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "SRC-DISS",
@@ -220,13 +326,18 @@
     "HE-01"
    ],
    "field_map": "results[job_id].effect -> outcomes (costs_treatment/costs_control/improvements, population, collisions, joint_non_deterioration, benefit label); verbatim carrier of the two frozen analyses (sha256 provenance inside)",
-   "expected_checks": 62,
-   "performed_checks": 62,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "e38ff03770e0de0a9d250b04397cc645908c0586e79675ac40a41e2d099c3821",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "SRC-HE-EXT: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "SRC-OE07",
@@ -274,13 +385,18 @@
     "CV-06"
    ],
    "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
-   "expected_checks": 100,
-   "performed_checks": 100,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "c40c89f9b7e83ef7a80b0c997f6040b10eb4f1a0b8fd1db342e72f9f570d48ad",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "CV06-PHYSICAL-COMPARISONS: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "CV12-PHYSICAL-COMPARISONS",
@@ -290,13 +406,18 @@
     "CV-12"
    ],
    "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
-   "expected_checks": 150,
-   "performed_checks": 150,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "80981cadd891cbfa31e4c04ed0cf0156abdf8351b4589d9733f6fca9b0b0e0fa",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "CV12-PHYSICAL-COMPARISONS: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "CV13-PHYSICAL-COMPARISONS",
@@ -306,13 +427,18 @@
     "CV-13"
    ],
    "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
-   "expected_checks": 100,
-   "performed_checks": 100,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "cece87b9d08c7a1dec76cbaa048623ba2b2bcf54fe495569320eea3da182330d",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "CV13-PHYSICAL-COMPARISONS: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "CV17-PHYSICAL-COMPARISONS",
@@ -322,13 +448,18 @@
     "CV-17"
    ],
    "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
-   "expected_checks": 75,
-   "performed_checks": 75,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "022a123b36e953d85317aed5a6d3b9c22f1bcc56daa840bed0012c6390157a6c",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "CV17-PHYSICAL-COMPARISONS: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "CV19-PHYSICAL-COMPARISONS",
@@ -338,13 +469,18 @@
     "CV-19"
    ],
    "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
-   "expected_checks": 150,
-   "performed_checks": 150,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "e99193d16ffe55f28299f8e9bedf8259af8615ac2804db06cbe63ae5c412f402",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "CV19-PHYSICAL-COMPARISONS: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "CV30-PHYSICAL-COMPARISONS",
@@ -354,13 +490,18 @@
     "CV-30"
    ],
    "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
-   "expected_checks": 450,
-   "performed_checks": 450,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "e61c1d719c3f4cf553d1fec79764d5ff595183270e199f87ab5e8db6a48e8e4e",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "CV30-PHYSICAL-COMPARISONS: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "WM08-OUTCOMES",
@@ -465,13 +606,18 @@
     "CV-31"
    ],
    "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
-   "expected_checks": 375,
-   "performed_checks": 375,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "92a10f4f1824d5deced5a99861baa5bca2befde97a8f5d873e29f965ceb1c0b3",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "CV31-PHYSICAL-COMPARISONS: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "CV32-PHYSICAL-COMPARISONS",
@@ -481,13 +627,18 @@
     "CV-32"
    ],
    "field_map": "cases keyed by comparison ID; normalized costs from source summaries; no qualification label",
-   "expected_checks": 375,
-   "performed_checks": 375,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "349086656817b5db2a1537aab820c7b5d1d9d07b07d9666cae40d05ab1848de4",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "expected_checks": 0,
+   "performed_checks": 0,
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "CV32-PHYSICAL-COMPARISONS: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "WM10-REHEARSAL",
@@ -537,11 +688,16 @@
    "field_map": "identity-only stop receipt; no physical outcome numeric comparisons",
    "expected_checks": 0,
    "performed_checks": 0,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "b77088ad390e82242a2643a1d69025aedf273f1c4909f7d59402d4c1eb08a86e",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "WM-N1-RECOVERY-01-STOP: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "WM-N1-RECOVERY-01-ZERO-ROW-CORRECTION",
@@ -553,11 +709,16 @@
    "field_map": "identity-only integrity/correction receipt; no physical outcome numeric comparisons",
    "expected_checks": 0,
    "performed_checks": 0,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "e90335a220727197f26c99690e11be6e8d523ea0819d1e86dacdfaf463a2fb88",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "WM-N1-RECOVERY-01-ZERO-ROW-CORRECTION: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "WM-N1-RECOVERY-01-NUMPY-WRITER-FAILURE",
@@ -569,11 +730,16 @@
    "field_map": "identity-only integrity failure receipt; no physical outcome numeric comparisons",
    "expected_checks": 0,
    "performed_checks": 0,
-   "skipped_checks": [],
-   "mismatches": [],
-   "status": "complete",
-   "sha256_current": "b02e64dba0601f6901136c26bab3912f0e81723f788bc75c7359c980ba04a521",
-   "verified_at": "2026-10-10T06:49:37+00:00"
+   "skipped_checks": [
+    {
+     "reason": "source file missing",
+     "count": null
+    }
+   ],
+   "mismatches": [
+    "WM-N1-RECOVERY-01-NUMPY-WRITER-FAILURE: source file missing"
+   ],
+   "status": "failure"
   },
   {
    "source_id": "WM-N1-M1-20261003-INTEGRITY",
@@ -596,14 +762,14 @@
   }
  ],
  "summary": {
-  "sources": 33,
-  "expected_checks": 2177,
-  "performed_checks": 2177,
-  "skipped_checks": 19,
-  "mismatches": 0,
-  "complete": 14,
+  "sources": 39,
+  "expected_checks": 0,
+  "performed_checks": 0,
+  "skipped_checks": 33,
+  "mismatches": 14,
+  "complete": 6,
   "partial": 0,
-  "failure": 0,
+  "failure": 14,
   "deleted": 19
  }
 }

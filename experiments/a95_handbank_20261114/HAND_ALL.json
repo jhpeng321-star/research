@@ -1,0 +1,727 @@
+[
+ {
+  "family": "wall_g_solo2",
+  "strategy_key": "c6b176478af8c50c",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "wall_g_duo12",
+  "strategy_key": "a5d026a7f1d0b060",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 1,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "wall_g_solo2_gate0",
+  "strategy_key": "036a4453d2425b81",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": "empty100",
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "wall_m_solo2",
+  "strategy_key": "400a1f46ebaae95a",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 90,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 18.0,
+     "dmax": 1.0,
+     "hold_s": 90,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "wall_g_solo1",
+  "strategy_key": "e01e3c082b5b979a",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 1,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "wall_g_duo12_gate0",
+  "strategy_key": "b7f0e2bcc984269a",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": "empty100",
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 1,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "wall_g_alt21",
+  "strategy_key": "ac6b17e6e97060fc",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": [
+    [
+     0
+    ],
+    [
+     1
+    ]
+   ],
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 1,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "wall_g_alt21_gate0",
+  "strategy_key": "4d7ec6e3feb58f3d",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": "empty100",
+   "phases": [
+    [
+     0
+    ],
+    [
+     1
+    ]
+   ],
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 1,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "wall_g_relay21",
+  "strategy_key": "f95f5277c16899ff",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 180,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 90,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 1,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 60,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "wall_g_relay12",
+  "strategy_key": "11f464e28297c2fe",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 180,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 1,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 90,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 60,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "g2_stagger40",
+  "strategy_key": "b7fb901ab0da9ff1",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "lanes",
+   "zone": "full",
+   "spread_m": 300.0,
+   "cooldown_s": 160,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 2,
+     "rank": 1,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 40,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "wall_g_duo12_stagger40",
+  "strategy_key": "59fa3e1b443c0965",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 160,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 1,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 40,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "g2_gap1",
+  "strategy_key": "3da551e8da79676f",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "lanes",
+   "zone": "full",
+   "spread_m": 300.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 1,
+     "rank": 0,
+     "v_w": 18.0,
+     "dmax": 1.0,
+     "hold_s": 90,
+     "onset_s": 20,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "g2_gap1_gate0",
+  "strategy_key": "395509b8ec47b150",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "lanes",
+   "zone": "full",
+   "spread_m": 300.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": "empty100",
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 1,
+     "rank": 0,
+     "v_w": 18.0,
+     "dmax": 1.0,
+     "hold_s": 90,
+     "onset_s": 20,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ },
+ {
+  "family": "g2_lc01",
+  "strategy_key": "df786a8eb3b7e338",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "lanes",
+   "zone": "full",
+   "spread_m": 300.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 0,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": 1
+    }
+   ]
+  }
+ },
+ {
+  "family": "lc01_g22",
+  "strategy_key": "d2704ee6bff0cfe9",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "lanes",
+   "zone": "full",
+   "spread_m": 300.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 0,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": 1
+    }
+   ]
+  }
+ },
+ {
+  "family": "g2_gapopen12",
+  "strategy_key": "be3213feaea83334",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "lanes",
+   "zone": "full",
+   "spread_m": 300.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 1,
+     "rank": 1,
+     "v_w": 18.0,
+     "dmax": 1.0,
+     "hold_s": 90,
+     "onset_s": 20,
+     "lc_target_sumo": 2
+    }
+   ]
+  }
+ },
+ {
+  "family": "duo12_v20",
+  "strategy_key": "750a55c9439a2efc",
+  "score": null,
+  "gain_vs_base": null,
+  "gain_vs_base_lcb": null,
+  "feasible": null,
+  "extended": false,
+  "offer_condition": {
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "situation": {
+    "unconditional": true
+   },
+   "roles": [
+    {
+     "sumo_lane": 1,
+     "rank": 0,
+     "v_w": 20.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    },
+    {
+     "sumo_lane": 2,
+     "rank": 0,
+     "v_w": 20.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target_sumo": null
+    }
+   ]
+  }
+ }
+]

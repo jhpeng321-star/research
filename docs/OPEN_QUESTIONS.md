@@ -1,4 +1,12 @@
 <!-- WM-S-open-questions-20261009 -->
+<!-- N6-CONFIRM-A28-A29-closeout -->
+**2026-11-09, N6-CONFIRM-A30 (answered):** [tables](../runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A30.json). Continued MAPPO training (96 episodes, original objective) does not beat U0; LEARNED_TRIGGER beats it (-5.7%), so the trigger gain is not explained by extra training episodes. Open: replication over training seeds; 900 s training vs 1200 s eval horizon.
+**2026-11-09, N6-CONFIRM-A28 / A29 (partly answered):** [a28](../runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A28.json), [a29](../runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A29.json). On the sealed confirmation panel the WM bank arms (ORACLE_WM, deployable LEARNED_TRIGGER) beat frozen MAPPO U0 in total delay with fairness/tail co-criteria. WM-guided continued training (C5D) does not significantly reduce total delay vs U0 at u12 or u17, but lowers CVaR90 vs U0 and vs its unguided twin C5DR. Open: whether u24 (not reached; disk stop) would differ; C5D vs F8B at equal training length (u17 vs u19 here).
+<!-- /N6-CONFIRM-A28-A29-closeout -->
+<!-- N6-BANK-A27-closeout -->
+**2026-11-09, N6-BANK-A27 (partly answered):** [analysis](../runs/active/C4-V7FT-20261017/nm_finaleval_p20x_r2_bank/BANK_ANALYSIS.txt), [sealed tables](../runs/active/C4-V7FT-20261017/nm_finaleval_p20x_r2_bank/BANK_TABLES.json). The privileged ORACLE bank bound beats U0 on p20x with fairness/tail co-criteria; the deployable LEARNED_TRIGGER and ORACLE_WM are not significant vs U0. Open: a deployable trigger that captures the ORACLE gap; L2-origin fairness cost vs MAPPO_LANE; breakdown-world effect not computable (0 worlds met the registered rule).
+<!-- /N6-BANK-A27-closeout -->
+
 <!-- S-GROUPDIAG-closeout -->
 **2026-11-06, S-GROUPDIAG (mechanism partly answered):** [Clean2 analysis](../runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md) decomposes +726.400 benefit into +726.434 best-solo benefit and -0.034 synergy. Eight native synergistic lessons exist; projected executable labels remain uncertified. Open: full-window native oracle for all seven states, causal named-move attribution, and whether feasible complementary pair actions with measured marginal credit create positive synergy. No new physics or diagnostic-outcome training.
 <!-- /S-GROUPDIAG-closeout -->
@@ -7,9 +15,13 @@
 **2026-11-06, S-DIAG (partially answered):** [Clean1 diagnosis](../runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md) rules out none-collapse/dead residual and identifies weak, reversed instantaneous move actuation, concentrated supervision, feasibility limits and local-credit mismatch. Still open: causal move-versus-none physical benefit, exact identities of three usable CE contexts, and whether production-consistent actuation plus feasible diverse practice produces group-over-best-solo benefit. Final clean1 owner STOP retained; existing clean2/plan-fix/mining work must be consulted before any follow-up.
 <!-- /S-DIAG-closeout -->
 
+**2026-11-06, S-MINING (open / infrastructure blocked):** do executable complementary two-CAV lane-yield/gap-open/ramp-merge or merge-timed walls beat each member solo on both matched CRN seeds? [Registered mining](../runs/active/C4-V7FT-20261017/MINING_REPORT.md) has zero new simulation and zero candidates because gpuA SSH closes before key exchange. The empty verified-move file is not evidence against synergy. Restore gpuA access for required parity/GPU WM pre-screen; cpuV is prospective bounded SUMO fallback.
+
 <!-- S-WMCHECK-closeout -->
 **2026-11-05, S-WMCHECK (partially answered):** [Gain-disagreement audit](../runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md) finds 90/221 positive predictions win on recovered selected training pairs. How wrong is the WM at raw/calibrated P>=0.8 remains **open**: no genuine candidate-bound probability evidence exists in these records. Matched original prediction-horizon provenance is also missing. No confidence inferred from gains and no new runs authorized by this analysis.
 <!-- /S-WMCHECK-closeout -->
+
+**2026-10-30, S-W78SCORE:** long-horizon WM improvement remains open. [W7](paper_results/W7_VERDICT.md)/[W8](paper_results/W8_VERDICT.md) best/final candidates all fail registered improvement and pairs300 non-regression; H_C remains 0. Both best checkpoints are initialization tensors and their PANEL120 rows are identical. The repeated best-score identity question is closed by tensor/hash audit; retain WM2.
 
 # WM-S open questions update (2026-10-09)
 

@@ -1,0 +1,242 @@
+{
+ "panel_sha256": "6c161a56e1c913e35441570774f1df6ee62999a0ca9e11b27a309ab3b0dfc5ff",
+ "panel_file_sha256": "0bb84f3c129ca7347236337cb4bcc316b447a0186f6478fa2ca9451646145c56",
+ "n_worlds": 192,
+ "seeds": [
+  984400,
+  984591
+ ],
+ "setting": "a99p_D2800_p20",
+ "arms": {
+  "BANK_S4_20C": {
+   "wave": "A99PC_BANK_S4_20C",
+   "n": 192,
+   "runner_arm": "A75_BANK",
+   "kind": "a75",
+   "jobs": [
+    "a99pc_bank_s4_20c_0000",
+    "a99pc_bank_s4_20c_0191"
+   ],
+   "seeds": [
+    984400,
+    984591
+   ],
+   "executor_fields": {
+    "comparator_kind": "a77_MAPPO20C",
+    "label": "Amendment 77 run84 production policy_00084 (speed-only MAPPO, 20 % CAV, D2800_p20, 84 updates x 46 episodes from u0 d9042cc5, TRAIN 987200-987599; iteration fixed in advance)",
+    "executor_path": "/home/ubuntu/a77/run84/production/policy_00084.pt",
+    "executor_sha256": "606e59e0f579a4c7c3be88b44da2237ce9ddbdc065780dbd4b385128775ad659",
+    "binding_sha256": "466bfcbfc3d4e0fad1731271008ece23bc469abd68a07400c7fc4825550afac8",
+    "binding_path": "/root/a96ref/root/BOUND_A77_MAPPO20C.json"
+   },
+   "runner_loaded_executor": {
+    "606e59e0f579a4c7c3be88b44da2237ce9ddbdc065780dbd4b385128775ad659": 192
+   },
+   "all_loaded_mappo20c": true,
+   "spec_diff_vs_u0_construction": [
+    "checkpoint.binding_path",
+    "checkpoint.binding_sha256",
+    "checkpoint.comparator_kind",
+    "checkpoint.executor_path",
+    "checkpoint.executor_sha256",
+    "checkpoint.label"
+   ],
+   "sim_s": 230400,
+   "mech_episodes": 2,
+   "mech_seeds": [
+    984400,
+    984401
+   ]
+  },
+  "BANK_HAND_20C": {
+   "wave": "A99PC_BANK_HAND_20C",
+   "n": 192,
+   "runner_arm": "A75_BANK",
+   "kind": "a75",
+   "jobs": [
+    "a99pc_bank_hand_20c_0000",
+    "a99pc_bank_hand_20c_0191"
+   ],
+   "seeds": [
+    984400,
+    984591
+   ],
+   "executor_fields": {
+    "comparator_kind": "a77_MAPPO20C",
+    "label": "Amendment 77 run84 production policy_00084 (speed-only MAPPO, 20 % CAV, D2800_p20, 84 updates x 46 episodes from u0 d9042cc5, TRAIN 987200-987599; iteration fixed in advance)",
+    "executor_path": "/home/ubuntu/a77/run84/production/policy_00084.pt",
+    "executor_sha256": "606e59e0f579a4c7c3be88b44da2237ce9ddbdc065780dbd4b385128775ad659",
+    "binding_sha256": "466bfcbfc3d4e0fad1731271008ece23bc469abd68a07400c7fc4825550afac8",
+    "binding_path": "/root/a96ref/root/BOUND_A77_MAPPO20C.json"
+   },
+   "runner_loaded_executor": {
+    "606e59e0f579a4c7c3be88b44da2237ce9ddbdc065780dbd4b385128775ad659": 192
+   },
+   "all_loaded_mappo20c": true,
+   "spec_diff_vs_u0_construction": [
+    "checkpoint.binding_path",
+    "checkpoint.binding_sha256",
+    "checkpoint.comparator_kind",
+    "checkpoint.executor_path",
+    "checkpoint.executor_sha256",
+    "checkpoint.label"
+   ],
+   "sim_s": 230400,
+   "mech_episodes": 2,
+   "mech_seeds": [
+    984400,
+    984401
+   ]
+  },
+  "DUO_HOLD_20C": {
+   "wave": "A99PC_DUO_HOLD_20C",
+   "n": 192,
+   "runner_arm": "DUO_HOLD",
+   "kind": "a32",
+   "jobs": [
+    "a99pc_duo_hold_20c_0000",
+    "a99pc_duo_hold_20c_0191"
+   ],
+   "seeds": [
+    984400,
+    984591
+   ],
+   "executor_fields": {
+    "comparator_kind": "a77_MAPPO20C",
+    "label": "Amendment 77 run84 production policy_00084 (speed-only MAPPO, 20 % CAV, D2800_p20, 84 updates x 46 episodes from u0 d9042cc5, TRAIN 987200-987599; iteration fixed in advance)",
+    "executor_path": "/home/ubuntu/a77/run84/production/policy_00084.pt",
+    "executor_sha256": "606e59e0f579a4c7c3be88b44da2237ce9ddbdc065780dbd4b385128775ad659",
+    "binding_sha256": "466bfcbfc3d4e0fad1731271008ece23bc469abd68a07400c7fc4825550afac8",
+    "binding_path": "/root/a96ref/root/BOUND_A77_MAPPO20C.json"
+   },
+   "runner_loaded_executor": {
+    "606e59e0f579a4c7c3be88b44da2237ce9ddbdc065780dbd4b385128775ad659": 192
+   },
+   "all_loaded_mappo20c": true,
+   "spec_diff_vs_u0_construction": [
+    "checkpoint.binding_path",
+    "checkpoint.binding_sha256",
+    "checkpoint.comparator_kind",
+    "checkpoint.executor_path",
+    "checkpoint.executor_sha256",
+    "checkpoint.label"
+   ],
+   "sim_s": 230400,
+   "mech_episodes": 2,
+   "mech_seeds": [
+    984400,
+    984401
+   ]
+  },
+  "MAPPO20C": {
+   "wave": "A99PC_MAPPO20C",
+   "n": 192,
+   "runner_arm": "U0",
+   "kind": "u0",
+   "jobs": [
+    "a99pc_mappo20c_0000",
+    "a99pc_mappo20c_0191"
+   ],
+   "seeds": [
+    984400,
+    984591
+   ],
+   "executor_fields": {
+    "comparator_kind": "a77_MAPPO20C",
+    "label": "Amendment 77 run84 production policy_00084 (speed-only MAPPO, 20 % CAV, D2800_p20, 84 updates x 46 episodes from u0 d9042cc5, TRAIN 987200-987599; iteration fixed in advance)",
+    "executor_path": "/home/ubuntu/a77/run84/production/policy_00084.pt",
+    "executor_sha256": "606e59e0f579a4c7c3be88b44da2237ce9ddbdc065780dbd4b385128775ad659",
+    "binding_sha256": "466bfcbfc3d4e0fad1731271008ece23bc469abd68a07400c7fc4825550afac8",
+    "binding_path": "/root/a96ref/root/BOUND_A77_MAPPO20C.json"
+   },
+   "runner_loaded_executor": {
+    "606e59e0f579a4c7c3be88b44da2237ce9ddbdc065780dbd4b385128775ad659": 192
+   },
+   "all_loaded_mappo20c": true,
+   "spec_diff_vs_u0_construction": [
+    "checkpoint.binding_path",
+    "checkpoint.binding_sha256",
+    "checkpoint.comparator_kind",
+    "checkpoint.executor_path",
+    "checkpoint.executor_sha256",
+    "checkpoint.label"
+   ],
+   "sim_s": 230400,
+   "mech_episodes": 2,
+   "mech_seeds": [
+    984400,
+    984401
+   ]
+  }
+ },
+ "omitted": {
+  "BANK_S5_20C": "empty: S5-p20 admitted 0/12 on MAPPO20C (/root/a99adm_s5 wrote no bank file); not run"
+ },
+ "contrasts": [
+  [
+   "BANK_S4_20C",
+   "MAPPO20C",
+   "vs_mappo20c"
+  ],
+  [
+   "BANK_HAND_20C",
+   "MAPPO20C",
+   "vs_mappo20c"
+  ],
+  [
+   "DUO_HOLD_20C",
+   "MAPPO20C",
+   "vs_mappo20c"
+  ],
+  [
+   "BANK_S4_20C",
+   "BANK_HAND_20C",
+   "between_plan_arms"
+  ],
+  [
+   "BANK_S4_20C",
+   "DUO_HOLD_20C",
+   "between_plan_arms"
+  ],
+  [
+   "BANK_HAND_20C",
+   "DUO_HOLD_20C",
+   "between_plan_arms"
+  ]
+ ],
+ "banks": {
+  "BANK_S4_20C": [
+   "682c01ae1deb28c774701ff0a5102cd77c2addf2ca302e4e42a90409b7302ab2",
+   [
+    "mut_4d472232b8df5b18",
+    "mut_a60055829df5f83b"
+   ]
+  ],
+  "BANK_HAND_20C": [
+   "59acb7471c51da728ffe7e1f0600082a8e6486a0455108a21df41d7b851bd946",
+   [
+    "wall_g_duo12_stagger40",
+    "wall_g_duo12"
+   ]
+  ]
+ },
+ "bank_pin": "78bfdbb5c494544e15fe286b2617f37d3fd406072a37265b67f4fb91c0daec5c",
+ "sim_s_total": 921600,
+ "caps": {
+  "mech": 9600,
+  "total": 921600
+ },
+ "charged": 0,
+ "a75_sha256": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+ "nm_finaleval_sha256": "fa98b5526296f67e96c7670d7baedf4e943df49074822daa9f6fdd73a69fc132",
+ "runner_sha256": "47afb40951b237f4d2be01a7e908b8b704c57250345058443312a92ef84a4020",
+ "runner_attr": [
+  "A96C_RANGES",
+  [
+   [
+    984400,
+    984599
+   ]
+  ]
+ ]
+}

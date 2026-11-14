@@ -1,0 +1,155 @@
+{
+ "schema": "coopmwm.a37.reuse.v1",
+ "rule": "an earlier SUMO verification is reused iff it is a single registered S-WMVERIFY block at the SAME cell executed under the UNC rule (24 paired seeds, unconditional, vs u0, fairness groups) - i.e. the same admission rule as the unconditional rows of fd385a2b; only PLAN.json / registration rule names and seed counts were read to decide (no outcome)",
+ "scanned": [
+  "wmverify_cfd/ANALYSIS_CFD/PLAN.json",
+  "wmverify_mc/ANALYSIS_MC/PLAN.json",
+  "wmverify_p20/ANALYSIS_P20/PLAN.json",
+  "wmverify_pair/ANALYSIS_PAIR/PLAN.json",
+  "wmverify_r3/ANALYSIS_R3_D2400/PLAN.json",
+  "wmverify_r3/ANALYSIS_R3_D2400C/PLAN.json",
+  "wmverify_r3/ANALYSIS_R3_D2800/PLAN.json",
+  "wmverify_r3/ANALYSIS_R3_D3200/PLAN.json",
+  "wmverify_r4/ANALYSIS_R4/PLAN.json",
+  "wmverify_r5/ANALYSIS_R5/PLAN.json",
+  "wmverify_r6/ANALYSIS_R6/PLAN.json",
+  "wmverify_r6c/ANALYSIS_R6C/PLAN.json",
+  "wmverify_r7a/ANALYSIS_R7A/PLAN.json",
+  "wmverify_r7b/ANALYSIS_R7B/PLAN.json",
+  "wmverify_r7c/ANALYSIS_R7C/PLAN.json",
+  "wmverify_rep/ANALYSIS_REP/PLAN.json",
+  "wmverify_sl/ANALYSIS_SL/PLAN.json",
+  "wmverify_unc/ANALYSIS_UNC/PLAN.json"
+ ],
+ "tests": [
+  {
+   "cell": "D3200_p20",
+   "family": "duo12_v18",
+   "dir": "wmverify_mc/ANALYSIS_MC",
+   "n_seeds": 2,
+   "seeds": [
+    989968,
+    989969
+   ],
+   "rule": "MC multi-cell screen (2 seeds per cell)",
+   "unc_rule": false,
+   "reusable": false,
+   "why": "not the UNC rule; 2 < 24 seeds in the block"
+  },
+  {
+   "cell": "D3200_p20",
+   "family": "duo12_v18",
+   "dir": "wmverify_r3/ANALYSIS_R3_D3200",
+   "n_seeds": 12,
+   "seeds": [
+    991152,
+    991163
+   ],
+   "rule": "12-seed S-WMVERIFY rule (R3)",
+   "unc_rule": false,
+   "reusable": false,
+   "why": "not the UNC rule; 12 < 24 seeds in the block"
+  },
+  {
+   "cell": "D3200_p20",
+   "family": "mut_0d1deed54cf85a43",
+   "dir": "wmverify_r3/ANALYSIS_R3_D3200",
+   "n_seeds": 12,
+   "seeds": [
+    991152,
+    991163
+   ],
+   "rule": "12-seed S-WMVERIFY rule (R3)",
+   "unc_rule": false,
+   "reusable": false,
+   "why": "not the UNC rule; 12 < 24 seeds in the block"
+  },
+  {
+   "cell": "D3200_p20",
+   "family": "mut_ad6205c9d248ab0f",
+   "dir": "wmverify_r3/ANALYSIS_R3_D3200",
+   "n_seeds": 12,
+   "seeds": [
+    991152,
+    991163
+   ],
+   "rule": "12-seed S-WMVERIFY rule (R3)",
+   "unc_rule": false,
+   "reusable": false,
+   "why": "not the UNC rule; 12 < 24 seeds in the block"
+  },
+  {
+   "cell": "D3200_p20",
+   "family": "mut_ed21f451c77f2878",
+   "dir": "wmverify_r3/ANALYSIS_R3_D3200",
+   "n_seeds": 12,
+   "seeds": [
+    991152,
+    991163
+   ],
+   "rule": "12-seed S-WMVERIFY rule (R3)",
+   "unc_rule": false,
+   "reusable": false,
+   "why": "not the UNC rule; 12 < 24 seeds in the block"
+  },
+  {
+   "cell": "D2400_p20",
+   "family": "duo12_v21",
+   "dir": "wmverify_r3/ANALYSIS_R3_D2400",
+   "n_seeds": 12,
+   "seeds": [
+    991140,
+    991151
+   ],
+   "rule": "12-seed S-WMVERIFY rule (R3)",
+   "unc_rule": false,
+   "reusable": false,
+   "why": "not the UNC rule; 12 < 24 seeds in the block"
+  },
+  {
+   "cell": "D2400_p20",
+   "family": "mut_a857168d4aae7b79",
+   "dir": "wmverify_r3/ANALYSIS_R3_D2400",
+   "n_seeds": 12,
+   "seeds": [
+    991140,
+    991151
+   ],
+   "rule": "12-seed S-WMVERIFY rule (R3)",
+   "unc_rule": false,
+   "reusable": false,
+   "why": "not the UNC rule; 12 < 24 seeds in the block"
+  },
+  {
+   "cell": "D2400_p20",
+   "family": "mut_fd73f0eab0e4fc39",
+   "dir": "wmverify_r3/ANALYSIS_R3_D2400",
+   "n_seeds": 12,
+   "seeds": [
+    991140,
+    991151
+   ],
+   "rule": "12-seed S-WMVERIFY rule (R3)",
+   "unc_rule": false,
+   "reusable": false,
+   "why": "not the UNC rule; 12 < 24 seeds in the block"
+  },
+  {
+   "cell": "D2400_p20",
+   "family": "mut_a857168d4aae7b79",
+   "dir": "wmverify_r3/ANALYSIS_R3_D2400C",
+   "n_seeds": 12,
+   "seeds": [
+    991176,
+    991187
+   ],
+   "rule": "R3C confirmation (pooled 24-seed vs incumbent + fairness rule, MAIN 2026-11-08 21:43)",
+   "unc_rule": false,
+   "reusable": false,
+   "why": "not the UNC rule; 12 < 24 seeds in the block"
+  }
+ ],
+ "reusable": [],
+ "note": "mut_a857168d4aae7b79 at D2400_p20 has 12 + 12 seeds over two blocks (R3 991140-991151, R3C 991176-991187) under different registered rules; pooling them into a UNC verdict would need the per-vehicle logs (on gpuA, not local) and mixes two registered analyses, so it is NOT reused; it is verified fresh with the other candidates (disclosed).",
+ "created": "2026-11-10 16:36:27 +08"
+}

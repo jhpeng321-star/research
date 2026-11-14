@@ -1,0 +1,40 @@
+NOT APPLIED. Table-only edits the registered tree needs before box_driver.py can run a block.
+No executor, runner-logic, controller or plan code changes: only seed-block tables, as amendments 42 / 50 / 68 did.
+Every <...> is a value MAIN registers after a seed audit. This build chose NO world seed.
+Banned: 962xxx, 964000-964199, 977xxx, 989600-989699 and every previously used panel.
+
+Blocks needed (cell D2800_p60, reference U0 = frozen base MAPPO d9042cc5):
+  e1v_seed11, e1v_seed23, e1v_seed42, e1v_seed67, e1v_seed89, e1v_seed103   24 worlds each  (E1 verification)
+  e1c                                                                       <N_c> worlds     (E1 confirmation)
+  e2m                                                                       <N_m> worlds     (E2 F / S / H18..H22)
+  e2r                                                                       <= 24 worlds     (E2 same-state replay)
+  mech (optional)                                                           2 worlds         (replay mechanics check)
+The existing settings give each block its own 100-seed range (EVAL_RANGE = (lo, lo+99), N_WORLDS <= 100).
+
+--- 1. tools/coopmwm/nm_eval_runner.py  (after A68_RANGES; pattern of A68_RANGES)
++#: claim validation 20261113_0231 (MAIN registration <ID>): fresh blocks, same A37 executor arms
++CV1_RANGES = ((<lo_1>, <lo_1>+99), (<lo_2>, <lo_2>+99), ...)        # one (lo, hi) per block above
+ EVAL_HELDOUT_RANGES = (... existing entries ...
++                       ) + tuple((lo, hi, lo) for lo, hi in CV1_RANGES) + (
+                        (A44_MECH_RANGE[0], A44_MECH_RANGE[1], A44_MECH_RANGE[0]),)
+
+--- 2. ops/nm_finaleval.py  (after the A68_CELLS loop; pattern of A68_CELLS, lines 543-563)
++CV1_CELLS = (('cv1v11_D2800_p60', <lo>, 24, 'E1 verification seed 11', 'nm_eval_trainblock_wz3to2_cv1v11_D2800_p60.json'),
++             ... one row per block ...
++             ('cv1r_D2800_p60', <lo>, <n<=24>, 'E2 replay', 'nm_eval_trainblock_wz3to2_cv1r_D2800_p60.json'))
++for _name, _lo, _n, _what, _file in CV1_CELLS:
++    SETTINGS[_name] = dict(SETTINGS['a35_D2800_p60'],
++        N_WORLDS=_n, EVAL_RANGE=(_lo, _lo+99), EVAL_EXTRA_RANGE=(_lo, _lo+99), SEEDS_RESERVED=(_lo+_n, _lo+99),
++        PANEL_SIZE_REASON=..., CELL_AUTHORITY=..., (remaining keys exactly as the A68_CELLS loop sets them)
++        PANEL_FILE=HERE/_file, PANEL_3C_FILE=None)
++BANK_SETTINGS = BANK_SETTINGS + tuple(c[0] for c in CV1_CELLS)
++SETTINGS_PINS['<setting>'] = dict(PANEL_SHA256='<sha after the panel build>', PANEL_3C_SHA256=None)   # per block
+
+--- 3. panel files ops/nm_eval_*_cv1*_D2800_p60.json: built by the tree's own panel builder for each new setting
+       (as for a68v / a68c), then their sha pinned in SETTINGS_PINS before any episode.
+
+--- 4. after the edits (zero or small SUMO, registered separately): the tree's unit tests, then an identity re-check
+       on already-published worlds (pattern IDENTITY_A68.json: stored J reproduced with difference 0.0) because
+       nm_eval_runner.py / nm_finaleval.py bytes change and both are sealed into job receipts.
+
+Then fill patches/REGISTRATION_TEMPLATE.json -> REGISTRATION.json (settings, ranges attr, panel shas, cap).

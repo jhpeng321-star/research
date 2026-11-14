@@ -1,0 +1,51 @@
+pin ok 62496e86 /root/a69/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 4e7a97f3 /root/a69/src/pytools/tools/coopmwm/a44_lcvariant.py
+A68 files linked into the clone: 2
+pin ok bff1a7bb /root/a103adm_a/src/ops/a68/CANDIDATES_D2800_p60.json
+pin ok be1a5df3 /root/a103adm_a/src/ops/a68/CANDIDATES_D2800_p60.sha256
+pin ok 72046db6 /root/a103adm_a/src/pytools/tools/coopmwm/a75_holdforms.py
+pin ok 8a2533ef /root/a103adm_a/src/ops/a75_d2forms.py
+pin ok 72af622e /root/a103adm_a/src/ops/a70_smallbank.py
+pin ok 835e423a /root/a103adm_a/src/ops/nm_eval_panel_wz3to2_a70c_D2800_p60.json
+pin ok c7d6b8ef /root/a103adm_a/src/ops/a75d2/EXAMPLE_PLANS.json
+pin ok 9741e2e3 /root/a103adm_a/src/ops/a75d2/REF_PINS.json
+patched /root/a103adm_a/patch.tmp/runner.py
+patched /root/a103adm_a/patch.tmp/settings.py
+patched /root/a103adm_a/patch.tmp/settings.py
+unchanged /root/a103adm_a/patch.tmp/a70_smallbank.py
+patched /root/a103adm_a/patch.tmp/runner.py
+pin ok 62496e86 /root/a69/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 280510a9 /root/a68/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 9f289431 /root/a69/src/ops/nm_finaleval.py
+pin ok 9f289431 /root/a68/src/ops/nm_finaleval.py
+runner A69 62496e86 (unchanged) -> A80 ef8788ff06d5aacc10f47e1384d54d75415d59e40a3f2245113fef939891c421   settings A68 9f289431 (unchanged) -> A80 49b6d048abbcf7262ddc47ebe851a20a533482dff7430f690621d1f529bf9c14
+pin ok 2abed317 /root/a66/inputs/policy_00084.pt
+code identity ok: a75 d1af7e0f covered tokens 15 synthetic candidates 12 mech plans 10
+tree diff vs the A69 tree (expected: runner, settings, a75_holdforms, ops/a75, a70_smallbank + A70 panel, a75_d2forms, ops/a75d2, the A80 files, A68 sync):
+Only in /root/a103adm_a/src/ops/a68: CANDIDATES_D2800_p60.json
+Only in /root/a103adm_a/src/ops/a68: CANDIDATES_D2800_p60.sha256
+Only in /root/a103adm_a/src/ops: a70_smallbank.py
+Only in /root/a103adm_a/src/ops: a75
+Only in /root/a103adm_a/src/ops: a75d2
+Only in /root/a103adm_a/src/ops: a75_d2forms.py
+Only in /root/a103adm_a/src/ops: a80
+Only in /root/a103adm_a/src/ops: a80_s2b.py
+Only in /root/a103adm_a/src/ops: nm_eval_panel_wz3to2_a70c_D2800_p60.json
+Files /root/a69/src/ops/nm_finaleval.py and /root/a103adm_a/src/ops/nm_finaleval.py differ
+Only in /root/a103adm_a/src/ops: test_a80_s2b.py
+Only in /root/a103adm_a/src/pytools/ops/a68: CANDIDATES_D2800_p60.json
+Only in /root/a103adm_a/src/pytools/ops/a68: CANDIDATES_D2800_p60.sha256
+Only in /root/a103adm_a/src/pytools/ops: a70_smallbank.py
+Only in /root/a103adm_a/src/pytools/ops: a75
+Only in /root/a103adm_a/src/pytools/ops: a75d2
+Only in /root/a103adm_a/src/pytools/ops: a75_d2forms.py
+Only in /root/a103adm_a/src/pytools/ops: a80
+Only in /root/a103adm_a/src/pytools/ops: a80_s2b.py
+Only in /root/a103adm_a/src/pytools/ops: nm_eval_panel_wz3to2_a70c_D2800_p60.json
+Files /root/a69/src/pytools/ops/nm_finaleval.py and /root/a103adm_a/src/pytools/ops/nm_finaleval.py differ
+Only in /root/a103adm_a/src/pytools/ops: test_a80_s2b.py
+Only in /root/a103adm_a/src/pytools/tools/coopmwm: a75_holdforms.py
+Files /root/a69/src/pytools/tools/coopmwm/nm_eval_runner.py and /root/a103adm_a/src/pytools/tools/coopmwm/nm_eval_runner.py differ
+54M	/root/a103adm_a
+  30G
+SETUP_OK

@@ -6,9 +6,13 @@
 **2026-11-06, S-DIAG:** [Clean1 diagnosis through final u9](runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md): B is not stuck at none; sampled named braking offsets have weak, reversed instantaneous actuation. Bank/practice concentration and credit mismatch constrain cooperation. Clean1 owner STOP preserved; zero new SUMO, training or charges.
 <!-- /S-DIAG-closeout -->
 
+**2026-11-06, S-MINING:** [Executable two-CAV merge/lane-change mining](runs/active/C4-V7FT-20261017/MINING_REPORT.md) is blocked before physics by gpuA SSH access. Zero new sim-s/admitted moves; cpuV metadata staging and hash-verified report transfer retained. No efficacy finding.
+
 <!-- S-WMCHECK-closeout -->
 **2026-11-05, S-WMCHECK:** [Existing-plan WM error audit](runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md): positive WM gain wins 90/221 on 542 recovered training pairs. The >=80%-confidence question remains unresolved because paired probabilities were not recorded; mixed horizons and selection bias limit interpretation. Zero new SUMO or charges.
 <!-- /S-WMCHECK-closeout -->
+
+**2026-10-30, S-W78SCORE:** [W7](docs/paper_results/W7_VERDICT.md) and [W8](docs/paper_results/W8_VERDICT.md) final scoring is complete. All four best/final candidates fail registered improvement despite passing acceptance; retain WM2. [Scoring-only record](docs/paper_results/W78_SCORING_RECORD.json).
 
 > **Current direction (2026-10-09):** the project is **WM-S**, a physics-informed
 > per-step traffic world model (IDM/MOBIL core + gated learned residual) used to pick

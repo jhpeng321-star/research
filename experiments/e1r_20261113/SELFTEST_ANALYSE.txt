@@ -1,0 +1,39 @@
+scipy cross-check ok
+{
+ "inc": {
+  "admitted_wm": 7,
+  "admitted_random": 2,
+  "table": [
+   [
+    7,
+    5
+   ],
+   [
+    2,
+    10
+   ]
+  ],
+  "fisher_two_sided_p": 0.08937945887737245
+ },
+ "exc": {
+  "admitted_wm": 5,
+  "admitted_random": 2,
+  "table": [
+   [
+    5,
+    5
+   ],
+   [
+    2,
+    10
+   ]
+  ],
+  "fisher_two_sided_p": 0.1718266253869969
+ },
+ "mw": {
+  "U_x": 18.0,
+  "p": 0.0021847851973037058,
+  "method": "exact"
+ }
+}
+SELFTEST OK (synthetic data only)

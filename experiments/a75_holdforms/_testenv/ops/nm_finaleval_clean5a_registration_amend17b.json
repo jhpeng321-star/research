@@ -1,0 +1,16 @@
+{
+ "amendment": "17b",
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend17a.json",
+  "registration_sha256": "e21540a1e3b9f7d40af959abbd0855722e103e90c26636c52fa1c537e2caefc3"
+ },
+ "authority": [
+  "MAIN 2026-11-07: the training-env subprocess path must be built from the bound train-src only, never the eval tree (IMITREPLAY: start-receipt train died with No module named tools.nm_mappo)"
+ ],
+ "fix": "nm_eval_runner.train_subprocess_env: PYTHONPATH = <train_src>, <train_src>/src, $SUMO_HOME/tools (traci) only; cwd = <train_src>; no G5 overlay; used by env-equivalence (train), envparity (train) and the MAPPO_LANE episode",
+ "registered_utc": "2026-11-07T04:47:58.906118+00:00",
+ "registration_sha256": "d48b8c8d6662c6112252df62f80a438ec63e9de1d2682ed5da4bb525414a849f",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: zero-SUMO fix; no envparity/MAPPO_LANE result exists",
+ "test": "test_training_subprocess_path_is_built_from_the_bound_training_tree_only; local smoke on 126b899c: the train start-receipt subprocess reaches traci.start (zero SUMO)"
+}

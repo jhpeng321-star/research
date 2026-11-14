@@ -1,0 +1,34 @@
+{
+ "adjusted": {
+  "E1 admitted count": 1.0,
+  "E2 F - H* delay": 0.283971602839716
+ },
+ "alpha": 0.05,
+ "doc_sha256": "47c5d9874e3ec86cd1c5b9fda50faef4a0f8a2728f4b7685919a96d781dd756b",
+ "family": "PROTOCOL.json multiplicity.primaries",
+ "method": "Holm",
+ "raw": {
+  "E1 admitted count": 1.0,
+  "E2 F - H* delay": 0.141985801419858
+ },
+ "rejected": {
+  "E1 admitted count": false,
+  "E2 F - H* delay": false
+ },
+ "repro_matches_sealed_E2_ANALYSIS": true,
+ "run_id": "20261113_0231",
+ "schema": "claim_validation.holm.v1",
+ "sources": {
+  "E1 admitted count": {
+   "doc_sha256": "c9b271b54085a5fbf3d5d0055e25d4cca0c1c9cc5c42bc7f003a3b7a985431c7",
+   "file": "/root/cv_20261113_0231/cv/out/e1/bank/FROZEN_BANKS.json",
+   "file_sha256": "f27f2e5a4fbdf0f59b02352719e21a7cead58dd8746278e592d8450c2c944299"
+  },
+  "E2 F - H* delay": {
+   "analysis_doc_sha256": "36f65eeb3295fcfcf40209368e9469ce910532df745ee4afb30ea6da40470f1d",
+   "file": "/root/cv_20261113_0231/cv/out/e2/E2C_RESULTS.json",
+   "file_sha256": "f698c87fbf86882deb8f0117de3a8ba5a36e95c333c2dab1c24cb160840f372a"
+  }
+ },
+ "two_sided": true
+}

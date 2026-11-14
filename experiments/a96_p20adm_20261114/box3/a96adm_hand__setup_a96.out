@@ -1,0 +1,24 @@
+pin ok 79fc9efd /root/a76p20/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 72046db6 /root/a76p20/src/pytools/tools/coopmwm/a75_holdforms.py
+tree copy ok: 1491 files identical to /root/a76p20/src
+pin ok 48c5c448 /root/a96adm_hand/src/ops/a80_s2b.py
+pin ok 308894c6 /root/a96adm_hand/src/ops/a77_mappo20c.py
+pin ok 2b33146b /root/a96adm_hand/src/ops/a82_s3b20.py
+patched /root/a96adm_hand/patch.tmp/runner.py
+pin ok 79fc9efd /root/a76p20/src/pytools/tools/coopmwm/nm_eval_runner.py
+runner A96: 0c5c2a4b53052ae25103e9b8ac7b895b86b590de4e4d94b77d2110d9065fa8c8
+code identity ok: a75 d1af7e0f A96_RANGES ((988900, 988999),)
+tree diff vs the A76 tree (expected: runner, a80_s2b, a77_mappo20c, a82_s3b20, a96_p20adm, ops/a96):
+Only in /root/a96adm_hand/src/ops: a77_mappo20c.py
+Only in /root/a96adm_hand/src/ops: a80_s2b.py
+Only in /root/a96adm_hand/src/ops: a82_s3b20.py
+Only in /root/a96adm_hand/src/ops: a96
+Only in /root/a96adm_hand/src/ops: a96_p20adm.py
+Only in /root/a96adm_hand/src/pytools/ops: a77_mappo20c.py
+Only in /root/a96adm_hand/src/pytools/ops: a80_s2b.py
+Only in /root/a96adm_hand/src/pytools/ops: a82_s3b20.py
+Only in /root/a96adm_hand/src/pytools/ops: a96
+Only in /root/a96adm_hand/src/pytools/ops: a96_p20adm.py
+Files /root/a76p20/src/pytools/tools/coopmwm/nm_eval_runner.py and /root/a96adm_hand/src/pytools/tools/coopmwm/nm_eval_runner.py differ
+53M	/root/a96adm_hand
+SETUP_OK

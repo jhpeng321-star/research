@@ -1,0 +1,85 @@
+{
+ "stage": "dry",
+ "phase": "tstrace_a102",
+ "cap": 2400,
+ "panel_sha256": "d85999ddaaf3eb583775d66dbabca168b4432966bc01e7193dfc79f244f7946c",
+ "waves": [
+  [
+   "A94C_MAPPO60C",
+   1,
+   "U0",
+   "a94c_mappo60c_0000",
+   988700
+  ],
+  [
+   "A94C_BANK_SEARCHED",
+   1,
+   "A75_BANK",
+   "a94c_bank_searched_0000",
+   988700
+  ]
+ ],
+ "episodes": 2,
+ "sim_s": 2400,
+ "charged": 0,
+ "identity": {
+  "MAPPO60C": {
+   "job_id": "a94c_mappo60c_0000",
+   "seed": 988700,
+   "spec_arm": "U0",
+   "record_arm": "U0",
+   "executor_sha256": "2abed31707b61121569af2936c23689827b52b28422df162751b230aa6a93de8",
+   "compared_fields": 23,
+   "diff": {},
+   "ok": true,
+   "stored_receipt": "693be701751e57d22551f6c191168deeecf04a21a2ee1627eda6868ed6d2ec6b",
+   "spec_keys": [
+    "arm",
+    "capture",
+    "checkpoint",
+    "deterministic",
+    "job_id",
+    "noise_seed",
+    "panel_sha256",
+    "sim_s",
+    "window",
+    "world",
+    "world_id"
+   ],
+   "sim_s": 1200,
+   "phase_in_spec": []
+  },
+  "BANK_SEARCHED": {
+   "job_id": "a94c_bank_searched_0000",
+   "seed": 988700,
+   "spec_arm": "A75_BANK",
+   "record_arm": "A75_BANK",
+   "executor_sha256": "2abed31707b61121569af2936c23689827b52b28422df162751b230aa6a93de8",
+   "compared_fields": 32,
+   "diff": {
+    "checkpoint.a75_bank.path": [
+     "/root/a94/root/a94_banks/A94_BANK_SEARCHED_D2800_p60.json",
+     "/root/a102ts/root/a94_banks/A94_BANK_SEARCHED_D2800_p60.json"
+    ]
+   },
+   "ok": true,
+   "stored_receipt": "9230f4ae53f7067f8753fb47f47d866ea6ea739123da8a60e69fa93a9d743586",
+   "spec_keys": [
+    "arm",
+    "capture",
+    "checkpoint",
+    "deterministic",
+    "job_id",
+    "noise_seed",
+    "panel_sha256",
+    "sim_s",
+    "window",
+    "world",
+    "world_id"
+   ],
+   "sim_s": 1200,
+   "phase_in_spec": []
+  }
+ },
+ "IDENTITY_OK": true
+}

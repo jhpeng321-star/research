@@ -1,0 +1,33 @@
+{
+ "amendment": "24",
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend23b.json",
+  "registration_sha256": "6cbb6a85e618b9f20dce44995a247013685827edec2c35ce5d6bf45117a0fd1f"
+ },
+ "analysis": {
+  "code": "ops/nm_finaleval.applicability_tables (tables.secondary.applicability)",
+  "primary": "D2800_p20 applicable worlds: paired total delay B - U0 CI95 upper < 0 AND groups (U0 labels) <= 10 s AND CVaR90 B - U0 CI95 lower <= 0",
+  "reported": "applicability rate (worlds, vehicle-time) per cell; non-applicable worlds (not significantly worse: CI95 lower <= 0); all worlds; MAPPO_LANE secondary; secondary cells D3200_p20 / D2400_p20 descriptive"
+ },
+ "authority": [
+  "owner 2026-11-08 22:57 (REGISTRATION): main claim \"when cooperation applies we can win mappo\" + how often it applies",
+  "MAIN -> N6 amendment 24"
+ ],
+ "labels": {
+  "bank": "the bank frozen at the end of training (path + sha256 sealed in the label file)",
+  "code": "ops/nm_applicability.py (label, label_world, bank_entries, ticks)",
+  "inputs": "U0 vehicle logs (file sha re-verified against the U0 wave receipts) + the frozen bank only",
+  "output": "sealed APPLICABILITY_<tag>.json; its sha is reported to MAIN with the per-cell rates",
+  "refusal": "label() refuses when any A/B/R wave exists in the root",
+  "rule": "world applicable iff some second t in [300, 1200) of its sealed U0 run has a CAV own and an admitted privileged-situation plan of the cell with fullpol_situational.onset_bin(own, rows, \"privileged\") in the admitted bins of that plan AND fullpol_bank.offer_ok(cond, own, rows) (the plan proximity rule; gates fail closed); functions imported from the evaluated tree",
+  "vehicle_time": "rate_vehicle_time = vehicle-seconds in applicable seconds / all vehicle-seconds in [300, 1200)"
+ },
+ "registered_utc": "2026-11-08T15:14:21.714564+00:00",
+ "registration_sha256": "d504afae8ed22b71939bca9bcb19ad20f33741844b1661f6efd0ea3824594719",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: labels are computed from sealed U0 tapes only, before any B/R wave exists",
+ "tests": [
+  "test_applicability_labels_read_only_u0_logs_and_the_bank",
+  "test_applicability_conditional_analysis_on_applicable_worlds"
+ ]
+}

@@ -1,0 +1,272 @@
+{
+ "schema": "a50.seed_audit.v1",
+ "audited": "2026-11-11 01:48:20 +0800",
+ "blocks": {
+  "verification": [
+   992800,
+   992899
+  ],
+  "confirmation": [
+   996800,
+   996899
+  ]
+ },
+ "used": {
+  "verification": [
+   992800,
+   992823
+  ],
+  "confirmation": [
+   996800,
+   996895
+  ]
+ },
+ "reserved_unused": {
+  "verification": [
+   992824,
+   992899
+  ],
+  "confirmation": [
+   996896,
+   996899
+  ]
+ },
+ "panels": {
+  "verification": {
+   "setting": "a50v_D2800_p60",
+   "cell": "D2800_p60",
+   "file": "ops/nm_eval_trainblock_wz3to2_a50v_D2800_p60.json",
+   "n_worlds": 24,
+   "panel_sha256": "c7f1d46aa28406cb009dffdc5bef6caf5ce2843e69591357ed49728f3f5b2fc0",
+   "file_sha256": "eb4ca33b0670a29fe92f47b083d4507ac4972394934a66f623fff8bf302dea94",
+   "runner_range": [
+    992800,
+    992899
+   ],
+   "registered_utc": "2026-11-10T17:37:35.191809+00:00"
+  },
+  "confirmation": {
+   "setting": "a50c_D2800_p60",
+   "cell": "D2800_p60",
+   "file": "ops/nm_eval_panel_wz3to2_a50c_D2800_p60.json",
+   "n_worlds": 96,
+   "panel_sha256": "7ef0cfabab4a5fffbe209d7308139a8ab1f8445f1b51f46e957586f598df98b5",
+   "file_sha256": "a103bcc54d8cc0aa3b6e84be79519cf8e34637b91e793c1fdeb3a4ab7e53f5f8",
+   "runner_range": [
+    996800,
+    996899
+   ],
+   "registered_utc": "2026-11-10T17:37:40.743532+00:00"
+  }
+ },
+ "method": "standalone-integer scan (ops/a50/seed_audit.py = the A42 audit code, superset of its sources) of 148612 text files on E: plus git grep over 546 branch/worktree tips; forbidden paths skipped unopened; per-world outcome files skipped by name; explicit overlap check against the known taken/reserved blocks",
+ "forbidden_skipped": [
+  "sealed",
+  "holdout",
+  "heldout",
+  "cal_split",
+  "chunk5",
+  "j4b",
+  "inc1",
+  "hetdata_truth",
+  "driver_params"
+ ],
+ "skipped_files": "^(WAVE_|RESULT|A\\d+B?_RESULTS|vehicles|observable)",
+ "run_dirs": [
+  "a32_ablation",
+  "a33_combined",
+  "a34_horizon",
+  "a35_transfer",
+  "a36_analysis",
+  "a37_celltailor",
+  "a40_geomvar",
+  "wmc_strategy_v3",
+  "paper_data",
+  "paper_analysis_a32",
+  "paper_fairness",
+  "p20c_seed_audit",
+  "p20x_seedaudit",
+  "p20x_bank",
+  "nm_finaleval_p20c_confirm",
+  "nm_finaleval_p20x_r2_bank",
+  "regimeu0",
+  "wmc_p20",
+  "lowcav",
+  "multicrit",
+  "wmverify_cfd",
+  "wmverify_d3200p60",
+  "wmverify_mc",
+  "wmverify_p20",
+  "wmverify_pair",
+  "wmverify_r3",
+  "wmverify_r4",
+  "wmverify_r5",
+  "wmverify_r6",
+  "wmverify_r6c",
+  "wmverify_r7a",
+  "wmverify_r7b",
+  "wmverify_r7c",
+  "wmverify_rep",
+  "wmverify_sl",
+  "wmverify_unc"
+ ],
+ "agent_dirs": [
+  "a32",
+  "a33",
+  "a34",
+  "a35",
+  "a37",
+  "a38",
+  "a39",
+  "a40",
+  "distill",
+  "distill-eval",
+  "distill-rl",
+  "distill-train",
+  "a38-road2",
+  "a40-geomvar",
+  "a41-d3200bound",
+  "a42",
+  "a32-ablation",
+  "a33-combined",
+  "a34-horizon",
+  "a35-transfer",
+  "a37-celltailor",
+  "a40-geomvar-d3a",
+  "a41",
+  "a42-bigp60",
+  "a42-run",
+  "a42-build-tmp",
+  "a44-lcvariant",
+  "a47-relay",
+  "distill-eval-dry",
+  "distill-log"
+ ],
+ "raw": "ops/a50/SEED_AUDIT_RAW.json",
+ "raw_sha256": "e75f682ce3752f7e944d0d10b609a532988f48be2e0d6b56c9858cc2b5135442",
+ "n_raw_hits": {
+  "file_hits": {
+   "verification": 3,
+   "confirmation": 0
+  },
+  "git_hits": {
+   "verification": 0,
+   "confirmation": 0
+  }
+ },
+ "known_overlap": [],
+ "known_blocks_checked": {
+  "A42": [
+   [
+    992000,
+    992099
+   ],
+   [
+    998600,
+    998699
+   ]
+  ],
+  "A44_proposed": [
+   [
+    992400,
+    992499
+   ]
+  ],
+  "A41": [
+   [
+    991724,
+    991771
+   ],
+   [
+    998400,
+    998591
+   ]
+  ],
+  "A33": [
+   [
+    999500,
+    999699
+   ],
+   [
+    991600,
+    991699
+   ]
+  ],
+  "A35": [
+   [
+    998000,
+    998399
+   ]
+  ],
+  "A37": [
+   [
+    991700,
+    991899
+   ]
+  ],
+  "p20x_p20c": [
+   [
+    993000,
+    993299
+   ]
+  ],
+  "finaleval_trainblock": [
+   [
+    991000,
+    991999
+   ]
+  ],
+  "DISTILLRL": [
+   [
+    998700,
+    998999
+   ]
+  ],
+  "N1_train_heldout": [
+   [
+    989000,
+    989099
+   ],
+   [
+    989200,
+    989699
+   ]
+  ],
+  "FORBIDDEN": [
+   [
+    964000,
+    964199
+   ],
+   [
+    962000,
+    962999
+   ],
+   [
+    977000,
+    977999
+   ]
+  ]
+ },
+ "hit_classification": [
+  {
+   "where": "runs/active/C4-V7FT-20261017/paper_data/train/coopmwm20261109_clean5c5b/jobs/g4_*/CLAIM.json (3 files)",
+   "class": "not_a_seed",
+   "note": "the integers are OS pid values (\"pid\":992843 / 992869 / 992874)"
+  }
+ ],
+ "neighbours": {
+  "A42_verification": [
+   992000,
+   992099
+  ],
+  "A44_proposed": [
+   992400,
+   992499
+  ]
+ },
+ "limits": "laptop E: records and local git tips only; remote hosts were not contacted (no ssh); files under forbidden path names and per-world outcome files were not opened; text files > 40 MB skipped (as A42)",
+ "verdict": {
+  "verification": "UNUSED",
+  "confirmation": "UNUSED"
+ }
+}

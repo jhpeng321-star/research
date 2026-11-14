@@ -90,3 +90,25 @@ Recommended order: A (≈ 3 h, 1 GPU) → D. B and C in parallel if a second GPU
 - WM diagnosis (local CPU): runs/active/C4-V7FT-20261017/wm_diag/WM_DIAGNOSIS_v7.md.
 - v7ft on gpuR (fine-tune from v5m with the same fixes, ~3 h). This isolates "from scratch vs fine-tune" as the
   cause of the 120 s regression.
+
+## Afternoon update (17:20): v8 policy fixes work
+- **v8 = v7 settings plus three changes:** TTC cost on CAV-as-follower pairs only, λ capped at 2, free-road speed
+  incentive 0.8. Trained from scratch on v5m for 600 updates (c4/v8pol).
+- **SUMO checks** (40 % CAVs, demand 2400, 12 paired training seeds each):
+
+  | Checkpoint | Δ vs native | Post-merge CAV accel | Downstream CAV speed |
+  |---|---|---|---|
+  | u200 | +25.1 | +0.03 | 15.0 |
+  | u400 | +4.45 | +0.30 | 26.0 |
+  | u600 | **+2.71** (sd 5.0) | +0.31 | 26.6 |
+  | native | 0 | +0.51 | 27.4 |
+
+- The CAVs now accelerate out of the merge. λ stayed ≈ 0.3, so the safety term no longer dominates.
+- **Acceleration probe** (accel_probe/ACCEL_PROBE.md): the WM's own reward and gradient already favoured accelerating;
+  the earlier policies failed on optimisation (weak signal, flat critic). The WM has no link from discharge to the
+  queue.
+- **WM work:**
+  - The v7ft fine-tune is also worse on walls at 120 s (+20 m, 30 blow-ups), so the v7 merge-loss recipe is the cause.
+  - The ramp diagnosis found a deterministic forced 5 m window and a mis-shaped merge_end_wait (ramp_diag/RAMP_DIAG.md).
+  - v8 WM code (c4/v8wm, c4/v8wm2): survival merge-timing loss, slim/capped merge loss, train-OFF/infer-ON switches,
+    lane-end hazard, zipper yield. Pre-checks short2 and short are running on gpuR.

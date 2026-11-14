@@ -1,0 +1,25 @@
+# Evaluation on the unseen-controller sets (PI/wall), ranked only against the previous best.
+schema_version = 2
+name = "WM-S-EVAL-UNSEEN"
+sets = ["wall_same", "wall_pilot", "seen_controls"]
+horizons_s = [10.0, 30.0, 60.0, 120.0]
+previous_best = "ckpt_c1fast"
+workers = 1
+
+[models]
+ckpt_c1fast = "ckpt_c1fast"
+
+[set_specs.wall_same]
+states = "eval_states_wall_same"
+
+[set_specs.wall_pilot]
+states = "eval_states_wall_pilot"
+
+[set_specs.seen_controls]
+states = "eval_states_seen_controls"
+
+[flags]
+entries = false
+projection = false
+merge_cal = true
+rollout_mode = "residual"

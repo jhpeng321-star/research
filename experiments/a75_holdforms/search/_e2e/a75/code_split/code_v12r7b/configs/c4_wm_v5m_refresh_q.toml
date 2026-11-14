@@ -1,0 +1,40 @@
+# V9ENTRY policy start windows (2026-10-18): = c4_wm_v5m_refresh.toml (the v8 policy's [data] wm_config) with the two
+# policy start sources pointed at copies that carry the entrance-queue arrays (entry_backlog, request_counter,
+# entry_cav_counter; tools/c4_queue_augment.py, because the collected v5 episode directories are not on the GPU
+# host).  Every other field, the mix ratios and the v6_policy / genrand_branch sources (read only for the world
+# split) are unchanged.  The policy loads only [data] from this file; the WM itself comes from --wm-ckpt.
+schema_version = 2
+name = "WM-S-C4-V5M-REFRESH-Q"
+extends = "c4_wm_v5m_refresh.toml"
+
+[[data.c4_sources]]
+name = "native_v5"
+path = "v5_native_q"        # WMS_DATA_V5_NATIVE_Q (v5_native + queue arrays)
+mix_ratio = 0.45
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain_q"    # WMS_DATA_GENRAND_PLAIN_Q (genrand_plain + queue arrays)
+mix_ratio = 0.25
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "v6_policy"
+path = "v6_policy"          # WMS_DATA_V6_POLICY (unchanged; world split only)
+mix_ratio = 0.25
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_branch"
+path = "genrand_branch"     # WMS_DATA_GENRAND_BRANCH (unchanged; world split only)
+mix_ratio = 0.05
+window_stride_s = 10.0
+use_val = true
+paired = true
+
+[runtime]
+out_dir = "runs/active/c4_wm_v5m_refresh_q"

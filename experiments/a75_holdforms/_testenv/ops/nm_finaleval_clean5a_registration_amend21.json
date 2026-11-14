@@ -1,0 +1,23 @@
+{
+ "amendment": 21,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend20.json",
+  "registration_sha256": "27ede9d748a593f6d43f12623f6e1695efc5d9dd7d71a1fdb886799b36eaf416"
+ },
+ "authority": [
+  "MAIN via IMITREPLAY 2026-11-08: cpuV -> cpuW migration of the sealed pre-run root /home/ubuntu/nm_finaleval_clean5a (same absolute paths); confirm byte identity and plant identity on cpuW with zero to minimal SUMO"
+ ],
+ "budget": "420 sim-s per host check inside the 1,600,000 v2v_final allocation (own ledger)",
+ "byte_identity": "per-file sha256 manifest of the whole final root taken on cpuV before the copy, checked on cpuW (sha256sum -c; same file count; no extra files); seals are content hashes, so byte identity keeps every sealed receipt valid; no receipt is parsed for outcomes",
+ "plant_identity": {
+  "command": "python -m ops.nm_finaleval host-identity --host cpuW --final-root /home/ubuntu/nm_finaleval_clean5a",
+  "output": "sealed HOST_IDENTITY_cpuW.json; verdict IDENTICAL required before any further N6 dispatch on cpuW",
+  "replay": "only if the zero-SUMO part is identical: the U0 plant envparity job on TRAIN world 989598 (420 sim-s, own-ledger phase v2v_final_hostcheck, cap 1,680 = up to 4 host moves) vs the cpuV plant log of the same job: every vehicle s/v/lane identical every tick AND J within 1e-9 of ENVPARITY_U0",
+  "zero_sumo": "plant start receipt on cpuW (fresh interpreter, G5 runtime, traci.start intercepted) vs the cpuV receipt envequiv/start_plant.json: cmd, scenario files, env kwargs/config, env classes, SUMO binary path equal; module sha changes allowed only in the 9 N6 overlay files; SUMO binary sha/version recorded"
+ },
+ "registered_utc": "2026-11-07T19:46:31.441899+00:00",
+ "registration_sha256": "d493b1d38f6372fbd0a230cf8cd5ce80b5912f316c2a2058969a531b434cd306",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: no held-out outcome opened; registered before the cpuV -> cpuW move is checked",
+ "tests": "test_host_identity_zero_sumo_receipt_then_one_train_world_replay; 76 passed, 6 skipped"
+}

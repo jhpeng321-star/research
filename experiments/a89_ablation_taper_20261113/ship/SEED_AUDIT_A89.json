@@ -1,0 +1,76 @@
+{
+ "amendment": "89 (draft)",
+ "block": [
+  988400,
+  988499
+ ],
+ "checks": [
+  {
+   "hits_in_block": 0,
+   "method": "every 6-digit token and a-b / a..b range parsed as an interval (A82 free_blocks pattern)",
+   "source": "runs/active/C4-V7FT-20261017/REGISTRATION.md + protocols/experiment_history.json (laptop, 2026-11-13 ~23:05)"
+  },
+  {
+   "caveat": "grep traversed directories before the banned-word path filter was applied to its output; nothing matched/printed",
+   "hits": 0,
+   "method": "grep -rIlE 9884[0-9]{2} token",
+   "source": "laptop experiments/ + runs/active/C4-V7FT-20261017 (.md .py .sh .json .txt)"
+  },
+  {
+   "code_hits": 0,
+   "explanation": "the only overlaps are A82 part B staging (unrun): its write-once N=384 option panel 988200-988583 and its own-tree runner row 988200-988599. A82 uses N=192 (988200-988391); the 384 panel must never be used.",
+   "method": "A82 tools/seed_audit_box.py 988400 988499",
+   "n_files_scanned": 25969,
+   "n_panels": 432,
+   "panel_overlap": [
+    "/root/a82four/panels/A82F_PANEL_C_384.json"
+   ],
+   "runner_overlap": [
+    [
+     "/root/a82four/src/pytools/tools/coopmwm/nm_eval_runner.py",
+     988200,
+     988599
+    ]
+   ],
+   "source": "Box 3 /root + /home/ubuntu (evaluation/venv/site-packages pruned, banned path words skipped)"
+  }
+ ],
+ "date": "2026-11-13",
+ "forbidden_checked": [
+  [
+   964000,
+   964199
+  ],
+  [
+   962000,
+   962999
+  ],
+  [
+   977000,
+   977999
+  ],
+  [
+   989600,
+   989699
+  ],
+  [
+   988200,
+   988391
+  ]
+ ],
+ "not_done": [
+  "broad grep of the laptop working tree (denied for A82; not attempted again)",
+  "git grep of branch tips for 9884xx (covered by A82 audit of the superset block)",
+  "Box 4 (not touched by rule)"
+ ],
+ "note": "registry absence is not proof of freshness. The block lies inside 988200-988599 audited unused by SEED_AUDIT_A82 (f52f65ed; git grep of 911 branch-tip trees 0 hits; laptop broad grep NOT done/denied). 988200-988391 is reserved for A82 part B and avoided.",
+ "reserved_unused": [
+  988496,
+  988499
+ ],
+ "schema": "coopmwm.a89.seed_audit.v1",
+ "used": [
+  988400,
+  988495
+ ]
+}

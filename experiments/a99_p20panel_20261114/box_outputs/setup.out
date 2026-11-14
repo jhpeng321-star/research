@@ -1,0 +1,26 @@
+pin ok fa98b552 /root/a99adm_s4/src/ops/nm_finaleval.py
+pin ok 0c5c2a4b /root/a99adm_s4/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok f3620a8c /root/a99adm_s4/src/ops/a99_on20c.py
+pin ok 3a1b7b57 /root/a99adm_s4/src/ops/a76_d2p20.py
+pin ok 8a2533ef /root/a99adm_s4/src/ops/a75_d2forms.py
+pin ok 48c5c448 /root/a99adm_s4/src/ops/a80_s2b.py
+pin ok 72046db6 /root/a99adm_s4/src/pytools/tools/coopmwm/a75_holdforms.py
+pin ok 0bb84f3c /root/a99panel_ship/A96C_PANEL_C_192.json
+pin ok 682c01ae /root/a99adm_s4/root/a96_banks/A96_BANK_D2800_p20.json
+pin ok 59acb747 /root/a99adm_hand/root/a96_banks/A96_BANK_D2800_p20.json
+tree copy ok: 1499 files identical to /root/a99adm_s4/src
+patched /root/a99panel/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 47afb409 /root/a99panel/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 0c5c2a4b /root/a99adm_s4/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 0bb84f3c /root/a99panel/panels/A96C_PANEL_C_192.json
+tree diff vs /root/a99adm_s4/src (expected: runner + ops/a96_p20.py, ops/a99_panel.py, ops/test_a99_panel.py, ops/a99):
+Only in /root/a99panel/src/ops: a96_p20.py
+Only in /root/a99panel/src/ops: a99
+Only in /root/a99panel/src/ops: a99_panel.py
+Only in /root/a99panel/src/ops: test_a99_panel.py
+Only in /root/a99panel/src/pytools/ops: a96_p20.py
+Only in /root/a99panel/src/pytools/ops: a99
+Only in /root/a99panel/src/pytools/ops: a99_panel.py
+Only in /root/a99panel/src/pytools/ops: test_a99_panel.py
+Files /root/a99adm_s4/src/pytools/tools/coopmwm/nm_eval_runner.py and /root/a99panel/src/pytools/tools/coopmwm/nm_eval_runner.py differ
+SETUP_OK

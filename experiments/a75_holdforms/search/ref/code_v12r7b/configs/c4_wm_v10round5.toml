@@ -1,0 +1,67 @@
+# V10 round 5 (2026-10-20, owner-approved MERGE REDESIGN + astra MERGE_REDESIGN_ADVICE): init = round 4b2 (if its braking /
+# ranking checks hold) else round 2 (set by the coordinator via model.init_from). Adds:
+#  * R5THR  learned gap-acceptance score + per-driver threshold (merge at first feasible crossing; no per-step coin) and the
+#           on-policy integrated censored first-passage loss (replaces merge_timing / merge_survival for the merge head);
+#  * R5INPUTS follower acceleration / gap trends / next gaps / time-to-align (zero-init input expansion);
+#  * R5YIELD learned follower yield (recorded pre-merge labels), gap-conditioned ramp speed adaptation, interaction/safety head;
+#  * braking-wave (10x) and post-merge consistency (4x) as in round 4b2, residual-head rescale;
+#  * protection of the paired-ranking gains: reduced lr outside the merge / lane / temporal parts.
+# Learned insertion stays OFF (blocked-entrance admission defect). pairs300b stays HELD OUT.
+schema_version = 2
+name = "WM-S-C4-V10ROUND5"
+extends = "c4_wm_v10round2.toml"
+
+[model]
+merge_negotiation = true
+merge_decision = "threshold"
+lane_v5_extra_features = true
+residual_head_rescale = true
+
+[loss.merge_first_passage]
+weight = 1.0
+rank_weight = 0.5
+metrics = true
+
+[loss.merge_survival]
+weight = 0.0
+negative_weight = 0.0
+
+[loss.merge_yield]
+yield_huber = 0.4
+ramp_adapt_huber = 0.2
+safety_bce = 0.2
+
+[loss.brake_wave]
+weight = 5.0
+residual_weight = 2.5
+spurious_weight = 5.0
+window_s = 4.0
+onset_decel_mps2 = 1.0
+spurious_decel_mps2 = 1.5
+
+[loss.post_merge]
+weight = 2.0
+residual_weight = 2.0
+window_s = 10.0
+huber_delta_mps2 = 0.5
+
+[curriculum]
+unroll_s = [120.0, 300.0]
+stage_steps = [30, 60]
+truncation_steps_per_stage = [120, 60]
+max_hours = 2.5
+merge_teacher_frac_schedule = [0.25, 0.0]
+
+[optim]
+lr_per_stage = [5.0e-5, 3.0e-5]
+batch_size_per_stage = [4, 2]
+
+[optim.lr_scale]
+"driver_encoder" = 0.3
+"driver_updater" = 0.3
+"residual_net" = 0.5
+"k_embedding" = 0.5
+"history_proj" = 0.5
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10_round5"

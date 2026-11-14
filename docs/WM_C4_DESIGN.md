@@ -73,6 +73,12 @@ fallback (owner 2026-10-12 late: direct-output candidates only; native, CIRCLES,
 whole-episode baselines, never check candidates) — each under several HDV driver-setting guesses. Keep the
 policy's plan unless an alternative wins clearly (paired margin). The policy outputs per-CAV acceleration AND
 a stay/left/right lane decision and is trained on cooperative difference rewards (POLICY2_NOTES.md).
+- **Decision rule (owner 2026-10-18).** Deployment imagination runs on the CONSTRUCTED (belief) state, not the
+  true state. An alternative replaces the policy's plan only when it shows a HIGH PROBABILITY of outperforming it,
+  estimated over the uncertainty samples (belief-state samples of unseen vehicles × HDV driver-setting guesses ×
+  WM members), paired from the same start. Score per sample = rollout delay (30–120 s, horizon to be tested) +
+  learned value of the end state (trained on real SUMO returns). Threshold starts at 0.8 (cf. the 2026-09-25 switch
+  rule) and is tested; the probability must be checked for calibration against SUMO before any claim.
 - **State for the check (owner question 2026-10-12).** The RSU only has CAV reports; imagination needs a state.
   Three levels, all reported:
   1. **Oracle check** — true SUMO state (upper bound, labelled as such).

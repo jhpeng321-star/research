@@ -1,0 +1,920 @@
+{
+ "stream_sha256": "b59d29977f82f93d107e9df9a451888993ecd534e89f435a28a4cfac52c16b93",
+ "a80_s2b_sha256": "48c5c448c2a85d4e2020def54cb17259979c89f2e0cc341829d6e99de0d0e289",
+ "rows": [
+  {
+   "family": "rand_2b84ba100dca39c9",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_f48526f5527aee64",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": [
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_f1f3c30f83d035fe",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "gap_drop",
+     false
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "o"
+    ]
+   ]
+  },
+  {
+   "family": "rand_b9a542e05b0287be",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     "do"
+    ]
+   ]
+  },
+  {
+   "family": "rand_3426823506bdb95f",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "do"
+    ]
+   ]
+  },
+  {
+   "family": "rand_324930af7618b8aa",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": [
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_954827ee338796cd",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_a4404139342ec3ad",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": [
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_e60ee926d34eb631",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_752ec63f1e216873",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_ac77454ba4dc3772",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_855593233fe40415",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ],
+    [
+     "role",
+     "onset",
+     "ip"
+    ]
+   ]
+  },
+  {
+   "family": "rand_743f602e76618ac9",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "i"
+    ]
+   ]
+  },
+  {
+   "family": "rand_0b56eb4e706bcb16",
+   "reason": null,
+   "form": "short",
+   "uncovered": []
+  },
+  {
+   "family": "rand_56171bb776566604",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "o"
+    ]
+   ]
+  },
+  {
+   "family": "rand_f5820239aa1305ab",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_2a2e4633f55d3959",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ]
+   ]
+  },
+  {
+   "family": "rand_8457bf72e7e8807b",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": []
+  },
+  {
+   "family": "rand_feac66e17e2e215b",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     "p"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_33671559cece50d7",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ],
+    [
+     "role",
+     "onset",
+     "iop"
+    ]
+   ]
+  },
+  {
+   "family": "rand_1341824acd895003",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ]
+   ]
+  },
+  {
+   "family": "rand_a7b53deddebe3301",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_855ca28e1d093562",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "dio"
+    ]
+   ]
+  },
+  {
+   "family": "rand_463e105e213837c0",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_6ed1fc8b0aaf39dd",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "dio"
+    ]
+   ]
+  },
+  {
+   "family": "rand_5f7b705222922b01",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_a9a5ce21607af093",
+   "reason": null,
+   "form": "zone",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_1e4a1fd67e7d288f",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_ee2fce15f7df7f20",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "i"
+    ]
+   ]
+  },
+  {
+   "family": "rand_0d1e45106ec6f8eb",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_af64779854593d77",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_f657fd1094e3170c",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_b90aa6df0db05ea1",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_af550df346c563e8",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_88651600fb64dfcf",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "o"
+    ]
+   ]
+  },
+  {
+   "family": "rand_c633866869ec0b7e",
+   "reason": null,
+   "form": "zone",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_a48474a0522d2a57",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": [
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_8da0f8f0d23a9596",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": []
+  },
+  {
+   "family": "rand_25279244b2a3641a",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "gap_drop",
+     false
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_6199de66d7d9f04b",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ]
+   ]
+  }
+ ]
+}

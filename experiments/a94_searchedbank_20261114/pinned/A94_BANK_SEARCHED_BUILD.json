@@ -1,0 +1,154 @@
+{
+ "amendment": "95",
+ "arm": "BANK_SEARCHED",
+ "cell": "D2800_p60",
+ "dropped_duplicates": [],
+ "executor_priority": [
+  {
+   "core": "HoldFormCore",
+   "extended": true,
+   "family": "mut_deba0680d3096904",
+   "key": "deba0680d3096904",
+   "lb95": 1551.588004528352,
+   "n_roles": 2,
+   "zone": [
+    1296.0,
+    2096.0
+   ]
+  },
+  {
+   "core": "HoldFormCore",
+   "extended": true,
+   "family": "rand_8b08c77a63f7d622",
+   "key": "8b08c77a63f7d622",
+   "lb95": 913.7683433657043,
+   "n_roles": 4,
+   "zone": [
+    896.0,
+    2296.0
+   ]
+  },
+  {
+   "core": "HoldFormCore",
+   "extended": true,
+   "family": "mut_576d526ec064db9c",
+   "key": "576d526ec064db9c",
+   "lb95": 462.95574873450704,
+   "n_roles": 2,
+   "zone": [
+    896.0,
+    2096.0
+   ]
+  },
+  {
+   "core": "LcStrategyCore",
+   "extended": false,
+   "family": "mut_28cad0ce56064e11",
+   "key": "28cad0ce56064e11",
+   "lb95": 433.14617788335335,
+   "n_roles": 2,
+   "zone": [
+    896.0,
+    1696.0
+   ]
+  },
+  {
+   "core": "LcStrategyCore",
+   "extended": false,
+   "family": "mut_069966492c9abdcc",
+   "key": "069966492c9abdcc",
+   "lb95": 401.5813374377569,
+   "n_roles": 2,
+   "zone": [
+    896.0,
+    1696.0
+   ]
+  },
+  {
+   "core": "HoldFormCore",
+   "extended": true,
+   "family": "mut_97dda2be6b45ccf0",
+   "key": "97dda2be6b45ccf0",
+   "lb95": 216.55692564279525,
+   "n_roles": 3,
+   "zone": [
+    1296.0,
+    1696.0
+   ]
+  }
+ ],
+ "inputs": {
+  "S4": {
+   "families": [
+    "mut_deba0680d3096904",
+    "mut_576d526ec064db9c",
+    "mut_28cad0ce56064e11"
+   ],
+   "path": "/root/a85adm/root/a80_banks/A80_BANK_D2800_p60.json",
+   "sha256": "a428cd1d320196578d55c84eea4b9b391f5e5c03928692a90dff0ac96667d7a8"
+  },
+  "S5": {
+   "families": [
+    "rand_8b08c77a63f7d622",
+    "mut_069966492c9abdcc",
+    "mut_97dda2be6b45ccf0"
+   ],
+   "path": "/root/a86adm/root/a80_banks/A80_BANK_D2800_p60.json",
+   "sha256": "577a0564944b2062e441d7ee603e7fe8090bede52a5dd6e8774d41ed9cb2d8b6"
+  }
+ },
+ "keys": [
+  "8b08c77a63f7d622",
+  "069966492c9abdcc",
+  "97dda2be6b45ccf0",
+  "deba0680d3096904",
+  "576d526ec064db9c",
+  "28cad0ce56064e11"
+ ],
+ "output": {
+  "file": "A94_BANK_SEARCHED_D2800_p60.json",
+  "sha256": "40b16ed95add6fcd63385dabcbf7e8a03fe8dbf20d0418e58e5aa8feee30ee04"
+ },
+ "plan_ids": [
+  "rand_8b08c77a63f7d622",
+  "mut_069966492c9abdcc",
+  "mut_97dda2be6b45ccf0",
+  "mut_deba0680d3096904",
+  "mut_576d526ec064db9c",
+  "mut_28cad0ce56064e11"
+ ],
+ "rule": "rows of the S5 (577a0564) and S4 (a428cd1d) admission bank files merged unchanged, identical strategy keys deduplicated (first kept)",
+ "schema": "coopmwm.a94.bank_build.v2",
+ "unchanged_copy_proof": {
+  "mut_069966492c9abdcc": {
+   "row_equal": true,
+   "source": "S5",
+   "template_equal": true
+  },
+  "mut_28cad0ce56064e11": {
+   "row_equal": true,
+   "source": "S4",
+   "template_equal": true
+  },
+  "mut_576d526ec064db9c": {
+   "row_equal": true,
+   "source": "S4",
+   "template_equal": true
+  },
+  "mut_97dda2be6b45ccf0": {
+   "row_equal": true,
+   "source": "S5",
+   "template_equal": true
+  },
+  "mut_deba0680d3096904": {
+   "row_equal": true,
+   "source": "S4",
+   "template_equal": true
+  },
+  "rand_8b08c77a63f7d622": {
+   "row_equal": true,
+   "source": "S5",
+   "template_equal": true
+  }
+ }
+}

@@ -1,0 +1,36 @@
+# V10 round 4 (2026-10-20, owner OK to auto-launch while away): continue from round 3 (wm_s_stage300.pt) and add the
+# learned braking-wave terms (V10WAVE, v10wave/WAVE.md): recorded-onset drop amplitude, one-sided penalty on the residual
+# pushing against recorded braking, and a penalty on spurious decel pulses on recorded non-braking steps.
+# Merge teacher now decays to a zero-teacher tail (astra MORNING_ADVICE). pairs300b stays HELD OUT.
+schema_version = 2
+name = "WM-S-C4-V10ROUND4"
+extends = "c4_wm_v10round2.toml"   # round-3 keys inlined below (extends depth limit)
+
+[model]
+merge_negotiation = true
+
+[loss.merge_survival]
+weight = 1.0
+negative_weight = 0.5
+
+[optim]
+lr_per_stage = [5.0e-5, 3.0e-5]
+batch_size_per_stage = [4, 2]
+
+[loss.brake_wave]
+weight = 0.5
+residual_weight = 0.25
+spurious_weight = 0.5
+window_s = 4.0
+onset_decel_mps2 = 1.0
+spurious_decel_mps2 = 1.5
+
+[curriculum]
+unroll_s = [120.0, 300.0]
+stage_steps = [30, 60]
+truncation_steps_per_stage = [120, 60]
+max_hours = 2.5
+merge_teacher_frac_schedule = [0.25, 0.0]
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10_round4"

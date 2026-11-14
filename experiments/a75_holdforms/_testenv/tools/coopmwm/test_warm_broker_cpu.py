@@ -1,0 +1,84 @@
+"""Durable remote broker identity, retry and shared-centre scheduling contracts."""
+import json
+import tempfile
+import unittest
+import subprocess
+from types import SimpleNamespace
+from pathlib import Path
+from unittest.mock import patch
+from .warm_broker import Remote,available,worker_endpoints
+from .warm_rpc import GATES,handle
+
+
+class BrokerCPU(unittest.TestCase):
+    def test_raw_classifies_ssh_exit255_and_timeout_only_at_metadata_boundary(self):
+        from .warm_transport import SSHConnectionError,connection_error
+        endpoint=dict(known_hosts='known',identity_file='key',port=22,destination='owned')
+        remote=Remote('.',endpoint)
+        with patch('subprocess.run',return_value=SimpleNamespace(returncode=255,stdout='',stderr='disconnect')):
+            with self.assertRaises(SSHConnectionError):remote.raw(dict(action='status'))
+        with patch('subprocess.run',side_effect=subprocess.TimeoutExpired('ssh',160)):
+            with self.assertRaises(SSHConnectionError):remote.raw(dict(action='status'))
+        with patch('subprocess.run',return_value=SimpleNamespace(returncode=255,stdout='Traceback: executor fault',stderr='')):
+            with self.assertRaises(RuntimeError) as caught:remote.raw(dict(action='status'))
+            self.assertFalse(connection_error(caught.exception))
+
+    def status(self):
+        receipts={name:dict(pass_=True,max_cost_error=0.) for name in GATES}
+        receipts.update({'SPOOL_OWNER.json':dict(pid=1,start_ticks='2',boot_id='b'),'SERVICE_OWNER.json':dict(pid=1)})
+        return dict(alive=True,ready=True,failed=False,receipts=receipts)
+
+    def test_reconnect_verifies_original_owner_before_replaying_same_delivery(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            remote=Remote(tmp,dict(slot='gpuA@0'));remote.raw=lambda v:self.status();remote.verify()
+            values=[]
+            def raw(value):
+                values.append(value)
+                if len(values)==1:raise RuntimeError('Connection closed by host port 22')
+                return self.status() if value['action']=='status' else dict(key='done')
+            with patch.object(remote,'raw',side_effect=raw),patch('tools.coopmwm.warm_transport.time.sleep'):
+                # Inject zero delays; the real registration retains15/30/60/120.
+                from .warm_transport import retry
+                result=retry(lambda:remote.raw(dict(action='submit')),remote.verify,remote.event,delays=(0,),sleep=lambda n:None)
+            self.assertEqual(result,dict(key='done'))
+            self.assertEqual([v['action'] for v in values],['submit','status','submit'])
+
+    def test_changed_worker_or_gate_is_fatal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            remote=Remote(tmp,{});remote.raw=lambda v:self.status();remote.verify()
+            value=self.status();value['receipts']['SPOOL_OWNER.json']['pid']=9
+            remote.raw=lambda v:value
+            with self.assertRaises(ValueError):remote.verify()
+
+    def test_centres_wait_for_B_pause_then_have_lower_priority(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            for name in ('requests','responses','centre_requests','centre_responses'):(root/name).mkdir()
+            record=dict(rows=[],time_s=300,state_id='a')
+            (root/'requests/a.json').write_text(json.dumps(record))
+            (root/'centre_requests/b.json').write_text(json.dumps(dict(record,state_id='b')))
+            self.assertEqual([k for k,r in available(root)],['plan'])
+            (root/'WARM_B_PAUSED.json').write_text('{}')
+            self.assertEqual([k for k,r in available(root)],['plan','centre'])
+
+    def test_RPC_rejects_arbitrary_commands_and_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);(root/'GPU_BINDING.json').write_text('{}')
+            with self.assertRaises(ValueError):handle(root,dict(action='execute',code='anything'))
+            with self.assertRaises(ValueError):handle(root,dict(action='forecast',key='../escape'))
+
+    def test_hot_add_only_same_registered_search_and_immutable_endpoints(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r=Path(tmp);binding=dict(endpoints=[dict(slot='A',port=1)],search_sha256='same-search')
+            previous=worker_endpoints(r,binding,{})
+            (r/'AUTHORITY.md').write_text('registered-amendment')
+            p=r/'WARM_REMOTE_ENDPOINT_ADMISSION_0001.json'
+            admission=dict(amendment_sha256='registered-amendment',search_sha256='same-search',endpoints=[dict(slot='R',port=2)])
+            p.write_text(json.dumps(admission));self.assertEqual(set(worker_endpoints(r,binding,previous)),{'A','R'})
+            p.write_text(json.dumps(dict(admission,search_sha256='changed')))
+            with self.assertRaises(ValueError):worker_endpoints(r,binding,previous)
+            p.write_text(json.dumps(dict(admission,endpoints=[dict(slot='A',port=9)])))
+            with self.assertRaises(ValueError):worker_endpoints(r,binding,previous)
+
+
+if __name__=='__main__':unittest.main()

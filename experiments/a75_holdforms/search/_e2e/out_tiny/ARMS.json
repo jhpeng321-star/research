@@ -1,0 +1,425 @@
+{
+ "D2800_p60": {
+  "wm": [
+   {
+    "name": "mut_5cb29ad064ec468e",
+    "trigger": "lanes",
+    "zone": "custom",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 40,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 10,
+      "onset_s": 60,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": 0.0,
+      "gap_dx_hi": 60.0,
+      "gap_drop_m": 300.0,
+      "gap_arm_s": 120,
+      "gap_events": 3
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140,
+    "zone_d": [
+     1400.0,
+     400.0
+    ]
+   }
+  ],
+  "wm_fairer": [
+   {
+    "name": "wall_g_relay12",
+    "trigger": "wall",
+    "zone": "full",
+    "spread_m": 200.0,
+    "cooldown_s": 180,
+    "slots": 1,
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "roles": [
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 90,
+      "onset_s": 0,
+      "lc_target": null
+     },
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 120,
+      "onset_s": 60,
+      "lc_target": null
+     }
+    ]
+   }
+  ],
+  "wm_bounded": [],
+  "wm_fair": [],
+  "wm_F": [],
+  "wm_D": [
+   {
+    "name": "rand_be2f958a58e26be3",
+    "trigger": "lanes",
+    "zone": "custom",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 20.0,
+      "dmax": 1.5,
+      "hold_s": 120,
+      "onset_s": 60,
+      "lc_target": null,
+      "taper_in_s": 5,
+      "taper_out_s": 10
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 10,
+      "onset_s": 0,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": 0.0,
+      "gap_dx_hi": 60.0,
+      "gap_drop_m": 300.0,
+      "gap_arm_s": 120,
+      "gap_events": 3
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140,
+    "zone_d": [
+     1400.0,
+     400.0
+    ]
+   },
+   {
+    "name": "rand_ce8009f2a078a5eb",
+    "trigger": "lanes",
+    "zone": "custom",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 1,
+      "rank": 1,
+      "v_w": 20.0,
+      "dmax": 1.0,
+      "hold_s": 60,
+      "onset_s": 40,
+      "lc_target": null
+     },
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 24.0,
+      "dmax": 1.5,
+      "hold_s": 20,
+      "onset_s": 60,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.5,
+      "hold_s": 90,
+      "onset_s": 0,
+      "lc_target": null,
+      "pulse_on_s": 5,
+      "pulse_off_s": 10
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200,
+    "zone_d": [
+     1800.0,
+     1000.0
+    ]
+   }
+  ],
+  "incumbent": {
+   "name": "wall_g_solo2",
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "roles": [
+    {
+     "lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target": null
+    }
+   ]
+  },
+  "best": {
+   "delay": {
+    "name": "mut_5cb29ad064ec468e",
+    "trigger": "lanes",
+    "zone": "custom",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 40,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 10,
+      "onset_s": 60,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": 0.0,
+      "gap_dx_hi": 60.0,
+      "gap_drop_m": 300.0,
+      "gap_arm_s": 120,
+      "gap_events": 3
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140,
+    "zone_d": [
+     1400.0,
+     400.0
+    ]
+   },
+   "bounded": {
+    "name": "mut_5cb29ad064ec468e",
+    "trigger": "lanes",
+    "zone": "custom",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 40,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 10,
+      "onset_s": 60,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": 0.0,
+      "gap_dx_hi": 60.0,
+      "gap_drop_m": 300.0,
+      "gap_arm_s": 120,
+      "gap_events": 3
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140,
+    "zone_d": [
+     1400.0,
+     400.0
+    ]
+   },
+   "fairer": {
+    "name": "mut_5cb29ad064ec468e",
+    "trigger": "lanes",
+    "zone": "custom",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 40,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 10,
+      "onset_s": 60,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": 0.0,
+      "gap_dx_hi": 60.0,
+      "gap_drop_m": 300.0,
+      "gap_arm_s": 120,
+      "gap_events": 3
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140,
+    "zone_d": [
+     1400.0,
+     400.0
+    ]
+   },
+   "fair": null,
+   "F": {
+    "name": "mut_5cb29ad064ec468e",
+    "trigger": "lanes",
+    "zone": "custom",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 40,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 10,
+      "onset_s": 60,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": 0.0,
+      "gap_dx_hi": 60.0,
+      "gap_drop_m": 300.0,
+      "gap_arm_s": 120,
+      "gap_events": 3
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140,
+    "zone_d": [
+     1400.0,
+     400.0
+    ]
+   },
+   "D": {
+    "name": "wall_g_relay12",
+    "trigger": "wall",
+    "zone": "full",
+    "spread_m": 200.0,
+    "cooldown_s": 180,
+    "slots": 1,
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "roles": [
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 90,
+      "onset_s": 0,
+      "lc_target": null
+     },
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 120,
+      "onset_s": 60,
+      "lc_target": null
+     }
+    ]
+   }
+  },
+  "comparators": {
+   "wall_g_solo2": {
+    "gain_vs_base": -38.71,
+    "gain_vs_base_lcb": -53.9,
+    "group_inc": {
+     "lane0": -0.054,
+     "lane1": -0.309,
+     "lane2": 1.186,
+     "hdv": 0.206,
+     "cav": 0.275
+    },
+    "worst_group_inc": 1.186,
+    "cvar90_inc": -1.155,
+    "bounded": true
+   },
+   "solo2": {
+    "gain_vs_base": -128.73,
+    "gain_vs_base_lcb": -129.42,
+    "group_inc": {
+     "lane0": -0.3,
+     "lane1": -0.521,
+     "lane2": 3.097,
+     "hdv": 0.71,
+     "cav": 0.818
+    },
+    "worst_group_inc": 3.097,
+    "cvar90_inc": -1.047,
+    "bounded": true
+   }
+  },
+  "fairness": "per-vehicle"
+ }
+}

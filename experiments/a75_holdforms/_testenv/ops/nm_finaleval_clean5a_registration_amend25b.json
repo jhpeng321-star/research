@@ -1,0 +1,49 @@
+{
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "amendment": "25b",
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend25.json",
+  "registration_sha256": "1d18b0b0ad90ffa9782785ba330b6dd1ef97caf018a18536240b635fa4594db6"
+ },
+ "status": "pre-results: registered before any ORACLE panel episode and before any outcome; resolves the REV-SPD BLOCK items B1-B3 on c4/oracle-arm e15ac011",
+ "authority": [
+  "MAIN 2026-11-09 00:06 amendment 25b (REGISTRATION.md)",
+  "REV-SPD c4/oracle-arm 8bc436df PASS on condition of this registration (E:/agent-work/_sol/REVIEW_ORACLE.md)"
+ ],
+ "arms": {
+  "ORACLE": "U0 (frozen d9042cc5 executor + bound zero-residual u0, A/0) + oracle_plan executing every admitted row of the frozen end-of-training bank (WM- and rule-sourced, provenance-tagged); ck oracle_plan_source='all'",
+  "ORACLE_WM": "the same with only plan_source == 'wm' rows of that bank; ck oracle_plan_source='wm'",
+  "disclosure": "privileged upper bounds (privileged onset bins), not deployable policies"
+ },
+ "semantics": {
+  "B1_plan_sources": "ORACLE = WM + rule rows; ORACLE_WM = WM rows; activations reported by plan_source and row_class",
+  "B2_sessions": "bank session rule, as in training: per plan family, < slots active sessions and that family's own cooldown_s (fullpol_bank.session_ok semantics); a CAV is owned by at most one session",
+  "B3_unconditional": "unconditional rows act whenever a feasible CAV group exists, in any bin including unobserved; situational rows are tried first and keep priority when admitted and feasible (order: row_class, lb95 desc, strategy_key, family); lb95 units differ by row class and are never compared across classes",
+  "O1_not_nested": "disclosed (REV-SPD O1): a running unconditional session can hold members a situational plan needs (refused as member_busy; smoke all_991227: 7 duo12 activations, 0 situational), so ORACLE is not a superset of ORACLE_WM and the two bounds are not nested"
+ },
+ "code": {
+  "branch": "c4/oracle-arm",
+  "commit": "8bc436df",
+  "review": "REV-SPD PASS",
+  "oracle_sha256": "7409a7b4765651813c4771462b7acbc16386d626900d9a031e19d3a65a9f9d22",
+  "smoke": "4 TRAIN-seed episodes, runtime privileged bin == tape bin in all (oracle_smoke/SMOKE25b_*.json)",
+  "analysis": "c4/nm-finaleval: ORACLE_ARMS, sealed ORACLE_BINDING.json, check_episode oracle receipts"
+ },
+ "bank": {
+  "rule": "the bank snapshot logged at CLEAN5C5's final update (MAIN 2026-11-09); path + file sha256 are sealed in ORACLE_BINDING.json in the p20x final root after training ends, never before; it must equal the bank of the amendment-24 applicability labels (enforced by nm_finaleval.oracle_binding)",
+  "start": "UNION 5ac00480 -> UNION_UNC 39f384a2 at u1 via pre-registered bank growth; r4-r6 verified plans may grow it further"
+ },
+ "analysis": "as amendment 24 for each oracle arm: applicable-world total X - U0 (CI95), groups and CVaR90 co-criteria, non-applicable not-worse, all worlds; both reported as bounds next to B, never as the primary; the applicability labels stay as registered in amendment 24 (WM-sourced privileged rows)",
+ "panels": "p20x primary D2800_p20 only (96 worlds, panel a0603e5d); no secondary-panel oracle episodes",
+ "budget": {
+  "final_eval_allocation": 2700000,
+  "authority": "MAIN 2026-11-08 23:27 / 2026-11-09 00:06",
+  "oracle_arms": 230400,
+  "p20_root_used": 723480,
+  "p20x_void_r1": 1800,
+  "p20x_prerun_r2": 577800,
+  "p20x_allocation_constant": 1974720
+ },
+ "registered_utc": "2026-11-08T16:18:45.677763+00:00",
+ "registration_sha256": "bfb15c2e43761085c3056ca52c98257e82e822f86a072f91f09355d1aa1d7749"
+}

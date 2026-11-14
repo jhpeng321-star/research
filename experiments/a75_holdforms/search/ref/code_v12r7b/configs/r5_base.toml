@@ -1,0 +1,22 @@
+# ROUND-5 base (WM-S-R5): R4 recipe + FIX 1 "learned driver settings in the physics".
+# rollout_mode="hybrid" routes the encoder's per-car IDM/MOBIL settings into the physics
+# and conditions the gated residual on the driver embedding (unlike driver_params mode,
+# the residual is KEPT - change-log #15 caveats do not apply).  Unlike residual mode the
+# encoder's parameters now reach the physics (R4-DIAG-HIST found them inert before).
+# driver_grad_across_chunks encodes the drivers ONCE at t0 (exactly as inference does)
+# and hands every truncated-BPTT chunk detached leaf tensors of that encoding; after
+# the last chunk the accumulated leaf gradients are back-propagated through the single
+# encoder pass, so the encoder keeps gradient from every chunk (today unroll.py
+# detaches driver_params/driver_embedding after chunk 0).
+# Weights initialise from the R4 checkpoint where shapes match (see INIT_FROM.json;
+# the registry name resolves via the WMS_DATA_CKPT_R4 environment override).
+schema_version = 2
+name = "WM-S-R5-BASE"
+extends = "r4.toml"
+
+[model]
+rollout_mode = "hybrid" # FIX 1: encoder settings drive the physics; residual stays on.
+init_from = "ckpt_r4" # R4 main run checkpoint (registry name; WMS_DATA_CKPT_R4 overrides).
+
+[curriculum]
+driver_grad_across_chunks = true # FIX 1: encode once at t0; leaf grads across chunks.

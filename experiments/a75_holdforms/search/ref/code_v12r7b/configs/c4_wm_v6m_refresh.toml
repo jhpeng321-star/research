@@ -1,0 +1,12 @@
+# Dreamer-loop WM refresh for the v6m (merge-zone fix) branch: = c4_wm_v6_refresh.toml + the two merge rules.
+# Use when the loop's base WM is v6m (init_from = a v6m / previous v6m-refresh checkpoint).
+schema_version = 2
+name = "WM-S-C4-V6M-REFRESH"
+extends = "c4_wm_v6_refresh.toml"
+
+[physics]
+merge_end_wait = true
+mainline_merge_yield = true
+
+[runtime]
+out_dir = "runs/active/c4_wm_v6m_refresh"

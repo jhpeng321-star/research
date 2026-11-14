@@ -1,0 +1,507 @@
+{
+ "authority": "A73 amendment 73: audited integers 992524-992547 (runner block 992500-992599) for the lane-change plan verification / admission ONLY; executed through the eval runner (scope label only); never pooled",
+ "cell": {
+  "authority": "MAIN amendment 73 (S-LCSIDE20, 2026-11-13): lane-change plans at D2800_p20",
+  "cell": 3,
+  "cell_key": "D2800_p20",
+  "demand_vph": {
+   "main": 2800
+  },
+  "depart_lane": "free",
+  "episode_s": [
+   0,
+   1200
+  ],
+  "newmap2_report_sha256": "70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05",
+  "penetration": 0.2,
+  "profile": "peak",
+  "rate_profile_s": [
+   [
+    0,
+    300,
+    0.8
+   ],
+   [
+    300,
+    1500,
+    1.0
+   ],
+   [
+    1500,
+    1800,
+    0.6
+   ]
+  ]
+ },
+ "contract": {
+  "arms": [
+   "A",
+   "B",
+   "R"
+  ],
+  "bootstrap": {
+   "level": 0.95,
+   "method": "paired_percentile",
+   "reps": 10000,
+   "seed": 20261104
+  },
+  "budget": {
+   "allocation_sim_s": 690000,
+   "authority": "MAIN decision 2026-11-06 for N6 (only clean4 final-evaluation runner)",
+   "ledger": "clean4 run root CHARGES.jsonl",
+   "phase": "v2v_final",
+   "quote_mappo_u0": 672000,
+   "quote_native": 556800
+  },
+  "comparators": {
+   "BASE": "clean4 base controller (N4 choice): mappo_u0 = frozen speed-only MAPPO u0 (A_checkpoint_000.pt == CONFIG common_checkpoint_sha256), or native (BASE aliases NATIVE)",
+   "NATIVE": "native SUMO CAV driving (no commands), same plant/runtime"
+  },
+  "comparisons": [
+   "B-A",
+   "R-A",
+   "B-R"
+  ],
+  "decisions": {
+   "arms": [
+    "B",
+    "R"
+   ],
+   "background": "BASE controller",
+   "branching": "clean3 sumo_verify decision snapshot + CRN prefix replay from t=0; charged t_s + 360 sim-s per branch (sumo_verify.branch_sim_s)",
+   "decomposition": "delta(all group new, background base) - max delta(one member new, background base) (clean3 ISOLATED_TEST)",
+   "higher_is_better": true,
+   "horizon_s": 360,
+   "labels": [
+    "all",
+    "background",
+    "solo<i>"
+   ],
+   "metrics": [
+    "delta_all_new_veh_s",
+    "delta_only_member_new_veh_s",
+    "best_solo_veh_s",
+    "policy_cooperation_gain_veh_s"
+   ],
+   "per_world": 1,
+   "rule": "first new cooperation plan with 2..3 members starting at 300 <= t <= 840 s in the evaluation episode; time order only (outcome-blind); none -> world has no decision",
+   "subset_rule": "panel repeat % 12 == 0",
+   "worlds": [
+    "wz3to2_992524",
+    "wz3to2_992536"
+   ]
+  },
+  "deterministic": true,
+  "estimator": "tools.coopmwm.planner_eval._paired_ci (whole-world resampling, identical resample indices for every contrast)",
+  "higher_is_better": false,
+  "horizon_note": "= clean4 training episode length (MAIN; N1 EPISODE_S)",
+  "horizon_s": 1200,
+  "metric": "J_veh_s",
+  "metric_definition": "team delay veh-s over the window: on-road speed deficit dt*max(0, 1-v/31.29) + source waiting (requested, not yet inserted)",
+  "noise_seed": "world seed",
+  "primary": {
+   "contrast": "B-BASE",
+   "note": "descriptive generalisation check; the clean4 registered primary criterion (u24 replicated synergy test on TRAIN states, N4) is unchanged; never gates training",
+   "rule": "mean(J_B - J_BASE) paired CI95 entirely below 0 AND B total collisions+teleports <= BASE total"
+  },
+  "role": "final_test (N1 HELDOUT_ROLES)",
+  "safety_counters": [
+   "collisions",
+   "teleports",
+   "hard_brakes",
+   "ttc_events"
+  ],
+  "total_benefit": {
+   "arms": [
+    "B",
+    "A",
+    "R"
+   ],
+   "vs": [
+    "BASE",
+    "NATIVE"
+   ]
+  },
+  "update": 24,
+  "window": {
+   "end_s": 1200,
+   "start_s": 0
+  }
+ },
+ "exposure": {
+  "checked": [
+   "newmap_probe ledger: seeds 989000-989006 only",
+   "NEWMAP2: TRAIN 989200-989202 only",
+   "tools/coopmwm, traffic_shepherd, ops code",
+   "amendment-73 audit: ops/a73/SEED_AUDIT.json"
+  ],
+  "disclosed": "integers 989600-989635 are the OLD merge-map S-COOPMWM final_test worlds (tools/coopmwm/protocol.py FINAL_START); wz3to2 worlds are map-namespaced, so no wz3to2 traffic realisation shares draws with them; job/world ids carry the wz3to2_ prefix; amendment 73: fresh integers (lane-change plan verification / admission), registered at runtime by the runner"
+ },
+ "map": "wz3to2",
+ "map_binding": {
+  "bottleneck": {
+   "adjacent_lane": 1,
+   "anchor_x_m": 2620.56,
+   "closing_lane": 2,
+   "drop_s_m": 75.44,
+   "drop_x_m": 2696.0,
+   "edge": "up",
+   "node_x_m": 2700.0,
+   "sumo_dropped_lane": 0,
+   "through_lanes": [
+    0,
+    1
+   ]
+  },
+  "descriptor_sha256_at_registration": "6fc6be652176948efdf594fdc48b564c2041d8ab3e0f3b15f6c7792cf02da20f",
+  "k_slots": 512,
+  "map_spec": "assets/research/newmap_candidates/wz3to2/MAP_SPEC.json",
+  "map_spec_file_sha256": "386400b78d27e50a376ee28a5d18d25a5baeb27fd4bb0436fb171e5ccafd4e0d",
+  "n1_registered": {
+   "network_sha256": "946594c52ac96c1e4bb44401b972d7095fdf5188f934af3be73f8b36fb615a9c",
+   "spec_sha256": "ac98e73be605a460ff0c14288bc43a7ce2187d0a26d0b49cc42003f9871f2a8f"
+  },
+  "net_file": "wz3to2.net.xml",
+  "net_rule": "sha256 of the staged probe network bytes (MAIN 2026-11-06, N11 F4)",
+  "net_sha256": "b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa",
+  "network_semantic_sha256": "946594c52ac96c1e4bb44401b972d7095fdf5188f934af3be73f8b36fb615a9c",
+  "spec_sha256": "ac98e73be605a460ff0c14288bc43a7ce2187d0a26d0b49cc42003f9871f2a8f",
+  "world_registry": "tools.coopmwm.map_scenarios (N1)"
+ },
+ "panel_sha256": "8c47595e428f5c483df04903f7c6c6935245c2b0a243edd2e8bce1b94c3c5ffd",
+ "power": {
+  "chosen": 24,
+  "decisions": "<= 8 decisions per arm -> MDE ~ 0.99 SD (~3,000 veh-s): descriptive only, sized by the 690,000 allocation with prefix-inclusive branch cost",
+  "episode_assumption": "1200 s = 3.33 x 360 s windows; if independent, per-world SD ~ 1.83 x 3,022 ~ 5,520 veh-s -> MDE(96) ~ 1,580 veh-s per world-episode",
+  "mde_sd_units": {
+   "100": 0.28,
+   "16": 0.7,
+   "48": 0.404,
+   "64": 0.35,
+   "8": 0.991,
+   "96": 0.286
+  },
+  "method": "paired two-sided normal approximation, alpha .05, power .80; MDE in SD units of the per-world paired difference = 2.8016/sqrt(N)",
+  "noise_basis": "newmap_probe SUMMARY_stage3 (wz3to2 2800 x 0.3, 7 worlds 989000-989006, H=360 s): paired SD solo-vs-base 3,022 veh-s (n=126), wall-vs-base T 3,633 (W2) - 5,259 (W1), synergy S 3,008 (n=42); the 3200 x 0.6 cell is more congested, SDs likely larger",
+  "reason": "MAIN amendment 73: lane-change plan verification / admission = 24 fresh worlds 992524-992547 (D2800_p20)"
+ },
+ "registered_utc": "2026-11-13T02:25:09.818597+00:00",
+ "role": "evaluation only (registered by N6; never training, never selection)",
+ "schema": "coopmwm.nm.finaleval.v1.panel",
+ "seed_ranges": {
+  "evaluation": [
+   992524,
+   992599
+  ],
+  "training": [
+   989200,
+   989599
+  ]
+ },
+ "seeds_reserved_unused": [
+  992548,
+  992599
+ ],
+ "seeds_used": [
+  992524,
+  992547
+ ],
+ "stream_rule": "map-namespaced streams (N1 map_scenarios == newmap probe/NEWMAP2): requests newmap_requests_v1:{map}:{seed}:{stream}, CAV identity newmap_cav_v1:..., HDV parameters sample_driver(\"{map}:{seed}\", id)",
+ "supersedes": [
+  {
+   "panel_sha256": "b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1",
+   "reason": "v1 cell 2800 veh/h x 0.3 superseded by the 3200 x 0.6 clean4 cell (MAIN 2026-11-06)"
+  }
+ ],
+ "version": "2_a73v_D2800_p20",
+ "worlds": [
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 24,
+    "seed": 992524
+   },
+   "world_id": "wz3to2_992524"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 25,
+    "seed": 992525
+   },
+   "world_id": "wz3to2_992525"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 26,
+    "seed": 992526
+   },
+   "world_id": "wz3to2_992526"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 27,
+    "seed": 992527
+   },
+   "world_id": "wz3to2_992527"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 28,
+    "seed": 992528
+   },
+   "world_id": "wz3to2_992528"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 29,
+    "seed": 992529
+   },
+   "world_id": "wz3to2_992529"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 30,
+    "seed": 992530
+   },
+   "world_id": "wz3to2_992530"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 31,
+    "seed": 992531
+   },
+   "world_id": "wz3to2_992531"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 32,
+    "seed": 992532
+   },
+   "world_id": "wz3to2_992532"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 33,
+    "seed": 992533
+   },
+   "world_id": "wz3to2_992533"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 34,
+    "seed": 992534
+   },
+   "world_id": "wz3to2_992534"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 35,
+    "seed": 992535
+   },
+   "world_id": "wz3to2_992535"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 36,
+    "seed": 992536
+   },
+   "world_id": "wz3to2_992536"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 37,
+    "seed": 992537
+   },
+   "world_id": "wz3to2_992537"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 38,
+    "seed": 992538
+   },
+   "world_id": "wz3to2_992538"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 39,
+    "seed": 992539
+   },
+   "world_id": "wz3to2_992539"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 40,
+    "seed": 992540
+   },
+   "world_id": "wz3to2_992540"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 41,
+    "seed": 992541
+   },
+   "world_id": "wz3to2_992541"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 42,
+    "seed": 992542
+   },
+   "world_id": "wz3to2_992542"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 43,
+    "seed": 992543
+   },
+   "world_id": "wz3to2_992543"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 44,
+    "seed": 992544
+   },
+   "world_id": "wz3to2_992544"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 45,
+    "seed": 992545
+   },
+   "world_id": "wz3to2_992545"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 46,
+    "seed": 992546
+   },
+   "world_id": "wz3to2_992546"
+  },
+  {
+   "world": {
+    "cell": 3,
+    "cell_key": "D2800_p20",
+    "demand": 2800,
+    "map": "wz3to2",
+    "penetration": 0.2,
+    "repeat": 47,
+    "seed": 992547
+   },
+   "world_id": "wz3to2_992547"
+  }
+ ]
+}

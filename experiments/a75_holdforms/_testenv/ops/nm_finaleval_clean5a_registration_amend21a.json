@@ -1,0 +1,23 @@
+{
+ "amendment": "21a",
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend21.json",
+  "registration_sha256": "d493b1d38f6372fbd0a230cf8cd5ce80b5912f316c2a2058969a531b434cd306"
+ },
+ "authority": [
+  "MAIN 2026-11-08: void the first cpuW host-identity (zero SUMO, nothing charged; DIFFERS caused by the missing runtime dirs /home/ubuntu/c4 and /home/ubuntu/aq_code, now copied and manifest-verified); rerun"
+ ],
+ "registered_utc": "2026-11-07T19:50:57.122886+00:00",
+ "registration_sha256": "f353bd0df13f5c4ebea2fb6f7be0213178bb091be2e644268e930e77626e595a",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "sim_s": 0,
+ "status": "pre-results: no held-out outcome read; zero SUMO charged by the voided attempts",
+ "voided": {
+  "dirs": [
+   "hostid_cpuW.VOID_1 (attempt 1: /home/ubuntu/c4 missing, no receipt)",
+   "hostid_cpuW.VOID_2 (attempt 2)"
+  ],
+  "handling": "the voided receipt file stays in place unmodified as the record; the valid check is the rerun under host label cpuW_r2 -> HOST_IDENTITY_cpuW_r2.json, which must be IDENTICAL before any N6 dispatch on cpuW",
+  "receipt": "HOST_IDENTITY_cpuW.json (receipt_sha256 b50e643b..., verdict DIFFERS: env.config.scenario_template_path unresolved because aq_code was missing; other_modules_changed none; replay skipped, 0 sim-s)"
+ }
+}

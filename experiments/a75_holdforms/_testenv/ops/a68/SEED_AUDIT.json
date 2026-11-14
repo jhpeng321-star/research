@@ -1,0 +1,33 @@
+{
+ "amendment": "68",
+ "audited": "2026-11-12 21:13:31 +0800",
+ "blocks": {
+  "a68c": [
+   996200,
+   996299
+  ],
+  "a68v": [
+   992500,
+   992599
+  ]
+ },
+ "classification": {
+  "a68c": "24 file hits: 20 copies of one process id (\"pid\":996200) in WMSPEED2_gpuR_warm120group3.json; 4 mentions inside this audit script. 11 git hits: the same pid in WMSPEED2 inventory files (10) and a byte count (\"bytes\": 996285) in archive/pre_circles/manifest.json. No use as a world seed.",
+  "a68v": "11 file hits: 5 process ids (\"pid\") in clean5c5b CLAIM.json job files; 2 range-boundary constants (992500 as the first value OUTSIDE the A44 block) in the A44 unit tests; 4 mentions inside this audit script. 1 git hit: the same A44 unit test. No use as a world seed."
+ },
+ "file_hits": {
+  "a68c": 24,
+  "a68v": 11
+ },
+ "git_hits": {
+  "a68c": 11,
+  "a68v": 1
+ },
+ "known_overlap": [],
+ "limits": "host run roots were not scanned by this script (Box 3 roots are created new for A68; the runner range table rejects overlapping ranges at import); paths with forbidden tokens were never opened",
+ "n_files": 206226,
+ "n_tips": 558,
+ "raw_sha256": "3b38e8ce1e0d597b39a256c40dd3f5e506a4d40dbce326002ea9f37550f37807",
+ "schema": "a68.seed_audit.v1",
+ "verdict": "UNUSED: no prior use of 992500-992599 or 996200-996299 as world seeds was found; no overlap with a known taken or forbidden block"
+}

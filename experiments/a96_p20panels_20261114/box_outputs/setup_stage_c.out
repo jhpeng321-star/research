@@ -1,0 +1,33 @@
+pin ok 2de0f1c0 /root/a82four/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 5181bf4b /root/a82four/src/ops/a82_fourarm.py
+pin ok 48c5c448 /root/a82four/src/ops/a80_s2b.py
+pin ok 007cef74 /root/a82four/refs/a32/WAVE_DUO_HOLD__0000-0047.json
+pin ok 1648eb4b /root/a82four/panels/A82F_PANEL_C_192.json
+patched /root/a96pc/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 2de0f1c0 /root/a82four/src/pytools/tools/coopmwm/nm_eval_runner.py
+runner A82 2de0f1c0 (unchanged) -> A96 part c 7f34dadb7953b3f1bf4af287d50285713ece113c57f64554d8fab45abc7d0769
+code identity ok: part c a75 d1af7e0f block (984400, 984599) seeds 984400 984591 arms(no hand) ('BANK_SEARCHED_P20', 'DUO_HOLD', 'MAPPO20C')
+tree diff vs the A82 tree (expected: [c: runner] + the A96 files):
+Only in /root/a96pc/src/ops: a96
+Only in /root/a96pc/src/ops: a96_e2e.py
+Only in /root/a96pc/src/ops: a96_p20.py
+Only in /root/a96pc/src/ops: test_a96_p20.py
+Only in /root/a96pc/src/pytools/ops: a96
+Only in /root/a96pc/src/pytools/ops: a96_e2e.py
+Only in /root/a96pc/src/pytools/ops: a96_p20.py
+Only in /root/a96pc/src/pytools/ops: test_a96_p20.py
+Files /root/a82four/src/pytools/tools/coopmwm/nm_eval_runner.py and /root/a96pc/src/pytools/tools/coopmwm/nm_eval_runner.py differ
+54M	/root/a96pc
+SETUP_OK
+2026-11-14 02:52:37 chain stage part c start pid 911460 workers  free 29G bank unset hand unset panel unset
+2026-11-14 02:52:43 panel 0bb84f3c129ca7347236337cb4bcc316b447a0186f6478fa2ca9451646145c56  A96C_PANEL_C.json panel_sha256 6c161a56e1c913e35441570774f1df6ee62999a0ca9e11b27a309ab3b0dfc5ff n 192
+2026-11-14 02:52:43 STAGE_OK charged 0
+{
+ "192": {
+  "file": "/root/a96pc/panels/A96C_PANEL_C_192.json",
+  "file_sha256": "0bb84f3c129ca7347236337cb4bcc316b447a0186f6478fa2ca9451646145c56",
+  "panel_sha256": "6c161a56e1c913e35441570774f1df6ee62999a0ca9e11b27a309ab3b0dfc5ff"
+ }
+}
+{"file_sha256": "0bb84f3c129ca7347236337cb4bcc316b447a0186f6478fa2ca9451646145c56", "panel_sha256": "6c161a56e1c913e35441570774f1df6ee62999a0ca9e11b27a309ab3b0dfc5ff", "n": 192, "seeds": [984400, 984591]}
+{"which": "IDENT_U0", "sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca", "binding_sha256": "aaeb93a633c23899d1030f063c55d290a019ec582be827bfe77a88380bcce024", "training": null}

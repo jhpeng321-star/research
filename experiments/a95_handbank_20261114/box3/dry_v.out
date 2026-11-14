@@ -1,0 +1,104 @@
+{
+ "stage": "v",
+ "panel_sha256": "989248f9d449b234724d74cd569e324e1be7bc1038529947429f336652412ea4",
+ "n_waves": 10,
+ "waves": [
+  [
+   "A80V_wall_g_solo2",
+   24,
+   "A75_PLAN",
+   "a80v_c6b176478af8c50c_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_wall_g_duo12",
+   24,
+   "A75_PLAN",
+   "a80v_a5d026a7f1d0b060_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_wall_m_solo2",
+   24,
+   "A75_PLAN",
+   "a80v_400a1f46ebaae95a_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_wall_g_solo1",
+   24,
+   "A75_PLAN",
+   "a80v_e01e3c082b5b979a_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_wall_g_relay21",
+   24,
+   "A75_PLAN",
+   "a80v_f95f5277c16899ff_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_wall_g_relay12",
+   24,
+   "A75_PLAN",
+   "a80v_11f464e28297c2fe_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_g2_stagger40",
+   24,
+   "A75_PLAN",
+   "a80v_b7fb901ab0da9ff1_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_wall_g_duo12_stagger40",
+   24,
+   "A75_PLAN",
+   "a80v_59fa3e1b443c0965_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_g2_gap1",
+   24,
+   "A75_PLAN",
+   "a80v_3da551e8da79676f_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_duo12_v20",
+   24,
+   "A75_PLAN",
+   "a80v_750a55c9439a2efc_0000",
+   992500,
+   992523
+  ]
+ ],
+ "sim_s": 288000,
+ "charged": 0,
+ "cap": 460800,
+ "a75_sha256": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+ "mech": {
+  "n_waves": 0,
+  "sim_s": 0,
+  "plans": []
+ },
+ "reference": {
+  "wave": "A68V_MAPPO60C",
+  "receipt_sha256": [
+   "1a6d31ddb386f0130ee05f755d73992a8716e8f45bfa2d26a30b337d5ca0e0a0"
+  ],
+  "n": 24,
+  "reports_ok": true
+ }
+}

@@ -1,0 +1,30 @@
+pin ok 47fb9f76 /root/a94/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok c8b05145 /root/a94/src/ops/a94_bank.py
+pin ok c8746b4a /root/a94/src/ops/a94/build_bank_a94.py
+pin ok c755a551 /root/a94/src/ops/a81_bigconfirm.py
+pin ok 720d19e1 /root/a94/root/A94_PANEL_C.json
+pin ok a428cd1d /root/a85adm/root/a80_banks/A80_BANK_D2800_p60.json
+pin ok 577a0564 /root/a86adm/root/a80_banks/A80_BANK_D2800_p60.json
+pin ok 40b16ed9 /root/a98/src/ops/a98/A94_BANK_SEARCHED_D2800_p60.json
+code identity ok: a75 d1af7e0f arms ('BANK_S4', 'BANK_S4S5') caps 4800 460800 465600
+Only in /root/a98/src/ops: a98
+Only in /root/a98/src/ops: a98_addon.py
+Only in /root/a98/src/ops: a98_e2e.py
+Only in /root/a98/src/ops: test_a98_addon.py
+Only in /root/a98/src/pytools/ops: a98
+Only in /root/a98/src/pytools/ops: a98_addon.py
+Only in /root/a98/src/pytools/ops: a98_e2e.py
+Only in /root/a98/src/pytools/ops: test_a98_addon.py
+SETUP_OK
+== prepare
+{"BANK_S4": {"file": "A98_BANK_S4_D2800_p60.json", "file_sha256": "a428cd1d320196578d55c84eea4b9b391f5e5c03928692a90dff0ac96667d7a8", "source": "/root/a85adm/root/a80_banks/A80_BANK_D2800_p60.json", "executor_priority": [["mut_deba0680d3096904", 1551.588004528352, "HoldFormCore"], ["mut_576d526ec064db9c", 462.95574873450704, "HoldFormCore"], ["mut_28cad0ce56064e11", 433.14617788335335, "LcStrategyCore"]]}, "BANK_S4S5": {"file": "A98_BANK_S4S5_D2800_p60.json", "file_sha256": "40b16ed95add6fcd63385dabcbf7e8a03fe8dbf20d0418e58e5aa8feee30ee04", "source": "/root/a98/src/ops/a98/A94_BANK_SEARCHED_D2800_p60.json", "executor_priority": [["mut_deba0680d3096904", 1551.588004528352, "HoldFormCore"], ["rand_8b08c77a63f7d622", 913.7683433657043, "HoldFormCore"], ["mut_576d526ec064db9c", 462.95574873450704, "HoldFormCore"], ["mut_28cad0ce56064e11", 433.14617788335335, "LcStrategyCore"], ["mut_069966492c9abdcc", 401.5813374377569, "LcStrategyCore"], ["mut_97dda2be6b45ccf0", 216.55692564279525, "HoldFormCore"]]}}
+
+== dry i
+{'arms': ['BANK_S4', 'BANK_S4S5'], 'episodes': 4, 'sim_s': 4800, 'stage_cap': 4800, 'charged': 0, 'cap': 465600, 'families': {'BANK_S4': ['mut_deba0680d3096904', 'mut_576d526ec064db9c', 'mut_28cad0ce56064e11'], 'BANK_S4S5': ['rand_8b08c77a63f7d622', 'mut_069966492c9abdcc', 'mut_97dda2be6b45ccf0', 'mut_deba0680d3096904', 'mut_576d526ec064db9c', 'mut_28cad0ce56064e11']}, 'spec_diff_S4S5_vs_S4': ['checkpoint.a75_bank.file_sha256', 'checkpoint.a75_bank.path', 'job_id']}
+== dry c
+{'panel_sha256': 'd85999ddaaf3eb583775d66dbabca168b4432966bc01e7193dfc79f244f7946c', 'arms': ['BANK_S4', 'BANK_S4S5'], 'contrasts': [['BANK_S4', 'BANK_HAND', 'secondary'], ['BANK_S4S5', 'BANK_HAND', 'secondary'], ['BANK_S4S5', 'BANK_SEARCHED', 'secondary'], ['BANK_S4', 'BANK_SEARCHED', 'secondary'], ['BANK_S4', 'DUO_HOLD_60C', 'secondary'], ['BANK_S4S5', 'DUO_HOLD_60C', 'secondary'], ['BANK_S4', 'MAPPO60C', 'secondary'], ['BANK_S4S5', 'MAPPO60C', 'secondary']], 'episodes': 384, 'sim_s': 460800, 'stage_cap': 460800, 'charged': 0, 'cap': 465600}
+[['A98C_BANK_S4', 192, 'A75_BANK', 'a98c_bank_s4_0000', 'a98c_bank_s4_0191', 988700, 988891], ['A98C_BANK_S4S5', 192, 'A75_BANK', 'a98c_bank_s4s5_0000', 'a98c_bank_s4s5_0191', 988700, 988891]]
+== e2e
+{"copied_arms": ["BANK_HAND", "BANK_SEARCHED", "DUO_HOLD_60C", "MAPPO60C"], "n_receipts": {"BANK_SEARCHED": 1, "BANK_HAND": 1, "DUO_HOLD_60C": 1, "MAPPO60C": 1}, "contrasts": [["BANK_S4", "BANK_HAND", "secondary"], ["BANK_S4S5", "BANK_HAND", "secondary"], ["BANK_S4S5", "BANK_SEARCHED", "secondary"], ["BANK_S4", "BANK_SEARCHED", "secondary"], ["BANK_S4", "DUO_HOLD_60C", "secondary"], ["BANK_S4S5", "DUO_HOLD_60C", "secondary"], ["BANK_S4", "MAPPO60C", "secondary"], ["BANK_S4S5", "MAPPO60C", "secondary"]], "arms": ["BANK_HAND", "BANK_S4", "BANK_S4S5", "BANK_SEARCHED", "DUO_HOLD_60C", "MAPPO60C"], "bank_keys": ["activation_counts", "activations_by_family", "cavs_engaged_at_once", "families", "mean_J_veh_s", "offers_by_family_outcome", "offers_by_plan", "overlap", "safety_totals"], "summary_keys": ["analysis_sha256", "banks", "contrasts"], "mech_errors": {"BANK_S4": 0, "BANK_S4S5": 0}, "mech_failures": 0, "analysis_sha256": "1bf23f29b8b0c7941c275a27b8ca70aa46c850e94df71fd28183031c3d5c1862"}
+A98_E2E_OK
+DRYTEST_OK charged 0 (scratch /dev/shm/a98_drytest_919708 removed on exit)

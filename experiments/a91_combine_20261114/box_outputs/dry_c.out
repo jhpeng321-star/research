@@ -1,0 +1,228 @@
+{
+ "stage": "c",
+ "setting": "a91c_D2800_p60",
+ "panel_sha256": "e5d51c5ad882c161bf134e080474aae0892a74c3e98a53a32433d8903042d386",
+ "n_waves": 5,
+ "waves": [
+  [
+   "A91C_L2_ONLY",
+   96,
+   "A75_PLAN",
+   "a91c_l2_only_0000",
+   "a91c_l2_only_0095",
+   988600,
+   988695
+  ],
+  [
+   "A91C_BANK_TURNS",
+   96,
+   "A75_BANK",
+   "a91c_bank_turns_0000",
+   "a91c_bank_turns_0095",
+   988600,
+   988695
+  ],
+  [
+   "A91C_ROLL_BOTH",
+   96,
+   "A75_PLAN",
+   "a91c_roll_both_0000",
+   "a91c_roll_both_0095",
+   988600,
+   988695
+  ],
+  [
+   "A91C_DUO_HOLD_60C",
+   96,
+   "DUO_HOLD",
+   "a91c_duo_hold_60c_0000",
+   "a91c_duo_hold_60c_0095",
+   988600,
+   988695
+  ],
+  [
+   "A91C_MAPPO60C",
+   96,
+   "U0",
+   "a91c_mappo60c_0000",
+   "a91c_mappo60c_0095",
+   988600,
+   988695
+  ]
+ ],
+ "episodes": 480,
+ "sim_s": 576000,
+ "stage_cap": 576000,
+ "charged": 0,
+ "cap": 590400,
+ "a75_sha256": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+ "checkpoints": {
+  "A91C_L2_ONLY": {
+   "kind": "a75",
+   "comparator_kind": "a66_MAPPO60C",
+   "executor_path": "/root/a66/inputs/policy_00084.pt",
+   "executor_sha256": "2abed31707b61121569af2936c23689827b52b28422df162751b230aa6a93de8",
+   "binding_sha256": "4a73e50ff847d4d201b19ca5d14104ca7302d6d833d1c508418ac2b1fa71c22c",
+   "binding_path": "/root/a66/root/BOUND_A66_MAPPO60C.json",
+   "path": "/root/autodl-fs/nm_finaleval_p20c_bank/prerun_plant/A_checkpoint_000.pt",
+   "file_sha256": "5ea2296470c2af2855f9e292b03eeaa62bafdfec08146712d7347d7ce117d734",
+   "update": 0,
+   "arm": "A",
+   "cell_key": "D2800_p60",
+   "oracle_bank": {
+    "path": "/autodl-fs/data/nm_finaleval_p20c_bank/oracle_banks/GUIDANCE_R6_WMONLY_PRIORITY.json",
+    "file_sha256": "fd385a2b8b1cbaf33897f8617b6d4c0abeb9f2dea40c9b72dca91d718bfc3c82"
+   },
+   "oracle_binding_sha256": "9eaca60ac4978d10e412fd7faa2556c60237a3628a5b5578f4ed7cef6abd8121",
+   "a75_arm": "A75_PLAN",
+   "a75_sha256": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+   "a75_bank": {
+    "path": "/root/a91/root/a91_banks/A89_ARMS_D2800_p60.json",
+    "file_sha256": "de9a30a944eda470777cbd3247c6ca81db2745547549cde3e2bff154e23824c2"
+   },
+   "a75_family": "a89l2_d86b1d6ac653e8ad"
+  },
+  "A91C_BANK_TURNS": {
+   "kind": "a75",
+   "comparator_kind": "a66_MAPPO60C",
+   "executor_path": "/root/a66/inputs/policy_00084.pt",
+   "executor_sha256": "2abed31707b61121569af2936c23689827b52b28422df162751b230aa6a93de8",
+   "binding_sha256": "4a73e50ff847d4d201b19ca5d14104ca7302d6d833d1c508418ac2b1fa71c22c",
+   "binding_path": "/root/a66/root/BOUND_A66_MAPPO60C.json",
+   "path": "/root/autodl-fs/nm_finaleval_p20c_bank/prerun_plant/A_checkpoint_000.pt",
+   "file_sha256": "5ea2296470c2af2855f9e292b03eeaa62bafdfec08146712d7347d7ce117d734",
+   "update": 0,
+   "arm": "A",
+   "cell_key": "D2800_p60",
+   "oracle_bank": {
+    "path": "/autodl-fs/data/nm_finaleval_p20c_bank/oracle_banks/GUIDANCE_R6_WMONLY_PRIORITY.json",
+    "file_sha256": "fd385a2b8b1cbaf33897f8617b6d4c0abeb9f2dea40c9b72dca91d718bfc3c82"
+   },
+   "oracle_binding_sha256": "9eaca60ac4978d10e412fd7faa2556c60237a3628a5b5578f4ed7cef6abd8121",
+   "a75_arm": "A75_BANK",
+   "a75_sha256": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+   "a75_bank": {
+    "path": "/root/a91/root/a91_banks/A91_TURNS_D2800_p60.json",
+    "file_sha256": "f10e7689d4fd32d6f204324fc02c8d48669d7cf89fc08327b84dfc8c36b2aff2"
+   },
+   "a75_family": null
+  },
+  "A91C_ROLL_BOTH": {
+   "kind": "a75",
+   "comparator_kind": "a66_MAPPO60C",
+   "executor_path": "/root/a66/inputs/policy_00084.pt",
+   "executor_sha256": "2abed31707b61121569af2936c23689827b52b28422df162751b230aa6a93de8",
+   "binding_sha256": "4a73e50ff847d4d201b19ca5d14104ca7302d6d833d1c508418ac2b1fa71c22c",
+   "binding_path": "/root/a66/root/BOUND_A66_MAPPO60C.json",
+   "path": "/root/autodl-fs/nm_finaleval_p20c_bank/prerun_plant/A_checkpoint_000.pt",
+   "file_sha256": "5ea2296470c2af2855f9e292b03eeaa62bafdfec08146712d7347d7ce117d734",
+   "update": 0,
+   "arm": "A",
+   "cell_key": "D2800_p60",
+   "oracle_bank": {
+    "path": "/autodl-fs/data/nm_finaleval_p20c_bank/oracle_banks/GUIDANCE_R6_WMONLY_PRIORITY.json",
+    "file_sha256": "fd385a2b8b1cbaf33897f8617b6d4c0abeb9f2dea40c9b72dca91d718bfc3c82"
+   },
+   "oracle_binding_sha256": "9eaca60ac4978d10e412fd7faa2556c60237a3628a5b5578f4ed7cef6abd8121",
+   "a75_arm": "A75_PLAN",
+   "a75_sha256": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+   "a75_bank": {
+    "path": "/root/a91/root/a91_banks/A89_ARMS_D2800_p60.json",
+    "file_sha256": "de9a30a944eda470777cbd3247c6ca81db2745547549cde3e2bff154e23824c2"
+   },
+   "a75_family": "d2_d86b1d6ac653e8ad"
+  },
+  "A91C_DUO_HOLD_60C": {
+   "kind": "a32",
+   "comparator_kind": "a66_MAPPO60C",
+   "executor_path": "/root/a66/inputs/policy_00084.pt",
+   "executor_sha256": "2abed31707b61121569af2936c23689827b52b28422df162751b230aa6a93de8",
+   "binding_sha256": "4a73e50ff847d4d201b19ca5d14104ca7302d6d833d1c508418ac2b1fa71c22c",
+   "binding_path": "/root/a66/root/BOUND_A66_MAPPO60C.json",
+   "path": "/root/autodl-fs/nm_finaleval_p20c_bank/prerun_plant/A_checkpoint_000.pt",
+   "file_sha256": "5ea2296470c2af2855f9e292b03eeaa62bafdfec08146712d7347d7ce117d734",
+   "update": 0,
+   "arm": "A",
+   "cell_key": "D2800_p60",
+   "oracle_bank": {
+    "path": "/autodl-fs/data/nm_finaleval_p20c_bank/oracle_banks/GUIDANCE_R6_WMONLY_PRIORITY.json",
+    "file_sha256": "fd385a2b8b1cbaf33897f8617b6d4c0abeb9f2dea40c9b72dca91d718bfc3c82"
+   },
+   "oracle_binding_sha256": "9eaca60ac4978d10e412fd7faa2556c60237a3628a5b5578f4ed7cef6abd8121",
+   "a32_arm": "DUO_HOLD",
+   "a32_sha256": "1c51f22c1a0fc29b90a263504f97bd8f0bdc8ad3c4c5d84eb6c015ef46aa12cf",
+   "duo_bank": {
+    "path": "/root/autodl-fs/nm_finaleval_p20c_bank/a32_banks/GUIDANCE_C4SIT_priv_UNION_UNC.json",
+    "file_sha256": "39f384a29fb8e952a94f918234c52bb3ff2059f2155b99f17b2f5c26a38ec239"
+   },
+   "bank_cell_key": "D2800_p20"
+  },
+  "A91C_MAPPO60C": {
+   "kind": "u0",
+   "comparator_kind": "a66_MAPPO60C",
+   "executor_path": "/root/a66/inputs/policy_00084.pt",
+   "executor_sha256": "2abed31707b61121569af2936c23689827b52b28422df162751b230aa6a93de8",
+   "binding_sha256": "4a73e50ff847d4d201b19ca5d14104ca7302d6d833d1c508418ac2b1fa71c22c",
+   "binding_path": "/root/a66/root/BOUND_A66_MAPPO60C.json",
+   "path": "/root/autodl-fs/nm_finaleval_p20c_bank/prerun_plant/A_checkpoint_000.pt",
+   "file_sha256": "5ea2296470c2af2855f9e292b03eeaa62bafdfec08146712d7347d7ce117d734",
+   "update": 0,
+   "arm": "A"
+  }
+ },
+ "horizon": [
+  1200,
+  1200,
+  1200,
+  1200,
+  1200
+ ],
+ "windows": [
+  {
+   "start_s": 0,
+   "end_s": 1200
+  },
+  {
+   "start_s": 0,
+   "end_s": 1200
+  },
+  {
+   "start_s": 0,
+   "end_s": 1200
+  },
+  {
+   "start_s": 0,
+   "end_s": 1200
+  },
+  {
+   "start_s": 0,
+   "end_s": 1200
+  }
+ ],
+ "spec_diff_vs_L2_ONLY": {
+  "ROLL_BOTH": [
+   "checkpoint.a75_family",
+   "job_id"
+  ],
+  "BANK_TURNS": [
+   "arm",
+   "checkpoint.a75_arm",
+   "checkpoint.a75_bank.file_sha256",
+   "checkpoint.a75_bank.path",
+   "checkpoint.a75_family",
+   "job_id"
+  ],
+  "MAPPO60C_vs_DUO_HOLD_60C": [
+   "arm",
+   "checkpoint.a32_arm",
+   "checkpoint.a32_sha256",
+   "checkpoint.bank_cell_key",
+   "checkpoint.cell_key",
+   "checkpoint.duo_bank",
+   "checkpoint.kind",
+   "checkpoint.oracle_bank",
+   "checkpoint.oracle_binding_sha256",
+   "job_id"
+  ]
+ }
+}

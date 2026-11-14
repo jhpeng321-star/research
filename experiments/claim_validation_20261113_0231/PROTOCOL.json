@@ -1,0 +1,299 @@
+{
+ "budgets_sim_s": {
+  "conf_u0_shared": 115200,
+  "dev_u0": 28800,
+  "e1_confirm": 1382400,
+  "e1_verify_cap": 2246400,
+  "e2_confirm": 345600,
+  "e2_tune": 144000,
+  "mechanics": 9600,
+  "replay": 115200,
+  "total_cap": 4387200,
+  "wm_scoring": "zero SUMO; <= 2,960 WM rollouts per seed (screen 1,952 + final 1,008), expected 750-1,350"
+ },
+ "cell": "D2800_p60",
+ "e1": {
+  "admission": "PASS iff 95% CI upper bound of (plan - U0) total delay < 0 AND each of the five group means (L0/L1/L2/HDV/CAV, labelled by the U0 run) <= +10 s (a37_cellbank.unc_verdict)",
+  "banks": "per seed x arm: the admitted plans among the first 6 candidates (budgets 2 and 4 are descriptive); no admitted plan -> bank is U0; no --max-plans",
+  "max_plans_note": "--max-plans is NOT used. Known risk, stated in advance: the executor has no bank-level activation cap, holds of a multi-plan bank stack (A68: 8-plan bank ~44 holds per world, failed confirmation).",
+  "note": "search seeds are RNG seeds, not world seeds; pool generation and WM scoring use no world seed of this round",
+  "pool": {
+   "frozen": {
+    "103": {
+     "pool_doc_sha256": "0be576d8a37a660316c757409608bb8ef192321896fc069f7b839a111cafee4e",
+     "pool_file_sha256": "b2a90a7992ecde63c47c143aa1adfeb86367e82cb7efbc61a9c023bb510aa058",
+     "random_order_doc_sha256": "5cc9a0d542652062f5f5a29cee509f8d5c782003c9562895c46f935cc5a99c6c",
+     "random_order_file_sha256": "3201764e7850bda4df736f180b64ff60ad6ffaa17cb0312598e41bd44d4afefd",
+     "random_top6": [
+      "aa9d3ad2f6a93a0303f514121ca06e336e1914b654fb980914ae12a0449ac07b",
+      "750deeae03a8d5e6e12de582bee6c421f447c74f0bd6fe5237b0734e6acf433f",
+      "1c5f56b2f9c67044514e9e524600c236f0da948b30c74a2c608df9fd9c2cddf9",
+      "b4ea273322f6155ae3ba6e7455237e658dc0490db1a7dcd08ed1da83ebe72cc3",
+      "9b018274d316a16bcec66f511447a9f7ac7295373b51c27ca5aff85abb6d933f",
+      "0c9cb5cb0573c6702cb32b1a8eb0d41c7046d0b944038e0b7f9c3f282f64c5d8"
+     ],
+     "wm_job_file_sha256": "7795c4dbc9dc8237177d52f59a8c7767fec3fd7c4515db784f32c28dae39890b"
+    },
+    "11": {
+     "pool_doc_sha256": "c9739a70840ff9fdc236f25499455e4e9cd4980b9710e25bcace9f4825fcc5ae",
+     "pool_file_sha256": "3f124460a045d95b0c1cbef53c3d582adcc78c28a017fca55a7646ba4d0defb4",
+     "random_order_doc_sha256": "a8f57f63559706c07bc4fa7bd4b1f91d5a87400d746c0504e1da4afa4be4c67d",
+     "random_order_file_sha256": "8648dcddccae0fa5964d936c88b922f2e48c3c0b68d90a174401db12122da4f8",
+     "random_top6": [
+      "8b387c721f64f62da88472def6da7b03eb74ffb38ca62e298f9e2641ca3ab1f3",
+      "2294ba5535a47d66f2e7159fb547ba2f9477ecf0a04c67852e0dfe7a97d94736",
+      "598543815090b1da4c5466da48eda0109deb5521e45e60b2245debe625df7489",
+      "45a0adbe9ea9600c2631ad2ec7dd9bb6ecb92c0e889131bf88750601a8bb18ff",
+      "5f369791473787fe45dc7ea50551b895f1e740454720a079b60c727c4b2f178f",
+      "e3730838508b24e1483508963882be2491f7764f45d03b82548ee9cd52b19b89"
+     ],
+     "wm_job_file_sha256": "2ee1217bb25435a934afedba30c7780968c29e0921a5508a7eab8ade44c632c5"
+    },
+    "23": {
+     "pool_doc_sha256": "8ab7b51d70f523016b3bbebe0a14c418583788308dc7e651f298b9b65a7ae7aa",
+     "pool_file_sha256": "cf73db5844a8b10bd1ddba0515c4cdea634e9b66787f1165f447f1136f418a03",
+     "random_order_doc_sha256": "c4c7971d267bf842580d6724ded788fa9f25635cdbd536cee23c8f17ad991980",
+     "random_order_file_sha256": "1dde582e008ef7834144eedb1b433a2aff2013aa531e6158b40e254665a86257",
+     "random_top6": [
+      "48567958f7501f3726aaa810fa3cca809a04b4ad0f49fcb8752b08b52c806dc1",
+      "28fe7fd264569047918707ac3b5fcf641275e2dda823c1da73f574a8e6a347f7",
+      "65849b4c3c0a4bf07cfe72f39ff18c61c10770d4edb5e03913706d06b35adf77",
+      "b4515c089d616c5ec65429255d077c4077aec0f020a1aca357ae068881655a01",
+      "d650adea140c5c05c1174a44311765ac3a7ae18d5c1922de6fece6bb2ee8e39f",
+      "652f29b744c0d0aed87328bcd79e2b2a509126a70360014e5740839a6dc098ed"
+     ],
+     "wm_job_file_sha256": "67906c695a521df2adde9cafbc7a1cd6ef3f7d5f1846fc3dc2b244db369a2b98"
+    },
+    "42": {
+     "pool_doc_sha256": "29c2ff9a73dfada3874bf8fda174bcec3d73609a3417c3558ef343b45043f738",
+     "pool_file_sha256": "af8f1c445d98ec7d4bd68524e4b050dc30dce96db61450ccec9eedfe361ef51c",
+     "random_order_doc_sha256": "faab2f8767e1d4102cf55d6de41806e11547611d85b8e3e8e01e6342a14e9fba",
+     "random_order_file_sha256": "884291bfe4f176a9bc5dcfc936c0e07eace34c5fb32d5742fa2f02b9dcc9ceed",
+     "random_top6": [
+      "b1aee89c85b1404bd204181bc9f8be7be97aa0fe84b55a36d57ae74c7d2da08f",
+      "ce3f6088cb59c44d48826e6dee0198efa0581d81f5be90dfaed88b08d688a5bf",
+      "93f30b53e8615882f39440c5dd764805298bebd4f68bd50704683d84e7b53cc4",
+      "760d787ffa5ceb6dba2d87ddb85609c29db02d7f6bc040cb8e2c8402745b1f93",
+      "8e719c1edf97ba3d53c3c1770c15d6926bc0cc5b5676c96b2499de45e9c24694",
+      "4b27f6d4277b7cd9c1b0715c3efaa4d06227f3184566fbfc3091f29dfeab89d0"
+     ],
+     "wm_job_file_sha256": "89953b322d52786cabd8918c45900801bd24c17872b769269b0b57a87c21084a"
+    },
+    "67": {
+     "pool_doc_sha256": "1698dd8b6ac92d6c739896444274908be264fb93b62e9bc34a0eeae913a9b654",
+     "pool_file_sha256": "4351ef1b4fb7580d80c6ea767f7a75dd5e72be27a72736911fe984b500c22a03",
+     "random_order_doc_sha256": "c35a34f9e6b5eaadc3ba298fa6ec5d48aca47391ecb5350addb883dad2ffbff0",
+     "random_order_file_sha256": "91445d99c2b1d6f2ca9c82dfa406c307478447912e5195bda8d81afa34da1453",
+     "random_top6": [
+      "76eccc30c3451c7346f605fc23cb931351f08b931795fe75ca3f150a4bfdab02",
+      "ddc77b037299837eb543e7d76f5056c2a6a5aa036e97300f971190b3f3ff7f8e",
+      "18a80daa64d5b87fc22478848f51312d16cf906bc825d40cdc73f0b7d0c7f94c",
+      "2984c36dfaf893cea7d30cc2ba0e1960c4945f37a6ab53a52109ef37357733e4",
+      "eb0a8850c377980aafd6446202b5d6439948af41c3f32502ae3b6ed2a42997c6",
+      "1aca8892f9652dcca49c83cdb1b3ed994acc0328c1545185e4797a8dae621a41"
+     ],
+     "wm_job_file_sha256": "d52af0957fa83a654b4ce031ea01a356bd241b077b801c373bc48674b6e25bc0"
+    },
+    "89": {
+     "pool_doc_sha256": "a95931a555d2e7dd1b3eb6dc5e2714bfc4b7664e87aeb104dc4d47b0d4bd98ab",
+     "pool_file_sha256": "be51a2d8fbfc8f773f5ac668913bf0c33dbfc139dc1088799e3901b856e20f7e",
+     "random_order_doc_sha256": "cb791130bf2d64caa243c5f5268feaddefcd245a4f249351b7738fe5e58b08d2",
+     "random_order_file_sha256": "e053d266f5641396fce10b5c6162198115cbd370dfc9aeaf5cfac8a3b128180d",
+     "random_top6": [
+      "22c8a5333b465dd877f1ef7616809c52e198d43a88ea63ca7b69aa1b2c85504f",
+      "49b685aa5d2ebcbab9b4b91d5cac2aa8527e8973edef8e722fb146f308475e8f",
+      "61970efae563bce073310d5926a74d11271543687b04535f919f72fd2d51bcb7",
+      "3e463a68cee8a313238ea710ef4193600347556687a4b0042660fee9f4ce41e0",
+      "3c3ae5d57d3bfb5cdb3dd49d0709d13267b1a6e095dc2406c202ae549d2d2427",
+      "602c654c54ca58d40236e6d94fffa094a288045cbbf2bffc1dab2b73caad5852"
+     ],
+     "wm_job_file_sha256": "6af180229ca50cea91d1d67c06d8d1cbca07d8ee18a918858b21646412cfc392"
+    }
+   },
+   "per_seed": 120,
+   "per_size": 30,
+   "rule": "uniform over the registered hold-only unconditional descriptor space (cfg search_grid), round-robin over sizes, trigger wall with p 0.4 for 3-role plans else lanes, cooldown = max(onset+hold); static legality shared by both arms; de-duplicated by sha256 of the normalised descriptor; reads only the search config",
+   "sizes": [
+    3,
+    4,
+    5,
+    6
+   ],
+   "stream": "claim_validation.e1_pool.v1"
+  },
+  "primary": "admitted-plan count at budget 6, WM - Random per search seed; exact paired sign-flip permutation over the 6 seed pairs, two-sided",
+  "random_arm": {
+   "module": "e1_random_arm.py (no file access; receives only the pool hashes and the seed)",
+   "rule": "sorted descriptor hashes shuffled by random.Random(sha256(stream|seed)); top six = first six",
+   "status": "ALREADY DRAWN AND FROZEN before any WM score exists (see pool.frozen[*].random_top6)",
+   "stream": "claim_validation.e1_random_arm.v1"
+  },
+  "search_seeds": [
+   11,
+   23,
+   42,
+   67,
+   89,
+   103
+  ],
+  "secondary": "total delay of the budget-6 WM bank vs Random bank on the 96 confirmation worlds (seed x world bootstrap; exact permutation over seeds); every bank vs U0",
+  "verification": "per seed: union of both arms top six (<= 12 plans), each run alone (A37_PLAN) + U0 on that seed 24 verification worlds",
+  "wm_arm": {
+   "chunk": 120,
+   "differences_from_search_cell": "no archive leaders / comparators / mutation; the pool is fixed, nothing is generated from WM scores",
+   "final": "the 12 finalists on all 18 valid states (n_final_states 30 > 18 -> all), K_final 4",
+   "finalists": "exactly the top 12 by screen summary.score (descending, ties by pool order)",
+   "ingest": "e1_order.py wm-ingest (verifies pool sha, checkpoint sha, mode)",
+   "mode": "two_stage",
+   "rank": "finalists by final summary.score descending, ties by screen rank; WM top six = first six",
+   "score": "summary.score = 95% lower bound of gain vs base - lam * disagreement / sqrt(n_states), lam 0.5, H 300 s (strategy_search.summarize)",
+   "scorer": "wm_pool_score.py",
+   "scorer_sha256": "94824b8a4b916d67e0cbeb785af84c745825c8601aa64d341d80d495b0c3cc1f",
+   "screen": "all 120 candidates on random.Random(search_seed).sample(valid_states, 4), K_screen 4",
+   "workers": 10
+  }
+ },
+ "e2": {
+  "arms": {
+   "F": "original four-plan bank, byte-identical",
+   "H": "uniform hold, common speed 18..22 m/s, resource matched",
+   "S": "synchronised-onset copy"
+  },
+  "confirmation": "CONF_U0, E2C_F, E2C_S, E2C_H* on the 96 confirmation worlds (same CONF_U0 wave as E1)",
+  "primary": "total delay F - H* on the 96 confirmation worlds, paired percentile bootstrap, two-sided",
+  "secondary": "F - S, every arm - U0, executed control effort, replay (<= 24 Development worlds)",
+  "selection_rule": "H* = the common speed with the lowest mean total delay on the Development worlds (strongest uniform hold); exact ties -> the lower speed. Registered before the tuning run; nothing else is tuned.",
+  "tuning": "5 H speeds + U0 on Development worlds 0..23 of a35_D2800_p60 (seeds 998200-998223, already viewed panel, pinned sha256 425e8a8d0a15dd93bb915e7d49f58d427e807f18e3f523e3fd77df24d3dd2995)"
+ },
+ "file_sha256": {
+  "box_driver.py": "a6b4643a53ba17d51a6dfe6b8097c7c98da5e3c789154b723ecade9ed4410cc3",
+  "cvlib.py": "7c40d192d22b4ec99b9e0f053259e535a0fe3edde5113f24947f46130f56ee2e",
+  "e1_bank.py": "e1c25b72e16eded6bce965d30b0637e2149cdd90c28beda2711133cee56cbc10",
+  "e1_order.py": "9cf73ddc5c2edd9d3006d65aae732814b80a14f1ec1d4b5a68a38eb49c0b6b36",
+  "e1_pool.py": "953a7d14593d434ab68a7da4a0b7a09ed19c99ac9a1bba55d03024a4d3dd72f4",
+  "e1_random_arm.py": "4eedeb0301597a44af3527589d965ec0334f1a398d542e8e75ae8a41c257a465",
+  "e1_verify.py": "f9a1e2e7efa06890732f19022b2c3cb438445cbf4820cd84059b45264557e181",
+  "e2_analyse.py": "2cbeb58819ca1c30209988f8cfc4f943a76d6a6b75e0c85c9ab48eb6e34fbd80",
+  "e2_build.py": "b8e26a60c34bf6cf9eaffe6ad7af932bf3ddcf427924210c090a25553d68041f",
+  "e2_replay.py": "9990b7a2f73bbf975641793e719ab8fc83e1559b7aa2bc0041c6b3888466dd60",
+  "e2_select.py": "fc2422b62100c5fa76dd02eee66efd6e3b7b0748975751eb6b0479465c7ce0fe",
+  "host/setup_cv.sh": "a69d1303e30066a2ace68a7fedf591f9ae64ec9a6f2729b696f61f459dd80930",
+  "inputs/A47_SEARCH_CFG.json": "f5636a96759d567b6d9510fc6f38c2391b43a019464dc0e3fe53bb4109044be9",
+  "out/e1/order/ORDER_RANDOM_seed103.json": "3201764e7850bda4df736f180b64ff60ad6ffaa17cb0312598e41bd44d4afefd",
+  "out/e1/order/ORDER_RANDOM_seed11.json": "8648dcddccae0fa5964d936c88b922f2e48c3c0b68d90a174401db12122da4f8",
+  "out/e1/order/ORDER_RANDOM_seed23.json": "1dde582e008ef7834144eedb1b433a2aff2013aa531e6158b40e254665a86257",
+  "out/e1/order/ORDER_RANDOM_seed42.json": "884291bfe4f176a9bc5dcfc936c0e07eace34c5fb32d5742fa2f02b9dcc9ceed",
+  "out/e1/order/ORDER_RANDOM_seed67.json": "91445d99c2b1d6f2ca9c82dfa406c307478447912e5195bda8d81afa34da1453",
+  "out/e1/order/ORDER_RANDOM_seed89.json": "e053d266f5641396fce10b5c6162198115cbd370dfc9aeaf5cfac8a3b128180d",
+  "out/e1/pool/POOL_seed103.json": "b2a90a7992ecde63c47c143aa1adfeb86367e82cb7efbc61a9c023bb510aa058",
+  "out/e1/pool/POOL_seed11.json": "3f124460a045d95b0c1cbef53c3d582adcc78c28a017fca55a7646ba4d0defb4",
+  "out/e1/pool/POOL_seed23.json": "cf73db5844a8b10bd1ddba0515c4cdea634e9b66787f1165f447f1136f418a03",
+  "out/e1/pool/POOL_seed42.json": "af8f1c445d98ec7d4bd68524e4b050dc30dce96db61450ccec9eedfe361ef51c",
+  "out/e1/pool/POOL_seed67.json": "4351ef1b4fb7580d80c6ea767f7a75dd5e72be27a72736911fe984b500c22a03",
+  "out/e1/pool/POOL_seed89.json": "be51a2d8fbfc8f773f5ac668913bf0c33dbfc139dc1088799e3901b856e20f7e",
+  "out/e1/wm_jobs/WM_POOL_seed103.json": "7795c4dbc9dc8237177d52f59a8c7767fec3fd7c4515db784f32c28dae39890b",
+  "out/e1/wm_jobs/WM_POOL_seed11.json": "2ee1217bb25435a934afedba30c7780968c29e0921a5508a7eab8ade44c632c5",
+  "out/e1/wm_jobs/WM_POOL_seed23.json": "67906c695a521df2adde9cafbc7a1cd6ef3f7d5f1846fc3dc2b244db369a2b98",
+  "out/e1/wm_jobs/WM_POOL_seed42.json": "89953b322d52786cabd8918c45900801bd24c17872b769269b0b57a87c21084a",
+  "out/e1/wm_jobs/WM_POOL_seed67.json": "d52af0957fa83a654b4ce031ea01a356bd241b077b801c373bc48674b6e25bc0",
+  "out/e1/wm_jobs/WM_POOL_seed89.json": "6af180229ca50cea91d1d67c06d8d1cbca07d8ee18a918858b21646412cfc392",
+  "out/e1/wm_jobs/run_wm_pool.sh": "e48063ac327d22fa27797dd8da168f1763cf239e12460c59f889fb91fc90a487",
+  "stats.py": "e977dc558e5562fd60b70fa14b857299d56c65da7cf10ff48134b6b16b8f8365",
+  "tests/test_claim_validation.py": "eb442243821cee0589d34ef340842997c0885649ec30de70f22db113b85fa57b",
+  "wm_pool_score.py": "94824b8a4b916d67e0cbeb785af84c745825c8601aa64d341d80d495b0c3cc1f"
+ },
+ "horizon_s": 1200,
+ "map": "wz3to2",
+ "models": {
+  "code_tree": "code_v12r7b (tar sha256 prefix 320e19f3; WMA_READY.json prefix c7952b42)",
+  "original_bank_F": "inputs/A42_BIG_BANK_D2800_p60.json sha256 7e7dc76b8a0cd5c158205a0e3f6ef96d73a36a483c46d03ac422428dc8c573ff",
+  "start_states": "data/regime_STATES.json sha256 74aef8f8047a073e16097aa1e104fbf72ab32ca1dd16c7a53f4ad58c70a154e3 (A42/A47/A68), 18 valid D2800_p60 states",
+  "strategy_search_py_sha256": "02e119c11a056c13bc54309c5f71e0ca8dd73aeb3c49c5a901e008fda36f54fc",
+  "wm_checkpoint_box_path": "/root/autodl-tmp/a68/ckpt/ckpt/wm_s.pt",
+  "wm_checkpoint_sha256": "6da9d3337aad78799c2e6ac97c87e79b927346011f55861e98887bb89728c063"
+ },
+ "multiplicity": {
+  "alpha": 0.05,
+  "caveat": "exact permutation over 6 pairs has minimum two-sided p = 2/64 = 0.03125 > 0.025, so under Holm E1 can be significant only if E2 p <= 0.025 and E1 p <= 0.05; stated before any result",
+  "method": "Holm",
+  "primaries": [
+   "E1 admitted count",
+   "E2 F - H* delay"
+  ],
+  "two_sided": true
+ },
+ "proposed_seed_blocks": {
+  "blocks": {
+   "conf": [
+    990900,
+    990995
+   ],
+   "dev_fallback_unused": [
+    990500,
+    990599
+   ],
+   "e1v_seed103": [
+    999800,
+    999823
+   ],
+   "e1v_seed11": [
+    993800,
+    993823
+   ],
+   "e1v_seed23": [
+    994100,
+    994123
+   ],
+   "e1v_seed42": [
+    994500,
+    994523
+   ],
+   "e1v_seed67": [
+    995400,
+    995423
+   ],
+   "e1v_seed89": [
+    999300,
+    999323
+   ],
+   "spare": [
+    999400,
+    999499
+   ]
+  },
+  "dev": "existing a35_D2800_p60 panel, world indices 0..23 (998200-998223); already viewed, Development only",
+  "evidence": "zero standalone-integer hits for any number of the nine hundreds in REGISTRATION.md (03:17 version, 4,099,714 bytes), the code tree ops/ and tools/, protocols/experiment_history.json, runs/active/C4-V7FT-20261017 (depth 3), a42-run, all c4/* branch tips, A70/A71 code (they use 992500/996300/998600 only) and the Box 3 /root/a70, /root/a71 tables (read-only grep). Outside the banned 962xxx, 964000-964199, 977xxx, 989600-989699.",
+  "reserved_ranges": "each block reserves its full hundred (e.g. 993800-993899)",
+  "status": "PROPOSED - not used until MAIN confirms"
+ },
+ "reference": {
+  "name": "U0",
+  "sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca",
+  "what": "frozen speed-only base MAPPO"
+ },
+ "run_id": "20261113_0231",
+ "schema": "claim_validation.protocol.v1",
+ "search_cfg": {
+  "file": "inputs/A47_SEARCH_CFG.json",
+  "sha256": "f5636a96759d567b6d9510fc6f38c2391b43a019464dc0e3fe53bb4109044be9",
+  "source": "config object of the A47 result a47_search/STRATEGY_SEARCH_D2800_p60.json (file sha256 prefix b8e451ee)",
+  "values": {
+   "H": 300,
+   "K_final": 4,
+   "K_screen": 4,
+   "finalists": 12,
+   "lam": 0.5,
+   "n_final_states": 30,
+   "n_screen_states": 4,
+   "seed": 20261113
+  }
+ },
+ "sign_convention": "difference = treatment - reference; negative total delay = improvement",
+ "sizes": {
+  "confirmation": "96 worlds shared by the 12 E1 banks and E2 F/H*/S + U0",
+  "e2_tuning": "24 Development worlds",
+  "replay": "<= 24 Development worlds",
+  "verification": "6 seeds x 24 worlds"
+ },
+ "status": "FROZEN before viewing any formal result of this round (no WM score of an E1 pool, no SUMO episode of this round exists at freeze time); world-seed blocks are PROPOSED and become part of the protocol only when MAIN confirms them"
+}

@@ -1,0 +1,73 @@
+{
+ "amendment": "73",
+ "audited": "2026-11-13 11:27:59 +0800",
+ "blocks": {
+  "a73c": [
+   996400,
+   996499
+  ],
+  "a73m": [
+   992408,
+   992415
+  ],
+  "a73v": [
+   992524,
+   992547
+  ]
+ },
+ "classification": {
+  "a73c": "474 file hits: 468 in the A73 files; 6 others = the A73 table edit in the laptop runner (4) and two process ids in training job files. 0 git hits. No prior use.",
+  "a73m": "105 file hits: 96 in the A73 files written for this amendment (panel, driver, test, audit, patch, ship copies); 9 others = the half-open end of range(992400, 992408) / \"992400-992408\" refusal case in test_a44_lcmech.py, the range-end marker 992408 in the A44 mechanics panel (3 copies) and the A73 comment in the laptop runner. 2 git hits = the same A44 panel end marker and test. No world 992408-992415.",
+  "a73v": "187 file hits: 152 in the A73 files; 35 others = the half-open end of range(992500, 992524) (A68 / A71 drivers), the A68 panel end marker and \"992524-992599 reserved unused\" texts (panel, nm_finaleval, A68 patch), process ids 9925xx quoted in training job files and in the A68 audit raw, and the A73 comment in the laptop runner. 6 git hits = the same items. No world 992524-992547."
+ },
+ "file_hits": {
+  "a73c": 474,
+  "a73m": 105,
+  "a73v": 187
+ },
+ "git_hits": {
+  "a73c": 0,
+  "a73m": 2,
+  "a73v": 6
+ },
+ "known_overlap": [
+  {
+   "block": "a73m",
+   "known": "A44_proposed",
+   "range": [
+    992400,
+    992499
+   ]
+  },
+  {
+   "block": "a73v",
+   "known": "A68",
+   "range": [
+    992500,
+    992599
+   ]
+  }
+ ],
+ "limits": "host run roots were not scanned (the Box 4 root /root/a73 is new; the runner range table rejects overlapping ranges at import; the A44 / A68 / A69 / A71 records name 992400-992407 and 992500-992523 as the only worlds used in the parent blocks); paths with forbidden tokens were never opened. A first run of the A70-style script (per-tip git grep) was stopped by its own task after the file scan because the git part would have taken hours; it wrote nothing; this is the rerun.",
+ "method": "file scan = ops/a70/seed_audit.py scan code; git scan = every unique blob of the trees of the same branch tips (cat-file --batch) with the same token rule, instead of per-tip git grep",
+ "n_blobs": 33206,
+ "n_files": 206547,
+ "n_tips": 558,
+ "raw": {
+  "files": {
+   "file": "SEED_AUDIT_RAW_FILES.json",
+   "sha256": "4710d892fb74b95b9ba0991b9548dde7022c338af5fba677fda052b784be6895"
+  },
+  "git": {
+   "file": "SEED_AUDIT_RAW_GIT.json",
+   "sha256": "32e6fb413e46076e28d52725e7b9183b9de14afaf7650e626baa39400f6b58df"
+  }
+ },
+ "schema": "a73.seed_audit.v1",
+ "used": {
+  "a73c": "996400-996495 (96)",
+  "a73m": "992408-992415 (8)",
+  "a73v": "992524-992547 (24)"
+ },
+ "verdict": "UNUSED: no prior use of 992408-992415, 992524-992547 or 996400-996499 as world seeds was found; a73m / a73v lie in the reserved-unused parts of the A44 / A68 blocks; a73c overlaps no known or forbidden block"
+}

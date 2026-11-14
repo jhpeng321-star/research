@@ -1,0 +1,181 @@
+{"file_sha256": "1648eb4b6d578a0256896120f49531d99edc4badf1e9e87e21762eb432462a89", "panel_sha256": "3c879f6ff47fa75ebbf5f5055f4ed35ad7e54be96a704dffa743287b86aa6485", "n": 192, "seeds": [988200, 988391]}
+{
+ "stage": "i",
+ "setting": "a82c_D2800_p20",
+ "panel_sha256": "3c879f6ff47fa75ebbf5f5055f4ed35ad7e54be96a704dffa743287b86aa6485",
+ "n_worlds": 192,
+ "n_waves": 4,
+ "waves": [
+  [
+   "A82FI_U0",
+   2,
+   "U0",
+   "a82fi_u0_0000",
+   997300,
+   997301,
+   "d9042cc5"
+  ],
+  [
+   "A82FI_A75_BANK_A76",
+   2,
+   "A75_BANK",
+   "a82fi_bank_a76_0000",
+   997300,
+   997301,
+   "d9042cc5"
+  ],
+  [
+   "A82FI_IDENT_U0",
+   2,
+   "U0",
+   "a82fi_ident_u0_0000",
+   997300,
+   997301,
+   "d9042cc5"
+  ],
+  [
+   "A82FI_DUO_HOLD",
+   2,
+   "DUO_HOLD",
+   "a82fi_duo_hold_0000",
+   993100,
+   993101,
+   "d9042cc5"
+  ]
+ ],
+ "episodes": 8,
+ "sim_s": 9600,
+ "caps": {
+  "mech": 9600,
+  "confirm": 921600,
+  "total": 931200
+ },
+ "synthetic_mappo20c_substitute": true,
+ "charged": 0,
+ "a75_sha256": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+ "spec_diff_vs_stored_driver": {
+  "U0": [
+   "checkpoint.binding_path",
+   "job_id"
+  ],
+  "A75_BANK_A76": [
+   "checkpoint.a75_bank.path",
+   "checkpoint.binding_path",
+   "job_id"
+  ],
+  "IDENT_U0": [
+   "checkpoint.binding_path",
+   "checkpoint.binding_sha256",
+   "checkpoint.comparator_kind",
+   "checkpoint.label",
+   "job_id"
+  ],
+  "DUO_HOLD": [
+   "checkpoint.binding_path",
+   "job_id"
+  ]
+ },
+ "stored": {
+  "receipts": {
+   "U0": [
+    "4c6eb3d552a9ab1345096a9c6f12c20999fb4c108f4501b61596e439447835da"
+   ],
+   "A75_BANK_A76": [
+    "4da364136cec7ee18589f8bed95c3db7b23eaa6b1586c75a974ec056942cd3d5"
+   ],
+   "IDENT_U0": [
+    "4c6eb3d552a9ab1345096a9c6f12c20999fb4c108f4501b61596e439447835da"
+   ],
+   "DUO_HOLD": "b991b0bda40d0d3400627ca2da19945e7f81386effc962fec1ea1795ebe93ca1"
+  },
+  "n": {
+   "U0": 2,
+   "A75_BANK_A76": 2,
+   "IDENT_U0": 2,
+   "DUO_HOLD": 2
+  },
+  "reports_ok": {
+   "U0": true,
+   "A75_BANK_A76": true,
+   "IDENT_U0": true,
+   "DUO_HOLD": true
+  }
+ }
+}
+{
+ "stage": "c",
+ "setting": "a82c_D2800_p20",
+ "panel_sha256": "3c879f6ff47fa75ebbf5f5055f4ed35ad7e54be96a704dffa743287b86aa6485",
+ "n_worlds": 192,
+ "n_waves": 4,
+ "waves": [
+  [
+   "A82FC_A82_BANK",
+   192,
+   "A75_BANK",
+   "a82fc_bank_0000",
+   988200,
+   988391,
+   "d9042cc5"
+  ],
+  [
+   "A82FC_DUO_HOLD",
+   192,
+   "DUO_HOLD",
+   "a82fc_duo_hold_0000",
+   988200,
+   988391,
+   "d9042cc5"
+  ],
+  [
+   "A82FC_MAPPO20C",
+   192,
+   "U0",
+   "a82fc_mappo20c_0000",
+   988200,
+   988391,
+   "d9042cc5"
+  ],
+  [
+   "A82FC_U0",
+   192,
+   "U0",
+   "a82fc_u0_0000",
+   988200,
+   988391,
+   "d9042cc5"
+  ]
+ ],
+ "episodes": 768,
+ "sim_s": 921600,
+ "caps": {
+  "mech": 9600,
+  "confirm": 921600,
+  "total": 931200
+ },
+ "synthetic_mappo20c_substitute": true,
+ "charged": 0,
+ "a75_sha256": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+ "bank": {
+  "amendment": "82",
+  "families": [
+   "d2_6694c2ec4fb09905"
+  ],
+  "file_sha256": "f8b5237eacfe2fecc04ab0c3d7f08432b5eda5e1825805316a98b05c94f22d80",
+  "receipt_sha256": "0d832635959b72e7c8762407f1f827fb5665aa2b06f84e2c6c2e5d873fe46332",
+  "schema": "coopmwm.a82f.bank.v1",
+  "source": "/root/a76p20/root/a76_banks/A76_BANK_D2800_p20.json",
+  "what": "SYNTHDRY_PLACEHOLDER_A76"
+ }
+}
+{
+ "charged": 0,
+ "caps": {
+  "mech": 9600,
+  "confirm": 921600,
+  "total": 931200
+ },
+ "n_worlds": 192,
+ "mech": false,
+ "note": "/root/a82four/synth/root/BOUND_A77_MAPPO20C.json: missing (run bind --which MAPPO20C first)"
+}

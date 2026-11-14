@@ -6,3 +6,4 @@ docs/records/reorg_v3/architect/scripts/DELETE_AFTER_VERIFY.ps1:31 SEC-GENERIC-A
 tests/golden/data/*.npz PATH-BINARY-EXT  # reviewed: 9 golden fixtures (0.3-3 MB each) that the equivalence tests load; with c1/wm_s.pt the golden data is 19.2 MB in total
 tests/golden/data/c1/wm_s.pt PATH-BINARY-EXT  # reviewed: 5.4 MB golden C1 model checkpoint needed by the golden/equivalence tests
 archive/pre_circles/manifest.json SIZE-BLOCK  # reviewed: 53 MB (50.8 MiB), under GitHub's 100 MB hard limit; needed for historical path resolution (AGENTS.md archive manifest)
+tests/fixtures/v6merge_off_golden.pt PATH-BINARY-EXT  # reviewed 2026-11-14: 8 KB golden output tensor loaded by tests/unit/test_v6merge.py; not a trained model checkpoint

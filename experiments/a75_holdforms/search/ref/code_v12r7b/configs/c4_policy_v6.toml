@@ -1,0 +1,9 @@
+# C4 V6: retain longer-horizon imagination gradients: 0.98^60 ~= 0.30 vs 0.9^60 ~= 0.0018.
+extends = "c4_policy_v5.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V6"
+
+[trainer]
+imagination_grad_decay = 0.98
+credit_profile_every = 25

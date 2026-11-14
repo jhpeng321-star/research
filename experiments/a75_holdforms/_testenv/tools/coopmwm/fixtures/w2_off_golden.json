@@ -1,0 +1,70 @@
+{
+ "executable_fields": "50f29b2ea3debf969321281e8eefadc022ce635f4533c9fcf3b2913307944c54",
+ "executor": "36a29b85caf2f1e9a1e982897004db73b8716ef69565141bccab1b508f06a4e5",
+ "feasible_candidates": "3a09f8988e205544512e0f9201573e8253747c637aa4ab90ed89bc8bebe5e938",
+ "from_plan": {
+  "depth": 0.7000000000000003,
+  "family": "wall",
+  "hold": 25,
+  "members": [
+   "c1",
+   "c2",
+   "c3"
+  ],
+  "onset": 3
+ },
+ "layer_state": "a395d34af3b3b053b22dddbc62150e6db5c3ba41bfb4b19a0599231440fc7add",
+ "moves_candidates": "70330811136d4ab813c098ec17a775725029e464c611e2062a121eeffafc00b8",
+ "offsets": "61bf446be84b176059c67ca9a0e3a9e2dfe7dbbc7d195e82dd06fbcc9e1876ab",
+ "offsets_state": "31135a3b404e69818293605119315371060098d6608a79f8cf82fe37d26c80bf",
+ "samples": [
+  "fd504d729368b1633cd46d16a39045d731662c2b695d184a141ea833cc59e679",
+  "94a35beea2f229aef5de2068a6b73a261937ac888452f55d19a0b96cca222a8b",
+  "37b129a41cdb4c5d8a78db97a62d17f5551cfead01f0b0c0cd7551b48c53475c",
+  "d99c43037730092940e3eb6f309bc79ca44898b2b002ea09e3739114780c571c",
+  "0c539814ef940679c64dd9f6baa89f091df46561ffadd4015ce836d484f3f29d",
+  "d433afacfc301c807136a332cbe7b4c3611926487cace44934516b8f4ecc7657",
+  "2105a1a1a1afffc8bde402e340571c659b1b414fc38a2e42e10481eaa8bcf49e",
+  "4b77467b77e30e0c62cf6bc2c91afa51012f42329f22b555e208db073cfc0e8b"
+ ],
+ "trigger_keys": [
+  "base_policy.actor.0.bias",
+  "base_policy.actor.0.weight",
+  "base_policy.actor.2.bias",
+  "base_policy.actor.2.weight",
+  "base_policy.actor.4.bias",
+  "base_policy.actor.4.weight",
+  "base_policy.broadcast.0.bias",
+  "base_policy.broadcast.0.weight",
+  "base_policy.broadcast.2.bias",
+  "base_policy.broadcast.2.weight",
+  "base_policy.critic.0.bias",
+  "base_policy.critic.0.weight",
+  "base_policy.critic.2.bias",
+  "base_policy.critic.2.weight",
+  "base_policy.critic.4.bias",
+  "base_policy.critic.4.weight",
+  "base_policy.intent_bounds",
+  "base_policy.intent_head.bias",
+  "base_policy.intent_head.weight",
+  "base_policy.log_std",
+  "trigger_head.0.bias",
+  "trigger_head.0.weight",
+  "trigger_head.2.bias",
+  "trigger_head.2.weight",
+  "trigger_value.bias",
+  "trigger_value.weight"
+ ],
+ "trigger_state": "c641c4110e34b630f6629746c432c33609174902e3e343d88bb4b93e78ef808c",
+ "wall_dict": {
+  "depth": 0.7,
+  "family": "wall",
+  "hold": 25,
+  "members": [
+   "c1",
+   "c2",
+   "c3"
+  ],
+  "onset": 3
+ }
+}

@@ -8,9 +8,13 @@
 **2026-11-06, S-DIAG completed:** [Clean1 diagnosis](../runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md), [resume/evidence receipt](../runs/active/C4-V7FT-20261017/S_DIAG_RESUME_RECEIPT_20261106.json). All seven requested topics, u1–u9 history, matched physical outcomes and ranked levers; zero new simulation/charges. Final clean1 owner STOP supersedes the recovered u8 draft's continuation advice.
 <!-- /S-DIAG-closeout -->
 
+**2026-11-06, S-MINING in progress / access blocked:** [Mining report](../runs/active/C4-V7FT-20261017/MINING_REPORT.md), [registration](../runs/active/C4-V7FT-20261017/MINING_REGISTRATION.json), [transfer receipt](../runs/active/C4-V7FT-20261017/MINING_TRANSFER_RECEIPT.json). Zero physics/admitted moves; gpuA parity and required GPU WM ranking remain unrun.
+
 <!-- S-WMCHECK-closeout -->
 **2026-11-05, S-WMCHECK:** [WM error report](../runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md), [resume/verification receipt](../runs/active/C4-V7FT-20261017/S_WMCHECK_RESUME_RECEIPT_20261105.json). Existing selected training-plan pairs only; high-confidence probability evidence unavailable; zero new SUMO or charges.
 <!-- /S-WMCHECK-closeout -->
+
+**2026-10-30, S-W78SCORE:** [W7 verdict](paper_results/W7_VERDICT.md), [W8 verdict](paper_results/W8_VERDICT.md), [scoring/identity record](paper_results/W78_SCORING_RECORD.json): scoring-only close-out complete; retain WM2.
 
 > Added 2026-10-09 (docs-only). The append-only status log below is historical and
 > unchanged. Current direction: **WM-S** — see [ROUTE.md](ROUTE.md),

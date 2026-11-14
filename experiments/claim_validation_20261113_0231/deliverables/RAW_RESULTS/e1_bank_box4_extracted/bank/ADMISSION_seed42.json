@@ -1,0 +1,278 @@
+{
+ "admitted": [
+  "8e719c1edf97ba3d53c3c1770c15d6926bc0cc5b5676c96b2499de45e9c24694"
+ ],
+ "doc_sha256": "c30e4cae76da36f3e4202f365c031f48bcd5367f5a79bafc5dcf155f8da9e38d",
+ "results_sha256": "320406637f6c4560ab1fb82857c6b9e0ce8dcd4027998391084f6c80204ec2e7",
+ "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+ "run_id": "20261113_0231",
+ "schema": "claim_validation.e1.admission.v1",
+ "search_seed": 42,
+ "verdicts": {
+  "28a351f470dba9218ef91f0461c602c5d7b4f1c12244f6ffeb7b5386760177db": {
+   "PASS": false,
+   "activations_per_ep": 3.375,
+   "allowed": true,
+   "benefit": 0.625,
+   "ci95": [
+    -6483.813608077718,
+    526.4804454879205
+   ],
+   "family": "e1s42_06fd3cdfc508dab2",
+   "key": "06fd3cdfc508dab2",
+   "lb95_gain_veh_s": -526.4804454879205,
+   "mean": -2983.7137525225285,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "WM": 3
+   },
+   "size": 5,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 1.344237522836914
+  },
+  "3305f5585f33248c431fec2ec012d133b624b38baa62ff47b35a96fbd5b5e3ab": {
+   "PASS": false,
+   "activations_per_ep": 3.4583333333333335,
+   "allowed": true,
+   "benefit": 0.4166666666666667,
+   "ci95": [
+    -1750.1890888281007,
+    4005.7989317006745
+   ],
+   "family": "e1s42_7f1088f51f9aee14",
+   "key": "7f1088f51f9aee14",
+   "lb95_gain_veh_s": -4005.7989317006745,
+   "mean": 1058.1357018087376,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "WM": 1
+   },
+   "size": 4,
+   "worst_group": "origin:L0",
+   "worst_group_inc": 2.1629081144255684
+  },
+  "4b27f6d4277b7cd9c1b0715c3efaa4d06227f3184566fbfc3091f29dfeab89d0": {
+   "PASS": false,
+   "activations_per_ep": 6.041666666666667,
+   "allowed": true,
+   "benefit": 0.5416666666666666,
+   "ci95": [
+    -3314.8823922641536,
+    1765.205998224931
+   ],
+   "family": "e1s42_e04b369239ee7bbe",
+   "key": "e04b369239ee7bbe",
+   "lb95_gain_veh_s": -1765.205998224931,
+   "mean": -719.7124837168207,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "RANDOM": 6
+   },
+   "size": 3,
+   "worst_group": "origin:L2",
+   "worst_group_inc": -0.39332044494452073
+  },
+  "760d787ffa5ceb6dba2d87ddb85609c29db02d7f6bc040cb8e2c8402745b1f93": {
+   "PASS": false,
+   "activations_per_ep": 5.0,
+   "allowed": true,
+   "benefit": 0.5416666666666666,
+   "ci95": [
+    -6309.174214597901,
+    479.9914189895371
+   ],
+   "family": "e1s42_e8cb08630c30f696",
+   "key": "e8cb08630c30f696",
+   "lb95_gain_veh_s": -479.9914189895371,
+   "mean": -2839.0808669131916,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "RANDOM": 4
+   },
+   "size": 3,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 1.7094581435690845
+  },
+  "847235a068df616a34638716d350f7f22b491aa7e7a933adc0178a1ca3185571": {
+   "PASS": false,
+   "activations_per_ep": 3.8333333333333335,
+   "allowed": true,
+   "benefit": 0.5416666666666666,
+   "ci95": [
+    -9211.979276869668,
+    191.11459850400675
+   ],
+   "family": "e1s42_9f10e460121f6f14",
+   "key": "9f10e460121f6f14",
+   "lb95_gain_veh_s": -191.11459850400675,
+   "mean": -4351.386818987875,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "WM": 6
+   },
+   "size": 5,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 2.4895163331886563
+  },
+  "8b8d53d0c20743c7adf1f45da3f1d0ddb17f400f1a19c64af36eceed16a0b292": {
+   "PASS": false,
+   "activations_per_ep": 3.5416666666666665,
+   "allowed": true,
+   "benefit": 0.5416666666666666,
+   "ci95": [
+    -7700.959618024278,
+    1294.816367557252
+   ],
+   "family": "e1s42_3ec814c3ab0e4d6a",
+   "key": "3ec814c3ab0e4d6a",
+   "lb95_gain_veh_s": -1294.816367557252,
+   "mean": -3167.5400300784386,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "WM": 4
+   },
+   "size": 5,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 2.7459496427323393
+  },
+  "8e719c1edf97ba3d53c3c1770c15d6926bc0cc5b5676c96b2499de45e9c24694": {
+   "PASS": true,
+   "activations_per_ep": 5.625,
+   "allowed": true,
+   "benefit": 0.6666666666666666,
+   "ci95": [
+    -11566.594059727133,
+    -2062.374165562482
+   ],
+   "family": "e1s42_90024e0c270fd77b",
+   "key": "90024e0c270fd77b",
+   "lb95_gain_veh_s": 2062.374165562482,
+   "mean": -6629.7092370938735,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "RANDOM": 5
+   },
+   "size": 5,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 3.7237201719253448
+  },
+  "93f30b53e8615882f39440c5dd764805298bebd4f68bd50704683d84e7b53cc4": {
+   "PASS": false,
+   "activations_per_ep": 4.291666666666667,
+   "allowed": true,
+   "benefit": 0.5833333333333334,
+   "ci95": [
+    -7913.43377653326,
+    938.5303017249339
+   ],
+   "family": "e1s42_9d94e0fe46cc915a",
+   "key": "9d94e0fe46cc915a",
+   "lb95_gain_veh_s": -938.5303017249339,
+   "mean": -3339.0660041457754,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "RANDOM": 3
+   },
+   "size": 4,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 1.9011885778363016
+  },
+  "b1aee89c85b1404bd204181bc9f8be7be97aa0fe84b55a36d57ae74c7d2da08f": {
+   "PASS": false,
+   "activations_per_ep": 5.0,
+   "allowed": true,
+   "benefit": 0.5,
+   "ci95": [
+    -2959.5827313466293,
+    2793.1699334984437
+   ],
+   "family": "e1s42_5b04943f69da02b9",
+   "key": "5b04943f69da02b9",
+   "lb95_gain_veh_s": -2793.1699334984437,
+   "mean": -102.3166754728092,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "RANDOM": 1
+   },
+   "size": 5,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 0.6235405095164821
+  },
+  "c435ca728b307a6e0298485a2ef8b2c373e17fd1447baf04cad7a1daaf74994c": {
+   "PASS": false,
+   "activations_per_ep": 3.25,
+   "allowed": true,
+   "benefit": 0.5416666666666666,
+   "ci95": [
+    -2595.62076935967,
+    3742.9968791058923
+   ],
+   "family": "e1s42_29c9cda49326e669",
+   "key": "29c9cda49326e669",
+   "lb95_gain_veh_s": -3742.9968791058923,
+   "mean": 422.00465728660606,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "WM": 2
+   },
+   "size": 6,
+   "worst_group": "origin:L0",
+   "worst_group_inc": 0.7491777607253353
+  },
+  "ce3f6088cb59c44d48826e6dee0198efa0581d81f5be90dfaed88b08d688a5bf": {
+   "PASS": false,
+   "activations_per_ep": 3.5416666666666665,
+   "allowed": true,
+   "benefit": 0.7083333333333334,
+   "ci95": [
+    -5446.89482712253,
+    485.28478370931106
+   ],
+   "family": "e1s42_de6eaaddb313b55d",
+   "key": "de6eaaddb313b55d",
+   "lb95_gain_veh_s": -485.28478370931106,
+   "mean": -2583.5908690499737,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "RANDOM": 2
+   },
+   "size": 4,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 1.7181095369991797
+  },
+  "fa382eeb587fa50651b460c1fa41780f4df500ffb4c3f2b0ac352e16e0fa5e6f": {
+   "PASS": false,
+   "activations_per_ep": 3.7083333333333335,
+   "allowed": true,
+   "benefit": 0.5,
+   "ci95": [
+    -4537.677835896952,
+    2810.482320881323
+   ],
+   "family": "e1s42_deeee89b7f96780a",
+   "key": "deeee89b7f96780a",
+   "lb95_gain_veh_s": -2810.482320881323,
+   "mean": -885.759819045813,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "WM": 5
+   },
+   "size": 5,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 1.8833853095248765
+  }
+ },
+ "verify_plan_sha256": "dd12dbdcd467975769de18c95538803049116791cce61b51282866a30779d118"
+}

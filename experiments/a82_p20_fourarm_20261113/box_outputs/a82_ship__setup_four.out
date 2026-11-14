@@ -1,0 +1,30 @@
+pin ok 79fc9efd /root/a76p20/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 72046db6 /root/a76p20/src/pytools/tools/coopmwm/a75_holdforms.py
+tree copy ok: 1491 files identical to /root/a76p20/src
+pin ok 48c5c448 /root/a82four/src/ops/a80_s2b.py
+pin ok 308894c6 /root/a82four/src/ops/a77_mappo20c.py
+patched /root/a82four/patch.tmp/runner.py
+pin ok 2de0f1c0 /root/a82four/patch.tmp/runner.py
+pin ok 79fc9efd /root/a76p20/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 2de0f1c0 /root/a82four/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 007cef74 /root/a82four/refs/a32/WAVE_DUO_HOLD__0000-0047.json
+code identity ok: a75 d1af7e0f synthetic candidates 12 mode four
+tree diff vs the A76 tree (expected: runner [four], a80_s2b, a77_mappo20c, the A82 driver/test files, ops/a82):
+Only in /root/a82four/src/ops: a77_mappo20c.py
+Only in /root/a82four/src/ops: a80_s2b.py
+Only in /root/a82four/src/ops: a82
+Only in /root/a82four/src/ops: a82_fourarm.py
+Only in /root/a82four/src/ops: a82_s3b20.py
+Only in /root/a82four/src/ops: test_a82_fourarm.py
+Only in /root/a82four/src/ops: test_a82_s3b20.py
+Only in /root/a82four/src/pytools/ops: a77_mappo20c.py
+Only in /root/a82four/src/pytools/ops: a80_s2b.py
+Only in /root/a82four/src/pytools/ops: a82
+Only in /root/a82four/src/pytools/ops: a82_fourarm.py
+Only in /root/a82four/src/pytools/ops: a82_s3b20.py
+Only in /root/a82four/src/pytools/ops: test_a82_fourarm.py
+Only in /root/a82four/src/pytools/ops: test_a82_s3b20.py
+Files /root/a76p20/src/pytools/tools/coopmwm/nm_eval_runner.py and /root/a82four/src/pytools/tools/coopmwm/nm_eval_runner.py differ
+54M	/root/a82four
+  31G
+SETUP_OK

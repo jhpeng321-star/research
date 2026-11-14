@@ -1,0 +1,16 @@
+# MAIN14: full owner-approved gated curriculum on the 24 GB gpuR.
+# Batch 1, two driver futures, checkpointed imagination; CUDA allocator capped by run env.
+extends = "c4_policy14_coop.toml"
+
+[trainer]
+batch_size = 1
+checkpoint_imagination = true
+
+[data]
+# Keep the frozen 16-start VAL gate valid while optimisation seeds advance each cycle.
+split_seed = 965140
+
+[horizon]
+horizons_s = [10, 30, 60]
+curriculum_updates = [0, 150, 300]
+entry_pad_max = [32, 83, 149]

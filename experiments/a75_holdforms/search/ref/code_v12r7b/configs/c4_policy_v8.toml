@@ -1,0 +1,35 @@
+# C4 POLICY V8 (2026-10-17; docs/C4_MORNING_REPORT_20261017.md, runs/active/C4-V7FT-20261017/REGISTRATION.md).
+# = c4_policy_v7.toml (native-relative TTC budget, lagrange_scaled, alpha_min 1e-3, lane_control native,
+# merge_discharge 0.8, policy from scratch) with the V8POL fixes:
+#   * ttc_pairs = "cav_follower": TTC cost only over pairs whose FOLLOWER (closing vehicle) is a CAV.  In v7 the
+#     "cav" pairs also counted human followers closing on a slow CAV leader, which braking cannot fix; the
+#     native-relative excess stayed ~2 and lambda rose without bound (0.6 -> ~8 at u600).
+#   * lagrange_max = 2.0.  v7 logs (runs/active/C4-V7FT-20261017/v7_on_{v7,v5m}_updates.jsonl), binned by lambda:
+#       lambda      v7-WM D_all / returns     v5m-WM D_all / returns     lambda*ttc_penalty/return_scale
+#       [0, 1)      -5.3..-4.6 / -11.5..-11.8 -4.3..-3.7 / -11.7..-12.3  0.006-0.05
+#       [1, 2)      -4.29 / -12.2             -3.45 / -13.1              0.03-0.10
+#       [2, 3)      -4.69 / -13.4             -                          0.15
+#       [3, 6)      -4.2..-4.5 / -14.5..-16.4 -                          0.20-0.22
+#     The scaled actor objective is ~|returns|/scale ~ 0.7 and its controllable part ~|D_all|/scale ~ 0.27; above
+#     lambda ~2-3 the safety term (0.15-0.22) is as large as that whole controllable part and returns fall steadily.
+#     The cap 2.0 bounds lambda*penalty/scale at ~2 x 1.0 / 16.4 ~ 0.12 (about half of the controllable objective;
+#     the v7 band [1, 2) had the best D_all on both WMs).  The cav_follower cost is a subset of the v7 "cav" cost,
+#     so the bound is conservative.
+#   * free_speed = 0.8 (reward incentive, NOT a controller; reward._free_speed_shortfall): per physics step
+#     reward -= 0.8 * dt * mean over CAVs of [free] * relu(1 - v/31.29), free = no same-lane leader within 100 m
+#     or time gap > 3 s (time gap at max(v, 10 m/s)).  Sizing vs the delay term: v7 logs give delay ~42 veh-s
+#     summed per control step over ~100 vehicles -> w_delay * delay / count ~ 0.42 per control step.  A free CAV
+#     holding 15 m/s (the observed post-merge speed; native ~27) has shortfall 1 - 15/31.29 = 0.52, so with all
+#     CAVs free the term is 0.8 x 2 steps x 0.5 s x 0.52 = 0.42 per control step (= the delay term); at native
+#     27 m/s it is 0.8 x 0.14 = 0.11, and 0 at the limit.  Only the free CAVs' own speeds get gradient.
+extends = "c4_policy_v7.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V8"
+
+[trainer]
+lagrange_max = 2.0
+
+[reward]
+ttc_pairs = "cav_follower"
+free_speed = 0.8

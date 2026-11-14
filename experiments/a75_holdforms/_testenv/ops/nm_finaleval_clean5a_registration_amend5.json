@@ -1,0 +1,114 @@
+{
+ "a_arm": {
+  "check": "gate: launch_production.checkpoint_weights(A, update) == checkpoint_weights(A, 0) tensor-for-tensor, else BLOCKED (never re-simulated, never silently assumed)",
+  "evaluated_as": "A = U0: the frozen control arm (no PPO update) carries the u0 weights at every update - verified zero-physics at the gate (A policy weights at the update == the common u0); not re-simulated",
+  "rule": "clean5a (MAIN 2026-11-06): \"A = base alone\" - A is the frozen bound base (BASE = the bound S-MAPPOWZ snapshot or u0) evaluated as an arm every update on the same worlds; no PPO update; only B and R train (their cooperation layer on the same frozen base)."
+ },
+ "accounting": {
+  "ledger": "<final_root>/CHARGES.jsonl only (phases v2v_final_prerun <= 432,000 and v2v_final); total <= 1340000; the clean run root and its ledger are never written",
+  "plant_config": "the clean run CONFIG unchanged (production check_pins passes); validated before any file of a new root is written"
+ },
+ "amendment": 5,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend4.json",
+  "registration_sha256": "59bf91bf5a0772a9811bcd04d8477a8bc7517dba0a2a9f90c061fe5bafc14d8a"
+ },
+ "authority": [
+  "MAIN registration 2026-11-06 23:10 (pre-launch, pre-results; owner: answers before noon): claim 3a/3c PRIMARY = clean5a u12 (B, R bound by sha at u12; A = frozen U0) on panel v2 + 3c with the sealed NATIVE/U0/RULE pre-run arms; u24 SECONDARY on the same panels; both reported, no selection",
+  "MAIN 2026-11-06 ~23:2x: the pre-run and the final eval waves account in the eval root (own ledger); SRC = the clean5a deploy source with the N6 overlay",
+  "MAIN 2026-11-06 ~23:3x (pre-results): SECONDARY report-only outcomes for every arm vs every comparator on 3a/3c (fairness, safety, smoothness, throughput), paired CIs and per-seed tables; primary unchanged; add per-vehicle logging with no physics change; restart the pre-run in a fresh root (old one VOID)",
+  "MAIN conditions: the ground-truth log is EVALUATION-ONLY (never feeds a policy/observation), records only kinematics, lane, route origin and the CAV/HDV fleet label (no driver parameters, no vType truth); the same logging applies to the u12 and u24 B/R waves"
+ ],
+ "mirror": "the evaluation host may differ from the training host: --mirror-config-sha256 <CONFIG.json file sha> reads a read-only mirror of the clean run root at the same absolute path; health = no FAULT/PAUSE_SAFETY/STOP; A/B/R files bound by sha (bind-arms) and monitors sealed to the CONFIG digest",
+ "prerun": {
+  "arms": [
+   "NATIVE",
+   "U0",
+   "RULE"
+  ],
+  "cap_sim_s": 432000,
+  "final_root": "/home/ubuntu/nm_finaleval_clean5a (fresh; the first root renamed .VOID, zero results opened)",
+  "void_spend": "the VOID root charged 2 NATIVE chunks (<= 76,800 sim-s) in its own ledger; counted as spent against v2v_final by MAIN accounting, not by this launcher (new root, new ledger)"
+ },
+ "quote": {
+  "allocation": 1340000,
+  "margin_over_total": 0.0791,
+  "need": {
+   "decisions": 0,
+   "episodes_MAPPO_LANE": 115200,
+   "episodes_MAPPO_SPEED": 115200,
+   "parity_f11": 3360,
+   "prerun_NATIVE": 144000,
+   "prerun_RULE": 144000,
+   "prerun_U0": 144000,
+   "u012_B": 115200,
+   "u012_C3_B": 28800,
+   "u012_C3_R": 28800,
+   "u012_R": 115200,
+   "u024_B": 115200,
+   "u024_C3_B": 28800,
+   "u024_C3_R": 28800,
+   "u024_R": 115200
+  },
+  "slack_sim_s": 98240,
+  "total_ceiling_sim_s": 1241760
+ },
+ "registered_utc": "2026-11-06T15:42:25.748615+00:00",
+ "registration_sha256": "b99a85b66b8fb659d18511020b33f8f9d1bbf26319eda3cde22328158fa05c6e",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "secondaries": {
+  "comparisons": "every arm vs every comparator present in the seal (BASE, NATIVE, U0, RULE, MAPPO_SPEED, MAPPO_LANE) on 3a and 3c, at u12 and u24",
+  "computed": "zero physics from each sealed episode log (sha re-verified), when that claim/update seal opens",
+  "fairness": {
+   "metrics": [
+    "Gini of per-vehicle delay",
+    "Jain index of per-vehicle delay",
+    "mean delay by route origin edge",
+    "HDV/CAV mean-delay ratio",
+    "worst-off 10%: mean delay of the top decile"
+   ],
+   "per_vehicle_delay_s": "sum_t max(0, 1 - v/SPEED_LIMIT_MPS) x 1 s (env team-delay speed-deficit term at 1 s sampling) + SUMO depart delay if first seen at t > 300"
+  },
+  "safety": {
+   "metrics": [
+    "TTC < 3 s exposure (vehicle-seconds; same-lane consecutive pairs by s; gap = ds - 5 m nominal; traffic_shepherd.metrics.closing_ttc)",
+    "minimum TTC",
+    "hard-braking vehicle-seconds (a < -3 m/s2)",
+    "emergency-deceleration vehicle-seconds (a < -4.5 m/s2)",
+    "collisions and teleports (plant counters, unchanged)"
+   ]
+  },
+  "smoothness": {
+   "metrics": [
+    "acceleration variance (pooled vehicle-seconds) and mean per-vehicle variance",
+    "stop-and-go count: per vehicle, transitions from v >= 5 m/s to v < 1 m/s, summed"
+   ]
+  },
+  "statistics": "paired whole-world percentile bootstrap (10,000, seed 20261104, 95%) + per-seed tables (benefit/harm/tie fractions, quartiles)",
+  "status": "SECONDARY, report-only; the primary outcome and every registered contrast are unchanged",
+  "throughput": {
+   "metrics": [
+    "vehicles crossing the drop (s from < 75.44 to >= 75.44 m, N1 descriptor drop) within the window"
+   ]
+  },
+  "window": "t in [300, 1200), 1 s samples; per world and arm, paired by world"
+ },
+ "status": "pre-results: no clean5a result exists; the first pre-run root (1 NATIVE chunk published, 1 in flight at STOP) is VOID with zero results opened (renamed *.VOID_*; its episodes lack the vehicle log)",
+ "updates": {
+  "bind": "bind-arms --update 12 --b-sha --r-sha (A optional) before the u12 gate; same for 24",
+  "evaluated": [
+   12,
+   24
+  ],
+  "primary": 12,
+  "rule": "both reported, no selection; per-update waves B_u012/R_u012 (and C3_), tables *_u012 / *_u024; U0/RULE/NATIVE (pre-run) and MAPPO comparator waves are shared by both updates",
+  "secondary": 24
+ },
+ "vehicle_log": {
+  "content": "per control second t in [300, 1200) (pre-step, like the observable trace): for every present vehicle s_m, v_mps, a_mps2 (frame kinematics), lane (lane_carry on junctions); per vehicle once: id, route origin edge (TraCI getRoute[0]), SUMO depart delay, CAV/HDV fleet label",
+  "excluded": "driver parameters, vType truth (no lengths: analyses use the nominal 5 m)",
+  "file": "vehicles.jsonl.gz",
+  "scope": "every episode of every arm (pre-run NATIVE/U0/RULE, B/R u12 and u24, MAPPO comparators); not F11 parity traces",
+  "use": "EVALUATION-ONLY (read-only; never fed to any policy, observation or controller); record carries file sha256, ticks (= 900) and vehicle count; check_episode refuses a missing log"
+ }
+}

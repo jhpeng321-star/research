@@ -1,0 +1,6 @@
+{"_note": "Identity re-check after the amendment-72 table edits: U0 and the original bank F on the first 4 worlds of the already-published A42 confirmation panel (998600-998603) must reproduce the stored A42 records exactly. 8 episodes = 9,600 sim-s.",
+ "waves": [
+  {"block": "ident", "kind": "U0", "wave": "IDENT_U0", "world_indices": [0, 1, 2, 3]},
+  {"block": "ident", "kind": "BANK", "wave": "IDENT_F", "arm": "F", "bank": "A42_BIG_BANK_D2800_p60.json",
+   "bank_sha256": "7e7dc76b8a0cd5c158205a0e3f6ef96d73a36a483c46d03ac422428dc8c573ff", "world_indices": [0, 1, 2, 3]}
+ ]}

@@ -1,5 +1,13 @@
 # Current route — WM-S readiness (2026-10-09)
 
+<!-- N6-CONFIRM-A28-A29-closeout -->
+**2026-11-09, N6-CONFIRM-A30:** MAPPO_CT ablation ([tables](../runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A30.json)): MAPPO_CT-U0 PRIMARY +604 [-1071,+2274] veh-s FAIL; LEARNED_TRIGGER-MAPPO_CT -2434 [-4034,-938] (-5.7%), CVaR90 -41.6; fairness passes. Disclosed: MAPPO_CT trained on 900 s episodes, evaluated at 1200 s.
+**2026-11-09, N6-CONFIRM-A28 / N6-CONFIRM-A29:** confirmation panel p20c (192 worlds) complete ([a28 tables](../runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A28.json), [a29 tables](../runs/active/C4-V7FT-20261017/nm_finaleval_p20c_confirm/CONFIRM_TABLES_A29.json)); diff = treatment - reference, negative = less delay. a28 (u12): ORACLE_WM-U0 PRIMARY -2290 [-3924,-696] veh-s MEETS; LEARNED_TRIGGER-U0 -1829 [-3411,-300] meets; C5D-U0 -405 [-2006,+1198] does not. a29 (disk-safety stop: C5D/C5DR u17, F8B u19): C5D-U0 PRIMARY -941 [-2591,+683] FAIL; CVaR90 lower vs U0 and vs C5DR; fairness passes everywhere. Analysis-code fix b68c2c60 (per-run k) disclosed in the ledger.
+<!-- /N6-CONFIRM-A28-A29-closeout -->
+<!-- N6-BANK-A27-closeout -->
+**2026-11-09, N6-BANK-A27:** amendment-27 bank eval complete ([analysis](../runs/active/C4-V7FT-20261017/nm_finaleval_p20x_r2_bank/BANK_ANALYSIS.txt), [sealed tables](../runs/active/C4-V7FT-20261017/nm_finaleval_p20x_r2_bank/BANK_TABLES.json)). ORACLE meets primary vs U0; ORACLE_WM and LEARNED_TRIGGER do not; all fail L2 fairness vs MAPPO_LANE; breakdown split not computable (0 worlds met the registered rule). Bank budget exhausted (345,600 = cap); any further bank physics needs a new registration.
+<!-- /N6-BANK-A27-closeout -->
+
 <!-- S-GROUPDIAG-closeout -->
 **2026-11-06, S-GROUPDIAG:** [Clean2 mechanism diagnosis](../runs/active/C4-V7FT-20261017/CLEAN2_GROUP_COOP_RESEARCH.md) prioritizes certified executable labels, earlier role-aware pair opportunities, complementary macros and sparse measured marginal credit. B's total benefit is essentially best-solo benefit, not group synergy. Preserve the registered u24 criterion and B/R symmetry; changed actions/rewards require a labelled successor. Existing mining/PLANFIX ownership must be consulted before follow-up.
 <!-- /S-GROUPDIAG-closeout -->
@@ -8,9 +16,13 @@
 **2026-11-06, S-DIAG:** [Clean1 evidence through final A9/B9/R9](../runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md) prioritizes production-consistent move actuation/credit, feasible joint opportunities and broader usable practice over blanket KL/imitation increases. Clean1's durable owner STOP remains authoritative. Consult existing clean2/plan-fix receipts before overlapping follow-up work; this zero-simulation analysis authorizes no dispatch.
 <!-- /S-DIAG-closeout -->
 
+**2026-11-06, S-MINING status:** owner-approved executable two-CAV merge/lane-change mining is [blocked before physics by gpuA SSH access](../runs/active/C4-V7FT-20261017/MINING_REPORT.md). cpuV metadata-only root and empty ledger staged; mining500000 allowance inside6500000 entirely unspent. No verified moves or scientific conclusion; restore gpuA for required environment/parity and GPU WM ranking.
+
 <!-- S-WMCHECK-closeout -->
 **2026-11-05, S-WMCHECK:** [WM error audit](../runs/active/C4-V7FT-20261017/WM_ERROR_CHECK_20261105.md) measures disagreement on 542 recovered selected training pairs. Positive predictions win 40.7%; logged gain ranking is weak and error signs depend on seed. Raw/calibrated >=80% reliability remains unresolved because genuine paired probabilities are absent. Mixed horizons prevent an isolated matched-horizon WM-error claim. Zero new SUMO or charges; no calibration artifact fitted.
 <!-- /S-WMCHECK-closeout -->
+
+**Scoring close-out, 2026-10-30 (S-W78SCORE):** [W7](paper_results/W7_VERDICT.md) and [W8](paper_results/W8_VERDICT.md) best/final tails and PANEL120 best scores are complete, with zero new training/SUMO. All four candidates are does_not_help/ACCEPT, H_C=0/H_G=300; both best checkpoints retain WM2's tensors. Retain WM2; long-horizon improvement remains unresolved. [Record](paper_results/W78_SCORING_RECORD.json).
 
 > Added 2026-10-09 (docs-only). The append-only route log below is historical and
 > unchanged. WM-S plan: [WM_STATE_PLAN.md](WM_STATE_PLAN.md); contributions and weekly
@@ -1169,4 +1181,3 @@ WM-39 complete (2026-09-25, zero simulation): the per-lane/per-cell mix layer (t
 
 <!-- WM38-fs-retirement -->
 WM-38 complete (2026-09-25, zero simulation): FollowerStopper retired 2026-09-25 by owner decision and removed from the active code (analytical_candidate/analytical_mechanics/fs_close_mechanics, the follower-stopper branches in controller_factory/workflow/mechanics/__main__, and the FS test files); per-CAV actions are now native, damping, PI external-U (wall-v2 stays a gated group action). CV-03..CV-06 records remain historical evidence. Hashed backup: D:/research-dense-backups/fs_removal_20260925/. Full active suite after removal: 601 passed / 1 failed (pre-existing test_evidence_regeneration_v1 failure) / 157 skipped; ruff clean.
-

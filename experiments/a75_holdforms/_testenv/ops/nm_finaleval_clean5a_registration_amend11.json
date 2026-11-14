@@ -1,0 +1,52 @@
+{
+ "amendment": 11,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend10.json",
+  "registration_sha256": "e0ab843706bc7686c1c5cb306e8f9265524baa8b9055c703fb8eed5e3bd9b602"
+ },
+ "authority": [
+  "owner fairness decision, registered pre-results (REGISTRATION 2026-11-07 04:0x): (1) RULE_FAIR arm = U0 + wall_g_solo2 always on (one lane-2 CAV holding 22 m/s for 120 s, dmax 1.0; the exact MULTICRIT rule code, digest-pinned) on 3a (96) and 3c (24), pre-run sealed like RULE, cap inside 1,600,000; (2) claim-3a success becomes co-primary: B total held-out delay lower than A AND every group (origin lane 0/1/2; HDV/CAV) has a mean per-vehicle delay increase <= 10 s vs A; (3) PRIMARY target = clean5b-F at u12 (the r3 run is being stopped)"
+ ],
+ "cap_outlook": {
+  "allocation": 1600000,
+  "items": {
+   "checks": 1800,
+   "mappo_lane": 115200,
+   "parity": 3360,
+   "prerun_charged": 510600,
+   "rule_fair_prerun": 144000,
+   "u12_B_R": 288000,
+   "u24_B_R": 288000,
+   "void_roots": 115200
+  },
+  "margin": 0.0913,
+  "note": "MAPPO_SPEED declared unavailable (not counted)",
+  "total": 1466160
+ },
+ "co_primary": {
+  "groups": "MAIN 04:2x convention: the group of a vehicle = its origin SUMO lane (0/1/2, at first observation) and class (HDV/CAV) in the REFERENCE arm U0 on the same world, paired by vehicle id; per world the mean per-vehicle delay of each group for B and for A (ground-truth vehicle logs); B - A averaged over worlds <= 10.0 s for EVERY group (point estimate; 95% CI reported); vehicles absent from the U0 log reported separately; own-arm labels = sensitivity only",
+  "meets": "total AND groups; A = the frozen U0 alias",
+  "replaces": "claim-3a primary B-BASE rule",
+  "total": "paired whole-world bootstrap of J (team delay): B - A, CI95 upper bound < 0"
+ },
+ "registered_utc": "2026-11-06T20:27:21.994695+00:00",
+ "registration_sha256": "6e0a8335498cda17a282c18c20aab546d0a3e053fc8243c58dd6baf103f41d34",
+ "rule_fair": {
+  "digest": "nm_eval_runner.multicrit_digest: source of sumo_lane, pick_wall, solo_lanes, behind_count, RuleHook, imitreplay.Recorder + X_B, S_OFF, ZONE_S, WALL_SPREAD, RELEASE_S, WALL_H, WALL_G, WALL_M, VARIANT_PARAMS, STRATEGIES, GATES",
+  "label": "RULE_FAIR: U0 + the S-MULTICRIT wall_g_solo2 rule (one CAV holds in SUMO lane 2 at 22 m/s for 120 s, dmax 1.0, cooldown = hold), always on",
+  "module": "tools.coopmwm.regimeu0_multicrit = byte copy of c4/multicrit 3fe79c61 tools/coopmwm/regimeu0.py (blob 4ff09522); imitreplay.py identical (d5042c33)",
+  "panels": [
+   "3a panel v2 (96)",
+   "3c D2400_p60 (24)"
+  ],
+  "prerun": "sealed like RULE (canary first); sub-cap 530,000 -> 660,000 needed (510,600 + 144,000 = 654,600)",
+  "rule_sha256": "a5fdf1c3bf3a9d0dc82a6c296bf09ea6ad4bfa51b288e9c378b4c1ebc9e10376",
+  "strategy": "wall_g_solo2"
+ },
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: pre-run NATIVE/U0/RULE sealed and unopened; no clean5 result exists",
+ "target": {
+  "plant_identity": "amendment 10 covered deploy b58daad8; if the clean5b-F deploy differs in plant files, the zero-SUMO identity check must be repeated before its waves",
+  "primary": "clean5b-F u12 B and R (bound by sha); r3 stopped"
+ }
+}

@@ -1,0 +1,55 @@
+# V9ENTRY pre-check (2026-10-18; PREPARED, NOT LAUNCHED - the coordinator launches GPU runs).
+# = c4_wm_v8ft_short4.toml (pre-check 4 recipe) with the WM's training entry process carrying the SUMO entrance
+# (source) queue (runs/active/C4-V7FT-20261017/entry_fix/ENTRY_FIX.md):
+#   * data.entry_queue_state = true: every training window's entry process starts from the recorded SUMO backlog at
+#     t0 and draws arrivals at the recorded request (demand) rate (not the insertion counter = service rate); a lane's
+#     same-step entrant gets no end-of-step credit.  Needs sources converted by this branch's converter (queue
+#     arrays from each episode's scenario/requests.rou.xml); windows without them raise.
+#   * data.entry_insert_rule = "sumo_like_v2" (was "sumo_like"): REQUIRED companion.  On a queued entrance
+#     "sumo_like" refuses ~100 % of SUMO's actual insertions (ENTRY_DIAG.md section 2), so a backlog would never
+#     drain; the policy imagination already uses "sumo_like_v2".
+# Data: the four sources must be RE-CONVERTED (python -m wms.data.c4_episodes --episodes <collected episode dirs>
+# --out <new dir>, same --val-frac/--split-seed as the originals) from episode directories that still hold
+# scenario/requests.rou.xml, and registered under the *_q names below (WMS_DATA_V5_NATIVE_Q, WMS_DATA_GENRAND_PLAIN_Q,
+# WMS_DATA_V6_POLICY_Q, WMS_DATA_GENRAND_BRANCH_Q).  Check each manifest entry carries "queue_arrays" (branch
+# episodes: "queue_unknown" counts requests older than the branch start that never appear -> backlog lower bound).
+# Launch like short4: --set model.init_from=<abs path of the v5m checkpoint (wm_s_best_ap.pt)>.
+schema_version = 2
+name = "WM-S-C4-V9ENTRY-SHORT"
+extends = "c4_wm_v8ft_short4.toml"
+
+[data]
+entry_queue_state = true
+entry_insert_rule = "sumo_like_v2"
+
+[[data.c4_sources]]
+name = "native_v5"
+path = "v5_native_q"        # WMS_DATA_V5_NATIVE_Q (re-converted v5_native with queue arrays)
+mix_ratio = 0.40
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain_q"    # WMS_DATA_GENRAND_PLAIN_Q
+mix_ratio = 0.20
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "v6_policy"
+path = "v6_policy_q"        # WMS_DATA_V6_POLICY_Q
+mix_ratio = 0.35
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_branch"
+path = "genrand_branch_q"   # WMS_DATA_GENRAND_BRANCH_Q (v5 60 s branches)
+mix_ratio = 0.05
+window_stride_s = 10.0
+use_val = true
+paired = true
+
+[runtime]
+out_dir = "runs/active/c4_wm_v9entry_short"

@@ -1,0 +1,61 @@
+pin ok 982ec0cf /root/a89/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok c755a551 /root/a89/src/ops/a81_bigconfirm.py
+pin ok 48c5c448 /root/a89/src/ops/a80_s2b.py
+pin ok de9a30a9 /root/a89/src/ops/a89/A89_ARMS_D2800_p60.json
+pin ok c325ec1d /root/a75d2c/root/a75d2_banks/A75D2_BANK_D2800_p60.json
+pin ok de9a30a9 /root/a91/src/ops/a91/A89_ARMS_D2800_p60.json
+patched /root/a91/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 982ec0cf /root/a89/src/pytools/tools/coopmwm/nm_eval_runner.py
+runner A89 982ec0cf (unchanged) -> A91 91e40a948c874ad057d64c751cd585362c816811694dc8a578f76032cc613700
+pin ok 2abed317 /root/a66/inputs/policy_00084.pt
+{
+ "out": "/root/a91/src/ops/a91/A91_TURNS_D2800_p60.json",
+ "sha256": "f10e7689d4fd32d6f204324fc02c8d48669d7cf89fc08327b84dfc8c36b2aff2",
+ "proof": {
+  "schema": "coopmwm.a75_holdforms.v1.bank",
+  "a89l2_d86b1d6ac653e8ad": {
+   "template_equal_a89": true,
+   "row_equal_a89": true
+  },
+  "mut_1fca373046a3c66e": {
+   "template_equal_a89": true,
+   "row_equal_a89": true
+  },
+  "executor_priority_order": [
+   {
+    "family": "a89l2_d86b1d6ac653e8ad",
+    "lb95": 2917.048072693633,
+    "key": "0bbb70f7956dae14",
+    "extended": false,
+    "core": "LcStrategyCore",
+    "n_roles": 1
+   },
+   {
+    "family": "mut_1fca373046a3c66e",
+    "lb95": 0.0,
+    "key": "1fca373046a3c66e",
+    "extended": true,
+    "core": "HoldFormCore",
+    "n_roles": 4
+   }
+  ]
+ }
+}
+turns bank f10e7689d4fd32d6f204324fc02c8d48669d7cf89fc08327b84dfc8c36b2aff2
+L2_ONLY a89l2_d86b1d6ac653e8ad 0bbb70f7956dae14 plain 1 roles
+ROLL_BOTH d2_d86b1d6ac653e8ad d86b1d6ac653e8ad plain 2 roles
+BANK_TURNS priority [('a89l2_d86b1d6ac653e8ad', '0bbb70f7956dae14', 'LcStrategyCore'), ('mut_1fca373046a3c66e', '1fca373046a3c66e', 'HoldFormCore')]
+code identity ok: a75 d1af7e0f A91 block (988600, 988699)
+tree diff vs the A89 tree (expected: runner + the A91 files):
+Only in /root/a91/src/ops: a91
+Only in /root/a91/src/ops: a91_analyse_e2e.py
+Only in /root/a91/src/ops: a91_combine.py
+Only in /root/a91/src/ops: test_a91_combine.py
+Only in /root/a91/src/pytools/ops: a91
+Only in /root/a91/src/pytools/ops: a91_analyse_e2e.py
+Only in /root/a91/src/pytools/ops: a91_combine.py
+Only in /root/a91/src/pytools/ops: test_a91_combine.py
+Files /root/a89/src/pytools/tools/coopmwm/nm_eval_runner.py and /root/a91/src/pytools/tools/coopmwm/nm_eval_runner.py differ
+54M	/root/a91
+  32G
+SETUP_OK

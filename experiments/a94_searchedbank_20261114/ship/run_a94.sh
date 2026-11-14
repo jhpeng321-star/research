@@ -1,0 +1,174 @@
+#!/bin/bash
+# AMENDMENTS 94 + 95 (A94) host chain. Derived from run_a91.sh (9caad4cf); A94 changes: names/paths, the zero-SUMO bank
+# build stages, required A94_BANK_SHA256 / A94_HAND_SHA256 (a sha or "none") / A94_PANEL_SHA256, the zero-SUMO
+# "drytest" stage, and the analyse summary printed by the A94 driver (A91 fix kept).
+# ONE STAGE per launch (except test / drytest, which write nothing under /root/a94/root); a stage whose chain file
+# exists refuses; no retry loop; no automatic replay.
+#   run_a94.sh test          : zero SUMO unit tests incl. builder stand-in tests (temporary files in /dev/shm only)
+#   run_a94.sh panel         : zero SUMO: panel-c (write-once, 192 worlds 988700-988891) -> PANEL_OK
+#   run_a94.sh bank-searched : zero SUMO: BANK_SEARCHED = S5 bank + S4 bank rows (both pinned) -> src/ops/a94 -> BANK_OK
+#                              A94_SEARCHED_MODE=s5only: the S5 bank rows alone (owner option); allowed ONCE before
+#                              pin; an existing two-search bank / receipt / chain / out are moved aside as
+#                              *.twosearch_<time> (never deleted). drytest honours the same switch.
+#   run_a94.sh bank-hand     : zero SUMO: BANK_HAND from A94_HAND_ROOTS="ROOT=SHA|none [ROOT=SHA|none]" -> BANK_OK
+#   run_a94.sh drytest       : zero SUMO: banks built in /dev/shm (searched = real inputs; hand = the S4 bank as a
+#                              stand-in) + a /dev/shm root: prepare, dry i, dry c, mech rule-check e2e, analysis e2e,
+#                              for the 4-arm layout AND the 3-arm (no hand plan) layout -> DRYTEST_OK
+#   run_a94.sh pin           : zero SUMO: prepare (bank copies) + dry i / c -> PIN_OK, writes $BASE/PINNED_SHAS
+#   run_a94.sh mech          : 3 A81 identity arms + the bank arms x 2 A70 worlds (12,000 / 9,600 sim-s; cap 14,400)
+#   run_a94.sh confirm       : 4 (3) arms x 192 fresh worlds (921,600 / 691,200 sim-s; raw dropped per round) -> analyse
+#   run_a94.sh analyse       : zero SUMO re-run of the registered analysis ONLY if confirm ran and no results file exists
+# Writes only /root/a94 (and /dev/shm for test / drytest). Stop between rounds: touch /root/a94/root/STOP_A94.
+STAGE=${1:?stage: test | panel | bank-searched | bank-hand | drytest | pin | mech | confirm | analyse}
+BASE=/root/a94
+source $BASE/env_a94.sh
+R=$BASE/root
+A70R=/root/a75/a70ref/root
+REF70=/root/a75/ref70
+A75D2R=/root/a75d2c/root
+A91R=/root/a91/root
+S5R=/root/a86adm/root
+S4R=/root/a85adm/root
+S5BANK=$S5R/a80_banks/A80_BANK_D2800_p60.json
+S4BANK=$S4R/a80_banks/A80_BANK_D2800_p60.json
+S4SHA=a428cd1d320196578d55c84eea4b9b391f5e5c03928692a90dff0ac96667d7a8
+REFS="--a66-root /root/a66/root --a70-root $A70R --ref70-reports $REF70 --a75d2-root $A75D2R"
+cd "$SRC" || exit 2
+run() { nice -n 19 "$PY" ops/a94_bank.py "$@" --final-root "$R" $REFS; }
+runr() { local root=$1; shift; nice -n 19 "$PY" ops/a94_bank.py "$@" --final-root "$root" $REFS; }
+charged() { python3 -c "import json,os;p='$R/CHARGES.jsonl';print(sum(json.loads(l)['sim_s'] for l in open(p)) if os.path.exists(p) else 0)"; }
+builder() { nice -n 19 "$PY" -I -c "import sys; sys.path[:0]=['$SRC/pytools','$SRC/ops','$SRC']; sys.argv=sys.argv[1:]; exec(open('$SRC/ops/a94/build_bank_a94.py').read())" b "$@"; }
+sha() { sha256sum "$1" 2>/dev/null | cut -c1-64; }
+[ -f "$BASE/SETUP_OK" ] || { echo "no SETUP_OK: run setup first"; exit 1; }
+if [ "$STAGE" = test ]; then
+  exec "$PY" -m pytest -q -rs ops/test_a94_bank.py -p no:cacheprovider --basetemp=/dev/shm/a94_test_$$
+fi
+if [ "$STAGE" = drytest ]; then
+  grep -q PANEL_OK "$BASE/chain_panel.out" 2>/dev/null || { echo "panel not built"; exit 5; }
+  T=/dev/shm/a94_drytest_$$; trap 'rm -rf "$T"' EXIT
+  S4ARG="--s4-bank $S4BANK"; [ "${A94_SEARCHED_MODE:-}" = s5only ] && S4ARG=; echo "searched mode ${A94_SEARCHED_MODE:-s5+s4}"
+  builder searched --s5-bank $S5BANK $S4ARG --out-dir $T/banks > "$T.s.out" 2>&1 || { cat "$T.s.out"; echo "DRYTEST: searched build failed"; exit 3; }
+  builder hand --hand "$S4R=$S4SHA" --out-dir $T/banks > "$T.h.out" 2>&1 || { cat "$T.h.out"; echo "DRYTEST: stand-in hand build failed"; exit 3; }
+  tail -3 "$T.s.out"; tail -3 "$T.h.out"; rm -f "$T.s.out" "$T.h.out"
+  export A94_BANK_SRC_DIR=$T/banks A94_BANK_SHA256=$(sha $T/banks/A94_BANK_SEARCHED_D2800_p60.json)
+  for H in $(sha $T/banks/A94_BANK_HAND_D2800_p60.json) none; do
+    export A94_HAND_SHA256=$H; TR=$T/root_$H
+    echo "==================== layout A94_HAND_SHA256=$H"
+    mkdir -p "$TR/prerun_plant" "$TR/oracle_banks" "$TR/a32_banks"
+    for f in A94_PANEL_C.json A94_PANEL_C.sha256 BOUND_U0.json ORACLE_BINDING.json PRERUN_PLAN.json prerun_plant/CONFIG.json \
+             prerun_plant/A_checkpoint_000.pt oracle_banks/GUIDANCE_R6_WMONLY_PRIORITY.json \
+             oracle_banks/LEARNED_TRIGGER_MODEL.json a32_banks/GUIDANCE_C4SIT_priv_UNION_UNC.json; do
+      cp "$R/$f" "$TR/$f" || { echo "DRYTEST: copy $f failed"; exit 3; }
+    done
+    echo "== prepare"; runr "$TR" prepare || { echo "DRYTEST: prepare failed"; exit 3; }
+    echo; echo "== dry i"; runr "$TR" dry --stage i > "$T/dry_i.out" 2>&1 || { cat "$T/dry_i.out"; echo "DRYTEST: dry i failed"; exit 3; }
+    python3 -c "import json,sys;d=json.load(open('$T/dry_i.out'));print({k:d[k] for k in ('arms','primary','episodes','sim_s','stage_cap','charged','cap','families','spec_diff')});print('stored_refs', d['stored_refs']['reports_ok'])"
+    echo "== dry c"; runr "$TR" dry --stage c > "$T/dry_c.out" 2>&1 || { cat "$T/dry_c.out"; echo "DRYTEST: dry c failed"; exit 3; }
+    python3 -c "import json,sys;d=json.load(open('$T/dry_c.out'));print({k:d[k] for k in ('panel_sha256','arms','primary','contrasts','episodes','sim_s','stage_cap','charged','cap','spec_diff')});print([w[:7] for w in d['waves']])"
+    echo "== mech rule-check e2e"; nice -n 19 "$PY" ops/a94_mech_e2e.py --a91-root $A91R --shm $T/me_$H > "$T/me.out" 2>&1 || { cat "$T/me.out"; echo "DRYTEST: mech e2e failed"; exit 3; }
+    tail -1 "$T/me.out"
+    echo "== analysis e2e"; nice -n 19 "$PY" ops/a94_analyse_e2e.py --a91-root $A91R --final-root "$TR" --shm $T/e2e_$H > "$T/e2e.out" 2>&1 || { cat "$T/e2e.out"; echo "DRYTEST: e2e failed"; exit 3; }
+    python3 -c "import json;s=open('$T/e2e.out').read();d=json.loads(s[:s.rindex('}')+1]);print({k:d[k] for k in ('hand_run','primary','direction_present','arms','contrasts','summary_keys','overlap_keys','engaged_keys')})"
+    tail -1 "$T/e2e.out"
+    [ -f "$TR/CHARGES.jsonl" ] && { echo "DRYTEST: CHARGES.jsonl appeared"; exit 3; }
+  done
+  echo "DRYTEST_OK charged 0 (scratch $T removed on exit)"; exit 0
+fi
+C=$BASE/chain_$STAGE.out
+if [ "$STAGE" = bank-searched ] && [ "${A94_SEARCHED_MODE:-}" = s5only ] && [ -f "$C" ]; then
+  # owner option: rebuild BANK_SEARCHED from the S5 bank alone, ONCE, before pin; the two-search bank is moved aside
+  [ -f "$BASE/chain_pin.out" ] && { echo "pin already ran: the searched bank cannot be rebuilt"; exit 5; }
+  [ -f "$BASE/BANK_SEARCHED_S5ONLY_ASIDE" ] && { echo "the s5only rebuild already happened once: not again"; exit 1; }
+  grep -q '"mode": "s5only"' "$SRC/ops/a94/A94_BANK_SEARCHED_BUILD.json" 2>/dev/null && { echo "the built bank is already s5only"; exit 1; }
+  TS=$(date +%Y%m%d_%H%M%S)
+  for f in "$C" "$BASE/bank_searched.out" "$BASE/chain_bank-searched.pid" "$SRC/ops/a94/A94_BANK_SEARCHED_D2800_p60.json" \
+           "$SRC/ops/a94/A94_BANK_SEARCHED_BUILD.json"; do
+    [ -e "$f" ] && { mv "$f" "$f.twosearch_$TS" || { echo "move aside failed: $f"; exit 3; }; }
+  done
+  echo "$TS: the two-search bank (40b16ed9...) and its chain / out / receipt moved aside as *.twosearch_$TS for the s5only rebuild" > "$BASE/BANK_SEARCHED_S5ONLY_ASIDE"
+fi
+log() { echo "$(date "+%F %T") $*" >> "$C"; }
+stop() { log "CHAIN_STOPPED $*"; printf '%s\n' "{\"stage\": \"$STAGE\", \"time\": \"$(date "+%F %T")\", \"reason\": \"$*\", \"charged\": $(charged), \"chain_log\": \"$C\"}" > "$BASE/CHAIN_STOPPED"; exit "${RC:-9}"; }
+case "$STAGE" in panel|bank-searched|bank-hand|pin|analyse) NEED=1 ;; mech) NEED=2 ;; confirm) NEED=8 ;; *) echo "unknown stage $STAGE"; exit 2 ;; esac
+case "$STAGE" in pin|mech|confirm|analyse)
+  [ ${#A94_BANK_SHA256} = 64 ] && { [ ${#A94_HAND_SHA256} = 64 ] || [ "$A94_HAND_SHA256" = none ]; } || { echo "A94_BANK_SHA256 / A94_HAND_SHA256 unset (the registered bank shas; hand may be none): not launching"; exit 5; }
+  export A94_BANK_SHA256 A94_HAND_SHA256; unset A94_BANK_SRC_DIR ;;
+esac
+[ -f "$C" ] && { echo "$C exists: stage $STAGE already launched; not relaunching"; exit 1; }
+[ -f "$BASE/CHAIN_STOPPED" ] && { echo "CHAIN_STOPPED present: not launching"; exit 1; }
+[ -f "$R/STOP_A94" ] && { echo "STOP_A94 present: not launching"; exit 1; }
+FREE=$(df -BG --output=avail "$BASE" | tail -1 | tr -dc 0-9)
+[ "${FREE:-0}" -ge "$NEED" ] || { echo "free disk ${FREE}G < ${NEED}G needed by stage $STAGE: not launching"; exit 1; }
+DROP="--drop-raw --drop-procs 16"
+mechpass() { grep -q '"verdict": "PASS"' "$R/A94_MECH.json" 2>/dev/null; }
+pinned_ok() { grep -q PIN_OK "$BASE/chain_pin.out" 2>/dev/null && grep -q "^bank $A94_BANK_SHA256 hand $A94_HAND_SHA256 " "$BASE/PINNED_SHAS"; }
+case "$STAGE" in
+bank-hand) [ -n "${A94_HAND_ROOTS:-}" ] || { echo "A94_HAND_ROOTS unset (\"ROOT=SHA|none [ROOT=SHA|none]\")"; exit 5; } ;;
+pin) grep -q PANEL_OK "$BASE/chain_panel.out" 2>/dev/null && grep -q BANK_OK "$BASE/chain_bank-searched.out" 2>/dev/null \
+       && grep -q BANK_OK "$BASE/chain_bank-hand.out" 2>/dev/null || { echo "panel / bank-searched / bank-hand not done"; exit 5; }
+     grep -q "sha256 A94_BANK_SEARCHED_D2800_p60.json $A94_BANK_SHA256" "$BASE/chain_bank-searched.out" || { echo "A94_BANK_SHA256 is not the built searched bank"; exit 5; }
+     grep -q "sha256 A94_BANK_HAND_D2800_p60.json $A94_HAND_SHA256" "$BASE/chain_bank-hand.out" || { echo "A94_HAND_SHA256 is not the built hand bank (or none)"; exit 5; } ;;
+mech) pinned_ok || { echo "not pinned with these bank shas"; exit 5; } ;;
+confirm) mechpass || { echo "mechanics is not PASS: nothing runs"; exit 5; }
+         pinned_ok || { echo "not pinned with these bank shas"; exit 5; }
+         [ -n "${A94_PANEL_SHA256:-}" ] || { echo "A94_PANEL_SHA256 unset (the registered panel sha): not launching"; exit 5; } ;;
+analyse) grep -q A94_CONFIRM_RUN_DONE "$BASE/chain_confirm.out" 2>/dev/null || { echo "confirm not done"; exit 5; }
+         [ -f "$R/A94_RESULTS_D2800_p60.json" ] && { echo "results exist: not rerunning"; exit 5; } ;;
+esac
+log "chain $STAGE start pid $$ workers ${A94_WORKERS:-} free ${FREE}G bank ${A94_BANK_SHA256:-unset} hand ${A94_HAND_SHA256:-unset} panel ${A94_PANEL_SHA256:-unset}"
+echo $$ > "$BASE/chain_$STAGE.pid"
+bankfail() {   # a builder STOP is a decision point (nothing written, zero SUMO): no CHAIN_STOPPED; the stage may be re-run
+  local T; T=$(date +%Y%m%d_%H%M%S); log "BANK BUILD STOPPED: $(grep STOP "$1" | cut -c1-600)"
+  mv "$C" "$C.stopped_$T"; mv "$1" "$1.stopped_$T"; tail -3 "$1.stopped_$T"; exit 3; }
+case "$STAGE" in
+panel)
+  mkdir -p "$R"
+  [ -f "$R/A94_PANEL_C.json" ] && { RC=3 stop "panel exists"; }
+  run panel-c > "$BASE/panel_c.out" 2>&1 || { RC=3 stop "PANEL-C FAILED"; }
+  [ "$(charged)" = 0 ] || { RC=3 stop "panel charged non-zero"; }
+  log "panel $(cat "$R/A94_PANEL_C.sha256")"
+  log "PANEL_OK charged $(charged)" ;;
+bank-searched)
+  O=$BASE/bank_searched.out
+  S4ARG="--s4-bank $S4BANK"; [ "${A94_SEARCHED_MODE:-}" = s5only ] && S4ARG=
+  builder searched --s5-bank $S5BANK $S4ARG --out-dir "$SRC/ops/a94" > "$O" 2>&1 && grep -q BUILD_BANK_A94_OK "$O" || bankfail "$O"
+  log "mode ${A94_SEARCHED_MODE:-s5+s4}; $(grep -E '^(BANK_|sha256 )' "$O" | tr '\n' ';')"
+  log "BANK_OK" ;;
+bank-hand)
+  O=$BASE/bank_hand.out; ARGS=; for x in $A94_HAND_ROOTS; do ARGS="$ARGS --hand $x"; done
+  builder hand $ARGS --out-dir "$SRC/ops/a94" > "$O" 2>&1 && grep -q BUILD_BANK_A94_OK "$O" || bankfail "$O"
+  log "roots $A94_HAND_ROOTS; $(grep -E '^(BANK_|sha256 )' "$O" | tr '\n' ';')"
+  log "BANK_OK" ;;
+pin)
+  run prepare > "$BASE/pin_prepare.out" 2>&1 || { RC=3 stop "PREPARE FAILED"; }
+  run dry --stage i > "$BASE/dry_i.out" 2>&1 || { RC=3 stop "DRY I FAILED"; }
+  run dry --stage c > "$BASE/dry_c.out" 2>&1 || { RC=3 stop "DRY C FAILED"; }
+  [ "$(charged)" = 0 ] || { RC=3 stop "pin charged non-zero"; }
+  P=$(cut -d' ' -f5 "$R/A94_PANEL_C.sha256")
+  echo "bank $A94_BANK_SHA256 hand $A94_HAND_SHA256 panel $P" > "$BASE/PINNED_SHAS"
+  log "pinned $(cat "$BASE/PINNED_SHAS")"
+  log "PIN_OK charged $(charged)" ;;
+mech)
+  W=${A94_WORKERS:?set A94_WORKERS}
+  run mech --workers $(( W < 10 ? W : 10 )) --chunk 10 >> "$BASE/mech.out" 2>&1 || { RC=4 stop "MECH RUN FAILED"; }
+  run mech-compare >> "$BASE/mech.out" 2>&1
+  log "mech $(tail -1 "$BASE/mech.out" | cut -c1-1500) charged $(charged)"
+  mechpass || { RC=5 stop "MECHANICS FAILED"; }
+  log "A94_MECH_DONE" ;;
+confirm)
+  W=${A94_WORKERS:?set A94_WORKERS}
+  export A81_PANEL_SHA256=$A94_PANEL_SHA256          # read by the (unchanged) A81 setup() as the registered panel sha
+  log "confirm start"
+  run confirm --workers "$W" --chunk 96 $DROP >> "$BASE/confirm.out" 2>&1 || { RC=8 stop "CONFIRM FAILED free $(df -BG --output=avail "$R" | tail -1 | tr -d " ")"; }
+  run drop-raw --drop-procs 16 >> "$BASE/confirm.out" 2>&1 || { RC=8 stop "DROP-RAW FAILED"; }
+  log "confirm done; charged $(charged)"
+  log "A94_CONFIRM_RUN_DONE free $(df -BG --output=avail "$R" | tail -1 | tr -d " ")"
+  run analyse >> "$BASE/analyse.out" 2>&1 || { RC=9 stop "ANALYSE FAILED"; }
+  log "analysis: $(tail -1 "$BASE/analyse.out" | cut -c1-1500)"
+  log "A94_CONFIRM_DONE" ;;
+analyse)
+  export A81_PANEL_SHA256=${A94_PANEL_SHA256:?}
+  run analyse >> "$BASE/analyse.out" 2>&1 || { RC=9 stop "ANALYSE FAILED"; }
+  log "analysis: $(tail -1 "$BASE/analyse.out" | cut -c1-1500)"
+  log "A94_ANALYSE_DONE" ;;
+esac

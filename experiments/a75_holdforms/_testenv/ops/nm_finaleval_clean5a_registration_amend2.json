@@ -1,0 +1,29 @@
+{
+ "amendment": 2,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend1.json",
+  "registration_sha256": "26c52f2f8d86d8118756365c7ef5f24d49882cefc931cb0e0e7ac865bbc8ef2f"
+ },
+ "authority": [
+  "N5 REVIEW_N6_3 (829c7303 PASS): total margin only 3.0% over the 1,164,960 ceiling; MAIN to acknowledge",
+  "MAIN 2026-11-06: v2v_final raised to 1,340,000, restoring a >= 15% margin over 1,164,960; registered"
+ ],
+ "change": {
+  "allocation_sim_s": 1340000,
+  "phase": "v2v_final",
+  "previous": 1200000,
+  "requirement": "the clean5a CONFIG v2v_final allocation must be >= 1,340,000 (budget_check blocks otherwise)"
+ },
+ "quote": {
+  "margin_over_core": 0.3168,
+  "margin_over_total": 0.1503,
+  "prerun_sim_s": 432000,
+  "slack_sim_s": 175040,
+  "total_ceiling_sim_s": 1164960
+ },
+ "registered_utc": "2026-11-06T12:45:41.901856+00:00",
+ "registration_sha256": "0cf2382c1fe63be74c30ebf30d10db0c7dd5c52107eccbfbe4471faa44fb75f3",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: no clean5a or pre-run result exists or has been opened",
+ "unchanged": "arms, panels (3acb2b56, d43510e9), RULE digest 88728592, pre-run cap 432,000, F12 sealing"
+}

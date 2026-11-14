@@ -1,0 +1,112 @@
+{
+ "stage": "v",
+ "panel_sha256": "989248f9d449b234724d74cd569e324e1be7bc1038529947429f336652412ea4",
+ "n_waves": 10,
+ "waves": [
+  [
+   "A80V_mut_c46ab5ac8c360d52",
+   24,
+   "A75_PLAN",
+   "a80v_c46ab5ac8c360d52_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_6509322f5f5ce63a",
+   24,
+   "A75_PLAN",
+   "a80v_6509322f5f5ce63a_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_785f8f615bd8c1a1",
+   24,
+   "A75_PLAN",
+   "a80v_785f8f615bd8c1a1_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_4eb2545450acb03b",
+   24,
+   "A75_PLAN",
+   "a80v_4eb2545450acb03b_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_7c02b4550ac14916",
+   24,
+   "A75_PLAN",
+   "a80v_7c02b4550ac14916_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_mut_a3c47635f8cb54dc",
+   24,
+   "A75_PLAN",
+   "a80v_a3c47635f8cb54dc_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_25fff2abc5f10b51",
+   24,
+   "A75_PLAN",
+   "a80v_25fff2abc5f10b51_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_mut_c4e65fde95356c88",
+   24,
+   "A75_PLAN",
+   "a80v_c4e65fde95356c88_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_mut_eafba3ec80941604",
+   24,
+   "A75_PLAN",
+   "a80v_eafba3ec80941604_0000",
+   992500,
+   992523
+  ],
+  [
+   "A80V_rand_1d68db2f4f3f46b9",
+   24,
+   "A75_PLAN",
+   "a80v_1d68db2f4f3f46b9_0000",
+   992500,
+   992523
+  ]
+ ],
+ "sim_s": 288000,
+ "charged": 0,
+ "cap": 460800,
+ "a75_sha256": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+ "mech": {
+  "n_waves": 7,
+  "sim_s": 16800,
+  "plans": [
+   "A80V_rand_6509322f5f5ce63a",
+   "A80V_rand_785f8f615bd8c1a1",
+   "A80V_rand_4eb2545450acb03b",
+   "A80V_rand_7c02b4550ac14916",
+   "A80V_mut_a3c47635f8cb54dc",
+   "A80V_rand_25fff2abc5f10b51",
+   "A80V_mut_c4e65fde95356c88"
+  ]
+ },
+ "reference": {
+  "wave": "A68V_MAPPO60C",
+  "receipt_sha256": [
+   "1a6d31ddb386f0130ee05f755d73992a8716e8f45bfa2d26a30b337d5ca0e0a0"
+  ],
+  "n": 24,
+  "reports_ok": true
+ }
+}

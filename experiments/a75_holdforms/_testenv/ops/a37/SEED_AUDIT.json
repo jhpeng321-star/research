@@ -1,0 +1,100 @@
+{
+ "schema": "a37.seed_audit.v1",
+ "blocks": {
+  "D3200_p20": [
+   991700,
+   991799
+  ],
+  "D2400_p20": [
+   991800,
+   991899
+  ]
+ },
+ "used": {
+  "D3200_p20": [
+   991700,
+   991723
+  ],
+  "D2400_p20": [
+   991800,
+   991823
+  ]
+ },
+ "never": [
+  "964000-964199",
+  "962xxx",
+  "977xxx",
+  "a28/a32/a33/a35 panel seeds"
+ ],
+ "regex": "(?<![\\da-fA-F.])(991[78]\\d\\d)(?![\\da-fA-F.]) (standalone integers; hex/decimal fragments excluded)",
+ "checked": [
+  "REGISTRATION.md",
+  "protocols/experiment_history.json",
+  "8312 text files under E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a32_ablation, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a33_combined, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a35_transfer, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a34_horizon, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\a36_analysis, E:\\agent-work\\a32, E:\\agent-work\\a33, E:\\agent-work\\a35, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_cfd, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_d3200p60, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_mc, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_p20, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_pair, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r3, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r4, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r5, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r6, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r6c, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r7a, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r7b, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_r7c, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_rep, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_sl, E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\wmverify_unc (per-episode evaluation dirs skipped)",
+  "git grep -P over 539 unique c4/* + main branch tips: 2 hit lines"
+ ],
+ "file_hits": [
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_2902d352d9337486c5374176fbbda78ba33c325f3b0c6bed5c58a7f9c13fcecb\\CLAIM.json",
+   "line": 1,
+   "token": "991772"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_47af9045265737cb41915f2b5fa0517277d087a38b74556ae647e2fe4dd78dd5\\CLAIM.json",
+   "line": 1,
+   "token": "991718"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_54502d2fcba55145b20ec58121fc8fcd2267b37b479a83b4956c46f6f60c1f3f\\CLAIM.json",
+   "line": 1,
+   "token": "991769"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_72cdacaf315fc58c28e13a24f12a4bf7136938561db52aab7bb2f71ea9fb1918\\CLAIM.json",
+   "line": 1,
+   "token": "991753"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_9ef41ab233c882d646c6d0f78c811d6c2f47889b5c7e1893f3e67865fcf0670a\\CLAIM.json",
+   "line": 1,
+   "token": "991738"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5b\\jobs\\g4_c4f7ae59a6608e22cfc1d0f4c9b373cc9283cc7192edd4d663ff44f1f7d12564\\CLAIM.json",
+   "line": 1,
+   "token": "991777"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_clean5c5d\\offloaded\\OFFLOAD_u008.json",
+   "line": 275,
+   "token": "991742"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\paper_data\\train\\coopmwm20261109_f8v4b\\offloaded\\OFFLOAD_u008.json",
+   "line": 275,
+   "token": "991742"
+  }
+ ],
+ "git_hits": [
+  "b030aeef911ae4404f546fd3cb8141a0edf9d137:tools/coopmwm/test_a33_combined_cpu.py:991700",
+  "ce50f874d997b1bfc9913cebbed070c2db25d8a1:tools/coopmwm/test_a33_combined_cpu.py:991700"
+ ],
+ "n_git_hits": 2,
+ "forbidden_skipped": [
+  "sealed",
+  "holdout",
+  "heldout",
+  "cal_split",
+  "chunk5",
+  "j4b",
+  "inc1",
+  "hetdata_truth",
+  "driver_params"
+ ],
+ "audited": "2026-11-10 16:52:05 +08 by A37 (zero SUMO, no outcome read)",
+ "classification": {
+  "verdict": "UNUSED (no hit is a seed use)",
+  "file_hits": "8 hits: 6 = process ids (\"pid\") in clean5c5b training job CLAIM.json files; 2 = byte sizes in clean5c5d / f8v4b OFFLOAD_u008.json manifests",
+  "git_hits": "2 = tools/coopmwm/test_a33_combined_cpu.py asserts ms.seed_scope(991700) is None (i.e. NOT registered) at c4/a33-combined / c4/a35-transfer tips"
+ }
+}

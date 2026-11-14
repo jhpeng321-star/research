@@ -1,0 +1,14 @@
+<configuration>
+    <input>
+        <net-file value="wz3to2.net.xml"/>
+        <route-files value="wz3to2.example.rou.xml"/>
+    </input>
+    <time>
+        <step-length value="0.5"/>
+        <end value="1800"/>
+    </time>
+    <processing>
+        <time-to-teleport value="-1"/>
+        <collision.action value="warn"/>
+    </processing>
+</configuration>

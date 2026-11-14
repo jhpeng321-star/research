@@ -1,0 +1,131 @@
+{
+ "analyses": {
+  "claim3a": {
+   "arms": [
+    "A",
+    "B",
+    "R",
+    "U0",
+    "NATIVE"
+   ],
+   "contrasts": [
+    "B-A",
+    "B-R",
+    "R-A",
+    "X-NATIVE",
+    "X-U0",
+    "B-BASE (primary, BASE = A)"
+   ],
+   "opens": "as soon as A, B, R, U0 and NATIVE episodes finish (U0 bound or declared unavailable first)",
+   "seal": "CLAIM3A_TABLES.json analysis_sha256 (own seal)"
+  },
+  "claim3b": {
+   "opens": "each comparator wave runs and its analysis opens only after that comparator is bound; a declared-unavailable comparator gets a sealed CLAIM3B_<arm>_UNAVAILABLE.json",
+   "per_comparator": [
+    "MAPPO_SPEED",
+    "MAPPO_LANE"
+   ],
+   "seal": "CLAIM3B_<arm>_TABLES.json analysis_sha256 (one seal per comparator)"
+  }
+ },
+ "arms": {
+  "A": "clean5a A u24 (frozen base alone)",
+  "B": "clean5a B u24 (cooperation layer + SUMO-verified guidance)",
+  "MAPPO_LANE": "S-MAPPOWZL final (lane head required); aecd7d70 and d9042cc5 refused",
+  "MAPPO_SPEED": "S-MAPPOWZ it168 ONLY (export iteration checked = 168; no it84/42/24 substitution)",
+  "NATIVE": "native SUMO CAV driving",
+  "R": "clean5a R u24 (same cooperation layer, NO guidance - the no-guidance arm)",
+  "U0": "MAPPO u0 transferred (frozen d9042cc5 executor, zero residual); executor bound by path, sha must be d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca"
+ },
+ "authority": [
+  "MAIN 2026-11-06 19:24 (comparator binding, R wording)",
+  "MAIN 2026-11-06 19:32 (final eval = clean5a, claim split)",
+  "MAIN to N6: v2v_final <= 1,040,000; 7 arms x panel v2 + 8-world decision branches; order F12 -> F11 -> F7",
+  "MAIN to N6: per-seed reporting + regime split; registered binding it168 / S-MAPPOWZL final"
+ ],
+ "code": {
+  "branch": "c4/nm-finaleval",
+  "launcher": "ops/nm_finaleval.py",
+  "runner": "tools/coopmwm/nm_eval_runner.py"
+ },
+ "panel": {
+  "net_sha256": "b62778986347e8c21bca90d7ddcc8d9faeb288290a4dbdc3f53ee64ae8c21dfa",
+  "panel_sha256": "3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130",
+  "worlds": "96 held-out seeds 989600-989695, N1 cell D3200_p60, 1200 s"
+ },
+ "quote": {
+  "allocation_authority": "MAIN 2026-11-06 under the owner authorisation to act on its recommendations: v2v_final raised from 690,000 to <= 1,040,000 sim-s for A, B, R, NATIVE, U0, MAPPO-speed, MAPPO-lane x panel v2 + the 8-world decision branches (~902k, 15% margin)",
+  "allocation_sim_s": 1040000,
+  "base": "mappo_frozen",
+  "basis": {
+   "charging": "planned sim-s precharged per job; whole wave reserved before dispatch",
+   "decisions": "2 arms x 8 registered worlds x <=1 decision x (all + background + <=3 solos) x <= 1200 s (prefix replay from 0 to t_s+360); only captured decisions are reserved",
+   "episodes": "7 arms x 96 worlds x 1200 s",
+   "parity_f11": "2 TRAIN worlds x 2 paths (eval plant, training env) x 2 comparators x 420 s"
+  },
+  "core_ceiling_sim_s": 902400,
+  "decisions_ceiling_sim_s": 96000,
+  "episodes_sim_s": 806400,
+  "fits": true,
+  "margin_over_core": 0.1525,
+  "margin_over_total": 0.1482,
+  "need_ceiling": {
+   "decisions_B": 48000,
+   "decisions_R": 48000,
+   "episodes_A": 115200,
+   "episodes_B": 115200,
+   "episodes_MAPPO_LANE": 115200,
+   "episodes_MAPPO_SPEED": 115200,
+   "episodes_NATIVE": 115200,
+   "episodes_R": 115200,
+   "episodes_U0": 115200,
+   "parity_f11": 3360
+  },
+  "parity_sim_s": 3360,
+  "phase": "v2v_final",
+  "slack_sim_s": 134240,
+  "total_ceiling_sim_s": 905760,
+  "wall_time": {
+   "hours": [
+    1.16,
+    1.75
+   ],
+   "sim_s_per_worker_s": "6-9 (newmap_probe cpuV: ~148k sim-s in ~22-25 min on <=12 workers)",
+   "workers": 24
+  }
+ },
+ "registered_utc": "2026-11-06T11:50:52.539857+00:00",
+ "registration_sha256": "2d9b8c0ebb8893fbf5e11d980924403aeda567e0ca5ed506476bf1c9e4af61b8",
+ "reporting": {
+  "b_r_and_b_a": "per seed (same statistics) + a per-seed table for B sorted by B-BASE",
+  "decisions": "descriptive decision activity for B/R on every seed; per-decision synergy branches on the 8 registered decision worlds when the runner provides them (F7)",
+  "every_arm_vs": [
+   "NATIVE",
+   "U0",
+   "MAPPO_SPEED",
+   "MAPPO_LANE"
+  ],
+  "per_comparator": "mean with paired whole-world percentile bootstrap CI (10,000 reps, seed 20261104, 95%); fraction of the 96 seeds with benefit / harm / tie; quartiles; sorted per-seed table",
+  "regimes": "report-only: demand cell (single cell D3200_p60 on panel v2) and the RSU-observable closing-lane speed tercile measured on the untreated NATIVE arm (WM lane 2, s in [-300, 75.44] m, t in [300, 360) s)",
+  "safety": "collisions, teleports, hard brakes, TTC events: totals and paired per-counter CIs"
+ },
+ "rules": {
+  "f12": "no comparator result exists before its binding; 3a never contains comparator data",
+  "pin": "bound comparator sha swapped into the leverprobe pin inside the eval worker only (F2)",
+  "r_wording": "R = same cooperation layer WITHOUT verified guidance (no-guidance arm); never \"random plans of matched effort\"",
+  "training_parity": "A/B/R built and wrapped exactly like the training episode (FAIRAUDIT F1, 9f116b6c)"
+ },
+ "schema": "coopmwm.nm.finaleval.v1.registration",
+ "target": {
+  "arms_bound": "A/B/R u24 by sha (bind-arms before the gate, else sealed into GATE_PASS at the gate)",
+  "base": "frozen S-MAPPOWZ snapshot (~it42); A = that base alone; BASE alias = A",
+  "clean4": "no final evaluation",
+  "host": "cpuZ, right after clean5a u24",
+  "run": "clean5a (speed-only expected-value cooperation)"
+ },
+ "workers": {
+  "default": 24,
+  "host": "cpuZ 48 cores",
+  "max": 46
+ }
+}
