@@ -2,14 +2,14 @@
 # Recipe = r5b.toml's (hybrid learned driver settings in the physics, grad damping 0.90,
 # lane cap 1.5 + separate saturating lane gate + flip-rate loss, per-step activation
 # checkpointing, per-stage truncation and lr) with the C4 changes:
-#   1. model.lane_rule = "forced_merge_only" (after
+#   1. model.lane_rule = "forced_merge_only" (owner decision 2026-10-12 after
 #      WM-S-LANECHECK: MOBIL matches 1.5% of recorded changes; discretionary changes
 #      dropped, only the mandatory ramp merge lane 2 -> 1 stays; masked logits stay
 #      masked after the learned residual and cap - see LANERULE_CHECK.md).
-#   2. NO warm start: trained from scratch; switching held-out family RELEASED.
+#   2. (2026-10-13 owner) NO warm start: trained from scratch; switching held-out family RELEASED.
 #      [superseded: init_from the R5b best checkpoint (registry name ckpt_r5b_best; resolves via
 #      WMS_DATA_CKPT_R5B_BEST, fails closed if unset - same pattern as r5b's stage30).
-#   3. DATA: native + RANDOM direct-output CAV actions only (no designed
+#   3. DATA: native + RANDOM direct-output CAV actions only (owner: no designed
 #      controllers in WM training). pack_v3 native/native_base TRAIN windows +
 #      pack_dspeed target-speed arms + the switching pack's direct-mix arm; the
 #      damping/base arm, the pack_damping pack, PI / wall / fixed / switching arms and
@@ -58,7 +58,7 @@ windows_train = "c4_wm_lists/windows_train_directmix_trainpart.json" # C4: direc
 windows_val = "c4_wm_lists/windows_val_directmix.json"               # C4: direct-mix monitoring part
 timeline_index = "action_timeline_index_train"
 zero_shot_heldout = "zero_shot_heldout"
-heldout_family_policy = "release" # held-out family released for C4 training (guard file not needed)
+heldout_family_policy = "release" # OWNER 2026-10-13: held-out family released for C4 training (guard file not needed)
 heldout_max_drop_frac = 0.85   # r3
 mix_ratio = 0.3                # r3: 30% switching-source draws (here: direct-mix only)
 event_oversample = 1.0         # r3
@@ -66,8 +66,8 @@ val_frac = 0.0                 # the TRAIN-scoped world split is provided explic
 
 [model]
 rollout_mode = "hybrid"     # r5_base FIX 1: encoder settings drive the physics, residual stays on
-lane_rule = "learned_discretionary" # C4: no MOBIL; forced merges in physics, discretionary changes learned by the residual
-# init_from: none - train the C4 world model from scratch (no warm start from R5b)
+lane_rule = "learned_discretionary" # C4 (owner 10-12 late): no MOBIL; forced merges in physics, discretionary changes learned by the residual
+# init_from: none - OWNER 2026-10-13: train the C4 world model from scratch (no warm start from R5b)
 sumo_fidelity = true        # r4
 n_controllers = 7           # r4
 merge_cal = false           # r4
@@ -102,14 +102,14 @@ allowance = 0.00124327163  # TRUE rate per HDV-step (LANECAL)
 
 [curriculum]
 unroll_s = [10.0, 30.0, 60.0]            # C4: 120 s skipped (C4 imagines <= 30 s)
-stage_steps = [1500, 1500, 600]          # the GPU host (4080S vGPU) is CPU-bound (~1.7 s/step at 10 s, GPU 10-25 % busy): batch 16 at ~same step time, fewer steps; ~5 h
+stage_steps = [1500, 1500, 600]          # gpuW (4080S vGPU) is CPU-bound (~1.7 s/step at 10 s, GPU 10-25 % busy): batch 16 at ~same step time, fewer steps; ~5 h
 truncation_steps = 20                    # r4
 truncation_steps_per_stage = [20, 60, 60] # C4 imagines <= 30 s: BPTT window 30 s in the 60 s stage (stability, time)
 driver_grad_across_chunks = true         # r5_base FIX 1: encode drivers once at t0
-max_hours = 6.5                          # C4 budget cap (from scratch, the GPU host)
+max_hours = 6.5                          # C4 budget cap (from scratch, gpuW)
 
 [optim]
-batch_size = 16       # the GPU host: GPU under-used at batch 8 (CPU-bound loop), so batch 16 costs ~no extra wall time
+batch_size = 16       # gpuW: GPU under-used at batch 8 (CPU-bound loop), so batch 16 costs ~no extra wall time
 lr = 0.001            # r4/c1fast
 lr_per_stage = [1.0e-3, 3.0e-4, 1.0e-4] # from scratch: c1fast lr for 10 s, then r5b-stable 3e-4/1e-4 with damping
 
@@ -118,7 +118,7 @@ select_by_long_horizon = true # r4
 val_batches = 8               # r4
 
 [runtime]
-device = "cuda"    # GPU recipe only; local preflight/smoke override to cpu
+device = "cuda"    # gpuA recipe only; local preflight/smoke override to cpu
 threads = 2        # r4
 num_workers = 0    # r4 (required by the clean trainer contract)
 seed = 101         # r4

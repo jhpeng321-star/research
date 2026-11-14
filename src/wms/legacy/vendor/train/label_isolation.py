@@ -1148,12 +1148,12 @@ def load_train_overlay(pack_dir, sidecar_dir):
       (:func:`load_train_outcomes`), the overlay parquet matches its
       receipt SHA/columns/row count;
     * every accepted group is a real zero-row TRAIN pack item (identity
-      re-derived from the pack plan), its arm is not rule-(b) excluded,
+      re-derived from the pack plan), its arm is not owner-(b) excluded,
       its resolved source is table-supported and re-checked against the
       rows (:func:`features.outcomes._check_identity`), and the per-group
       row / t0-row counts match the receipt;
     * COVERAGE: every zero-row TRAIN item is accepted, excluded with a
-      reason, or rule-(b) excluded -- an uncovered item refuses.
+      reason, or owner-(b) excluded -- an uncovered item refuses.
     """
     import pandas as pd
 
@@ -1226,7 +1226,7 @@ def load_train_overlay(pack_dir, sidecar_dir):
         if str(item["arm"]).strip().lower() in \
                 ("base", "native_base"):
             raise LabelIsolationError(
-                f"overlay accepted group {g.get('key')!r} is a rule-(b) "
+                f"overlay accepted group {g.get('key')!r} is an owner-(b) "
                 "excluded arm; refusing")
         source = label_source(key[0], key[1], key[3], item.get("policy"))
         if source is None or source != str(g.get("resolved_source")):
@@ -1256,7 +1256,7 @@ def load_train_overlay(pack_dir, sidecar_dir):
             "list")
 
     # COVERAGE: every zero-row TRAIN item is accepted, excluded with a
-    # reason, or rule-(b) excluded.
+    # reason, or owner-(b) excluded.
     excluded_keys = set()
     for g in excluded:
         if not g.get("reason"):
@@ -1289,7 +1289,7 @@ def load_train_overlay(pack_dir, sidecar_dir):
         if ikey in seen or ikey in excluded_keys:
             continue
         if str(item["arm"]).strip().lower() in ("base", "native_base"):
-            continue                      # decision (b)
+            continue                      # owner decision (b)
         missing.append(str(run["key"]))
     if missing:
         raise LabelIsolationError(

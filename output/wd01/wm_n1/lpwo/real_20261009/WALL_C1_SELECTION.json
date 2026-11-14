@@ -1,0 +1,42 @@
+{
+ "retained_train_windows": 140,
+ "retained_val_windows": 21,
+ "retained_train_worlds": 140,
+ "wall_same_candidates": 1089,
+ "wall_same_candidates_by_pack": {
+  "pack_v3": 332,
+  "pack_dspeed": 560,
+  "pack_damping": 197
+ },
+ "wall_same_candidates_by_reason": {
+  "unverifiable_schedule_missing": 954,
+  "wall_owned_not_assembled": 13,
+  "wall_engaged": 114,
+  "wall_label_not_engaged": 8
+ },
+ "wall_same_with_timeline": 135,
+ "wall_same_with_timeline_by_reason": {
+  "wall_owned_not_assembled": 13,
+  "wall_engaged": 114,
+  "wall_label_not_engaged": 8
+ },
+ "wall_pilot_requested": 155,
+ "wall_pilot_status_counts": {
+  "assembled_released": 82,
+  "aborted_in_assembly": 16,
+  "aborted_in_hold": 48,
+  "not_feasible": 9
+ },
+ "wall_pilot_engaged": 130,
+ "wall_pilot_engaged_overlapping_training_worlds": 114,
+ "seen_controls_candidates": 39,
+ "seen_controls_by_pack": {
+  "pack_v3": 39
+ },
+ "needed_packs": [
+  "pack_damping",
+  "pack_dspeed",
+  "pack_v3"
+ ],
+ "guard_refusals": 0
+}

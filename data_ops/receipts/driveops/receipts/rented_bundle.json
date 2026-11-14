@@ -1,0 +1,17 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "rented_bundle",
+ "kind": "dir",
+ "class": "ARCHIVE",
+ "producer": "rented-box bundle scripts/manifests",
+ "restore": "copy to E:/rented_bundle",
+ "local": "E:/rented_bundle",
+ "drive": "gdrive:research-archive/data/staging/rented_bundle",
+ "bytes": 484239,
+ "files": 65,
+ "md5_manifest": "receipts/md5/rented_bundle.md5",
+ "check": "passed",
+ "check_method": "rclone check --one-way (size+MD5)",
+ "check_detail": "",
+ "timestamp": "2026-10-09T14:13:54"
+}

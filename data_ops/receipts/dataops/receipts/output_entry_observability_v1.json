@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/entry_observability_v1",
+ "name": "entry_observability_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\entry_observability_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/entry_observability_v1/entry_observability_v1.tar.zst",
+ "bytes": 92070,
+ "files": 6,
+ "archive_bytes": 24808,
+ "archive_md5": "3a97b536c865990f35ac5086682f65f4",
+ "member_manifest": "manifests/members/output_entry_observability_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 18.5,
+ "timestamp": "2026-10-10T01:37:21"
+}

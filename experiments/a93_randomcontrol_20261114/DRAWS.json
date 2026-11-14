@@ -1,0 +1,219 @@
+{
+ "seed": 20261114,
+ "generator": "strategy_search.random_strategy patched by a75ss.install(S4 cfg)",
+ "cfg_sha256": "0a80c0f4c6a8858faf4430c8e55be04a9abc77779337cd91921e1df873b82f5e",
+ "code": {
+  "a75ss.py": "cae54dc11be5f5220f19eb7399efac2699c7cdf363a90b7fa202766d5b906bc0",
+  "a85s4.py": "7ca82976e7183ce205d0591470a60281b553c2d03e8643d479d739b86c419261",
+  "strategy_search.py": "02e119c11a056c13bc54309c5f71e0ca8dd73aeb3c49c5a901e008fda36f54fc",
+  "A85S4_SEARCH_CFG.json": "0a80c0f4c6a8858faf4430c8e55be04a9abc77779337cd91921e1df873b82f5e"
+ },
+ "n_draws": 50,
+ "n_draws_used": 16,
+ "rule": "first 12 distinct plans (strategy key) passing the S4 search validity checks and the zero-SUMO A80 pin mapping (map_rows), in generation order; no WM score used",
+ "stream_sha256": "b59d29977f82f93d107e9df9a451888993ecd534e89f435a28a4cfac52c16b93",
+ "mapcheck_sha256": "098e074c76ecededa2b56c5f9789874f732bca6cdfeb7ae72810d5fb3f24639e",
+ "top_sha256": "238b0cbef482d402bdf0156edd978af88809738ae43f59273aaf6989b6c4c054",
+ "n_rejected": 4,
+ "draws": [
+  {
+   "draw": 1,
+   "name": "rand_84f2b34a3563c9b5",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 2,
+   "name": "rand_e91dd62846b9f65f",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "2b84ba100dca39c9",
+   "uncond_name": "rand_2b84ba100dca39c9",
+   "status": "pass",
+   "pass_rank": 1,
+   "top_rank": 1
+  },
+  {
+   "draw": 3,
+   "name": "rand_f48526f5527aee64",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "f48526f5527aee64",
+   "uncond_name": "rand_f48526f5527aee64",
+   "status": "pass",
+   "pass_rank": 2,
+   "top_rank": 2
+  },
+  {
+   "draw": 4,
+   "name": "rand_f1f3c30f83d035fe",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "f1f3c30f83d035fe",
+   "uncond_name": "rand_f1f3c30f83d035fe",
+   "status": "pass",
+   "pass_rank": 3,
+   "top_rank": 3
+  },
+  {
+   "draw": 5,
+   "name": "rand_98770a4a7f3cd262",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 6,
+   "name": "rand_b9a542e05b0287be",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "b9a542e05b0287be",
+   "uncond_name": "rand_b9a542e05b0287be",
+   "status": "pass",
+   "pass_rank": 4,
+   "top_rank": 4
+  },
+  {
+   "draw": 7,
+   "name": "rand_fdba7617dbd1c41e",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 8,
+   "name": "rand_83663075cd92fb5f",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "3426823506bdb95f",
+   "uncond_name": "rand_3426823506bdb95f",
+   "status": "pass",
+   "pass_rank": 5,
+   "top_rank": 5
+  },
+  {
+   "draw": 9,
+   "name": "rand_324930af7618b8aa",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "324930af7618b8aa",
+   "uncond_name": "rand_324930af7618b8aa",
+   "status": "pass",
+   "pass_rank": 6,
+   "top_rank": 6
+  },
+  {
+   "draw": 10,
+   "name": "rand_954827ee338796cd",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "954827ee338796cd",
+   "uncond_name": "rand_954827ee338796cd",
+   "status": "pass",
+   "pass_rank": 7,
+   "top_rank": 7
+  },
+  {
+   "draw": 11,
+   "name": "rand_8743ae43679c772a",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "a4404139342ec3ad",
+   "uncond_name": "rand_a4404139342ec3ad",
+   "status": "pass",
+   "pass_rank": 8,
+   "top_rank": 8
+  },
+  {
+   "draw": 12,
+   "name": "rand_e60ee926d34eb631",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "e60ee926d34eb631",
+   "uncond_name": "rand_e60ee926d34eb631",
+   "status": "pass",
+   "pass_rank": 9,
+   "top_rank": 9
+  },
+  {
+   "draw": 13,
+   "name": "rand_2f6d9d40335d68ac",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "752ec63f1e216873",
+   "uncond_name": "rand_752ec63f1e216873",
+   "status": "pass",
+   "pass_rank": 10,
+   "top_rank": 10
+  },
+  {
+   "draw": 14,
+   "name": "rand_ba031ab8d27791c4",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "ac77454ba4dc3772",
+   "uncond_name": "rand_ac77454ba4dc3772",
+   "status": "pass",
+   "pass_rank": 11,
+   "top_rank": 11
+  },
+  {
+   "draw": 15,
+   "name": "rand_0351f0fd6ef5a767",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 16,
+   "name": "rand_ced30ccf1f2c930b",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "855593233fe40415",
+   "uncond_name": "rand_855593233fe40415",
+   "status": "pass",
+   "pass_rank": 12,
+   "top_rank": 12
+  }
+ ]
+}

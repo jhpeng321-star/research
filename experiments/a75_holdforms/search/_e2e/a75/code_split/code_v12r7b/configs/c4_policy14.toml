@@ -1,0 +1,99 @@
+# Checkpoint-agnostic POLICY14; WM weights AND model/physics config are CLI inputs.
+# Minimal fixes can be ablated independently; no actor initialization or resume.
+[run]
+seed = 965140
+threads = 2
+updates = 600
+validation_batches = 1
+
+[trainer]
+batch_size = 1
+horizon = 10
+gamma = 1.0
+lambda_ = 1.0
+actor_lr = 0.00005
+critic_lr = 0.0003
+entropy_weight = 0.001
+lane_entropy_weight = 0.001
+uncertainty_weight = 0.1
+lagrange_init = 0.1
+lagrange_max = 2.0
+lagrange_scaled = true
+ttc_budget_mode = "native_relative"
+checkpoint_imagination = true
+imagine_entries = true
+entry_pad_max = 32
+entry_queue_state = true
+source_wait_grad = true
+critic_entry_backlog = true
+entry_insert_rule = "sumo_like_v2"
+cav_exec_cap = "idm"
+imagination_grad_decay = 1.0
+credit_profile_every = 0
+real_return_mix = 0.3
+real_return_scale = 10000.0
+actor_gradient_audit = true
+checkpoint_every = 100
+validation_every = 100
+policy_lane_actions = true
+low_penetration_horizon_cap = true
+wm_safety_report_only = true
+
+[policy]
+# ROBUST TRAIN acceleration endpoints supplied in the engineering brief.
+# The shared actor/executor lower endpoint is -3.0 m/s^2. Empirical lane-rate
+# and hold-length limits still require the exact ROBUST TRAIN artifacts.
+accel_max_mps2 = 1.2
+lane_control = "learned"
+init_zero_accel = false
+
+[reward]
+delay = 1.0
+throughput = 0.0
+smooth = 0.0
+hard_brake = 0.0
+fairness = 0.0
+ttc_pairs = "cav_follower"
+
+[lanes]
+enabled = true
+# CAVCUTIN consequence tier is ON. The additional 13E tier stays opt-in for CAVs.
+consequence_mask = true
+# Empty hook disables the optional 13E tier; it can plug in module:function.
+# Explicit gs requires inferred per-slot T,b, NOT hidden driver truth.
+secure_gap_hook = ""
+
+[counterfactual]
+enabled = true
+max_starts = 1
+n_individual = 0
+n_group = 1
+n_flip = 1
+cover_group_members = false
+group_max_size = 3
+group_state_fraction = 0.0
+# Same nominal direct cap and execution projection for the native reference.
+native_accel_max_mps2 = 1.2
+curriculum_updates = [0]
+w_all = [1.0]
+w_individual = [0.0]
+w_group = [0.0]
+w_coop = [0.0]
+w_team = [0.0]
+
+[data]
+wm_config = "configs/c4_policy14_starts.toml"
+start_sources = ["native_v5", "genrand_plain"]
+val_fraction = 0.1
+
+[policy14]
+authoritative_j = true
+sampled_marginal_lane_weight = 0.25
+independent_rescore = true
+free_road_gate = true
+fd_gate = true
+critic_value_scale = 10000.0
+critic_warmup_updates = 32
+entropy_floor = 0.0003
+entropy_decay_on_improvement = 0.99
+signal_gate_updates = 10

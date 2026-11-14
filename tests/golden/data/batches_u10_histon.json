@@ -1,0 +1,352 @@
+{
+ "batch_size": 2,
+ "history_s": 60.0,
+ "identities": [
+  [
+   null,
+   null
+  ],
+  [
+   null,
+   null
+  ],
+  [
+   null,
+   null
+  ]
+ ],
+ "indices": [
+  807,
+  595,
+  214,
+  491,
+  13,
+  562
+ ],
+ "items": [
+  {
+   "dataset_index": 807,
+   "start_shift_ticks": 33
+  },
+  {
+   "dataset_index": 595,
+   "start_shift_ticks": 881
+  },
+  {
+   "dataset_index": 214,
+   "start_shift_ticks": 339
+  },
+  {
+   "dataset_index": 491,
+   "start_shift_ticks": 855
+  },
+  {
+   "dataset_index": 13,
+   "start_shift_ticks": 1029
+  },
+  {
+   "dataset_index": 562,
+   "start_shift_ticks": 0
+  }
+ ],
+ "n_batches": 3,
+ "seeds": {
+  "item": 7000,
+  "perm": 2026
+ },
+ "shapes": {
+  "b0_cav_teacher": [
+   [
+    2,
+    21,
+    192,
+    4
+   ],
+   "torch.float32"
+  ],
+  "b0_controller_id": [
+   [
+    2
+   ],
+   "torch.int64"
+  ],
+  "b0_driver_hist": [
+   [
+    2,
+    192,
+    61,
+    9
+   ],
+   "torch.float32"
+  ],
+  "b0_driver_hist_mask": [
+   [
+    2,
+    192,
+    61
+   ],
+   "torch.bool"
+  ],
+  "b0_hist": [
+   [
+    2,
+    192,
+    10,
+    6
+   ],
+   "torch.float32"
+  ],
+  "b0_hist_mask": [
+   [
+    2,
+    192,
+    10
+   ],
+   "torch.bool"
+  ],
+  "b0_is_cav": [
+   [
+    2,
+    21,
+    192
+   ],
+   "torch.bool"
+  ],
+  "b0_loss_valid": [
+   [
+    2,
+    21,
+    192
+   ],
+   "torch.bool"
+  ],
+  "b0_present": [
+   [
+    2,
+    21,
+    192
+   ],
+   "torch.bool"
+  ],
+  "b0_slot_index": [
+   [
+    2,
+    21,
+    192
+   ],
+   "torch.int64"
+  ],
+  "b0_states": [
+   [
+    2,
+    21,
+    192,
+    7
+   ],
+   "torch.float32"
+  ],
+  "b0_vehicle_ids": [
+   [
+    2,
+    192
+   ],
+   "torch.int64"
+  ],
+  "b1_cav_teacher": [
+   [
+    2,
+    21,
+    192,
+    4
+   ],
+   "torch.float32"
+  ],
+  "b1_controller_id": [
+   [
+    2
+   ],
+   "torch.int64"
+  ],
+  "b1_driver_hist": [
+   [
+    2,
+    192,
+    61,
+    9
+   ],
+   "torch.float32"
+  ],
+  "b1_driver_hist_mask": [
+   [
+    2,
+    192,
+    61
+   ],
+   "torch.bool"
+  ],
+  "b1_hist": [
+   [
+    2,
+    192,
+    10,
+    6
+   ],
+   "torch.float32"
+  ],
+  "b1_hist_mask": [
+   [
+    2,
+    192,
+    10
+   ],
+   "torch.bool"
+  ],
+  "b1_is_cav": [
+   [
+    2,
+    21,
+    192
+   ],
+   "torch.bool"
+  ],
+  "b1_loss_valid": [
+   [
+    2,
+    21,
+    192
+   ],
+   "torch.bool"
+  ],
+  "b1_present": [
+   [
+    2,
+    21,
+    192
+   ],
+   "torch.bool"
+  ],
+  "b1_slot_index": [
+   [
+    2,
+    21,
+    192
+   ],
+   "torch.int64"
+  ],
+  "b1_states": [
+   [
+    2,
+    21,
+    192,
+    7
+   ],
+   "torch.float32"
+  ],
+  "b1_vehicle_ids": [
+   [
+    2,
+    192
+   ],
+   "torch.int64"
+  ],
+  "b2_cav_teacher": [
+   [
+    2,
+    21,
+    192,
+    4
+   ],
+   "torch.float32"
+  ],
+  "b2_controller_id": [
+   [
+    2
+   ],
+   "torch.int64"
+  ],
+  "b2_driver_hist": [
+   [
+    2,
+    192,
+    61,
+    9
+   ],
+   "torch.float32"
+  ],
+  "b2_driver_hist_mask": [
+   [
+    2,
+    192,
+    61
+   ],
+   "torch.bool"
+  ],
+  "b2_hist": [
+   [
+    2,
+    192,
+    10,
+    6
+   ],
+   "torch.float32"
+  ],
+  "b2_hist_mask": [
+   [
+    2,
+    192,
+    10
+   ],
+   "torch.bool"
+  ],
+  "b2_is_cav": [
+   [
+    2,
+    21,
+    192
+   ],
+   "torch.bool"
+  ],
+  "b2_loss_valid": [
+   [
+    2,
+    21,
+    192
+   ],
+   "torch.bool"
+  ],
+  "b2_present": [
+   [
+    2,
+    21,
+    192
+   ],
+   "torch.bool"
+  ],
+  "b2_slot_index": [
+   [
+    2,
+    21,
+    192
+   ],
+   "torch.int64"
+  ],
+  "b2_states": [
+   [
+    2,
+    21,
+    192,
+    7
+   ],
+   "torch.float32"
+  ],
+  "b2_vehicle_ids": [
+   [
+    2,
+    192
+   ],
+   "torch.int64"
+  ]
+ },
+ "start_shift_prob": 0.75,
+ "unroll_s": 10
+}

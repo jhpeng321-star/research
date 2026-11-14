@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/flow_effect_v1",
+ "name": "flow_effect_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\flow_effect_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/flow_effect_v1/flow_effect_v1.tar.zst",
+ "bytes": 249596848,
+ "files": 131,
+ "archive_bytes": 13732551,
+ "archive_md5": "7b7eb02592c695a2486f31239a0b72b1",
+ "member_manifest": "manifests/members/output_flow_effect_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 51.3,
+ "timestamp": "2026-10-10T02:52:57"
+}

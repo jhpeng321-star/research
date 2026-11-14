@@ -1,0 +1,1296 @@
+{
+ "stream_sha256": "70aaf8390cf8a056ab9b30cb4f982bf893a7ec046d069beb0808c03b5bc2f7ec",
+ "a80_s2b_sha256": "48c5c448c2a85d4e2020def54cb17259979c89f2e0cc341829d6e99de0d0e289",
+ "rows": [
+  {
+   "family": "rand_8b349e4e21de2104",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_248e417088ca5bca",
+   "reason": null,
+   "form": "zone",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_362b1c090017333d",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_426b1e24398af1e1",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_ce70dd9cd94958ee",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_76356c2101305101",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_6fcc79151f336ee3",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "gap_drop",
+     false
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_aa089de181d7575e",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "o"
+    ]
+   ]
+  },
+  {
+   "family": "rand_5eed2f91a929939a",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "gap_drop",
+     false
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     "i"
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ],
+    [
+     "role",
+     "onset",
+     "i"
+    ]
+   ]
+  },
+  {
+   "family": "rand_55a62d9652f4bf15",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "iop"
+    ]
+   ]
+  },
+  {
+   "family": "rand_10fef05aff5844cc",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_2d89591c984cfd37",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_0db02e78514eed61",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ]
+   ]
+  },
+  {
+   "family": "rand_7fc41682205c6940",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": []
+  },
+  {
+   "family": "rand_bb679295a33cb50b",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "ip"
+    ]
+   ]
+  },
+  {
+   "family": "rand_80694514f5996183",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "iop"
+    ]
+   ]
+  },
+  {
+   "family": "rand_e711ecb761e15469",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_a7696635085eefda",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_35701c6c651b6de0",
+   "reason": null,
+   "form": "zone",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_4620e67c85f4b0f1",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_86076079147e9799",
+   "reason": null,
+   "form": "zone",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_5d173c6fcf318e39",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ]
+   ]
+  },
+  {
+   "family": "rand_e46caf221e9be7ba",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_bbb21eaf950a8f5b",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "dio"
+    ],
+    [
+     "role",
+     "onset",
+     "i"
+    ]
+   ]
+  },
+  {
+   "family": "rand_1c8ec3e6ce33f4e4",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_711d31bc19c727fc",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "o"
+    ]
+   ]
+  },
+  {
+   "family": "rand_c9a14802607aa642",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_7b47f5c7335fac87",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_328db41802196c07",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_623d61dec04ead15",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ]
+   ]
+  },
+  {
+   "family": "rand_cd93b4fdd10b8f72",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ]
+   ]
+  },
+  {
+   "family": "rand_8159475008730707",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_d0cc45703e3a1f61",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_b21e51d8708930a7",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_1a1384d93c4844b5",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_81fbdc5199830a06",
+   "reason": null,
+   "form": "zone",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_a336295a7de0864d",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "gap_drop",
+     false
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ]
+   ]
+  },
+  {
+   "family": "rand_8cf42398be8068cf",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_8eed4d81cf5c865f",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": []
+  },
+  {
+   "family": "rand_abd8a98fd3987ed8",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": []
+  },
+  {
+   "family": "rand_c63c570e5d1dbaea",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_132126b16f132f3f",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ]
+   ]
+  },
+  {
+   "family": "rand_a37cd45ff6329fb1",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_d8b26911d402c617",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "iop"
+    ]
+   ]
+  },
+  {
+   "family": "rand_a68e577578412fc3",
+   "reason": null,
+   "form": "zone",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_3b688c3242e6652b",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_5fdbd52bbdd85d3f",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     "io"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_0a47bcf093cd46c2",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "iop"
+    ]
+   ]
+  },
+  {
+   "family": "rand_344eb844e8dca4cf",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "i"
+    ]
+   ]
+  },
+  {
+   "family": "rand_be07b929c1f67c1d",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_e932e3c4069cd686",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "gap_drop",
+     false
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "i"
+    ]
+   ]
+  },
+  {
+   "family": "rand_87d995de0eb89fab",
+   "reason": null,
+   "form": "zone",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ]
+  },
+  {
+   "family": "rand_e92e4ffe17e81cdb",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  },
+  {
+   "family": "rand_05ff81b458adb0f2",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_e768b30f00276b66",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "near"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_ae2ee86adeff0d20",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "dio"
+    ],
+    [
+     "role",
+     "onset",
+     "o"
+    ]
+   ]
+  },
+  {
+   "family": "rand_d5377deb5555725d",
+   "reason": null,
+   "form": "taper",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "i"
+    ]
+   ]
+  },
+  {
+   "family": "rand_879444ab07d917c6",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ]
+   ]
+  },
+  {
+   "family": "rand_e991fbb35c2df460",
+   "reason": null,
+   "form": "pulse",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "dp"
+    ]
+   ]
+  },
+  {
+   "family": "rand_4ce57b4d3616c361",
+   "reason": null,
+   "form": "gap",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ]
+  }
+ ]
+}

@@ -1,0 +1,184 @@
+priority below-normal: False
+=== WD-01 part 3m TASK A: TTC<3 exposure excess diagnosis (TRAIN fit roots + VALIDATION report-only) ===
+ZERO simulation; holdout blocked in root_arrays (never passed).
+device=cpu torch_threads=2
+H=30 s (K=60 steps of 0.5 s), t0 grid every 60 s (120, 180, 240, 300, 360, 420, 480); train-diagnosis roots = FIT roots ['cv17', 'cv19_4107', 'cv19_4108', 'cv20_7001m2000']; validation roots ['cv20_7005m2000', 'cv20_7006m2000', 'cv30_7305m2700', 'seed_7535m2400'] (report only); holdout blocked
+member configs (p3l L5 reference members):
+  member 0: seed=1 lc_scale=0.00075 merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.0} dawdle_scale=1.0
+  member 1: seed=18 lc_scale=0.003 merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.25} dawdle_scale=1.25
+  member 2: seed=35 lc_scale=0.0005 merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.25} dawdle_scale=1.5
+  member 3: seed=52 lc_scale=0.0015 merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.0} dawdle_scale=0.8
+  member 4: seed=69 lc_scale=0.001 merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.25} dawdle_scale=1.5
+[   0.0s] == train: 4 roots x 7 t0 x 5 members ...
+[  36.1s]   train member 0: 28 windows done ({'n_windows': 28, 'pred_all': 7.5, 'pred_matched': 7.5, 'truth': 2.732, 'bias': 4.768, 'composition': 0.0, 'behaviour': 4.768})
+[  72.8s]   train member 1: 56 windows done ({'n_windows': 28, 'pred_all': 8.929, 'pred_matched': 8.929, 'truth': 2.732, 'bias': 6.196, 'composition': 0.0, 'behaviour': 6.196})
+[ 106.5s]   train member 2: 84 windows done ({'n_windows': 28, 'pred_all': 9.446, 'pred_matched': 9.446, 'truth': 2.732, 'bias': 6.714, 'composition': 0.0, 'behaviour': 6.714})
+[ 139.7s]   train member 3: 112 windows done ({'n_windows': 28, 'pred_all': 8.339, 'pred_matched': 8.339, 'truth': 2.732, 'bias': 5.607, 'composition': 0.0, 'behaviour': 5.607})
+[ 173.2s]   train member 4: 140 windows done ({'n_windows': 28, 'pred_all': 8.232, 'pred_matched': 8.232, 'truth': 2.732, 'bias': 5.5, 'composition': 0.0, 'behaviour': 5.5})
+
+==== TRAIN pooled over 140 windows ({'n_windows': 140, 'pred_all': 8.489, 'pred_matched': 8.489, 'truth': 2.732, 'bias': 5.757, 'composition': 0.0, 'behaviour': 5.757}) ====
+
+  -- ev (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  ('pure_cf',)                   660.0 1042.5 1042.5  382.5   2085  2085   765
+  ('post_merge',)                122.5  122.5  122.5    0.0    245   245     0
+  ('post_lc',)                    23.5   23.5   23.5    0.0     47    47     0
+
+  -- ev_lane (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  ('pure_cf', 2)                 418.5  628.5  628.5  210.0   1257  1257   420
+  ('pure_cf', 1)                 240.5  413.0  413.0  172.5    826   826   345
+  ('post_merge', 1)              122.0  122.0  122.0    0.0    244   244     0
+  ('post_lc', 0)                  15.5   15.5   15.5    0.0     31    31     0
+  ('post_lc', 1)                   8.0    8.0    8.0    0.0     16    16     0
+  ('pure_cf', 0)                   1.0    1.0    1.0    0.0      2     2     0
+  ('post_merge', 0)                0.5    0.5    0.5    0.0      1     1     0
+
+  -- seg (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  ('downstream',)                887.5 1082.5 1082.5  195.0   2165  2165   390
+  ('upstream',)                    0.0    2.5    2.5    2.5      5     5     5
+  ('rsu_window',)                -28.5   29.0   29.0   57.5     58    58   115
+  ('merge_edge',)                -53.0   74.5   74.5  127.5    149   149   255
+
+  -- lane (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  (2,)                           418.5  628.5  628.5  210.0   1257  1257   420
+  (1,)                           370.5  543.0  543.0  172.5   1086  1086   345
+  (0,)                            17.0   17.0   17.0    0.0     34    34     0
+
+  -- who (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  ('pure_cf', '-')               660.0 1042.5 1042.5  382.5   2085  2085   765
+  ('post_merge', 'foll')          50.5   50.5   50.5    0.0    101   101     0
+  ('post_merge', 'lead')          47.0   47.0   47.0    0.0     94    94     0
+  ('post_merge', 'both')          25.0   25.0   25.0    0.0     50    50     0
+  ('post_lc', '-')                23.5   23.5   23.5    0.0     47    47     0
+
+  -- ttc (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  ('[2,3)',)                     563.0  943.0  943.0  380.0   1886  1886   760
+  ('[1.5,2)',)                   202.5  202.5  202.5    0.0    405   405     0
+  ('[1,1.5)',)                    31.5   31.5   31.5    0.0     63    63     0
+  ('[0,1)',)                       9.0   11.5   11.5    2.5     23    23     5
+
+  -- vt (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  (2,)                           379.5  387.0  387.0    7.5    774   774    15
+  (1,)                           343.5  698.5  698.5  355.0   1397  1397   710
+  (0,)                            83.0  103.0  103.0   20.0    206   206    40
+
+  -- dawdle (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  (1.5,)                         342.0  495.0  495.0  153.0    990   990   306
+  (1.25,)                        173.5  250.0  250.0   76.5    500   500   153
+  (0.8,)                         157.0  233.5  233.5   76.5    467   467   153
+  (1.0,)                         133.5  210.0  210.0   76.5    420   420   153
+
+  ==== member 0 (dawdle=1.0 lc_scale=0.00075 p_coop=0.0) -- event + lane tables ====
+   member 0 ev: ('pure_cf',)=+109.5(pa 186.0/tr 76.5); ('post_merge',)=+18.5(pa 18.5/tr 0.0); ('post_lc',)=+5.5(pa 5.5/tr 0.0)
+   member 0 ev_lane: ('pure_cf', 2)=+115.0(pa 157.0/tr 42.0); ('post_merge', 1)=+18.5(pa 18.5/tr 0.0); ('post_lc', 0)=+3.5(pa 3.5/tr 0.0); ('post_lc', 1)=+2.0(pa 2.0/tr 0.0)
+
+  ==== member 1 (dawdle=1.25 lc_scale=0.003 p_coop=0.25) -- event + lane tables ====
+   member 1 ev: ('pure_cf',)=+129.0(pa 205.5/tr 76.5); ('post_merge',)=+36.0(pa 36.0/tr 0.0); ('post_lc',)=+8.5(pa 8.5/tr 0.0)
+   member 1 ev_lane: ('pure_cf', 1)=+74.5(pa 109.0/tr 34.5); ('pure_cf', 2)=+53.5(pa 95.5/tr 42.0); ('post_merge', 1)=+35.5(pa 35.5/tr 0.0); ('post_lc', 0)=+6.5(pa 6.5/tr 0.0)
+
+  ==== member 2 (dawdle=1.5 lc_scale=0.0005 p_coop=0.25) -- event + lane tables ====
+   member 2 ev: ('pure_cf',)=+153.5(pa 230.0/tr 76.5); ('post_merge',)=+30.0(pa 30.0/tr 0.0); ('post_lc',)=+4.5(pa 4.5/tr 0.0)
+   member 2 ev_lane: ('pure_cf', 1)=+103.0(pa 137.5/tr 34.5); ('pure_cf', 2)=+50.5(pa 92.5/tr 42.0); ('post_merge', 1)=+30.0(pa 30.0/tr 0.0); ('post_lc', 0)=+4.5(pa 4.5/tr 0.0)
+
+  ==== member 3 (dawdle=0.8 lc_scale=0.0015 p_coop=0.0) -- event + lane tables ====
+   member 3 ev: ('pure_cf',)=+145.5(pa 222.0/tr 76.5); ('post_merge',)=+9.5(pa 9.5/tr 0.0); ('post_lc',)=+2.0(pa 2.0/tr 0.0)
+   member 3 ev_lane: ('pure_cf', 2)=+170.5(pa 212.5/tr 42.0); ('post_merge', 1)=+9.5(pa 9.5/tr 0.0); ('post_lc', 0)=+1.0(pa 1.0/tr 0.0); ('post_lc', 1)=+1.0(pa 1.0/tr 0.0)
+
+  ==== member 4 (dawdle=1.5 lc_scale=0.001 p_coop=0.25) -- event + lane tables ====
+   member 4 ev: ('pure_cf',)=+122.5(pa 199.0/tr 76.5); ('post_merge',)=+28.5(pa 28.5/tr 0.0); ('post_lc',)=+3.0(pa 3.0/tr 0.0)
+   member 4 ev_lane: ('pure_cf', 1)=+93.5(pa 128.0/tr 34.5); ('pure_cf', 2)=+29.0(pa 71.0/tr 42.0); ('post_merge', 1)=+28.5(pa 28.5/tr 0.0); ('post_lc', 1)=+3.0(pa 3.0/tr 0.0)
+[ 173.2s] == validation: 4 roots x 7 t0 x 5 members ...
+[ 211.8s]   validation member 0: 28 windows done ({'n_windows': 28, 'pred_all': 14.054, 'pred_matched': 14.054, 'truth': 7.304, 'bias': 6.75, 'composition': 0.0, 'behaviour': 6.75})
+[ 249.3s]   validation member 1: 56 windows done ({'n_windows': 28, 'pred_all': 14.964, 'pred_matched': 14.964, 'truth': 7.339, 'bias': 7.625, 'composition': 0.0, 'behaviour': 7.625})
+[ 285.5s]   validation member 2: 84 windows done ({'n_windows': 28, 'pred_all': 14.786, 'pred_matched': 14.786, 'truth': 7.304, 'bias': 7.482, 'composition': 0.0, 'behaviour': 7.482})
+[ 324.0s]   validation member 3: 112 windows done ({'n_windows': 28, 'pred_all': 14.286, 'pred_matched': 14.286, 'truth': 7.321, 'bias': 6.964, 'composition': 0.0, 'behaviour': 6.964})
+[ 363.5s]   validation member 4: 140 windows done ({'n_windows': 28, 'pred_all': 13.143, 'pred_matched': 13.143, 'truth': 7.321, 'bias': 5.821, 'composition': 0.0, 'behaviour': 5.821})
+
+==== VALIDATION pooled over 140 windows ({'n_windows': 140, 'pred_all': 14.246, 'pred_matched': 14.246, 'truth': 7.318, 'bias': 6.929, 'composition': 0.0, 'behaviour': 6.929}) ====
+
+  -- ev (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  ('pure_cf',)                   767.5 1784.5 1784.5 1017.0   3569  3569  2034
+  ('post_merge',)                134.0  141.5  141.5    7.5    283   283    15
+  ('post_lc',)                    68.5   68.5   68.5    0.0    137   137     0
+
+  -- ev_lane (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  ('pure_cf', 2)                 440.5  945.0  945.0  504.5   1890  1890  1009
+  ('pure_cf', 1)                 324.5  832.0  832.0  507.5   1664  1664  1015
+  ('post_merge', 1)              130.5  138.0  138.0    7.5    276   276    15
+  ('post_lc', 0)                  43.0   43.0   43.0    0.0     86    86     0
+  ('post_lc', 1)                  25.5   25.5   25.5    0.0     51    51     0
+  ('post_merge', 0)                3.5    3.5    3.5    0.0      7     7     0
+  ('pure_cf', 0)                   2.5    7.5    7.5    5.0     15    15    10
+
+  -- seg (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  ('downstream',)               1284.0 1756.0 1756.0  472.0   3512  3512   944
+  ('upstream',)                    3.5    3.5    3.5    0.0      7     7     0
+  ('rsu_window',)                -84.0   83.5   83.5  167.5    167   167   335
+  ('merge_edge',)               -233.5  151.5  151.5  385.0    303   303   770
+
+  -- lane (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  (1,)                           480.5  995.5  995.5  515.0   1991  1991  1030
+  (2,)                           440.5  945.0  945.0  504.5   1890  1890  1009
+  (0,)                            49.0   54.0   54.0    5.0    108   108    10
+
+  -- who (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  ('pure_cf', '-')               767.5 1784.5 1784.5 1017.0   3569  3569  2034
+  ('post_lc', '-')                68.5   68.5   68.5    0.0    137   137     0
+  ('post_merge', 'lead')          52.0   59.5   59.5    7.5    119   119    15
+  ('post_merge', 'both')          43.5   43.5   43.5    0.0     87    87     0
+  ('post_merge', 'foll')          38.5   38.5   38.5    0.0     77    77     0
+
+  -- ttc (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  ('[2,3)',)                     558.5 1580.5 1580.5 1022.0   3161  3161  2044
+  ('[1.5,2)',)                   324.5  327.0  327.0    2.5    654   654     5
+  ('[1,1.5)',)                    59.0   59.0   59.0    0.0    118   118     0
+  ('[0,1)',)                      28.0   28.0   28.0    0.0     56    56     0
+
+  -- vt (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  (1,)                           503.5 1323.0 1323.0  819.5   2646  2646  1639
+  (2,)                           465.0  520.0  520.0   55.0   1040  1040   110
+  (0,)                             1.5  151.5  151.5  150.0    303   303   300
+
+  -- dawdle (all members) (excess = pa - tr; veh s pooled) --
+  key                          excess     pa     pm     tr    n_pa  n_pm  n_tr
+  (1.5,)                         372.5  782.0  782.0  409.5   1564  1564   819
+  (1.25,)                        213.5  419.0  419.0  205.5    838   838   411
+  (0.8,)                         195.0  400.0  400.0  205.0    800   800   410
+  (1.0,)                         189.0  393.5  393.5  204.5    787   787   409
+
+  ==== member 0 (dawdle=1.0 lc_scale=0.00075 p_coop=0.0) -- event + lane tables ====
+   member 0 ev: ('pure_cf',)=+174.5(pa 377.5/tr 203.0); ('post_merge',)=+7.5(pa 9.0/tr 1.5); ('post_lc',)=+7.0(pa 7.0/tr 0.0)
+   member 0 ev_lane: ('pure_cf', 2)=+186.0(pa 286.5/tr 100.5); ('post_merge', 1)=+7.5(pa 9.0/tr 1.5); ('post_lc', 1)=+3.5(pa 3.5/tr 0.0); ('post_lc', 0)=+3.5(pa 3.5/tr 0.0)
+
+  ==== member 1 (dawdle=1.25 lc_scale=0.003 p_coop=0.25) -- event + lane tables ====
+   member 1 ev: ('pure_cf',)=+150.0(pa 354.0/tr 204.0); ('post_merge',)=+36.0(pa 37.5/tr 1.5); ('post_lc',)=+27.5(pa 27.5/tr 0.0)
+   member 1 ev_lane: ('pure_cf', 1)=+132.5(pa 234.0/tr 101.5); ('post_merge', 1)=+34.0(pa 35.5/tr 1.5); ('post_lc', 1)=+14.5(pa 14.5/tr 0.0); ('pure_cf', 2)=+14.0(pa 115.5/tr 101.5)
+
+  ==== member 2 (dawdle=1.5 lc_scale=0.0005 p_coop=0.25) -- event + lane tables ====
+   member 2 ev: ('pure_cf',)=+172.5(pa 375.5/tr 203.0); ('post_merge',)=+32.0(pa 33.5/tr 1.5); ('post_lc',)=+5.0(pa 5.0/tr 0.0)
+   member 2 ev_lane: ('pure_cf', 1)=+144.0(pa 245.5/tr 101.5); ('post_merge', 1)=+30.5(pa 32.0/tr 1.5); ('pure_cf', 2)=+27.5(pa 128.0/tr 100.5); ('post_lc', 0)=+4.0(pa 4.0/tr 0.0)
+
+  ==== member 3 (dawdle=0.8 lc_scale=0.0015 p_coop=0.0) -- event + lane tables ====
+   member 3 ev: ('pure_cf',)=+166.5(pa 370.0/tr 203.5); ('post_merge',)=+15.5(pa 17.0/tr 1.5); ('post_lc',)=+13.0(pa 13.0/tr 0.0)
+   member 3 ev_lane: ('pure_cf', 2)=+220.5(pa 321.5/tr 101.0); ('post_merge', 1)=+15.5(pa 17.0/tr 1.5); ('post_lc', 0)=+8.0(pa 8.0/tr 0.0); ('post_lc', 1)=+5.0(pa 5.0/tr 0.0)
+
+  ==== member 4 (dawdle=1.5 lc_scale=0.001 p_coop=0.25) -- event + lane tables ====
+   member 4 ev: ('pure_cf',)=+104.0(pa 307.5/tr 203.5); ('post_merge',)=+43.0(pa 44.5/tr 1.5); ('post_lc',)=+16.0(pa 16.0/tr 0.0)
+   member 4 ev_lane: ('pure_cf', 1)=+112.0(pa 213.5/tr 101.5); ('post_merge', 1)=+43.0(pa 44.5/tr 1.5); ('post_lc', 0)=+14.5(pa 14.5/tr 0.0); ('post_lc', 1)=+1.5(pa 1.5/tr 0.0)
+[ 363.6s] wrote D:\rd-wt\wd01k\output\wd01\part3m\results\diag_p3m.json
+
+DONE part 3m TASK A diagnosis.

@@ -1,0 +1,74 @@
+pin ok 538bd0bf /root/a81big/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok c755a551 /root/a81big/src/ops/a81_bigconfirm.py
+pin ok c325ec1d /root/a81big/root/a75d2_banks/A75D2_BANK_D2800_p60.json
+pin ok 48c5c448 /root/a78s2b/src/ops/a80_s2b.py
+pin ok 057c1f06 /root/a80e1r/root/a80_banks/A80_CANDS_D2800_p60.json
+patched /root/a89/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 538bd0bf /root/a81big/src/pytools/tools/coopmwm/nm_eval_runner.py
+runner A81 538bd0bf (unchanged) -> A89 982ec0cf56ea6803f9e294567278ae5ca96677a97e4e871f2e3d40e3ae9f934f
+pin ok 2abed317 /root/a66/inputs/policy_00084.pt
+{
+ "out": "/root/a89/src/ops/a89/A89_ARMS_D2800_p60.json",
+ "sha256": "de9a30a944eda470777cbd3247c6ca81db2745547549cde3e2bff154e23824c2",
+ "arms": {
+  "ROLL_BOTH": {
+   "family": "d2_d86b1d6ac653e8ad",
+   "strategy_key": "d86b1d6ac653e8ad",
+   "extended": false,
+   "n_roles": 2,
+   "executor_core": "LcStrategyCore",
+   "spec_sha256": "079efcf13458c0d95f7bae7002e22b464a6aa8509bce993244952f41d1fd5e56",
+   "template_equal_c325": true,
+   "row_equal_c325": true
+  },
+  "ROLL_L0_ONLY": {
+   "family": "a89l0_d86b1d6ac653e8ad",
+   "strategy_key": "928dfa5951710cb2",
+   "extended": false,
+   "n_roles": 1,
+   "executor_core": "LcStrategyCore",
+   "spec_sha256": "820ef5a7731ec5d41dea7d1c8d30e6c786742505b63cc207e6d02fe52040c833",
+   "condition_unchanged_except_roles": true,
+   "kept_role_identical": true
+  },
+  "ROLL_L2_ONLY": {
+   "family": "a89l2_d86b1d6ac653e8ad",
+   "strategy_key": "0bbb70f7956dae14",
+   "extended": false,
+   "n_roles": 1,
+   "executor_core": "LcStrategyCore",
+   "spec_sha256": "2084f425eac86ee831f16e423a97ef52af8d5677303ba63f9717bb138c70e217",
+   "condition_unchanged_except_roles": true,
+   "kept_role_identical": true
+  },
+  "TAPER": {
+   "family": "mut_1fca373046a3c66e",
+   "strategy_key": "1fca373046a3c66e",
+   "extended": true,
+   "n_roles": 4,
+   "executor_core": "HoldFormCore",
+   "spec_sha256": "4e5825a4e849b71210fa186a28d01875e9f07c170750588df730323afbdc60b8",
+   "template_equal_e1r": true,
+   "row_equal_e1r": true
+  }
+ }
+}
+arms bank de9a30a944eda470777cbd3247c6ca81db2745547549cde3e2bff154e23824c2
+ROLL_BOTH d2_d86b1d6ac653e8ad d86b1d6ac653e8ad plain 2 roles
+ROLL_L0_ONLY a89l0_d86b1d6ac653e8ad 928dfa5951710cb2 plain 1 roles
+ROLL_L2_ONLY a89l2_d86b1d6ac653e8ad 0bbb70f7956dae14 plain 1 roles
+TAPER mut_1fca373046a3c66e 1fca373046a3c66e extended 4 roles
+code identity ok: a75 d1af7e0f A89 block (988400, 988499)
+tree diff vs the A81 tree (expected: runner + the A89 files):
+Only in /root/a89/src/ops: a80_s2b.py
+Only in /root/a89/src/ops: a89
+Only in /root/a89/src/ops: a89_sixarm.py
+Only in /root/a89/src/ops: test_a89_sixarm.py
+Only in /root/a89/src/pytools/ops: a80_s2b.py
+Only in /root/a89/src/pytools/ops: a89
+Only in /root/a89/src/pytools/ops: a89_sixarm.py
+Only in /root/a89/src/pytools/ops: test_a89_sixarm.py
+Files /root/a81big/src/pytools/tools/coopmwm/nm_eval_runner.py and /root/a89/src/pytools/tools/coopmwm/nm_eval_runner.py differ
+53M	/root/a89
+  33G
+SETUP_OK

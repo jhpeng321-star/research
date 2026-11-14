@@ -1,0 +1,54 @@
+{
+ "schema": "wm_n1_box_configs_index/1",
+ "plan": "2-box-a",
+ "n_boxes": 2,
+ "wall_clock_hours": 102.5,
+ "co_run": false,
+ "concurrency": 1,
+ "co_run_assumption": "aggregate throughput speedup 1.3x (2 jobs) / 1.5x (3 jobs); placeholder to be replaced by the 1-h timing gate",
+ "generated_by": "bundle.multibox.plan_two_box",
+ "boxes": {
+  "box-A": {
+   "file": "boxA.json",
+   "configs": [
+    "member-1",
+    "member-2",
+    "member-3",
+    "member-4",
+    "member-5",
+    "n-member-1",
+    "n-member-2",
+    "n-member-3",
+    "n-member-4",
+    "n-member-5"
+   ],
+   "finish_hours": 102.5,
+   "start_hours": {
+    "member-1": 0.0,
+    "member-2": 13.0,
+    "member-3": 26.0,
+    "member-4": 39.0,
+    "member-5": 52.0,
+    "n-member-1": 65.0,
+    "n-member-2": 72.5,
+    "n-member-3": 80.0,
+    "n-member-4": 87.5,
+    "n-member-5": 95.0
+   }
+  },
+  "box-B": {
+   "file": "boxB.json",
+   "configs": [
+    "heldout-i-j4b",
+    "heldout-ii-leave-pi",
+    "heldout-iii-leave-highest-wall-speed"
+   ],
+   "finish_hours": 39.0,
+   "start_hours": {
+    "heldout-i-j4b": 0.0,
+    "heldout-ii-leave-pi": 13.0,
+    "heldout-iii-leave-highest-wall-speed": 26.0
+   }
+  }
+ }
+}

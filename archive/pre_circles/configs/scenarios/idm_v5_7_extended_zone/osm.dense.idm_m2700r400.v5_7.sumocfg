@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sumoConfiguration><input>
+<net-file value="osm.v5_7.extended.net.xml"/>
+<route-files value="idm_m2700r400.v5_7.rou.xml"/>
+</input><processing><ignore-route-errors value="true"/><collision.action value="warn"/><time-to-teleport value="-1"/></processing><report><no-step-log value="true"/></report></sumoConfiguration>

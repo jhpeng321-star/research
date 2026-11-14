@@ -1,0 +1,74 @@
+{
+  "name": "pl14",
+  "path": "E:\\rd-wt\\pl14",
+  "class": "worktree",
+  "manual": false,
+  "branch": "HEAD",
+  "headBefore": "4c4fb2ffb748063c4161b05674252a1b7176827a",
+  "headType": "detached",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": "refs/heads/analysis/effect-horizon",
+  "dest": "gdrive:research-archive/worktrees/pl14",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\pl14.tar.txt",
+  "uploadCount": 1090,
+  "uploadBytes": 23178913,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl14.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 dfea1e3999ea9057c47d74bede981394 local dfea1e3999ea9057c47d74bede981394; size 927386/927386; manifest md5 match size match; members=1090 (tar -t 1090, sha256 1090); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\pl14.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 1,
+  "skippedSensitiveSample": [
+    "output/planner_v1/DEVIATION_PL02a_HOLDOUT.md"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T06:39:34.968131+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "4c4fb2ffb748063c4161b05674252a1b7176827a",
+  "skippedSensitive": [
+    "output/planner_v1/DEVIATION_PL02a_HOLDOUT.md"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/pl14/pl14.tar.zst",
+    "name": "pl14.tar.zst",
+    "size": 927386,
+    "md5": "dfea1e3999ea9057c47d74bede981394",
+    "sha256": "12a55787d96c903ff74d072ee4cf62c20bbcbf8028c8da983759b0f30198bfb8",
+    "manifest_remote": "gdrive:research-archive/worktrees/pl14/pl14.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\pl14.manifest.json",
+    "manifest_size": 203907,
+    "manifest_md5": "a31a9909cf6e35f5d872258c7a03cba4",
+    "member_count": 1090,
+    "member_bytes": 23178913,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 34.7,
+    "verify_seconds": 2.0,
+    "upload_seconds": 11.2,
+    "upload_MBps": 0.08,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 1090,
+  "memberBytes": 23178913,
+  "junctionsFound": []
+}

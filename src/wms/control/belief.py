@@ -126,7 +126,7 @@ class BeliefConfig:
     det_speed_std_mps: float = 0.3
     rsu_pos_std_m: float = 0.5
     rsu_speed_std_mps: float = 0.2
-    # RSU own sensors; False = CAV-reports-only ablation
+    # RSU own sensors (owner 2026-10-12); False = CAV-reports-only ablation
     rsu_sensors: bool = True
     rsu_zones: RsuZones = field(default_factory=RsuZones)
     age_accel_std_mps2: float = 1.5   # unknown accel over the receipt age

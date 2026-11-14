@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-01",
+  "not_optimizer_update": true,
+  "physics_dispatched": 0,
+  "comparison": "original sampled joint explorations minus exact zero-update policy-mean HOLD",
+  "horizon_s": 600,
+  "windows": 156,
+  "D_G": {"n": 156, "mean": 90.19723865846544, "sd": 3449.763789388585, "quantiles": [-8317.091993191709, -1390.1680599792962, 0.0, 1328.7216175734357, 10477.92906897259]},
+  "exact_completed_windows": 33,
+  "exact_planned_windows": 66,
+  "C_G": {"n": 33, "mean": 246.43173954438834, "sd": 4814.8717893061785, "quantiles": [-13926.098354165588, 0.0, 0.0, 2.4814042262732983e-05, 22048.17800766611]},
+  "sum_D_i": {"n": 33, "mean": -474.5197843825439, "sd": 6453.001554405713, "quantiles": [-28846.295312834518, -7.121544562949566, 0.0, 396.48046904883813, 17124.851342755195]},
+  "positive_C_G_share": 0.2727272727272727,
+  "executed_change_share": 0.9358974358974359,
+  "safety_override_share": 0.8488972640982692,
+  "limitation": "Partial completion-order exact subset; exploration not learned DEV gain; no inference from subset sign or optimizer not yet run."
+}

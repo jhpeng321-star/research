@@ -1,0 +1,275 @@
+diff --git a/AGENTS.md b/AGENTS.md
+index 81fbd79..13d847b 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -1,5 +1,24 @@
+ # AGENTS.md — research-dense
+ 
++**Latest owner clarification, 2026-09-06: prioritize an existing trained
++controller; escalation is the intended contribution.** Start with
++`docs/PUBLISHED_DAMPING_REUSE_AUDIT_2026-09-06.md`. A coordinating task owns the
++bounded transfer check in `runs/probe/published_idm_fit_check_2026-09-06/`;
++inspect its manifest/process state before doing anything and do not duplicate
++its corridor or penetration runs. The released RL candidate is not yet linked
++to an exact paper checkpoint or accepted in this setting. Do not claim otherwise.
++
++The v1 campaign is checkpoint-paused at 36/8/8; do not restart either
++coordinator. Native-selectable v2 completed its bounded learning/physical check
++with NO-GO. The separate 480-second v2.1 recovery prototype removed the rebound
++but worsened pulse effort and also stopped with NO-GO, with no training.
++Read `docs/NATIVE_SELECTABLE_DAMPING_V2_RESULTS.md` and
++`docs/NATIVE_DAMPING_RECOVERY_V21_RESULTS_2026-09-06.md`, including the correction
++to the nondiscriminative `getSpeedWithoutTraCI` handback statistic and the later
++passing paired unfinished-command release/re-engagement check. Preserve all
++sources, checkpoints and negative results. No bespoke successor campaign or
++parameter search is authorized. Acceptance stays sealed; wall training paused.
++
+ Dense/hyper Traffic Shepherd workspace (SUMO + TraCI + Ray RLlib). The active
+ IEEE IV project is IDM-native decentralized damping followed by conditional
+ escalation to coordinated moving-wall control.
+@@ -25,9 +44,12 @@ Set-Location D:\research-dense
+ 
+ ## Current scientific order
+ 
+-1. Verify the analytical IDM controller and bounded residual learning contract.
+-2. Pass action-credit, reward-alignment, safety, and RLlib learning-signal gates.
+-3. Train and prospectively evaluate the IDM damping checkpoint on untouched seeds.
++1. Audit provenance, observations and execution semantics of an existing trained
++   damping candidate; validate its adapter with native IDM background traffic.
++2. Require physical benefit, service/source protection and safety in bounded
++   development checks. If learning is later necessary, first pass action-credit,
++   reward-alignment and learning-signal gates under a separate frozen budget.
++3. Prospectively evaluate the fixed candidate and adapter on untouched seeds.
+ 4. Freeze that checkpoint as the counterfactual control arm.
+ 5. Verify damping-preserving moving-wall dose, safety, and outcome headroom.
+ 6. Only then train and prospectively validate the two-stage escalation predictor.
+@@ -36,12 +58,32 @@ Do not generate predictor-scale data or claim prediction, calibration, collapse
+ prevention, or IDM generalization before its frozen gate passes. Record all
+ development seeds and exclude them from final prospective evaluation.
+ 
+-Authoritative navigation is in `docs/INDEX.md`. The **active handoff**
+-is `docs/HANDOFF_2026-09-05.md`; the remaining-work prompt is
+-`docs/STAGE2_NEXT_AGENT_PROMPT.md`. The v5.x master plan
++Authoritative navigation is in `docs/INDEX.md`. The owner clarified on
++2026-09-05 that **standalone trained damping is required before escalation**.
++The 2026-09-06 reuse priority above supersedes the bespoke implementation route
++in `docs/TRAINED_DAMPING_TO_PAPER_ROUTE_2026-09-05.md`. Historical implementation and
++the bounded PyTorch PPO check are in `docs/NATIVE_DAMPING_V1_IMPLEMENTATION.md`
++and `docs/NATIVE_DAMPING_V1_LEARNING_CHECK.md`; do not confuse that learner
++with the historical RLlib per-vehicle terminal path.
++For the stopped registered full campaign, see
++`docs/NATIVE_DAMPING_FULL_CAMPAIGN_2026-09-05.md` and the single directory
++`runs/rllib/native_damping_campaign_v1/`; inspect its current stage before
++launching or resuming anything.
++Historical scheduling was parallel across the three independent optimizer seeds;
++read `docs/NATIVE_DAMPING_PARALLEL_EXECUTION_2026-09-05.md` and inspect
++`runs/rllib/native_damping_campaign_v1/parallel_execution/` before acting.
++The previous serial coordinator is stopped; do not restart it or duplicate
++the isolated worker runs. Do not edit the active parallel wrapper or frozen
++scientific sources while those processes are running. Reserved acceptance seeds must
++not be generated during training/development. The older
++`docs/HANDOFF_2026-09-05.md` and `docs/STAGE2_NEXT_AGENT_PROMPT.md` are
++stopped historical directions, not prompts to resume. The v5.x master plan
+ (`docs/IDM_DECENTRALIZED_ESCALATION_MASTER_PLAN.md`) is historical: do
+-not resume the compact-wall treadmill or treat validated IDM residual RL
+-as a prerequisite (damping is measured neutral-to-harmful).
++not resume the compact-wall treadmill. Negative analytical/P30 results do
++not establish that trained damping is finished or authorize substituting an
++analytical controller for the owner's required learned checkpoint. A new
++learning contract must address the documented authority, observation and
++credit problems; do not restart a rejected training run unchanged.
+ 
+ ## Artifacts
+ 
+diff --git a/docs/HANDOFF_2026-09-05.md b/docs/HANDOFF_2026-09-05.md
+index 3c4edf2..bbd9813 100644
+--- a/docs/HANDOFF_2026-09-05.md
++++ b/docs/HANDOFF_2026-09-05.md
+@@ -1,5 +1,16 @@
+ # Handoff — 2026-09-05
+ 
++> **Latest owner clarification:** a standalone trained damping checkpoint is
++> required before escalation. The [restored route](TRAINED_DAMPING_TO_PAPER_ROUTE_2026-09-05.md)
++> takes precedence over both this handoff and the later wall-only paper proposal.
++
++> **Post-stop review:** the owner stopped Stage 2 and requested a direct
++> paper plan. Read [the evidence review and proposed replacement plan](PAPER_COMPLETION_PLAN_2026-09-05.md)
++> first. The launch status and several readiness claims below are stale;
++> the new review identifies concrete implementation and observation-contract
++> gaps. Preserve this handoff as provenance; do not resume its execution
++> prompt unchanged. No replacement experiment was launched by that review.
++
+ **For the next agent.** This is the current scientific and operational
+ state. The v5.x compact-wall / two-stage predictor treadmill is closed.
+ Do not resume it. The controlling remaining-work prompt is
+diff --git a/docs/IDM_PAPER_SKELETON.md b/docs/IDM_PAPER_SKELETON.md
+index 953e3ba..97c912b 100644
+--- a/docs/IDM_PAPER_SKELETON.md
++++ b/docs/IDM_PAPER_SKELETON.md
+@@ -1,5 +1,12 @@
+ # Paper skeleton — learned metastable corridor control under IDM (IEEE IV draft)
+ 
++> Historical wall-first manuscript. Its claims and numbers are not accepted
++> evidence for the restored standalone-trained-damping project. Preserve this
++> text as earlier work; do not import its results into the current paper without
++> a separate provenance and applicability audit. Current methods are drafted in
++> `TRAINED_DAMPING_METHODS_DRAFT_2026-09-05.md`; the active route is
++> `TRAINED_DAMPING_TO_PAPER_ROUTE_2026-09-05.md`.
++
+ ## Working title
+ **"Learning to hold the lower branch: a moving-bottleneck wall against metastable
+ breakdown under realistic car-following (IDM)"**
+@@ -98,4 +105,4 @@ protection: 0.46→0.90).
+   (p≤0.005, n=50) — the wall pays where collapse is expensive.
+ - C6 (frontier, measured not assumed): every mechanism knob trades delay for protection;
+   the learned model sits below the hand-tuned frontier (4.9 s cheaper than the long-band
+-  rule at matched protection, p<0.001).
+\ No newline at end of file
++  rule at matched protection, p<0.001).
+diff --git a/docs/INDEX.md b/docs/INDEX.md
+index a131ec6..c466f28 100644
+--- a/docs/INDEX.md
++++ b/docs/INDEX.md
+@@ -1,5 +1,61 @@
+ # Documentation index
+ 
++**Current owner priority, 2026-09-06: reuse an existing trained damping baseline
++and focus the contribution on escalation.** Start with
++[published-controller provenance and graph audit](PUBLISHED_DAMPING_REUSE_AUDIT_2026-09-06.md).
++The coordinating task owns the single bounded development transfer check in
++`runs/probe/published_idm_fit_check_2026-09-06/`; do not duplicate or extend its
++simulations. The model is a frozen external RL candidate, not yet an accepted
++baseline or an exactly identified paper checkpoint. No training or acceptance
++data were used in the source/inference audit.
++
++**Completed repair:** [Native-selectable damping v2.0](NATIVE_SELECTABLE_DAMPING_V2_PROTOCOL.md).
++**Result:** [Action/reward repair, damping efficacy fails](NATIVE_SELECTABLE_DAMPING_V2_RESULTS.md).
++The bounded check is finished: 20,400 charged global seconds, 18,000 completed,
++no accepted checkpoint and no authorization to extend training. Native/reward
++semantics are tested; a later negative-control audit rejects the old handback
++speed-equality statistic, and a separately bounded paired unfinished-command
++test now verifies physical release/re-engagement directly (20 actual simulated
++seconds, 40 charged). Short pulse/recovery and corridor outcomes still fail.
++The separate [v2.1 recovery prototype](NATIVE_DAMPING_RECOVERY_V21_RESULTS_2026-09-06.md)
++completed its 480-second mechanism budget with no learning: rebound removed,
++pulse effort 18.94% worse, NO-GO. Do not create another bespoke variant or
++train it automatically. Both versions and all negative evidence are preserved.
++The old campaign is stopped at verified 36/8/8 checkpoints. Do not resume its
++serial or parallel coordinator. This repair has a separate 22,800-global-second
++ceiling, explicit native release, bounded intervention cost, short SUMO learning
++check and two exposed corridor diagnostic cases. No full campaign or acceptance
++evaluation is authorized by that check. Historical scheduling text below is
++superseded. Wall training remains paused.
++
++**Historical implementation route, 2026-09-05 (stopped).** See
++`TRAINED_DAMPING_TO_PAPER_ROUTE_2026-09-05.md`, then
++`NATIVE_DAMPING_V1_IMPLEMENTATION.md` and `NATIVE_DAMPING_V1_LEARNING_CHECK.md`.
++The stopped stage is `NATIVE_DAMPING_FULL_CAMPAIGN_2026-09-05.md`.
++Its historical scheduling used three independent workers; see
++`NATIVE_DAMPING_PARALLEL_EXECUTION_2026-09-05.md` and
++`runs/rllib/native_damping_campaign_v1/parallel_execution/` for preserved records.
++The earlier serial coordinator is stopped and must not be restarted.
++A separate two-case magnitude diagnostic uses the remaining two development
++rollout slots; see `NATIVE_DAMPING_MAGNITUDE_ABLATION_PROTOCOL_2026-09-05.md`.
++Its completed findings are in `NATIVE_DAMPING_MAGNITUDE_ABLATION_RESULTS_2026-09-05.md`:
++substantial effects persist with microunit corrections, while reducing magnitude
++also changes outcomes. The capped policy remains harmful in the 2200 case.
++The first complete checkpoint assessment and action-record audit are in
++`NATIVE_DAMPING_O71_E020_DEVELOPMENT_RESULTS_2026-09-05.md`: episode 20 is
++ineligible; the registered campaign was subsequently stopped at 36/8/8.
++Prospective acceptance criteria and remaining execution prerequisites are in
++`NATIVE_DAMPING_ACCEPTANCE_PROTOCOL_2026-09-05.md`; acceptance data remain sealed.
++The current manuscript methods draft is
++`TRAINED_DAMPING_METHODS_DRAFT_2026-09-05.md`; the earlier
++`IDM_PAPER_SKELETON.md` is historical and supplies no current-pipeline results.
++The primary-source introduction and related-work draft is
++`TRAINED_DAMPING_INTRO_RELATED_WORK_2026-09-05.md`; its proposed contribution
++remains conditional on validated damping and escalation results.
++The learning check is bounded development work, not an accepted checkpoint.
++Wall/predictor campaigns remain paused. Earlier wall documents below are
++historical evidence and do not override this objective.
++
+ - `IDM_V5_7_1_ORIGINAL_CORRIDOR_EXPANDED_ZONE_PROTOCOL.md` — corrected,
+   unexecuted original-corridor 200--1,900 m / 58 s low-authority mechanism
+   protocol. It replaces neither the v5.6.2 no-go nor the unexecuted v5.7
+@@ -135,12 +191,31 @@ Maintained module ownership and dependency rules are in `CODE_ARCHITECTURE.md`.
+ 
+ ## Current work
+ 
+-- `HANDOFF_2026-09-05.md` — **active scientific and operational handoff**
++- `NATIVE_DAMPING_V1_IMPLEMENTATION.md` — **current implementation status**:
++  sensor-local continuous controller foundation, causal team-credit primitives,
++  executable actor/actuator adapter, regression tests and a passing exposed-seed
++  mechanical comparison. The collector and learner are now implemented.
++- `NATIVE_DAMPING_V1_LEARNING_CHECK.md` — **bounded learning and repair evidence**:
++  explicit request accounting, fixed-clock PPO, the stopped per-episode-centering
++  defect, its reproduced/fixed terminal-penalty regression, exact reuse/budget
++  accounting, and deterministic development evaluation. No accepted checkpoint.
++- `TRAINED_DAMPING_TO_PAPER_ROUTE_2026-09-05.md` — **read first: the owner
++  requires standalone trained damping, then escalation**. Current evidence,
++  distinction between residual control and fixed-P30 activation learning,
++  proposed bounded training route, checkpoint acceptance, and downstream
++  paper dependencies. No experiment launched by this planning review.
++- `PAPER_COMPLETION_PLAN_2026-09-05.md` — **owner-requested post-stop
++  evidence review and wall-only alternative**, superseded as the primary
++  route by the owner's trained-damping clarification above.
++  Stage 2 must not resume unchanged: horizon, command restoration, and
++  CAV-only observation requirements are unresolved. This is a proposal,
++  not authorization to execute or alter frozen experiments.
++- `HANDOFF_2026-09-05.md` — **prior scientific and operational handoff**
+   for the next agent: frozen treatment (onset + loading threshold +
+   duration map), measured boundary, remaining Stage 2 → freeze →
+   prospective order, seed registry, and claim boundaries.
+-- `STAGE2_NEXT_AGENT_PROMPT.md` — paste-ready execution prompt for
+-  Stage 2 generation, freeze, and prospective evaluation.
++- `STAGE2_NEXT_AGENT_PROMPT.md` — **stopped historical execution prompt**;
++  do not resume before the trained-damping dependencies above are resolved.
+ - `STAGE1C2_RESULTS.md` — hold-duration / onset-trigger / fair-threshold
+   / lead-time results that froze the current policy shape.
+ - `ESTIMAND_RESET_2026-09-02.md` — owner-directed reset of treatment and
+diff --git a/docs/STAGE2_NEXT_AGENT_PROMPT.md b/docs/STAGE2_NEXT_AGENT_PROMPT.md
+index 10f269f..95a235f 100644
+--- a/docs/STAGE2_NEXT_AGENT_PROMPT.md
++++ b/docs/STAGE2_NEXT_AGENT_PROMPT.md
+@@ -1,6 +1,13 @@
+ # Paste-ready prompt for the execution agent
+ 
+-Copy everything below the line into a new agent chat.
++> **Stopped by owner; do not execute this prompt unchanged.** The subsequent
++> [paper completion review](PAPER_COMPLETION_PLAN_2026-09-05.md) records the
++> 1080/2400 horizon mismatch, damping command-restoration discrepancy, and
++> controlling CAV-reported observation requirement. The replacement is a
++> proposed plan, not a launched or approved experiment contract. The text
++> below is preserved as the prior execution specification.
++
++The historical prompt follows for provenance. Do not copy it into an execution task.
+ 
+ ---
+ 
+diff --git a/idm/contract.py b/idm/contract.py
+index b42076d..42ed895 100644
+--- a/idm/contract.py
++++ b/idm/contract.py
+@@ -6,6 +6,12 @@ from hashlib import sha256
+ from pathlib import Path
+ from typing import Iterable
+ 
++from idm.damping_campaign import (
++    TRAINING_SEEDS as NATIVE_DAMPING_TRAINING_SEEDS,
++    DEVELOPMENT_SEEDS as NATIVE_DAMPING_DEVELOPMENT_SEEDS,
++    ACCEPTANCE_SEEDS as NATIVE_DAMPING_ACCEPTANCE_SEEDS,
++)
++
+ CONTRACT_VERSION = "idm_decentralized_escalation/2"
+ ROOT = Path(__file__).resolve().parent.parent
+ SCENARIO_ROOT = ROOT / "scenarios" / "idm_transition"
+@@ -92,6 +98,9 @@ PROSPECTIVE_EVALUATION_EXCLUDED_SEEDS = tuple(
+         | set(STAGE1B_GENERATION_SEEDS)
+         | set(STAGE1C_RELEASE_SEEDS)
+         | set(STAGE2_GENERATION_SEEDS)
++        | set(NATIVE_DAMPING_TRAINING_SEEDS)
++        | set(NATIVE_DAMPING_DEVELOPMENT_SEEDS)
++        | set(NATIVE_DAMPING_ACCEPTANCE_SEEDS)
+     )
+ )
+ DEMANDS_VPH = (1900, 2000, 2100, 2200)

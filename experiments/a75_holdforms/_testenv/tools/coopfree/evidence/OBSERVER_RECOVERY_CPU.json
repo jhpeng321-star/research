@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-01",
+  "scope": "Local read-only observer transport recovery only; immutable remote scientific sources unchanged",
+  "command": "python -B -m unittest tools.test_coopfree_hold_publish tools.test_coopfree_publish tools.test_coopfree_learning_checks -v",
+  "tests": 18,
+  "passed": 18,
+  "skipped": 0,
+  "wall_s": 0.102,
+  "sim_s": 0,
+  "regressions": [
+    "Observed SSH RuntimeError followed by successful read preserves observer",
+    "SSH archive disconnect and timeout are recoverable",
+    "Remote Python validation, archive errors and authentication errors still fail closed",
+    "Publication immutability and paired learning checks remain passing"
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "coopmwm.s_launch.prerequisite.v1",
+  "timestamp": "2026-11-05T03:49:32+08:00",
+  "status": "BLOCKED_BEFORE_STEP_0",
+  "missing_receipt": "E:/agent-work/c4-track2-backend/P1_ACCEPTED.json",
+  "present_receipts": [
+    "E:/agent-work/c4-rerun-tracks/T2C_ACCEPTED.json",
+    "E:/agent-work/c4-track2-reward/P2_ACCEPTED.json",
+    "E:/agent-work/c4-track2-monitor/P3_ACCEPTED.json",
+    "E:/agent-work/c4-staging-closure/P4_ACCEPTED.json"
+  ],
+  "t2c_receipt_meaning": "Owner 03:33 handoff, not independent acceptance; operator must finish wiring and test it.",
+  "p1": {
+    "ready": "P1_READY.json",
+    "implementation_commit": "6f660574f86b1dc98bd457bca70bcfbc4df5c20e",
+    "reported_tests": "452 passed; 5 subtests passed; no failures/skips/deselections",
+    "independent_review": "Pending; latest existing REVIEW_P1_r1.md is BLOCK against older 2b925ee8"
+  },
+  "s0": "PASS_REUSED_AND_RECHECKED",
+  "host": "cpuV",
+  "remote_research_processes": [],
+  "clean_root_exists": false,
+  "integration_worktree_created": false,
+  "new_sim_s": 0,
+  "previous_parity_sim_s": 960,
+  "current_unaccepted_documented_quote_including_smoke": 4310220,
+  "quote_plus_parity": 4311180,
+  "owner_total_cap_including_smoke": 5000000,
+  "quote_source": "c4-rerun-tracks/RERUN_TRACKS_READY.md; not final integration authorization",
+  "context_probe": {
+    "reader": "deployed src7 replay_bank.bank_decisions/_decision_snapshot",
+    "role": "train",
+    "seeds": "986000..986071 only",
+    "B_unresolved": 68,
+    "R_unresolved": 0,
+    "B_986040_chosen_multicav_contexts": 5,
+    "R_986040_chosen_multicav_contexts": 9,
+    "new_sim_s": 0
+  },
+  "next": "Observe acceptance from existing review workflow; then create c4/rerun-launch, merge accepted branches and complete T2C production integration. Preserve all prior work and jobs."
+}

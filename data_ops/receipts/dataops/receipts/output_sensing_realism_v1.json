@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/sensing_realism_v1",
+ "name": "sensing_realism_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\sensing_realism_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/sensing_realism_v1/sensing_realism_v1.tar.zst",
+ "bytes": 1475002,
+ "files": 24,
+ "archive_bytes": 296246,
+ "archive_md5": "8d4a9e34ff0ae723cde0babfbd742050",
+ "member_manifest": "manifests/members/output_sensing_realism_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 17.0,
+ "timestamp": "2026-10-10T01:46:41"
+}

@@ -1,0 +1,181 @@
+pin ok 91e40a94 /root/a91/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok c755a551 /root/a91/src/ops/a81_bigconfirm.py
+pin ok 48c5c448 /root/a91/src/ops/a80_s2b.py
+pin ok c325ec1d /root/a75d2c/root/a75d2_banks/A75D2_BANK_D2800_p60.json
+pin ok 577a0564 /root/a86adm/root/a80_banks/A80_BANK_D2800_p60.json
+pin ok 78b25e45 /root/a86adm/root/A80_ADMISSION_D2800_p60.json
+patched /root/a94/src/pytools/tools/coopmwm/nm_eval_runner.py
+pin ok 91e40a94 /root/a91/src/pytools/tools/coopmwm/nm_eval_runner.py
+runner A91 91e40a94 (unchanged) -> A94 47fb9f76117c3862ac0f173a64891599f84d6b9a16c8b5a04ed8a33ebd2397f5
+pin ok 2abed317 /root/a66/inputs/policy_00084.pt
+code identity ok: a75 d1af7e0f A94 block (988700, 988899) seeds 988700 988891
+tree diff vs the A91 tree (expected: runner + the A94 files):
+Only in /root/a94/src/ops: a94
+Only in /root/a94/src/ops: a94_analyse_e2e.py
+Only in /root/a94/src/ops: a94_bank.py
+Only in /root/a94/src/ops: test_a94_bank.py
+Only in /root/a94/src/pytools/ops: a94
+Only in /root/a94/src/pytools/ops: a94_analyse_e2e.py
+Only in /root/a94/src/pytools/ops: a94_bank.py
+Only in /root/a94/src/pytools/ops: test_a94_bank.py
+Files /root/a91/src/pytools/tools/coopmwm/nm_eval_runner.py and /root/a94/src/pytools/tools/coopmwm/nm_eval_runner.py differ
+54M	/root/a94
+  31G
+SETUP_OK
+{
+ "amendment": "95",
+ "arm": "BANK_SEARCHED",
+ "cell": "D2800_p60",
+ "dropped_duplicates": [],
+ "executor_priority": [
+  {
+   "core": "HoldFormCore",
+   "extended": true,
+   "family": "mut_deba0680d3096904",
+   "key": "deba0680d3096904",
+   "lb95": 1551.588004528352,
+   "n_roles": 2,
+   "zone": [
+    1296.0,
+    2096.0
+   ]
+  },
+  {
+   "core": "HoldFormCore",
+   "extended": true,
+   "family": "rand_8b08c77a63f7d622",
+   "key": "8b08c77a63f7d622",
+   "lb95": 913.7683433657043,
+   "n_roles": 4,
+   "zone": [
+    896.0,
+    2296.0
+   ]
+  },
+  {
+   "core": "HoldFormCore",
+   "extended": true,
+   "family": "mut_576d526ec064db9c",
+   "key": "576d526ec064db9c",
+   "lb95": 462.95574873450704,
+   "n_roles": 2,
+   "zone": [
+    896.0,
+    2096.0
+   ]
+  },
+  {
+   "core": "LcStrategyCore",
+   "extended": false,
+   "family": "mut_28cad0ce56064e11",
+   "key": "28cad0ce56064e11",
+   "lb95": 433.14617788335335,
+   "n_roles": 2,
+   "zone": [
+    896.0,
+    1696.0
+   ]
+  },
+  {
+   "core": "LcStrategyCore",
+   "extended": false,
+   "family": "mut_069966492c9abdcc",
+   "key": "069966492c9abdcc",
+   "lb95": 401.5813374377569,
+   "n_roles": 2,
+   "zone": [
+    896.0,
+    1696.0
+   ]
+  },
+  {
+   "core": "HoldFormCore",
+   "extended": true,
+   "family": "mut_97dda2be6b45ccf0",
+   "key": "97dda2be6b45ccf0",
+   "lb95": 216.55692564279525,
+   "n_roles": 3,
+   "zone": [
+    1296.0,
+    1696.0
+   ]
+  }
+ ],
+ "inputs": {
+  "S4": {
+   "families": [
+    "mut_deba0680d3096904",
+    "mut_576d526ec064db9c",
+    "mut_28cad0ce56064e11"
+   ],
+   "path": "/root/a85adm/root/a80_banks/A80_BANK_D2800_p60.json",
+   "sha256": "a428cd1d320196578d55c84eea4b9b391f5e5c03928692a90dff0ac96667d7a8"
+  },
+  "S5": {
+   "families": [
+    "rand_8b08c77a63f7d622",
+    "mut_069966492c9abdcc",
+    "mut_97dda2be6b45ccf0"
+   ],
+   "path": "/root/a86adm/root/a80_banks/A80_BANK_D2800_p60.json",
+   "sha256": "577a0564944b2062e441d7ee603e7fe8090bede52a5dd6e8774d41ed9cb2d8b6"
+  }
+ },
+ "keys": [
+  "8b08c77a63f7d622",
+  "069966492c9abdcc",
+  "97dda2be6b45ccf0",
+  "deba0680d3096904",
+  "576d526ec064db9c",
+  "28cad0ce56064e11"
+ ],
+ "output": {
+  "file": "A94_BANK_SEARCHED_D2800_p60.json",
+  "sha256": "40b16ed95add6fcd63385dabcbf7e8a03fe8dbf20d0418e58e5aa8feee30ee04"
+ },
+ "plan_ids": [
+  "rand_8b08c77a63f7d622",
+  "mut_069966492c9abdcc",
+  "mut_97dda2be6b45ccf0",
+  "mut_deba0680d3096904",
+  "mut_576d526ec064db9c",
+  "mut_28cad0ce56064e11"
+ ],
+ "rule": "rows of the S5 (577a0564) and S4 (a428cd1d) admission bank files merged unchanged, identical strategy keys deduplicated (first kept)",
+ "schema": "coopmwm.a94.bank_build.v2",
+ "unchanged_copy_proof": {
+  "mut_069966492c9abdcc": {
+   "row_equal": true,
+   "source": "S5",
+   "template_equal": true
+  },
+  "mut_28cad0ce56064e11": {
+   "row_equal": true,
+   "source": "S4",
+   "template_equal": true
+  },
+  "mut_576d526ec064db9c": {
+   "row_equal": true,
+   "source": "S4",
+   "template_equal": true
+  },
+  "mut_97dda2be6b45ccf0": {
+   "row_equal": true,
+   "source": "S5",
+   "template_equal": true
+  },
+  "mut_deba0680d3096904": {
+   "row_equal": true,
+   "source": "S4",
+   "template_equal": true
+  },
+  "rand_8b08c77a63f7d622": {
+   "row_equal": true,
+   "source": "S5",
+   "template_equal": true
+  }
+ }
+}
+BANK_SEARCHED plan ids: rand_8b08c77a63f7d622 mut_069966492c9abdcc mut_97dda2be6b45ccf0 mut_deba0680d3096904 mut_576d526ec064db9c mut_28cad0ce56064e11
+sha256 A94_BANK_SEARCHED_D2800_p60.json 40b16ed95add6fcd63385dabcbf7e8a03fe8dbf20d0418e58e5aa8feee30ee04
+BUILD_BANK_A94_OK

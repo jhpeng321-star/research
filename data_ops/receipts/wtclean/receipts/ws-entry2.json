@@ -1,0 +1,39 @@
+﻿{
+    "name":  "ws-entry2",
+    "path":  "E:\\rd-wt\\ws-entry2",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "wms/entry2",
+    "headBefore":  "33ad3170cc244be266af97d34c62a5594833043e",
+    "headType":  null,
+    "dirtyBefore":  0,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/ws-entry2",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-entry2.txt",
+    "uploadCount":  119,
+    "uploadBytes":  10651157,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-entry2.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 03:29:57 NOTICE: Google drive root \u0027research-archive/worktrees/ws-entry2\u0027: 0 differences found | 2026/10/10 03:29:57 NOTICE: Google drive root \u0027research-archive/worktrees/ws-entry2\u0027: 119 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-entry2.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  1,
+    "skippedSensitiveSample":  [
+                                   "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T03:23:48.9844889+08:00"
+}

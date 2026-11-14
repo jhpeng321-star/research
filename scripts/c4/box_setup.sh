@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # One-time setup of a C4 box (GPU box or CPU box).  LF only.  Safe to rerun (idempotent, never overwrites).
 #
-#   scp -r <bundle dir> gpu-host:/workspace/c4/bundle        # the bundle dir also holds box_setup.sh + unpack_bundle.py
-#   ssh gpu-host 'cd /workspace/c4/bundle && bash box_setup.sh --detach'    # survives ssh drops
-#   ssh gpu-host 'tail -f /workspace/c4/setup.log; cat /workspace/c4/SETUP_REPORT.txt'
+#   scp -r <bundle dir> gpuA:/root/autodl-tmp/c4/bundle        # the bundle dir also holds box_setup.sh + unpack_bundle.py
+#   ssh gpuA 'cd /root/autodl-tmp/c4/bundle && bash box_setup.sh --detach'    # survives ssh drops
+#   ssh gpuA 'tail -f /root/autodl-tmp/c4/setup.log; cat /root/autodl-tmp/c4/SETUP_REPORT.txt'
 #
 # Options:  --role gpu|cpu|both   which data to unpack (cpu: code, ckpts, lists, sidecars; no big packs)
 #           --bundle DIR          default: the directory of this script if it holds SHA256SUMS, else $C4_HOME/bundle
 #           --skip-sumo --skip-tests --no-verify-tars --detach
-# Env:      C4_HOME (default /workspace/c4), PY, MIN_DISK_GB (default 60 gpu / 15 cpu), STRICT_TESTS=1
+# Env:      C4_HOME (default /root/autodl-tmp/c4), PY, MIN_DISK_GB (default 60 gpu / 15 cpu), STRICT_TESTS=1
 #
 # What it does: environment report (python, torch/CUDA, pandas==2.3.3, pyarrow, onnxruntime, SUMO 1.27.1,
 # nproc + cgroup CPU quota, RAM, disk) -> unpack + sha verify -> write env.sh/UNPACK_OK -> unit-test smoke.
@@ -17,7 +17,7 @@
 if LC_ALL=C grep -q $'\r' "${BASH_SOURCE[0]}"; then echo 'REFUSED: CRLF bytes in script' >&2; exit 2; fi
 set -uo pipefail
 SELF_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-C4_HOME=${C4_HOME:-/workspace/c4}
+C4_HOME=${C4_HOME:-/root/autodl-tmp/c4}
 ROLE=both; BUNDLE=""; SKIP_SUMO=0; SKIP_TESTS=0; VERIFY=1; DETACH=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -60,7 +60,7 @@ UNPACK_PY=$SELF_DIR/unpack_bundle.py
 # ---------------------------------------------------------------- python
 say "-- python"
 PY=${PY:-}
-for cand in "$PY" /workspace/gpu1/env/rd_gpu/bin/python /root/miniconda3/bin/python python3 python; do
+for cand in "$PY" /root/autodl-tmp/gpu1/env/rd_gpu/bin/python /root/miniconda3/bin/python python3 python; do
   [[ -n "$cand" ]] || continue
   if command -v "$cand" >/dev/null 2>&1; then PY=$(command -v "$cand"); break; fi
 done
@@ -180,7 +180,7 @@ if [[ "$SKIP_TESTS" == 0 ]]; then
   ( cd "$REPO" && PYTHONPATH="$REPO/src:$REPO" "$PY" -m traffic_shepherd inspect >/dev/null 2>&1 ) && ok "traffic_shepherd inspect" || warn "traffic_shepherd inspect failed"
   if [[ "$ROLE" != cpu && -f "$REPO/configs/c4_wm.toml" ]]; then
     # preflight needs the R5b init checkpoint (WMS_DATA_CKPT_R5B_BEST) and the zero-shot guard file; the guard is NOT in the
-    # bundle (restricted-token name), so until it is placed by hand this check is expected to fail (OPS_NOTES section 11).
+    # bundle (restricted-token name), so until the owner places it this check is expected to fail (OPS_NOTES section 11).
     ( cd "$REPO" && WMS_DATA_CKPT_R5B_BEST="${WMS_DATA_CKPT_R5B_BEST:-$REPO/data_cache/ckpt_r5b/wm_s_best.pt}" PYTHONPATH="$REPO/src:$REPO" "$PY" -m wms preflight --config configs/c4_wm.toml --out "$C4_HOME/runs/preflight_setup_$(date +%s)" 2>&1 | tail -25 ) | tee -a "$REPORT"
     [[ ${PIPESTATUS[0]} -eq 0 ]] && ok "wms preflight configs/c4_wm.toml" || warn "wms preflight did not pass (expected until the zero-shot guard file is placed; see OPS_NOTES section 11)"
   fi

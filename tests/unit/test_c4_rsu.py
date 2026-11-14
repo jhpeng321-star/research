@@ -248,7 +248,7 @@ def test_default_candidates_force_deterministic_and_group_alternatives():
                                     group_encoder=lambda s: torch.ones(1, 8), safety=lambda s, a: a,
                                     bridge=bridge,
                                     alternative_group_encoders=[lambda s: torch.full((1, 8), 3.)])
-    # direct-output candidates only (no native / damping / pi).
+    # Owner 2026-10-12 late: direct-output candidates only (no native / damping / pi).
     assert list(candidates) == ["policy", "policy_group_0", "policy_group_1", "policy_group_2",
                                 "hold_speed"]
     with torch.no_grad():

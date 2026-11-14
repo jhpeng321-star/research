@@ -1,0 +1,80 @@
+{
+  "name": "ws-evalh",
+  "path": "E:\\rd-wt\\ws-evalh",
+  "class": "worktree",
+  "manual": false,
+  "branch": "wms/evalh",
+  "headBefore": "8b607fe2a8aa37458802dd63e613a96b3b0ebc0b",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-evalh",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-evalh.tar.txt",
+  "uploadCount": 303,
+  "uploadBytes": 1547518388,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-evalh.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 6cc152811fb2359ef517f39178ddbb8c local 6cc152811fb2359ef517f39178ddbb8c; size 117758745/117758745; manifest md5 match size match; members=303 (tar -t 303, sha256 303); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-evalh.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 4,
+  "skippedSensitiveSample": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc",
+    "tests/planner/__pycache__/test_holdout_guard.cpython-310-pytest-9.1.1.pyc",
+    "tests/planner/__pycache__/test_holdout_guard_seal.cpython-310-pytest-9.1.1.pyc",
+    "traffic_shepherd/planner/__pycache__/holdout.cpython-310.pyc"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T07:54:51.256683+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "8b607fe2a8aa37458802dd63e613a96b3b0ebc0b",
+  "skippedSensitive": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc",
+    "tests/planner/__pycache__/test_holdout_guard.cpython-310-pytest-9.1.1.pyc",
+    "tests/planner/__pycache__/test_holdout_guard_seal.cpython-310-pytest-9.1.1.pyc",
+    "traffic_shepherd/planner/__pycache__/holdout.cpython-310.pyc"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-evalh/ws-evalh.tar.zst",
+    "name": "ws-evalh.tar.zst",
+    "size": 117758745,
+    "md5": "6cc152811fb2359ef517f39178ddbb8c",
+    "sha256": "ea20ae763497412377e62cb1243b387316c11e28f9552c0f77e1adcda82f9249",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-evalh/ws-evalh.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-evalh.manifest.json",
+    "manifest_size": 51413,
+    "manifest_md5": "90d523b6497ad1c518de7474a70abc66",
+    "member_count": 303,
+    "member_bytes": 1547518388,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 34.7,
+    "verify_seconds": 17.4,
+    "upload_seconds": 70.8,
+    "upload_MBps": 1.66,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 303,
+  "memberBytes": 1547518388,
+  "junctionsFound": []
+}

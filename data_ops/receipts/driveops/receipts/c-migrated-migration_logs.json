@@ -1,0 +1,17 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "c-migrated-migration_logs",
+ "kind": "dir",
+ "class": "ARCHIVE",
+ "producer": "logs/scripts from the 2026-09-28/29 E:/D: cutover",
+ "restore": "copy to E:/migration_logs",
+ "local": "E:/migration_logs",
+ "drive": "gdrive:research-archive/repo-evidence/archive/migration_logs",
+ "bytes": 398269,
+ "files": 22,
+ "md5_manifest": "receipts/md5/c-migrated-migration_logs.md5",
+ "check": "passed",
+ "check_method": "rclone check --one-way (size+MD5)",
+ "check_detail": "",
+ "timestamp": "2026-10-09T13:37:53"
+}

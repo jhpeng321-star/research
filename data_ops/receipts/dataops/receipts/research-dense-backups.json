@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "research-dense-backups",
+ "name": "research-dense-backups",
+ "kind": "dir",
+ "class": "ARCHIVE",
+ "producer": "backups incl reorg_phase3 + pre-change experiment_history",
+ "local": "E:\\research-dense-backups",
+ "drive": "gdrive:research-archive/repo-evidence/archive/research-dense-backups.tar.zst",
+ "bytes": 2175663154,
+ "files": 17109,
+ "archive_bytes": 1355445562,
+ "archive_md5": "2a032886925a81c2bdfa1bb1cb82e300",
+ "member_manifest": "manifests/members/research-dense-backups.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 869.8,
+ "timestamp": "2026-10-09T23:32:52"
+}

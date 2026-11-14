@@ -1,0 +1,17 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "pack_v2c_meta",
+ "kind": "dir",
+ "class": "DELETE-CANDIDATE",
+ "producer": "metadata of the already-deleted pack_v2c",
+ "restore": "copy to D:/rd-staging/wmn1_feat/pack_v2c_meta",
+ "local": "D:/rd-staging/wmn1_feat/pack_v2c_meta",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/pack_v2c_meta",
+ "bytes": 3763835,
+ "files": 3,
+ "md5_manifest": "receipts/md5/pack_v2c_meta.md5",
+ "check": "passed",
+ "check_method": "rclone check --one-way (size+MD5)",
+ "check_detail": "",
+ "timestamp": "2026-10-09T13:49:35"
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/recon_v4",
+ "name": "recon_v4",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\recon_v4",
+ "drive": "gdrive:research-archive/repo-evidence/output/recon_v4/recon_v4.tar.zst",
+ "bytes": 19767902,
+ "files": 389,
+ "archive_bytes": 637935,
+ "archive_md5": "f32f30ce40470eaaf081ae701853072c",
+ "member_manifest": "manifests/members/output_recon_v4.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 15.7,
+ "timestamp": "2026-10-10T01:50:27"
+}

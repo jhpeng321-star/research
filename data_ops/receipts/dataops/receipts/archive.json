@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "archive",
+ "name": "archive",
+ "kind": "dir",
+ "class": "ARCHIVE",
+ "producer": "pre-CIRCLES archived history",
+ "local": "E:\\research-dense\\archive",
+ "drive": "gdrive:research-archive/repo-evidence/archive.tar.zst",
+ "bytes": 73321337,
+ "files": 1895,
+ "archive_bytes": 9948419,
+ "archive_md5": "603d4f418ff4875e38220d5374c68849",
+ "member_manifest": "manifests/members/archive.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 46.2,
+ "timestamp": "2026-10-10T03:43:32"
+}

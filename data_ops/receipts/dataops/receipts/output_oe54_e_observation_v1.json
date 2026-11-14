@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe54_e_observation_v1",
+ "name": "oe54_e_observation_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe54_e_observation_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe54_e_observation_v1/oe54_e_observation_v1.tar.zst",
+ "bytes": 186057,
+ "files": 9,
+ "archive_bytes": 40773,
+ "archive_md5": "fe943ed4c1bac4202f019e0253998821",
+ "member_manifest": "manifests/members/output_oe54_e_observation_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 12.9,
+ "timestamp": "2026-10-10T01:42:33"
+}

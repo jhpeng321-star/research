@@ -1,0 +1,46 @@
+{
+ "changed": [
+  "cell 2800 x 0.3 -> 3200 x 0.6",
+  "world dicts = N1 map_scenarios.world (cell 8, cell_key D3200_p60)",
+  "map binding = N1 semantic digests",
+  "decision subset 24 -> 8 worlds (prefix-inclusive branch cost)"
+ ],
+ "exposure": "none: no simulation, training or evaluation used the superseded panel",
+ "newmap2_report_sha256": "70c119595ff3f391bbdebfa0a98d9c2f7ca02d2ae61f8acb53c126754adfdb05",
+ "note_sha256": "a6aba4e5de885c22bdaa0c6426ef14f46929cda59fe6f65f6c2f76f53bddab61",
+ "physics_on_superseded": 0,
+ "reason": "MAIN 2026-11-06 (N6): clean4 training cell = demand 3200 veh/h x CAV share 0.6 (N3 NEWMAP2_REPORT.md recommendation, adopted); the registered panel must be the clean4 training cell",
+ "registered_utc": "2026-11-06T07:46:30.347133+00:00",
+ "rule": "a clean4 CONFIG binding to a superseded panel sha is refused by nm_finaleval.clean4_binding",
+ "schema": "coopmwm.nm.finaleval.v1.supersession",
+ "superseded": {
+  "cell": {
+   "demand_vph": {
+    "main": 2800
+   },
+   "penetration": 0.3
+  },
+  "file": "ops/nm_eval_panel_wz3to2.json",
+  "panel_sha256": "b5e1cd2a1d068c5e2bb66bb44005b2dd954e0419b4a6c99778af304aeae6dbc1",
+  "registered_commit": "03f8db32",
+  "registered_utc": "2026-11-06T07:11:35.102683+00:00"
+ },
+ "superseded_by": {
+  "cell": {
+   "cell_key": "D3200_p60",
+   "demand_vph": {
+    "main": 3200
+   },
+   "penetration": 0.6
+  },
+  "file": "ops/nm_eval_panel_wz3to2_v2.json",
+  "panel_sha256": "3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130",
+  "registered_utc": "2026-11-06T07:45:38.162327+00:00"
+ },
+ "unchanged": [
+  "seeds 989600-989695 (989696-989699 reserved unused)",
+  "estimator and bootstrap",
+  "arms and tables",
+  "v2v_final 690,000 cap"
+ ]
+}

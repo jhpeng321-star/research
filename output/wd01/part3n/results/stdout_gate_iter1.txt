@@ -1,0 +1,37 @@
+priority below-normal: False
+=== WD-01 part 3n TASK C: TRAIN-internal gate v2, iteration 1 ===
+ZERO simulation; holdout blocked in root_arrays (never passed); validation NOT touched here.
+device=cpu torch_threads=2
+[   0.0s] rolling L6(p3n) member 0 (seed 1, dawdle 1.0) over the 4 calibration roots ...
+[ 120.9s]   member 0: done (56 rows)
+[ 120.9s] rolling L6(p3n) member 1 (seed 18, dawdle 1.0) over the 4 calibration roots ...
+[ 243.8s]   member 1: done (112 rows)
+[ 243.8s] rolling L6(p3n) member 2 (seed 35, dawdle 1.5) over the 4 calibration roots ...
+[ 357.9s]   member 2: done (168 rows)
+[ 358.0s] rolling L6(p3n) member 3 (seed 52, dawdle 1.25) over the 4 calibration roots ...
+[ 466.7s]   member 3: done (224 rows)
+[ 466.7s] rolling L6(p3n) member 4 (seed 69, dawdle 1.25) over the 4 calibration roots ...
+[ 574.3s]   member 4: done (280 rows)
+[ 574.3s] wrote 280 rows -> raw_train_internal_iter1.jsonl
+iter 1: scoring the part 3n members (raw_train_internal_iter1.jsonl) + TASK A L0 rows (56) + TASK A fit-root truth rows (336, climatology only)
+TRAIN-internal gate split: fold A ('cv20_7002m2000', 'cv20_7003m2000'), fold B ('cv20_7004m2000', 'cv20_7007m2700'); t0 (120, 180, 240, 300, 360, 420, 480); scored windows 28; 2-fold spread (scored fold never fits its own factors)
+
+== TRAIN-internal GATE v2 at H=30 (PRIMARY) ==
+  L6:  (a) coll/1000=0.015 PASS | (b) lc 13.664/11.214 (21.9%) FAIL | (c) ttc3 0.7857 delay-phys 0.7143 crps 34.953 vs L0 mae 242.5 -> FAIL | (d) speed 3.6896 vs 1.05xL0=3.7812 (PASS, binding) ==> v2 FAIL: b_lc,c_coverage_crps
+       2-fold detail: ttc3 A(s=8.3784, cov 0.9286) B(s=3.0314, cov 0.6429) | delay-phys A(s=2.2974, cov 0.5) B(s=3.0314, cov 0.9286)
+       minmax (old-gate item, widened): 0.875; OLD gate -> FAIL
+
+== TRAIN-internal GATE v2 at H=60 (secondary) ==
+  L6:  (a) coll/1000=0.01 PASS | (b) lc 26.143/23.179 (12.8%) PASS | (c) ttc3 0.7857 delay-phys 0.7857 crps 82.262 vs L0 mae 591.11 -> FAIL | (d) speed 4.3619 vs 1.05xL0=4.3534 (FAIL, binding) ==> v2 FAIL: c_coverage_crps,d_speed_per_horizon
+       2-fold detail: ttc3 A(s=13.2998, cov 1.0) B(s=3.325, cov 0.5714) | delay-phys A(s=2.2974, cov 0.6429) B(s=2.7638, cov 0.9286)
+       minmax (old-gate item, widened): 0.875; OLD gate -> PASS
+
+== SHARPNESS + CLIMATOLOGY (TRAIN-internal, 2-fold widened) ==
+   output      H   cov    med_band  truth_iqr | crps_L6  clima_crps(empirical) crps(TRAIN-mean) n_train
+   delay_phys  30  0.7143    163.55     752.70 |   34.95    189.25   246.69      28  beats climatology
+   delay_phys  60  0.7857    363.09    1549.84 |   82.26    386.56   505.55      28  beats climatology
+   ttc3        30  0.7857     13.23      10.80 |    4.03      3.01     3.54      28  DOES NOT beat climatology
+   ttc3        60  0.7857     21.45      16.90 |    8.66      6.33     7.20      28  DOES NOT beat climatology
+[ 584.1s] wrote results/gate_train_internal_iter1.json
+
+DONE part 3n TASK C iteration 1.

@@ -1,0 +1,14 @@
+# 1b how the world model works
+s = S("Our world model: physics + learned correction",
+      "From the RSU snapshot, the model simulates traffic step by step: CAVs run their real controller code; human drivers follow IDM physics, and a neural network corrects how real drivers deviate from it. The result is the future state of every car, from which delay is measured directly.",
+      ["4 boxes: snapshot, physics, learned correction, future traffic"])
+B = dict(color="1F3A5F", bold=True, anchor=MSO_ANCHOR.MIDDLE, align=PP_ALIGN.CENTER)
+tb(s, 0.3, 1.7, 2.6, 2.4, ["Snapshot", "what the RSU sees"], size=24, fill="EEF3F7", line="1F3A5F", **B)
+tb(s, 2.9, 2.5, 0.5, 0.7, "→", size=38, **B)
+tb(s, 3.4, 1.5, 3.0, 2.8, ["Physics", "IDM drivers", "CAVs: real controllers"], size=23, fill="D5EEF0", line="0E7C86", **B)
+tb(s, 6.4, 2.5, 0.5, 0.7, "→", size=38, **B)
+tb(s, 6.9, 1.5, 2.9, 2.8, ["+ Learned correction", "how real drivers differ"], size=23, fill="FFF4D6", line="C77700", **B)
+tb(s, 9.8, 2.5, 0.5, 0.7, "→", size=38, **B)
+tb(s, 10.3, 1.5, 2.75, 2.8, ["Future traffic", "every car, every 0.5 s", "→ measure delay"], size=22, fill="EEF3F7", line="1F3A5F", **B)
+tb(s, 3.4, 4.5, 6.4, 0.6, "repeat every 0.5 s", size=20, color="666666", anchor=MSO_ANCHOR.MIDDLE, align=PP_ALIGN.CENTER)
+takeaway(s, "Physics gives the structure; learning corrects how real drivers behave", y=6.0, h=0.85)

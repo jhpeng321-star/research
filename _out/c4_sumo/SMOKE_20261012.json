@@ -1,0 +1,73 @@
+{
+ "schema": "c4_sumo_smoke/1",
+ "args": {
+  "out": "runs/active/C4-SUMO-SMOKE-20261012",
+  "seed": 4107,
+  "demand": 2700,
+  "penetration": 0.2,
+  "warmup": 300,
+  "horizon": 120
+ },
+ "collisions": 0,
+ "teleports": 0,
+ "command_counts": {
+  "native": 4424,
+  "wall": 2648
+ },
+ "fallback_counts": {
+  "selected_native": 4424
+ },
+ "commands_applied": {
+  "n": 2646,
+  "median_abs_err_mps2": 0.0,
+  "frac_within_0_05": 0.918745275888133,
+  "frac_slower_than_issued": 0.08125472411186697,
+  "frac_faster_than_issued_by_0_05": 0.0
+ },
+ "rsu_parity_failures": 0,
+ "sensor_parity_checks": 1403,
+ "sensor_parity_mismatches": 0,
+ "frozen_featurizer_parity": {
+  "ok": true,
+  "n_ticks": 841,
+  "n_vehicle_rows": 72983,
+  "slot_assignment_equal": true,
+  "lane_equal": true,
+  "junction_equal": true,
+  "max_abs_s_err_m": 0.00012206505471112905,
+  "max_abs_s_err_with_junction_carry_m": 0.00012206505471112905,
+  "max_abs_v_err_mps": 0.0,
+  "max_abs_a_err_mps2": 0.0,
+  "frozen_dropped_concurrent": 0,
+  "n_junction_rows": 445
+ },
+ "rsu_detections_per_step": {
+  "min": 39,
+  "max": 60,
+  "mean": 46.45
+ },
+ "max_present_vehicles": 130,
+ "dropped_vehicle_steps": 0,
+ "trajectory_windows": 4,
+ "window_metrics": {
+  "dropped_vehicle_steps": 0,
+  "braking_vehicle_seconds": 375.0,
+  "acceleration_energy": 22706.47230482755,
+  "speed_deficit_vehicle_seconds": 9340.607754778603,
+  "vehicle_seconds_on_road": 14118.5,
+  "ttc_below_3_vehicle_seconds": 775.0,
+  "requested_not_arrived_vehicle_seconds": 17371.242331999994,
+  "source_wait_vehicle_seconds": 3263.7423319999984,
+  "arrivals": 38,
+  "departures": 60,
+  "collision_involvements": 0,
+  "starting_teleports": 0,
+  "mainline_entry_crossings": 45,
+  "mainline_exit_crossings": 57,
+  "ramp_entry_crossings": 15,
+  "system_vehicle_seconds": 17371.242331999998
+ },
+ "sim_s_per_wall_s": 4.180435561572115,
+ "window_sim_s_per_wall_s_with_parity_checks": 2.556618446000211,
+ "pass": true
+}

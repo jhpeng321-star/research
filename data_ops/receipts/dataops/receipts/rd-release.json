@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "rd-release",
+ "name": "rd-release",
+ "kind": "dir",
+ "class": "ARCHIVE",
+ "producer": "release build workspace",
+ "local": "E:\\rd-release",
+ "drive": "gdrive:research-archive/repo-evidence/archive/rd-release.tar.zst",
+ "bytes": 1087355546,
+ "files": 37245,
+ "archive_bytes": 322193947,
+ "archive_md5": "03e48e038c4c6d420ede69888bc229c8",
+ "member_manifest": "manifests/members/rd-release.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 617.9,
+ "timestamp": "2026-10-10T00:46:30"
+}

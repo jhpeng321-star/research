@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_walls_v22_smoke",
+ "name": "campaign_walls_v22_smoke",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_walls_v22_smoke",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_walls_v22_smoke/campaign_walls_v22_smoke.tar.zst",
+ "bytes": 34281233,
+ "files": 11,
+ "archive_bytes": 2904163,
+ "archive_md5": "8a76f1a417ce2a6738a8d9706ae19542",
+ "member_manifest": "manifests/members/runs_campaign_walls_v22_smoke.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 51.0,
+ "timestamp": "2026-10-10T04:21:58"
+}

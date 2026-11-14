@@ -1,0 +1,178 @@
+"""Live V2V policy/observation adapters; used only by explicitly enabled jobs.
+
+The integrated parts expose the features and widened layers independently. This
+adapter connects sampling AND scoring to those layers, including spawned SUMO
+workers and exact diagnostic branches. No non-V2V policy is modified.
+"""
+import torch
+
+from .acceleration import Policy as BasePolicy
+from .v2v_obs import V2V_DIM
+from .v2v_model import extend_for_v2v, forward_with_v2v
+from .v2v_integrate import widen_context
+
+
+class Policy(BasePolicy):
+    def __init__(self):
+        super().__init__()
+        extend_for_v2v(self, V2V_DIM)
+
+    def forward(self, context):
+        x = context['x']
+        if x and len(x[0]) == 29:
+            blocks = context.get('v2v')
+            if not blocks:
+                raise ValueError('V2V policy requires recorded partner observations')
+            context = widen_context(context, blocks)
+            x = context['x']
+        if not x:
+            x = torch.empty((0, 29+V2V_DIM), dtype=torch.float32)
+        else:
+            x = torch.as_tensor(x, dtype=torch.float32)
+        if x.shape[1] != 29+V2V_DIM:
+            raise ValueError('V2V feature width mismatch')
+        return forward_with_v2v(self, x, torch.as_tensor(context['rsu'], dtype=torch.float32))
+
+
+def from_weights(weights, *, enabled=False):
+    if 'intent_head.weight' in weights:  # v2v_intent ON (tools/coopmwm/v2v_intent.py)
+        from .v2v_intent import from_weights as intent_weights
+        return intent_weights(weights, enabled=enabled)
+    width = int(weights['actor.0.weight'].shape[1])
+    if width == 33+V2V_DIM:
+        if not enabled:
+            raise ValueError('widened policy without explicit V2V job/branch flag')
+        model = Policy()
+    elif width == 33:
+        # A legacy u3 reference in an enabled mixed-policy diagnostic stays plain.
+        model = BasePolicy()
+    else:
+        raise ValueError('unsupported V2V checkpoint width')
+    model.load_state_dict(weights)
+    return model
+
+
+def load_checkpoint(path, config=None):
+    if config and config.get('v2v') and config.get('v2v_intent'):
+        from .v2v_intent import load_checkpoint as intent_load
+        return intent_load(path, config)
+    from .v2v_model import load_checkpoint as load
+    model, optimizer, generator, payload = load(path, config=config)
+    if config and config.get('v2v'):
+        # The loader has already remapped Adam and retained parameter identities.
+        model.__class__ = Policy
+    return model, optimizer, generator, payload
+
+
+def controller_class(base):
+    """Add causal partner features before sampling; keep the command chain intact."""
+    from .bank_v2v import _features, DEFAULT_CFG
+
+    class Proxy:
+        def __init__(self, real, blocks, intent=None, trigger_blocks=None, trigger_publish=None):
+            self.real, self.blocks, self.intent = real, blocks, intent
+            self.trigger_blocks, self.trigger_publish = trigger_blocks, trigger_publish
+
+        def sample(self, context, *args, **kwargs):
+            context = dict(context, v2v={v: self.blocks(v) for v in context['members']})
+            out = self.real.sample(context, *args, **kwargs)
+            if self.intent is not None:
+                # Broadcast AFTER the policy step; partners see it at the next second.
+                sample = out[0] if isinstance(out, tuple) else out
+                if 'published_intent' not in sample:  # replayed samples keep their record
+                    sample['published_intent'] = self.intent.publish(context)
+            if self.trigger_blocks is not None:
+                # Explicit trigger opt-in only. Add its independent observations
+                # AFTER the unchanged low-level action/publication operations.
+                sample = out[0] if isinstance(out, tuple) else out
+                recorded = sample['context']
+                recorded['trigger_v2v'] = {v: self.trigger_blocks(v) for v in recorded['members']}
+                sample['published_trigger_intent'] = self.trigger_publish(recorded)
+            return out
+
+        def __getattr__(self, key):
+            return getattr(self.real, key)
+
+    class Controller(base):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.previous_frame = None
+            self.intent_board = {}  # v2v_intent ON: vid -> (published second, H commands)
+            self.trigger_intent_board = {}  # explicit wrapper opt-in; never the base publication
+            self.g5_lane_targets = {}
+            self.g5_lane_runtime = True
+
+        def observe_issued(self, frame):
+            self.previous_frame = frame
+
+        def v2v_block(self, context):
+            present={v['vid'] for v in self.feature_frame['vehicles'] if v.get('is_cav')}
+            return {v:(_features(self.feature_frame,v,self.feature_previous,DEFAULT_CFG)
+                if v in present else [0.]*V2V_DIM) for v in context['members']}
+
+        def apply(self, rows, commands, now):
+            from .bank_v2v import causal_frame, _last_commands
+            # The trace callback observes the actual post-safety command from
+            # the PREVIOUS second, never the current imitation target/raw request.
+            frame = causal_frame(dict(time_s=now, vehicles=rows), self.previous_frame)
+            previous = {k:v for k,v in _last_commands(self.previous_frame or {}).items() if v is not None}
+            self.feature_frame,self.feature_previous=frame,previous
+            saved = self.policy
+            from .v2v_intent import intent_model
+            intent = intent_model(saved)
+            trigger_publish = getattr(saved, 'publish_trigger_intent', None) if intent is not None else None
+            if intent is None:
+                self.policy = Proxy(saved, lambda vid: _features(frame, vid, previous, DEFAULT_CFG))
+            else:
+                from .bank_v2v import _intent_features
+                spec = dict(horizon=intent.intent_horizon, board=dict(self.intent_board))
+                trigger_spec = dict(horizon=intent.intent_horizon, board=dict(self.trigger_intent_board))
+                self.policy = Proxy(saved, lambda vid: _intent_features(frame, vid, previous, DEFAULT_CFG, spec),
+                                    intent,
+                                    (lambda vid: _intent_features(frame, vid, previous, DEFAULT_CFG, trigger_spec))
+                                    if callable(trigger_publish) else None, trigger_publish)
+            try:
+                desired = super().apply(rows, commands, now)
+            finally:
+                self.policy = saved
+            from .group_lane import controller_targets
+            self.g5_lane_targets = controller_targets(self, saved, rows, now)
+            if intent is not None:
+                # Publish this second's intents (also from replayed samples); despawned or
+                # silent CAVs simply have no fresh entry and read as invalid next second.
+                published = (self.events[-1]['sample'].get('published_intent') or {}) if self.events else {}
+                self.intent_board = {vid: (int(now), list(values)) for vid, values in published.items()}
+                if callable(trigger_publish):
+                    published = ((self.events[-1]['sample'].get('published_trigger_intent') or {})
+                                 if self.events else {})
+                    self.trigger_intent_board = {vid: (int(now), list(values)) for vid, values in published.items()}
+            return desired
+
+        def lane_request(self, env):
+            from .group_lane import lanes_tensor
+            return lanes_tensor(self.g5_lane_targets, env)
+
+        def lane_actors(self):
+            # G5 ownership contract: only this tick's gate-passed lane actors may be put
+            # under policy lane control by the sole env writer; nonmembers stay native.
+            return frozenset(self.g5_lane_targets)
+
+        def observe_lane(self, info):
+            if self.g5_lane_targets and self.events:
+                from .group_lane import lane_outcome
+                self.events[-1]['g5_lane_outcome'] = lane_outcome(info.get('lane_commands'),
+                                                                  info.get('lane_vehicles'))
+
+    return Controller
+
+
+class ObservedTrace:
+    """Pass-through writer exposing only the existing observable trace frame."""
+    def __init__(self, stream, controller):
+        self.stream, self.controller = stream, controller
+
+    def write(self, line):
+        import json
+        result = self.stream.write(line)
+        self.controller.observe_issued(json.loads(line))
+        return result

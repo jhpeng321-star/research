@@ -1,0 +1,276 @@
+{
+  "_doc": "All numbers quoted from verified reports (see sources). Any value null/\"PENDING\" renders as a PENDING placeholder. Fill nulls and run: python build_deck.py",
+  "meta": {
+    "date": "2026-10-05",
+    "title": "WM-N1 research update",
+    "author": "Jinghan Peng"
+  },
+  "taus": [
+    30,
+    60,
+    120,
+    300,
+    570
+  ],
+  "models": [
+    {
+      "name": "A8",
+      "change": "label coverage (1,308 pairs), climatology-anchored paired head (state only), pair-dense K=4, loss scale",
+      "ckpt": "8b023883"
+    },
+    {
+      "name": "A9",
+      "change": "+ plan-aware head (10 s CAV plan) + 644 direct-speed runs (1,952 pairs)",
+      "ckpt": "9c666a7c"
+    },
+    {
+      "name": "A10",
+      "change": "+ 263 re-aligned damping runs + supervised-reference fix (2,113 pairs)",
+      "ckpt": "284b1b35"
+    },
+    {
+      "name": "A11",
+      "change": "+ 120 s plan input + within-decision ranking loss",
+      "ckpt": "41221852"
+    }
+  ],
+  "slice_regret": {
+    "unit": "s of total delay vs best controller per decision (lower = better)",
+    "source": "docs/MORNING_SUMMARY_20261005.md sec.1; WM-N1-EVALSLICE-20261004/REPORT.md",
+    "A11": [
+      0.5,
+      3.3,
+      105.1,
+      972.3,
+      5408.9
+    ],
+    "A10": [
+      2.1,
+      13.6,
+      179.8,
+      1555.8,
+      5509.1
+    ],
+    "A9": [
+      1.0,
+      2.1,
+      104.8,
+      1618.0,
+      4845.7
+    ],
+    "A8": [
+      102.0,
+      148.0,
+      105.1,
+      1555.8,
+      6504.8
+    ],
+    "always_native": [
+      0.5,
+      3.3,
+      105.1,
+      1555.8,
+      6504.8
+    ],
+    "random": [
+      136.5,
+      367.1,
+      949.5,
+      2798.3,
+      7716.0
+    ],
+    "a11_vs_native_300": {
+      "a11": 972.3,
+      "native": 1555.8,
+      "ci90": [
+        -1339,
+        -3
+      ]
+    },
+    "a11_vs_native_570": {
+      "a11": 5408.9,
+      "native": 6504.8,
+      "ci90": [
+        -3288,
+        0
+      ]
+    }
+  },
+  "pi_native_crps": {
+    "unit": "CRPS in s (lower = better), PI-native, 11 decisions",
+    "A11": [
+      11.0,
+      37.3,
+      135.3,
+      431.7,
+      1567.4
+    ],
+    "A10": [
+      7.6,
+      29.5,
+      145.4,
+      542.9,
+      1594.4
+    ],
+    "A9": [
+      8.9,
+      32.4,
+      142.3,
+      543.7,
+      1616.1
+    ],
+    "A8": [
+      6.6,
+      25.5,
+      127.5,
+      518.4,
+      1551.5
+    ],
+    "M1FIX1": [
+      52.4,
+      107.9,
+      280.9,
+      879.8,
+      2114.6
+    ],
+    "climatology": [
+      5.3,
+      25.0,
+      129.1,
+      528.2,
+      1563.6
+    ],
+    "a11_300_ci": [
+      -266,
+      52
+    ]
+  },
+  "noise": {
+    "source": "WM-N1-NOISEFLOOR-20261004/RESULT.md",
+    "ratio": [
+      27.17,
+      9.42,
+      6.4,
+      20.82,
+      4.96
+    ],
+    "ci_lo": [
+      16.32,
+      5.13,
+      4.01,
+      12.24,
+      3.0
+    ],
+    "ci_hi": [
+      44.71,
+      104.21,
+      158.31,
+      508.38,
+      1724.41
+    ],
+    "n1_sd": [
+      1.021,
+      9.533,
+      41.219,
+      43.905,
+      656.351
+    ],
+    "pi_sd": [
+      27.73,
+      89.787,
+      263.745,
+      914.019,
+      3252.354
+    ]
+  },
+  "t4g": {
+    "source": "tmp/overnight_20261004/T4g_out/RESULT.md",
+    "clim_crps": [
+      12.09,
+      46.67,
+      152.39,
+      654.82,
+      1895.88
+    ],
+    "hgb_crps": [
+      10.56,
+      45.07,
+      150.54,
+      700.12,
+      2095.25
+    ],
+    "clim_sign": [
+      0.665,
+      0.658,
+      0.689,
+      0.609,
+      0.547
+    ],
+    "hgb_sign": [
+      0.615,
+      0.634,
+      0.609,
+      0.54,
+      0.534
+    ],
+    "hgb_dcrps_30": "-1.54 [-2.40, -0.71]"
+  },
+  "dspeed": {
+    "train_runs": 644,
+    "cal_tune_runs": 44,
+    "failures": 0,
+    "smoke": {
+      "world": "w8676m2700p20t360",
+      "horizon_s": 150,
+      "cavs": 25,
+      "selected": 8,
+      "collisions": 0,
+      "teleports": 0,
+      "unit_tests": 20
+    }
+  },
+  "repl": {
+    "expected": "16:00",
+    "a11_regret_300": 1072.7,
+    "native_regret_300": 1117.2,
+    "ci90_diff_300": [
+      -224.8,
+      112.9
+    ],
+    "a10_regret_300": 1138.3,
+    "a9_regret_300": 1136.4,
+    "other_taus": {
+      "30": "A11 3.4 vs native 2.2 (diff CI [-0.8,3.4])",
+      "60": "A11 22.5 vs native 18.7 (diff CI [0.8,7.3], A11 worse)",
+      "120": "A11 126.6 vs native 122.6 (CI [-2.4,11.7])",
+      "570": "A11 4652 vs native 4638 (CI [-618,681])"
+    },
+    "verdict": "NOT REPLICATED: on 30 fresh worlds A11 300 s regret 1073 vs always-native 1117, diff -44 s, 90% CI [-225, +113] includes 0 (frozen primary test fails). A11 ties native at 120-570 s and is slightly worse at 60 s.",
+    "a12_regret_300": 1139.0,
+    "note_secondary": "A9/A10/A12 also tie native at 300 s (CIs include 0). A9 at 570 s: 4200 vs native 4638, CI [-971, +1] (borderline, exploratory, not significant)."
+  },
+  "closed_loop": {
+    "expected": "18:00",
+    "unit": "total delay over [t0, t0+600] s, 30 fresh worlds, mean (s)",
+    "pl01_a11": null,
+    "fleet_wm": null,
+    "always_native": null,
+    "always_pi": null,
+    "random": null,
+    "pl01_a11_walls": null,
+    "diff_pl01_vs_native_ci90": null,
+    "walls_cutoff_note": "Wall policy runs only if its smoke passes by 17:00 +0800; otherwise reported as NOT DONE"
+  },
+  "a12": {
+    "expected": "16:00",
+    "crps_30": 11.4,
+    "crps_300": 427.1,
+    "ref": {
+      "a11_crps_30": 11.0,
+      "clim_crps_30": 5.3,
+      "a11_crps_300": 431.7,
+      "clim_crps_300": 528.2
+    },
+    "verdict": "A12 does not fix 30 s (11.4 vs clim 5.3, sig. worse); keeps 300 s CRPS gain (427 vs 528); evalslice 300 s regret 1186 vs native 1556, CI [-1129,+20] includes 0 (A11: 972, CI [-1339,-3])"
+  }
+}

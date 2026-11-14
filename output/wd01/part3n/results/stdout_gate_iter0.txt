@@ -1,0 +1,26 @@
+priority below-normal: False
+=== WD-01 part 3n TASK C: TRAIN-internal gate v2, iteration 0 ===
+ZERO simulation; holdout blocked in root_arrays (never passed); validation NOT touched here.
+device=cpu torch_threads=2
+iter 0: scoring the p3m L6 members from TASK A rows (raw_train_internal_p3n.jsonl; 560 L6 rows total, calibration-root subset scored)
+TRAIN-internal gate split: fold A ('cv20_7002m2000', 'cv20_7003m2000'), fold B ('cv20_7004m2000', 'cv20_7007m2700'); t0 (120, 180, 240, 300, 360, 420, 480); scored windows 28; 2-fold spread (scored fold never fits its own factors)
+
+== TRAIN-internal GATE v2 at H=30 (PRIMARY) ==
+  L6:  (a) coll/1000=0.016 PASS | (b) lc 14.686/11.214 (31.0%) FAIL | (c) ttc3 0.6786 delay-phys 0.8214 crps 32.717 vs L0 mae 242.5 -> FAIL | (d) speed 3.7563 vs 1.05xL0=3.7812 (PASS, binding) ==> v2 FAIL: b_lc,c_coverage_crps
+       2-fold detail: ttc3 A(s=12.1257, cov 0.8571) B(s=2.0946, cov 0.5) | delay-phys A(s=2.2974, cov 0.7143) B(s=2.7638, cov 0.9286)
+       minmax (old-gate item, widened): 0.9286; OLD gate -> FAIL
+
+== TRAIN-internal GATE v2 at H=60 (secondary) ==
+  L6:  (a) coll/1000=0.012 PASS | (b) lc 27.857/23.179 (20.2%) FAIL | (c) ttc3 0.4286 delay-phys 0.7857 crps 78.491 vs L0 mae 591.11 -> FAIL | (d) speed 4.4282 vs 1.05xL0=4.3534 (FAIL, binding) ==> v2 FAIL: b_lc,c_coverage_crps,d_speed_per_horizon
+       2-fold detail: ttc3 A(s=14.5876, cov 0.7857) B(s=None, cov 0.0714) | delay-phys A(s=2.0946, cov 0.6429) B(s=2.7638, cov 0.9286)
+       minmax (old-gate item, widened): 0.9286; OLD gate -> FAIL
+
+== SHARPNESS + CLIMATOLOGY (TRAIN-internal, 2-fold widened) ==
+   output      H   cov    med_band  truth_iqr | crps_L6  clima_crps(empirical) crps(TRAIN-mean) n_train
+   delay_phys  30  0.8214    158.15     752.70 |   32.72    189.25   246.69      28  beats climatology
+   delay_phys  60  0.7857    355.74    1549.84 |   78.49    386.56   505.55      28  beats climatology
+   ttc3        30  0.6786      9.54      10.80 |    4.98      3.01     3.54      28  DOES NOT beat climatology
+   ttc3        60  0.4286      5.79      16.90 |    9.04      6.33     7.20      28  DOES NOT beat climatology
+[  10.7s] wrote results/gate_train_internal_iter0.json
+
+DONE part 3n TASK C iteration 0.

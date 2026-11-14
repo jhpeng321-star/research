@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "shards_v3/truearms_chunk2",
+ "name": "truearms_chunk2",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "v3 shard corpus (D:), biggest remaining D: staging item",
+ "local": "D:\\rd-staging\\wmn1_feat\\shards_v3\\truearms_chunk2",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v3/truearms_chunk2/truearms_chunk2.tar.zst",
+ "bytes": 2327671009,
+ "files": 2464,
+ "archive_bytes": 346516844,
+ "archive_md5": "1cde913c9b9a315b0d7a23a37cac8834",
+ "member_manifest": "manifests/members/shards_v3_truearms_chunk2.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 86.2,
+ "timestamp": "2026-10-09T23:10:53"
+}

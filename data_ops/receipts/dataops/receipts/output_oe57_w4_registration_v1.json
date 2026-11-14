@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe57_w4_registration_v1",
+ "name": "oe57_w4_registration_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe57_w4_registration_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe57_w4_registration_v1/oe57_w4_registration_v1.tar.zst",
+ "bytes": 3089118,
+ "files": 14,
+ "archive_bytes": 120628,
+ "archive_md5": "3118a4242201cf009f23a849431d0432",
+ "member_manifest": "manifests/members/output_oe57_w4_registration_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 53.6,
+ "timestamp": "2026-10-10T01:47:54"
+}

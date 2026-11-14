@@ -1,0 +1,61 @@
+[    0.0s] guards ok (p2C manifest 2439004d528a...)
+[    0.0s] splits: train=17 val=['cv20_7005m2000', 'cv20_7006m2000', 'cv30_7305m2700', 'seed_7535m2400'] holdout=5 (holdout untouched)
+[    0.0s] phase-1 samples: cv17
+[   10.9s] phase-1 samples: cv19_4107
+[   19.9s] phase-1 samples: cv19_4108
+[   28.2s] phase-1 samples: cv20_7001m2000
+[   38.0s] phase-1 samples: cv20_7002m2000
+[   46.3s] phase-1 samples: cv20_7003m2000
+[   56.1s] phase-1 samples: cv20_7004m2000
+[   64.9s] phase-1 samples: cv20_7007m2700
+[   77.9s] phase-1 samples: cv21_7008m2700
+[   89.9s] phase-1 samples: cv23_7010m2700
+[  101.5s] phase-1 samples: cv30_7302m2000
+[  110.7s] phase-1 samples: cv30_7303m2000
+[  118.2s] phase-1 samples: cv30_7304m2700
+[  130.1s] phase-1 samples: cv30_7306m2700
+[  141.7s] phase-1 samples: seed_7301m2000
+[  150.1s] phase-1 samples: seed_7531m2700
+[  164.0s] phase-1 samples: seed_7532m2700
+[  177.7s] phase-1 samples: cv20_7005m2000
+[  186.7s] phase-1 samples: cv20_7006m2000
+[  194.5s] phase-1 samples: cv30_7305m2700
+[  206.8s] phase-1 samples: seed_7535m2400
+[  219.4s] phase-1 caches ready
+[  219.4s] phase-1 samples: 340000
+D:\rd-wt\wd01\output\wd01\part3\train.py:178: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\torch\csrc\autograd\generated\python_variable_methods.cpp:839.)
+  tot += float(loss)
+[  226.1s]   phase1 ep0: loss 0.0740
+[  228.3s]   phase1 ep1: loss 0.0552
+[  230.6s]   phase1 ep2: loss 0.0489
+[  232.9s]   phase1 ep3: loss 0.0469
+[  255.8s] val rmse phase1: 10.5716 (kept)
+[  264.2s] phase-2 windows: 64
+[  264.2s] phase2 stage L=10: 200 iterations starting
+[  264.7s]   phase2 L=10 it=0: loss 8805.0479
+[  289.7s]   phase2 L=10 it=50: loss 9006.6230
+[  315.1s]   phase2 L=10 it=100: loss 8708.3662
+[  340.0s]   phase2 L=10 it=150: loss 9361.1035
+[  389.2s] val rmse after L=10: 12.3739 (degraded)
+[  389.2s] reverted to phase1
+[  389.2s] member0 saved (stage phase1, val 10.5716)
+[  389.2s] member 1: bootstrap roots (unique 10)
+[  392.0s]   phase1 ep0: loss 0.1139
+[  394.5s]   phase1 ep1: loss 0.0571
+[  396.9s]   phase1 ep2: loss 0.0490
+[  399.5s]   phase1 ep3: loss 0.0449
+[  406.0s] member curriculum L=10: 200 iterations starting
+[  520.4s] member curriculum L=40: 120 iterations starting
+[  777.0s] member curriculum L=120: 60 iterations starting
+[ 1152.0s] member 1 saved
+[ 1152.0s] member 2: bootstrap roots (unique 11)
+[ 1154.7s]   phase1 ep0: loss 0.1016
+[ 1157.0s]   phase1 ep1: loss 0.0603
+[ 1159.4s]   phase1 ep2: loss 0.0510
+[ 1161.8s]   phase1 ep3: loss 0.0457
+[ 1166.0s] member curriculum L=10: 200 iterations starting
+[ 1277.2s] member curriculum L=40: 120 iterations starting
+[ 1532.0s] member curriculum L=120: 60 iterations starting
+[ 1921.7s] member 2 saved
+[ 1921.7s] TRAINING DONE

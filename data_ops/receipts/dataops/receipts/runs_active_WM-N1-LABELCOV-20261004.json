@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/WM-N1-LABELCOV-20261004",
+ "name": "WM-N1-LABELCOV-20261004",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\WM-N1-LABELCOV-20261004",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-LABELCOV-20261004/WM-N1-LABELCOV-20261004.tar.zst",
+ "bytes": 130665,
+ "files": 9,
+ "archive_bytes": 25898,
+ "archive_md5": "ca088e4cfd47f6bdfa610096e04c26c5",
+ "member_manifest": "manifests/members/runs_active_WM-N1-LABELCOV-20261004.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 48.1,
+ "timestamp": "2026-10-10T03:53:42"
+}

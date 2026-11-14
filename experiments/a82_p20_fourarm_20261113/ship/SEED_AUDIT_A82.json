@@ -1,0 +1,76 @@
+{
+ "schema": "coopmwm.a82.seed_audit.v1",
+ "amendment": "82 (draft)",
+ "block": [
+  988200,
+  988599
+ ],
+ "sizes": {
+  "96": [
+   988200,
+   988295
+  ],
+  "192": [
+   988200,
+   988391
+  ],
+  "384": [
+   988200,
+   988583
+  ]
+ },
+ "forbidden_checked": [
+  [
+   964000,
+   964199
+  ],
+  [
+   962000,
+   962999
+  ],
+  [
+   977000,
+   977999
+  ],
+  [
+   989600,
+   989699
+  ],
+  [
+   987200,
+   987599
+  ]
+ ],
+ "note": "registry absence is not proof of freshness; this records what was checked on 2026-11-13 (zero simulation); neighbours: 988000-988071 = a TRAIN block of an earlier fixed24update run (registered), 987200-987599 = A77 TRAIN",
+ "checks": [
+  {
+   "source": "runs/active/C4-V7FT-20261017/REGISTRATION.md + protocols/experiment_history.json",
+   "method": "every 6-digit token and a-b / a..b range (span <= 20,000) parsed as an interval; free 400-blocks listed (tools/free_blocks.py)",
+   "hits_in_block": "0 (only decimal / hash fragments such as 0.0235988200..., checked by context)"
+  },
+  {
+   "source": "git: all refs/heads + refs/remotes, 911 unique tree objects",
+   "method": "git grep 98(76|77|78|79|82|83|84|85)xx tokens in *.py *.sh *.md *.yaml *.toml",
+   "hits": 0
+  },
+  {
+   "source": "Box 3 (124.220.72.157) /root + /home/ubuntu, evaluation/venv/site-packages pruned, banned path words skipped",
+   "method": "tools/seed_audit_box.py: panel files (307 with worlds), runner range tables (29 ranges), 6-digit tokens in code/docs",
+   "panel_overlap": [],
+   "runner_overlap": [],
+   "code_hits": "10, all inside hex hashes of /home/ubuntu/env/Python-3.12.16/Misc/svnmap.txt (not seeds)",
+   "n_files_scanned": 19802
+  },
+  {
+   "source": "Box 4 (49.235.140.169), LIGHT check only (training running): nm_eval_runner / adapter / toml / CONFIG json under /home/ubuntu/a77, /root/a73/src, /root/cv_20261113_0231 (maxdepth 6, evaluation excluded)",
+   "method": "grep 98(82|83|84|85)xx",
+   "hits": 0
+  },
+  {
+   "source": "laptop working tree text files (runs/ protocols/ docs/ experiments/ ...)",
+   "method": "grep",
+   "status": "NOT DONE: the broad grep was denied by the permission classifier on 2026-11-13 ~21:06; git trees + registration + ledger were checked instead"
+  }
+ ],
+ "verdict": "UNUSED as far as checked (see NOT DONE item)"
+}

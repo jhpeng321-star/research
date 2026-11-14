@@ -151,7 +151,7 @@ class HeldOutGuard:
 
 
 class ReleasedGuard:
-    """The switching pack's zero-shot held-out family is
+    """Owner decision 2026-10-13 (C4): the switching pack's zero-shot held-out family is
     RELEASED for training.  No guard file is required or opened; nothing is refused or
     dropped.  (The held-out WORLDS live outside the TRAIN pack and are still never read.)"""
 
@@ -160,7 +160,7 @@ class ReleasedGuard:
     n_families = 0
     family_clean = True
     family_train_val_overlap = 0
-    source = "released (C4)"
+    source = "released (owner 2026-10-13, C4)"
 
     def refuse_worlds(self, worlds, *, where: str) -> None:
         return None
@@ -440,7 +440,7 @@ def scan_held_family(timelines: SwitchTimelines, book: Optional[IdentityBook],
 
 # ------------------------------------------------------------ DATAHYG strict --
 #: strict hygiene disables the switching source when it would drop more than this fraction of
-#: its items (drop unless > 60 % is removed; otherwise decided case by case).
+#: its items (owner rule: drop unless > 60 % is removed; then the integrator decides).
 HYGIENE_MAX_DROP_FRAC = 0.6
 
 

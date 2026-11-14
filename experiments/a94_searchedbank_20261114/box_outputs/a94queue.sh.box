@@ -1,0 +1,29 @@
+#!/bin/bash
+# A94 / A95 SUMO chain (Box 3, /root/a94; arms BANK_SEARCHED, BANK_HAND (unless hand = none), DUO_HOLD_60C, MAPPO60C). Started BY HAND only; it waits for nothing. Refuses unless setup + panel + bank +
+# pin are done (shas from /root/a94/PINNED_SHAS, written by run_a94.sh pin; the panel sha must equal the registered
+# A94_PANEL below). Then mech -> confirm (+ analyse) ONCE, no retry, 46 workers. Any failure writes
+# /root/a94/CHAIN_STOPPED (run_a94.sh writes it itself; this script also writes one if a stage ends without its DONE
+# line). Log /root/a94queue.log, last line A94Q_DONE. Written 2026-11-14 by the prep agent; NOT started by it.
+L=/root/a94queue.log
+B=/root/a94
+A94_PANEL=d85999ddaaf3eb583775d66dbabca168b4432966bc01e7193dfc79f244f7946c
+chainstop() { [ -f $B/CHAIN_STOPPED ] || printf '%s\n' "{\"stage\": \"queue\", \"time\": \"$(date "+%F %T")\", \"reason\": \"$*\"}" > $B/CHAIN_STOPPED; echo "$(date '+%F %T') CHAIN_STOPPED $*" >> $L; echo A94Q_DONE >> $L; exit 1; }
+refuse() { echo "$(date '+%F %T') REFUSED: $*" >> $L; echo A94Q_DONE >> $L; exit 1; }
+[ -f $B/SETUP_OK ] && grep -q PIN_OK $B/chain_pin.out 2>/dev/null && [ -f $B/PINNED_SHAS ] || refuse "$B not pinned"
+[ -f $B/chain_mech.out ] && refuse "$B mech already launched"
+[ -f $B/CHAIN_STOPPED ] && refuse "$B/CHAIN_STOPPED present"
+read -r k1 BANK k2 HAND k3 PANEL < $B/PINNED_SHAS
+[ "$k1 $k2 $k3" = "bank hand panel" ] && [ ${#BANK} = 64 ] && { [ ${#HAND} = 64 ] || [ "$HAND" = none ]; } || refuse "PINNED_SHAS malformed"
+[ "$PANEL" = "$A94_PANEL" ] || refuse "pinned panel $PANEL != registered $A94_PANEL"
+export A94_WORKERS=46 A94_BANK_SHA256=$BANK A94_HAND_SHA256=$HAND A94_PANEL_SHA256=$A94_PANEL
+echo "$(date '+%F %T') a94 queue pid $$ bank $BANK hand $HAND panel $A94_PANEL" >> $L
+echo "$(date '+%F %T') $B mech start (ALLOCATION START)" >> $L
+bash $B/run_a94.sh mech > $B/nohup_mech.out 2>&1; r=$?
+echo "$(date '+%F %T') a94 mech end rc $r" >> $L
+[ $r -eq 0 ] && grep -q A94_MECH_DONE $B/chain_mech.out && [ ! -f $B/CHAIN_STOPPED ] || chainstop "mech rc $r (no A94_MECH_DONE)"
+echo "$(date '+%F %T') a94 confirm start" >> $L
+bash $B/run_a94.sh confirm > $B/nohup_confirm.out 2>&1; r=$?
+echo "$(date '+%F %T') a94 confirm end rc $r" >> $L
+[ $r -eq 0 ] && grep -q A94_CONFIRM_DONE $B/chain_confirm.out && [ ! -f $B/CHAIN_STOPPED ] || chainstop "confirm rc $r (no A94_CONFIRM_DONE)"
+echo "$(date '+%F %T') $(grep 'analysis:' $B/chain_confirm.out | tail -1 | cut -c1-900)" >> $L
+echo A94Q_DONE >> $L

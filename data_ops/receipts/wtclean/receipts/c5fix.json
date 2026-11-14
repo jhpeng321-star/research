@@ -1,0 +1,59 @@
+﻿{
+    "name":  "c5fix",
+    "path":  "E:\\rd-wt\\c5fix",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "HEAD",
+    "headBefore":  "7350ee15d73fb48c139e6bcb5cf5c674a2dbf3b9",
+    "headType":  "detached",
+    "dirtyBefore":  1,
+    "committed":  true,
+    "commitSha":  "ee8a1b9c18654c77884cba277a31116d5d667828",
+    "preserveRef":  "refs/heads/wip-preserve/c5fix",
+    "dest":  "gdrive:research-archive/worktrees/c5fix",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\c5fix.txt",
+    "uploadCount":  208,
+    "uploadBytes":  19384615,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\c5fix.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 05:49:53 NOTICE: Google drive root \u0027research-archive/worktrees/c5fix\u0027: 0 differences found | 2026/10/10 05:49:53 NOTICE: Google drive root \u0027research-archive/worktrees/c5fix\u0027: 208 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\c5fix.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  21,
+    "skippedSensitiveSample":  [
+                                   "output/campaign_stage1_v3/chunk5_launch.py",
+                                   "output/campaign_stage1_v3/chunk5_registration.py",
+                                   "output/campaign_stage1_v3/grade_chunk5.py",
+                                   "output/campaign_stage1_v3/plan_chunk5.py",
+                                   "output/campaign_stage1_v3/results_audit_chunk5/C5_SEED_AUDIT.json",
+                                   "output/campaign_stage1_v3/results_plan_chunk5/BUDGET.json",
+                                   "output/campaign_stage1_v3/results_plan_chunk5/REGISTRATION_CHUNK5_TEST.md",
+                                   "output/campaign_stage1_v3/results_plan_chunk5/WORLD_PLAN.json",
+                                   "output/campaign_stage1_v3/results_plan_chunk5/world_runs.csv",
+                                   "output/campaign_stage1_v3/seeds_chunk5.py",
+                                   "output/campaign_stage1_v3/tests/test_chunk5_arms.py",
+                                   "output/campaign_stage1_v3/tests/test_chunk5_grade.py",
+                                   "output/campaign_stage1_v3/tests/test_chunk5_launch.py",
+                                   "output/campaign_stage1_v3/tests/test_chunk5_plan.py",
+                                   "output/campaign_stage1_v3/tests/test_chunk5_seeds.py",
+                                   "protocols/chunk5_test_seal.json",
+                                   "protocols/holdout_exclusions.json",
+                                   "tests/planner/test_holdout_guard.py",
+                                   "tests/planner/test_holdout_guard_seal.py",
+                                   "tests/test_holdout_exclusions.py",
+                                   "tools/holdout_guard.py"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T05:46:44.9864010+08:00"
+}

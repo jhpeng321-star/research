@@ -1,4 +1,4 @@
-# WM-S-C4 v6 DREAMER-LOOP REFRESH (2026-10-16).
+# WM-S-C4 v6 DREAMER-LOOP REFRESH (2026-10-16, owner: "set up the loop. this is the intended way of training").
 # Loop iteration 1: the v6 policy (trained in imagination) is run in SUMO; its own episodes are added to the WM data
 # and the WM is fine-tuned from its final checkpoint, so the model learns what the policy's actions really do
 # (the v5 policy exploited an entry-queue blind spot that its own rollouts would have exposed). Then the policy

@@ -118,7 +118,7 @@ FORBIDDEN_CHUNKS = ("chunk5",)
 REFERENCE_POLICIES = ("native",)
 REFERENCE_ARMS = ("native", "native_base")
 
-#: Arms whose OUTCOME supervision is removed for this retrain (decision
+#: Arms whose OUTCOME supervision is removed for this retrain (owner decision
 #: (b), registered audit WM-N1-LABEL-TIME-FIX1-20261003).  The source-inferred
 #: snapshot at run start (``features/featurizer.py`` origin 0, lines 207-208)
 #: is misaligned with the packed label ``t0`` for these arms, so no label row
@@ -185,8 +185,8 @@ def _num(value, default=0.0):
 def is_outcome_supervision_excluded(item_or_arm) -> bool:
     """True iff an item (or arm) loses outcome supervision for this retrain.
 
-    Decision (b) excludes the origin-0-snapshotted ``base`` /
-    ``native_base`` arms.  A re-aligned supplementary item (registered
+    Owner decision (b) excludes the origin-0-snapshotted ``base`` /
+    ``native_base`` arms.  A re-aligned supplementary item (owner-approved
     damping-snap, pack marker ``damping_snap=True``) carries the SAME arm name
     but a snapshot origin at its own ``t0``, so it is NOT excluded; the
     pack_v3 origin-0 copy (no marker) stays excluded.
@@ -287,7 +287,7 @@ def _wrapped_corpus(corpus):
 
 
 def outcome_supervision_exclusion(corpus) -> dict:
-    """FAIL-CLOSED receipt for decision (b).
+    """FAIL-CLOSED receipt for owner decision (b).
 
     Returns ``{"arms", "count", "items"}`` for the TRAIN source: the sorted
     ``world__arm`` keys of every item whose arm is in
@@ -352,7 +352,7 @@ def outcome_supervision_exclusion(corpus) -> dict:
 def excluded_outcome_item_keys(corpus) -> list:
     """Keys (``world__arm``) of items whose outcome supervision is removed.
 
-    Thin list view of :func:`outcome_supervision_exclusion` (decision
+    Thin list view of :func:`outcome_supervision_exclusion` (owner decision
     (b)); the receipt form carries the same keys under ``items``.
     """
     return list(outcome_supervision_exclusion(corpus)["items"])
@@ -377,7 +377,7 @@ def is_reference(item: dict) -> bool:
 def _reference_of(group, items):
     """Pick the reference item id inside a pair group (``native`` preferred).
 
-    A reference whose outcome supervision is removed by decision (b)
+    A reference whose outcome supervision is removed by owner decision (b)
     (the origin-0 ``base``/``native_base`` copies of ``pack_v3``) is NEVER
     chosen while a NON-excluded reference exists in the same group: the
     paired-effect contrast would otherwise be anchored on an item that
@@ -1083,8 +1083,8 @@ class MemmapCorpus(Dataset):
         A schema/3 OVERLAY sidecar additionally carries rows for zero-row
         TRAIN items keyed by full item identity: an item whose packed
         ``outcome_rows`` is empty reads its overlay group (validated at
-        load: identity, t0 rows, rule-(b) refusal, coverage).  A missing
-        group refuses (fail closed) unless the arm is rule-(b) excluded,
+        load: identity, t0 rows, owner-(b) refusal, coverage).  A missing
+        group refuses (fail closed) unless the arm is owner-(b) excluded,
         whose supervision stays removed by the dataset zeroing.
         """
         if not positions:
@@ -1098,7 +1098,7 @@ class MemmapCorpus(Dataset):
                     return group
                 if key in getattr(self, "_overlay_excluded", ()) or \
                         is_outcome_supervision_excluded(item):
-                    # receipt-excluded (e.g. alignment refusal) or rule-(b):
+                    # receipt-excluded (e.g. alignment refusal) or owner-(b):
                     # the item legitimately trains with no outcome labels.
                     return rows.iloc[0:0]
                 raise CorpusRefusal(
@@ -1196,7 +1196,7 @@ class MemmapCorpus(Dataset):
             item_rows, t0_s=item["t0_s"])
         excluded = is_outcome_supervision_excluded(item)
         if excluded:
-            # Decision (b): no outcome supervision for these arms.  The
+            # Owner decision (b): no outcome supervision for these arms.  The
             # mask/targets/collision are zeroed here (the single place labels
             # enter); every other loss term is unchanged.
             targets = np.zeros_like(targets)

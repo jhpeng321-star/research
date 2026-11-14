@@ -1,0 +1,41 @@
+priority below-normal: False
+=== WD-01 part 3o: TRAIN-internal gate v2 + LC by type, iteration 1 ===
+ZERO simulation; holdout blocked; NO validation look (the validation roots are never loaded here).
+device=cpu torch_threads=2
+[  68.3s] iter1 member 0: wrote 56 rows -> raw_train_internal_iter1_m0.jsonl
+[ 151.7s] iter1 member 1: wrote 56 rows -> raw_train_internal_iter1_m1.jsonl
+[ 240.5s] iter1 member 2: wrote 56 rows -> raw_train_internal_iter1_m2.jsonl
+[ 320.6s] iter1 member 3: wrote 56 rows -> raw_train_internal_iter1_m3.jsonl
+[ 402.1s] iter1 member 4: wrote 56 rows -> raw_train_internal_iter1_m4.jsonl
+TRAIN-internal gate split: fold A ('cv20_7002m2000', 'cv20_7003m2000'), fold B ('cv20_7004m2000', 'cv20_7007m2700'); t0 (120, 180, 240, 300, 360, 420, 480); scored windows 28; members 5; 2-fold spread (scored fold never fits its own factors)
+
+== TRAIN-internal GATE v2 at H=30 (PRIMARY) ==
+  L6:  (a) coll/1000=0.012 PASS | (b) lc 11.914/11.214 (6.2%) PASS | (c) ttc3 0.8214 delay-phys 0.7857 crps 33.743 vs L0 mae 242.5 -> FAIL | (d) speed 3.6016 vs 1.05xL0=3.7812 (PASS, binding) ==> v2 FAIL: c_coverage_crps
+
+== TRAIN-internal GATE v2 at H=60 (secondary) ==
+  L6:  (a) coll/1000=0.009 PASS | (b) lc 22.771/23.179 (1.8%) PASS | (c) ttc3 0.8929 delay-phys 0.8571 crps 88.265 vs L0 mae 591.11 -> PASS | (d) speed 4.2656 vs 1.05xL0=4.3534 (PASS, binding) ==> v2 PASS
+
+== LC BY TYPE (per window; calibration roots, members pooled) ==
+  H=30:
+    pooled   predM  4.54 trueM  3.25 ( +39.8%) | predD  7.31 trueD  7.96 (  -8.2%) | total 11.85/11.21 (  +5.7%)
+    fold_A   predM  4.44 trueM  3.50 ( +26.9%) | predD  6.47 trueD  9.21 ( -29.8%) | total 10.91/12.71 ( -14.2%)
+    fold_B   predM  4.64 trueM  3.00 ( +54.8%) | predD  8.14 trueD  6.71 ( +21.3%) | total 12.79/ 9.71 ( +31.6%)
+  H=60:
+    pooled   predM  8.07 trueM  6.54 ( +23.5%) | predD 14.56 trueD 16.64 ( -12.5%) | total 22.64/23.18 (  -2.3%)
+    fold_A   predM  7.99 trueM  6.50 ( +22.9%) | predD 13.04 trueD 20.14 ( -35.2%) | total 21.03/26.64 ( -21.1%)
+    fold_B   predM  8.16 trueM  6.57 ( +24.1%) | predD 16.09 trueD 13.14 ( +22.4%) | total 24.24/19.71 ( +23.0%)
+
+== p3o GOAL PACKAGE (LC by type+total +-20% at BOTH H; (a); (d); delay CRPS <= p3n iter1) ==
+  H=30: type-dev max pooled 0.398 foldA 0.298 foldB 0.548 | crps 33.743 <= ref 34.953 | speed 3.6016 <= 3.7812 | b_type_pooled:False, b_total_gate:True, a_collisions:True, d_speed:True, crps_not_worse:True, PASS:False
+  H=60: type-dev max pooled 0.235 foldA 0.352 foldB 0.241 | crps 88.265 <= ref 82.262 | speed 4.2656 <= 4.3534 | b_type_pooled:False, b_total_gate:True, a_collisions:True, d_speed:True, crps_not_worse:False, PASS:False
+  ==> GOAL PACKAGE FAIL
+
+== SHARPNESS + CLIMATOLOGY (diagnostics; TTC criterion under owner decision) ==
+   output      H   cov    med_band  truth_iqr | crps_L6  clima_crps(empirical) crps(TRAIN-mean) n_train
+   delay_phys  30  0.7857    160.29     752.70 |   33.74    189.25   246.69      28  beats climatology
+   delay_phys  60  0.8571    377.17    1549.84 |   88.27    386.56   505.55      28  beats climatology
+   ttc3        30  0.8214     14.36      10.80 |    3.91      2.63     3.50      28  DOES NOT beat climatology
+   ttc3        60  0.8929     18.19      16.90 |    8.05      5.14     6.72      28  DOES NOT beat climatology
+[ 404.9s] wrote results/gate_train_internal_iter1.json
+
+DONE part 3o gate iteration 1.

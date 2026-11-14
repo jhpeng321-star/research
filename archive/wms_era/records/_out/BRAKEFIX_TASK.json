@@ -1,0 +1,54 @@
+{
+  "id": "BRAKEFIX-01",
+  "kind": "engineering_verification",
+  "date": "2026-10-09",
+  "branch": "wms/brakefix",
+  "base_commit": "6ebcf95",
+  "status": "implementation_verified_real_data_pending",
+  "implementation_source": "continued reviewed partial uncommitted work",
+  "diagnosis_source": "_in/DIAG120.md",
+  "ready_note": "_out/BRAKEFIX_READY.md",
+  "simulation_seconds": 0,
+  "real_data_optimizer_updates": 0,
+  "scientific_conclusion_changed": false,
+  "master_ledger_update": "Not a scientific experiment; routine synthetic verification is recorded here. No experiment ledger or shared scientific route update claimed.",
+  "verification": {
+    "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe tools/brakefix_verify.py --tag final_08 -- -m pytest -q output/wd01/wm_n1/wms/tests --basetemp=E:/rd-wt/ws-brakefix/_out/pytest_final_08",
+    "passed": 290,
+    "skipped": 2,
+    "failed": 0,
+    "warnings": 0,
+    "pytest_seconds": 192.51,
+    "peak_os_working_set_bytes": 865292288,
+    "memory_limit_bytes": 6000000000,
+    "receipt": "_out/brakefix_verification/final_08/verification.json",
+    "log": "_out/brakefix_verification/final_08/command.log",
+    "ruff": "passed on all changed Python files",
+    "git_diff_check": "passed",
+    "parity": "exact pre-fix trainer loss, deterministic records and gradients in residual/driver_params/hybrid, including traffic and gradient-share logging",
+    "synthetic_cli_smoke": {
+      "stages_s": [10, 30, 60, 120, 300],
+      "updates_per_stage": 1,
+      "new_flags": "all enabled",
+      "production_cli_trainer_optimizer": true,
+      "synthetic_dataset_small_model_substituted": true,
+      "both_gates": "passed",
+      "artifacts": "_out/pytest_final_08/test_cli_train_cpu_all_stages_0/smoke"
+    }
+  },
+  "prior_attempts": [
+    {"id": "initial", "result": "32 passed, 1 warning; inherited partial implementation"},
+    {"id": "focused_02", "result": "interrupted at shell timeout; receipt preserved"},
+    {"id": "parity_03", "result": "3 failed: Windows GBK decoding of UTF-8 git source; fixed"},
+    {"id": "focused_04", "result": "64 passed, 1 warning"},
+    {"id": "regression_05", "result": "219 passed, 2 skipped"},
+    {"id": "audit_06", "result": "24 passed"},
+    {"id": "final_07", "result": "289 passed, 2 skipped"},
+    {"id": "final_08", "result": "290 passed, 2 skipped; supersedes prior verification"}
+  ],
+  "pending": [
+    "Coordinator read-only real TRAIN deceleration/reach audit using exact READY command; verify acceleration channel alignment.",
+    "Coordinator tiny TRAIN five-update CPU smoke through actual wms.cli train argv and update READY evidence."
+  ],
+  "blocker": "Execution policy forbids reading external packs/sidecars from this workspace-limited session."
+}

@@ -1,0 +1,86 @@
+{
+  "schema": "holdout_exclusions/1",
+  "updated_utc": "2026-09-30T07:48:38Z",
+  "rule": "Final/confirmatory HOLDOUT evaluations MUST load this file (tools/holdout_guard.py) and refuse every 'excluded' world, PER WORLD: all runs of the world (any chunk, incl. fix27/verify27 re-runs) are excluded. 'kept_disclosed' worlds stay in HOLDOUT but every final HOLDOUT report must list them.",
+  "expected_excluded_count": 13,
+  "excluded": [
+    {
+      "world": "w8407m2400p02t360",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    },
+    {
+      "world": "w8408m2600p02t300",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    },
+    {
+      "world": "w8409m2600p02t360",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    },
+    {
+      "world": "w8421m2600p05t420",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    },
+    {
+      "world": "w8422m2700p05t240",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    },
+    {
+      "world": "w8423m2400p05t300",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    },
+    {
+      "world": "w8435m2700p10t240",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    },
+    {
+      "world": "w8436m2700p10t240",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    },
+    {
+      "world": "w8437m2600p10t360",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    },
+    {
+      "world": "w8449m2400p20t240",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    },
+    {
+      "world": "w8450m2700p20t300",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    },
+    {
+      "world": "w8463m2700p40t420",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    },
+    {
+      "world": "w8464m2600p40t480",
+      "reason": "PL-02a (ZCode 7919b100, 2026-09-27) read recorded HOLDOUT outcomes of this root; owner ruling 2026-09-29 ~19:45: EXCLUDED from any final/confirmatory HOLDOUT evaluation (development use only if a future registration says so; default excluded entirely)",
+      "source": "DEVIATION_PL02a_HOLDOUT.md (planner worktree pl01)"
+    }
+  ],
+  "kept_disclosed": [
+    "w8477m2600p02t480",
+    "w8617m2700p02t300"
+  ],
+  "notes": [
+    "WM-70 format-only exposures: w8477m2600p02t480 (KEPT + disclosed, owner ruling 2026-09-29), w8463m2700p40t420 and w8407m2400p02t360 (also PL-02a outcome-exposed -> EXCLUDED; exclusion wins).",
+    "Not analysed by PL-02a: w8451m2700p20t420 (remains clean HOLDOUT).",
+    "Per-world exclusion covers the speedMode-27 fix27/verify27 re-runs of w8463 and w8464 (their outcomes were not read).",
+    "2026-09-30: DeepSeek d0737437 also opened RUN_RECEIPT/switch_schedule/dir listings of w8477m2600p02t480 (already kept_disclosed) and w8407m2400p02t360 (already EXCLUDED); metadata only, no outcomes; status unchanged. 'pending_owner_ruling' is not read by tools/holdout_guard.py; move the world to 'excluded' or 'kept_disclosed' once the owner rules.",
+    "w8617m2700p02t300 (chunk-4 HOLDOUT): KEPT + disclosed, owner ruling 2026-09-30 (relayed by main discussion; precedent w8477). Metadata-only exposures, no outcomes seen: (1) main discussion session ~2026-09-30T04:20Z grepped RUN_RECEIPT.json/summary.json/manifest.json of w8617__native_base for duration/elapsed (saw duration 900, elapsed_wall 673.7 s, wall_generation_authorized false); (2) DeepSeek task d0737437 (WM-N1 inventory reconnaissance) opened RUN_RECEIPT/switch_schedule/dir listings.",
+    "2026-09-30 transcript check of DeepSeek d0737437 (main discussion, read-only script over the OpenCode DB, no values printed): for w8617m2700p02t300 and w8477m2600p02t480 the agent printed receipt key names incl. evaluate_summary; no values (transcript check 2026-09-30); no 'read' tool calls on sealed receipts. FORMAT-level exposure; both remain KEPT + disclosed per owner ruling."
+  ],
+  "pending_owner_ruling": []
+}

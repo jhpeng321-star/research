@@ -1,0 +1,36 @@
+{
+  "config": {
+    "flags": {
+      "entries": false,
+      "merge_cal": true,
+      "projection": false,
+      "rollout_mode": "residual"
+    },
+    "horizons_s": [
+      10.0,
+      30.0,
+      60.0
+    ],
+    "models": {
+      "smoke_local": "ckpt_smoke_local"
+    },
+    "name": "WM-S-SCORE-SMOKE-LOCAL",
+    "out_dir": "runs/active/int_score_smoke_local",
+    "previous_best": "ckpt_c1fast",
+    "schema_version": 2,
+    "set_specs": {
+      "wall_same": {
+        "identities": null,
+        "pack": null,
+        "states": "eval_states_wall_same",
+        "subset": "first_per_world:20",
+        "windows": null
+      }
+    },
+    "sets": [
+      "wall_same"
+    ],
+    "workers": 1
+  },
+  "fingerprint": "34204b627005f33ed4f0c0249f84dbe8e8aab149d47399878a2b843c9ba1e51b"
+}

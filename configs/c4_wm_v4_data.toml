@@ -15,7 +15,7 @@
 #   4. [loss.paired_diff] weight 0.5: arm-minus-reference differences of t0 HDV positions/speeds
 #      and per-5 s cohort delay (road, RSU zone) / merge throughput, predicted vs recorded.
 #      Weight chosen on the CPU smoke for a ~5-15 % share of a paired batch's loss value.
-# NOT trained yet.
+# The integrator adds the stage-schedule changes from c4/sched.  NOT trained yet.
 schema_version = 2
 name = "WM-S-C4-V4DATA"
 extends = "c4_wm_v4_lane.toml"

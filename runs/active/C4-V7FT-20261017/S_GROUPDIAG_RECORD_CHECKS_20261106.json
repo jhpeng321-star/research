@@ -1,0 +1,30 @@
+{
+  "schema": "sgroupdiag-record-checks/1",
+  "task_id": "S-GROUPDIAG",
+  "date": "2026-11-06",
+  "local_verifier": "python -B E:/Temp/opencode/sgroup_verify.py: PASS",
+  "ledger_check": "python -B E:/Temp/opencode/sgroup_record_checks.py: PASS",
+  "validation": {
+    "preexisting_errors": 174,
+    "current_errors": 174,
+    "new_errors": [],
+    "note": "Existing missing-path errors retained; not a globally clean ledger claim."
+  },
+  "scoped_verify_sources": {
+    "source_id": "SRC-SGROUPDIAG-RESUME",
+    "mismatches": [],
+    "numeric_checks_expected": 0,
+    "numeric_checks_performed": 0,
+    "note": "Integrity receipt identity only; physical arithmetic independently checked by sgroup_verify.py."
+  },
+  "bindings": "Report and all eight saved-capture SHA256 bindings PASS",
+  "summary_check": "python -B tools/experiment_history.py summary --check: CURRENT; ledger prefix5a4e8e4cf670 (working-tree ledger including preserved unrelated edits).",
+  "staged_artifact_check": "PASS staged ledger/generated-summary consistency (ledger prefix4188c71293998b02) and staged report/receipt SHA256 binding. Only task-specific additions staged; unrelated worktree edits preserved.",
+  "tests": {
+    "command": "python -B -m pytest -q -p no:cacheprovider tests/test_experiment_history_ledger.py::test_ledger_loads_and_schema_is_versioned tests/test_experiment_history_ledger.py::test_coverage_metadata_and_evidence_vocabulary",
+    "passed": 2,
+    "warnings": "One pytest unknown cache_dir configuration warning when cache provider disabled."
+  },
+  "access_guard": "An initial generic-validator attempt was refused before opening an excluded archive metadata map. The successful check filters that map before validation and retains the prohibited-path open guard. Zero prohibited bytes read; no global source traversal.",
+  "execution": "No new SSH, remote commands, running-process interaction, jobs, SUMO, training, charges or web research during resume."
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "experiment_id": "WD-01-C4L1",
+    "record": "analysis",
+    "record_kind": "analysis",
+    "status": "in_progress",
+    "execution_status": "in_progress",
+    "evidence_validity": "pending",
+    "scientific_verdict": "pending",
+    "recorded_utc": "2026-09-30T00:00:00Z",
+    "recorded_by": "ZCode GLM execution session (WD-01-C4L1 task, worktree wd01c4l1); integrating agent to append",
+    "registration": {
+      "file": "output/wd01/REGISTRATION_C4L1.md",
+      "registered": "2026-09-30 (frozen; commit e93ffb3), LF-sha256 5e4a772137b8b427823b4860a20440eaa65abcbea735551eff681aa67b80b124, acknowledged by the main discussion before any allocation",
+      "type": "ANALYSIS on existing logs, zero simulation; FIRST look at the 9 chunk-4 CALIBRATION worlds (nominal Part A v2 general, true-state input); ONE pass; pre-specified PASS rule (a)+(c)+(d) at H30, (b) reported only"
+    },
+    "question": "Does Part A v2 general (one-parameter-set Treiber IDM + MOBIL + merge engine, nominal params, TRUE logged zone state, native CAV path) reach the pre-specified accuracy and safety criteria at H = 30 s on the previously unopened chunk-4 CALIBRATION worlds' __native_base truth?",
+    "closest_prior_and_difference": {
+      "related_records": [
+        "WD-01-PA2G-A2 (output/wd01/REPORT_PA2G_EVAL_A2.md): same engine (LC1 counting fix), same truth type (chunk-4 __native_base), same metrics code, on 32 TRAIN worlds; its criteria were descriptive, no pass rule"
+      ],
+      "unanswered_difference": "A2 opened TRAIN worlds only; the chunk-4 CALIBRATION worlds were never opened by Part A (exposure audit 2026-09-30 run time: zero hits across 49 output roots). C4L1 is the first look at CAL with a pre-specified pass/fail rule and one pass."
+    },
+    "changed_variable": "world set (TRAIN -> the 9 CALIBRATION worlds) + a pre-specified decision rule; engine, parameters, comparators and metric definitions unchanged from A2",
+    "data": {
+      "truth": "E:/research-dense/runs/campaign_stage1_chunk4/<world>__native_base/run/physics_steps.jsonl over (t0, t0+540]; a run counts only with RUN_RECEIPT exit_status complete + coverage; CAV identity from the physics rows' cav_ids; refused worlds reported, never replaced",
+      "worlds": "all 9 CALIBRATION worlds of results_plan_chunk4/WORLD_PLAN.json (chunk 4 has no VALIDATION split): w8621m2700p02t240, w8622m2700p02t360, w8639m2700p05t360, w8640m2000p05t540, w8657m2700p10t300, w8658m2600p10t360, w8674m2600p20t300, w8675m2700p20t300, w8692m2600p40t300",
+      "access_control": "loader refuses the 9 CAL worlds unless given the frozen registration with matching LF-sha256; HOLDOUT refused via E:/research-dense/tools/holdout_guard.py + protocols/holdout_exclusions.json; opened-file list asserted at close-out (only the 9 CAL __native_base run files + plan files); exposure audit passed at run time (output/wd01/partA_v2g/EXPOSURE_AUDIT_C4L1.md)"
+    },
+    "budget_and_charges": {
+      "registered_budget": "ONE eval_c4l1 pass over the 9 CAL worlds, --workers 1, low priority, zero SUMO/CPU only (replay of saved logs + model rollouts), expected < 10 min; no successor experiment follows from characterization; FAIL -> diagnosis on TRAIN only, no second look on these worlds",
+      "allocations": [
+        {
+          "id": "c4l1_eval_pass",
+          "status": "registered",
+          "note": "output/wd01/partA_v2g/results/c4l1/ (fresh dir, never overwritten); raw rows saved before aggregation; crash before any row -> at most ONE disclosed restart; crash after rows -> reported as is; no re-run after seeing any number"
+        }
+      ]
+    },
+    "criteria_verdict": "pending (frozen rule: PASS iff at H30 (a) collisions <= 1/1000 veh-steps AND (c) v2g delay MAE < const-speed MAE on the same windows AND |mean signed delay error| <= 15% of mean truth tracked delay AND (d) v2g v_RMSE <= 1.05 x min(const-speed, p3o replica) v_RMSE; (b) LC ratios reported only)",
+    "source_hashes": {
+      "registration_lf_sha256": "5e4a772137b8b427823b4860a20440eaa65abcbea735551eff681aa67b80b124",
+      "params_nominal_lf_sha256": "079a55768f803b23c92af188680c1df91dc63f04acbbbac948870b46e75935f7",
+      "engine_commit": "9f716b4a54b130dac6a8bf382454bd00e19a5a6b (zcode/wd01c4l1 == zcode/wd01 9f716b4; partA_v2g engine.py/metrics.py/cavctrl.py unchanged since 9dda3a3, verified via git log)",
+      "plan_raw_sha256": "65510b27f651f477c3de9acc663b9138916a07dfb46468718dc9932147e1ffc4"
+    },
+    "ledger_updated": "NO (draft only; integrating agent appends to protocols/experiment_history.json)",
+    "open_questions_updated": "NO (shared records untouched by this task; close-out per registration section 5)",
+    "route_updated": "NO (shared records untouched by this task)",
+    "next_action": "freeze + committed eval code, then the single pass; close-out adds results + criteria_verdict to LEDGER_DRAFT_C4L1.json"
+  }
+]

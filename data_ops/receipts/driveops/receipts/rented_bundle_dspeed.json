@@ -1,0 +1,17 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "rented_bundle_dspeed",
+ "kind": "dir",
+ "class": "ARCHIVE",
+ "producer": "dspeed rented-box bundle variant + upload_staging",
+ "restore": "copy to E:/",
+ "local": "E:/rented_bundle_dspeed",
+ "drive": "gdrive:research-archive/data/staging/rented_bundle_dspeed",
+ "bytes": 175120615,
+ "files": 2561,
+ "md5_manifest": "receipts/md5/rented_bundle_dspeed.md5",
+ "check": "passed",
+ "check_method": "rclone check --one-way (size+MD5)",
+ "check_detail": "",
+ "timestamp": "2026-10-09T21:05:48"
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "shards_v3/ALLOCATION.json",
+ "name": "ALLOCATION.json",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "v3 shard corpus (D:), biggest remaining D: staging item",
+ "local": "D:\\rd-staging\\wmn1_feat\\shards_v3\\ALLOCATION.json",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v3/ALLOCATION.json.tar.zst",
+ "bytes": 103992,
+ "files": 1,
+ "archive_bytes": 7473,
+ "archive_md5": "10aae905a6c11c5d49e3c8713d264d45",
+ "member_manifest": "manifests/members/shards_v3_ALLOCATION.json.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 49.8,
+ "timestamp": "2026-10-10T01:37:53"
+}

@@ -1,0 +1,69 @@
+{
+ "part": "3o",
+ "date": "2026-09-27",
+ "title": "gate-v2 (b) LC over-count FIX for the p3n idm_merge emulator: per-type hazard levers (lc_scale_disc + merge_accept_prob engine flags), 2 TRAIN-internal fit/gate iterations, freeze of candidate + spread factors",
+ "status": "completed (TRAIN-internal only)",
+ "holdout_accessed": false,
+ "holdout_note": "no holdout root loaded, no registration hash created or passed; holdout_block authoritative",
+ "simulation": false,
+ "simulation_note": "ZERO simulation: no SUMO/TraCI anywhere in part 3o; the only dynamics is the pure-torch part-3 rollout engine",
+ "validation_look_taken": false,
+ "validation_note": "NO validation look; the 4 validation roots (cv20_7005m2000, cv20_7006m2000, cv30_7305m2700, seed_7535m2400) were NEVER loaded or scored",
+ "engine_change": "TWO Rollout kwargs in output/wd01/part3/engine.py, defaults exact no-ops: lc_scale_disc (discretionary 0<->1 hazard scale, None->lc_scale) and merge_accept_prob (probabilistic thinning of gap-accepted M2 merges, 1.0 = shipped deterministic; dedicated RNG stream, created only when active; merge_stats['rej_prob'] only exists when active; getattr defaults keep prior __new__-stub tests green)",
+ "data_root": "runs used WD01_DATA_ROOT=D:/rd-wt/wd01/output/wd01 read-only; never written",
+ "split": {
+  "fit_roots": ["cv17", "cv19_4107", "cv19_4108", "cv20_7001m2000"],
+  "gate_fold_A": ["cv20_7002m2000", "cv20_7003m2000"],
+  "gate_fold_B": ["cv20_7004m2000", "cv20_7007m2700"],
+  "gate_windows": 28,
+  "protocol": "2-fold: scored fold's spread factors fitted on the other fold only; frozen factors for the possible single look fitted on the FULL calibration split"
+ },
+ "diagnosis": {
+  "basis": "typed row builder (LC by type on BOTH sides) re-rolling the p3n iter1 members on the calibration roots (iter0) + fit roots (truth sides only)",
+  "pooled_by_type": {
+   "H30": {"pred_merge": 4.68, "true_merge": 3.25, "dev_merge": 0.44, "pred_disc": 8.91, "true_disc": 7.96, "dev_disc": 0.119, "dev_total": 0.212},
+   "H60": {"pred_merge": 8.18, "true_merge": 6.54, "dev_merge": 0.251, "pred_disc": 17.8, "true_disc": 16.64, "dev_disc": 0.07, "dev_total": 0.121}
+  },
+  "fold_structure": "fold A total -2.8% @H30 (on target), fold B +52.7% (fold B truth carries systematically fewer LCs; global levers cannot reconcile per-fold -> fold tables reported as diagnostics, package gates pooled)",
+  "regression_vs_committed_p3n_gate": "pooled LC totals differ 0.07/0.16 lc/window (cross-platform jitter; p3n raw rolls were not kept); flags verified no-op at defaults"
+ },
+ "iterations": [
+  {
+   "iteration": 1,
+   "declared": "merge_accept_prob (1.0,0.85,0.7,0.55) x lc_scale_disc (0.002,0.0016,0.0012) x tau_accept (1.9,2.4) lines on the 28 fit windows; members 1-4 = p3n bases + softmax draws over the new fields",
+   "winner_member0": {"lc_scale": 0.002, "lc_scale_disc": 0.0016, "merge_accept_prob": 0.55, "tau_accept": 2.4, "b_accept": 2.0, "end_force_s": 60.0, "dawdle_scale": 1.0},
+   "gate": {"H30": {"v2": "FAIL (c only)", "b": "+6.2% PASS", "crps": 33.743, "d": "PASS"}, "H60": {"v2": "PASS", "b": "-1.8% PASS", "crps": 88.265, "d": "PASS"}},
+   "json": "gate_train_internal_iter1.json"
+  },
+  {
+   "iteration": 2,
+   "declared": "count-effective merge levers after the thinning negative result: end_force_s (60,45,30,15), tau_accept (2.4,3.0,3.6), b_accept (2.0,1.5,1.0), merge_accept_prob (0.55,0.7,0.85), lc_scale_disc (0.0016,0.0018,0.002)",
+   "negative_result": "merge over-count is structural for the declared levers: mprob thinning delays (arrival-limited retries) but does not prevent merges; shrinking the relaxed end-force zone 60->15 m cuts lcM30 0.105->0.087 while joint loss explodes 2.27->4.35 (delay-driven); tau/b count-flat",
+   "winner_member0": {"lc_scale": 0.002, "lc_scale_disc": 0.0016, "merge_accept_prob": 0.55, "tau_accept": 2.4, "b_accept": 1.0, "end_force_s": 60.0, "dawdle_scale": 1.0},
+   "gate": {"H30": {"v2": "PASS (all of a-d)", "b": "+6.5% PASS", "by_type": "merge +40.4%, disc -8.0%", "crps": 33.613, "crps_p3n_iter1_ref": 34.953, "d": "3.6089<=3.7812 PASS"}, "H60": {"v2": "PASS (all of a-d)", "b": "-1.7% PASS", "by_type": "merge +23.8%, disc -12.2%", "crps": 85.928, "crps_p3n_iter1_ref": 82.262, "d": "4.2785<=4.3534 PASS"}},
+   "json": "gate_train_internal_iter2.json"
+  }
+ ],
+ "freeze": {
+  "candidate_json": "candidate_p3o_iter2.json",
+  "candidate_sha256": "458890d9c4b0ee6ee03de145be50498d9bd0873505a4e86f2bf8a1e224ebe45d",
+  "calibration_json": "calibration_p3o.json",
+  "calibration_sha256": "c7ffa7540768fa67e75e99881eec6f801201990dea4ace90af93c202f789c22a",
+  "frozen_utc": "2026-09-27T05:09:19.400476+00:00",
+  "members": 5,
+  "s_out": {"delay_phys": {"30": 2.7638, "60": 2.5198}, "ttc3": {"30": 3.0314, "60": 6.3496}},
+  "residuals_accepted": ["H30:b_type_pooled", "H60:b_type_pooled", "H60:crps_not_worse"],
+  "residual_note": "formal (b) total, (a), (d) PASS at both H; merge-type pooled band structural within declared levers (evidence in REPORT_P3O.md par.4); H60 delay CRPS +3.7 pts vs p3n iter1 (which itself fails (c) coverage at both H); owner decides on the single validation look"
+ },
+ "diagnostics": {
+  "ttc3": "coverage 0.821 @H30 / 0.893 @H60 (2-fold); ensemble CRPS does NOT beat TRAIN climatology (4.05 vs 2.63; 10.55 vs 5.14) - unchanged from p3n, never optimised for (owner decision pending)",
+  "delay_phys": "CRPS beats climatology at both H (33.6 vs 189.3; 85.9 vs 386.6); 2-fold coverage 0.857/0.821"
+ },
+ "tests": "part3o 9 passed; part3/part3l/part3m/part3n suites all pass (101 passed, 1 skip: p3n TASK-A raw-row pin - raw rows never committed)",
+ "artifacts": {
+  "code": ["p3o_lib.py", "base_p3o.py", "fit_p3o.py", "gate_p3o.py", "freeze_p3o.py", "tests/"],
+  "results": ["results/raw/*", "results/stdout_*.txt", "results/fit_lines_iter*.json", "results/fit_p3o_iter*.json", "results/gate_train_internal_iter*.json", "results/candidate_p3o_iter2.json", "results/calibration_p3o.json", "*.FROZEN.sha256"],
+  "report": "REPORT_P3O.md"
+ },
+ "shared_ledger_note": "the SHARED LEDGER_DRAFT_WD01_DEVIATIONS.json was NOT edited; this is part 3o's own draft record"
+}

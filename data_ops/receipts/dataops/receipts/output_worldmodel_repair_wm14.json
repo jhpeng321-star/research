@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/worldmodel_repair_wm14",
+ "name": "worldmodel_repair_wm14",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\worldmodel_repair_wm14",
+ "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_repair_wm14/worldmodel_repair_wm14.tar.zst",
+ "bytes": 586872,
+ "files": 22,
+ "archive_bytes": 138615,
+ "archive_md5": "7a040f0fd37c574d6cb857e0ed87c0ba",
+ "member_manifest": "manifests/members/output_worldmodel_repair_wm14.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 12.8,
+ "timestamp": "2026-10-10T01:44:41"
+}

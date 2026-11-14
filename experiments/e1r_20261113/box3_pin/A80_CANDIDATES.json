@@ -1,0 +1,1396 @@
+{
+ "STOP": false,
+ "amendment": "80",
+ "candidates": [
+  {
+   "draw_rank": 1,
+   "extended": false,
+   "family": "mut_3cc4a6cac9ecbbdc",
+   "form": "rolling",
+   "hold_s": [
+    30,
+    120
+   ],
+   "key": "3cc4a6cac9ecbbdc",
+   "mech": false,
+   "n_roles": 2,
+   "name": "mut_3cc4a6cac9ecbbdc",
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "mut_3cc4a6cac9ecbbdc",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 30,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   },
+   "strategy_sha256": "b25fe7c20b0a71f233a3b7134b5583907c1990c0f5876d87bbdaf870978f5c68",
+   "stratum": "wm_top",
+   "tokens": [
+    [
+     "plain"
+    ]
+   ],
+   "trigger": "wall",
+   "uncovered": [],
+   "wm": {
+    "feasible": 1.0,
+    "gain_vs_base": 820.17,
+    "gain_vs_base_lcb": null,
+    "score": null
+   },
+   "zone": "full",
+   "zone_d": null
+  },
+  {
+   "draw_rank": 2,
+   "extended": true,
+   "family": "mut_2d63cd1d82262ffe",
+   "form": "zone",
+   "hold_s": [
+    120
+   ],
+   "key": "2d63cd1d82262ffe",
+   "mech": true,
+   "n_roles": 2,
+   "name": "mut_2d63cd1d82262ffe",
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "mut_2d63cd1d82262ffe",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "mid"
+   },
+   "strategy_sha256": "6aca14a0f16758d5fb604f99bb88ec8633b3b0edc1ac391e5adc8233e0892e6c",
+   "stratum": "wm_top",
+   "tokens": [
+    [
+     "ext_roles",
+     "onset"
+    ],
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "mid"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     ""
+    ]
+   ],
+   "trigger": "wall",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ],
+   "wm": {
+    "feasible": 0.8888888888888888,
+    "gain_vs_base": 387.5,
+    "gain_vs_base_lcb": null,
+    "score": -236.1
+   },
+   "zone": "mid",
+   "zone_d": null
+  },
+  {
+   "draw_rank": 3,
+   "extended": true,
+   "family": "rand_d86c59950501b868",
+   "form": "pulse",
+   "hold_s": [
+    20,
+    60,
+    180
+   ],
+   "key": "d86c59950501b868",
+   "mech": true,
+   "n_roles": 3,
+   "name": "rand_d86c59950501b868",
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "rand_d86c59950501b868",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 20,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 40,
+      "rank": 0,
+      "taper_out_s": 20,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 40,
+      "pulse_off_s": 5,
+      "pulse_on_s": 20,
+      "rank": 0,
+      "v_w": 16.0
+     },
+     {
+      "dmax": 1.0,
+      "dv_rel": 4.0,
+      "hold_s": 60,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "taper_in_s": 20,
+      "v_w": 16.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   },
+   "strategy_sha256": "28399dd690f91c11a47ba1b3dd4869f785087e39718af9beda1345062e205e88",
+   "stratum": "wm_top",
+   "tokens": [
+    [
+     "ext_roles",
+     "onset"
+    ],
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "di"
+    ],
+    [
+     "role",
+     "onset",
+     "o"
+    ],
+    [
+     "role",
+     "onset",
+     "p"
+    ]
+   ],
+   "trigger": "wall",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "di"
+    ],
+    [
+     "role",
+     "onset",
+     "o"
+    ]
+   ],
+   "wm": {
+    "feasible": 1.0,
+    "gain_vs_base": -227.51,
+    "gain_vs_base_lcb": null,
+    "score": -711.44
+   },
+   "zone": "full",
+   "zone_d": null
+  },
+  {
+   "draw_rank": 4,
+   "extended": true,
+   "family": "mut_1fca373046a3c66e",
+   "form": "taper",
+   "hold_s": [
+    20,
+    30,
+    120,
+    180
+   ],
+   "key": "1fca373046a3c66e",
+   "mech": true,
+   "n_roles": 4,
+   "name": "mut_1fca373046a3c66e",
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "mut_1fca373046a3c66e",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "dv_rel": 2.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "taper_in_s": 20,
+      "taper_out_s": 10,
+      "v_w": 16.0
+     },
+     {
+      "dmax": 1.5,
+      "dv_rel": 8.0,
+      "hold_s": 30,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 60,
+      "rank": 0,
+      "v_w": 16.0
+     },
+     {
+      "dmax": 1.5,
+      "dv_rel": 6.0,
+      "hold_s": 20,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 16.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   },
+   "strategy_sha256": "4e5825a4e849b71210fa186a28d01875e9f07c170750588df730323afbdc60b8",
+   "stratum": "wm_top",
+   "tokens": [
+    [
+     "ext_roles",
+     "onset"
+    ],
+    [
+     "ext_trigger",
+     "lanes"
+    ],
+    [
+     "ext_zone",
+     "far"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "dio"
+    ]
+   ],
+   "trigger": "lanes",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "dio"
+    ]
+   ],
+   "wm": {
+    "feasible": 0.3333333333333333,
+    "gain_vs_base": -102.13,
+    "gain_vs_base_lcb": null,
+    "score": -289.02
+   },
+   "zone": "far",
+   "zone_d": null
+  },
+  {
+   "draw_rank": 5,
+   "extended": true,
+   "family": "rand_fc669b0881c3202a",
+   "form": "taper",
+   "hold_s": [
+    60,
+    180
+   ],
+   "key": "fc669b0881c3202a",
+   "mech": true,
+   "n_roles": 2,
+   "name": "rand_fc669b0881c3202a",
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "rand_fc669b0881c3202a",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "dv_rel": 6.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 40,
+      "rank": 0,
+      "taper_in_s": 10,
+      "v_w": 12.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 60,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "mid"
+   },
+   "strategy_sha256": "c54509b6554c2ff6f1141265477a2c23050ef12d6b9ce35c95d615398e9b47bd",
+   "stratum": "wm_top",
+   "tokens": [
+    [
+     "ext_roles",
+     "onset"
+    ],
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "ext_zone",
+     "mid"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "di"
+    ]
+   ],
+   "trigger": "wall",
+   "uncovered": [
+    [
+     "ext_trigger",
+     "wall"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "di"
+    ]
+   ],
+   "wm": {
+    "feasible": 0.8888888888888888,
+    "gain_vs_base": 192.97,
+    "gain_vs_base_lcb": null,
+    "score": -262.11
+   },
+   "zone": "mid",
+   "zone_d": null
+  },
+  {
+   "draw_rank": 6,
+   "extended": true,
+   "family": "mut_b80c232749756e25",
+   "form": "zone",
+   "hold_s": [
+    10,
+    45,
+    60
+   ],
+   "key": "b80c232749756e25",
+   "mech": true,
+   "n_roles": 3,
+   "name": "mut_b80c232749756e25",
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "mut_b80c232749756e25",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 45,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 60,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "dv_rel": 8.0,
+      "hold_s": 10,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 40,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 60,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 60,
+      "rank": 0,
+      "v_w": 12.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "merge"
+   },
+   "strategy_sha256": "9e6901baeebd624261a847021b57721f2409ecfae0037b78775549bc9a50c323",
+   "stratum": "wm_top",
+   "tokens": [
+    [
+     "ext_roles",
+     "onset"
+    ],
+    [
+     "ext_trigger",
+     "lanes"
+    ],
+    [
+     "ext_zone",
+     "merge"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ],
+   "trigger": "lanes",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ],
+   "wm": {
+    "feasible": 0.2222222222222222,
+    "gain_vs_base": 99.22,
+    "gain_vs_base_lcb": null,
+    "score": -57.7
+   },
+   "zone": "merge",
+   "zone_d": null
+  },
+  {
+   "draw_rank": 7,
+   "extended": true,
+   "family": "rand_d93996c482e115fc",
+   "form": "gap",
+   "hold_s": [
+    10,
+    30,
+    120
+   ],
+   "key": "d93996c482e115fc",
+   "mech": true,
+   "n_roles": 4,
+   "name": "rand_d93996c482e115fc",
+   "strategy": {
+    "cooldown_s": 90,
+    "gate": null,
+    "name": "rand_d93996c482e115fc",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "dv_rel": 8.0,
+      "gap_arm_s": 60,
+      "gap_drop_m": 300.0,
+      "gap_dx_hi": 20.0,
+      "gap_dx_lo": -20.0,
+      "hold_s": 10,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "start": "gap",
+      "v_w": 12.0
+     },
+     {
+      "dmax": 1.5,
+      "dv_rel": 4.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 40,
+      "rank": 1,
+      "taper_in_s": 20,
+      "taper_out_s": 5,
+      "v_w": 0.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 30,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 40,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "gap_arm_s": 60,
+      "gap_drop_m": 300.0,
+      "gap_dx_hi": 40.0,
+      "gap_dx_lo": -20.0,
+      "gap_events": 3,
+      "hold_s": 10,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 60,
+      "rank": 0,
+      "start": "gap",
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   },
+   "strategy_sha256": "fb0b40753b93f08516a8cbb4c3d182dd96530fa451325959542c2ec816fa4270",
+   "stratum": "wm_top",
+   "tokens": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_trigger",
+     "lanes"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "gap_drop",
+     true
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "gap_events_multi",
+     true
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "gap",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "dio"
+    ]
+   ],
+   "trigger": "lanes",
+   "uncovered": [
+    [
+     "ext_roles",
+     "gap+onset"
+    ],
+    [
+     "ext_zone",
+     "full"
+    ],
+    [
+     "gap_events_multi",
+     false
+    ],
+    [
+     "gap_release",
+     "timer"
+    ],
+    [
+     "onset_delay",
+     "gap"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "gap",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "dio"
+    ]
+   ],
+   "wm": {
+    "feasible": 0.16666666666666666,
+    "gain_vs_base": 5.85,
+    "gain_vs_base_lcb": null,
+    "score": null
+   },
+   "zone": "full",
+   "zone_d": null
+  },
+  {
+   "draw_rank": 8,
+   "extended": true,
+   "family": "rand_c558b66748f20a32",
+   "form": "pulse",
+   "hold_s": [
+    10,
+    180
+   ],
+   "key": "c558b66748f20a32",
+   "mech": true,
+   "n_roles": 2,
+   "name": "rand_c558b66748f20a32",
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "rand_c558b66748f20a32",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 10,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 60,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 40,
+      "pulse_off_s": 10,
+      "pulse_on_s": 20,
+      "rank": 0,
+      "v_w": 24.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   },
+   "strategy_sha256": "549e4454d11773e0a27a8c78018f8dd50e4d655579fecf482fda8e16d797dd50",
+   "stratum": "wm_top",
+   "tokens": [
+    [
+     "ext_roles",
+     "onset"
+    ],
+    [
+     "ext_trigger",
+     "lanes"
+    ],
+    [
+     "ext_zone",
+     "far"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "p"
+    ]
+   ],
+   "trigger": "lanes",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ]
+   ],
+   "wm": {
+    "feasible": 0.9444444444444444,
+    "gain_vs_base": -57.09,
+    "gain_vs_base_lcb": null,
+    "score": -364.61
+   },
+   "zone": "far",
+   "zone_d": null
+  },
+  {
+   "draw_rank": 9,
+   "extended": false,
+   "family": "mut_f1f5d50d9cc5e257",
+   "form": "rolling",
+   "hold_s": [
+    60,
+    120
+   ],
+   "key": "f1f5d50d9cc5e257",
+   "mech": false,
+   "n_roles": 2,
+   "name": "mut_f1f5d50d9cc5e257",
+   "strategy": {
+    "cooldown_s": 90,
+    "gate": null,
+    "name": "mut_f1f5d50d9cc5e257",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 60,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 12.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   },
+   "strategy_sha256": "6bbf5d1e70eff4fa72a3799146aca8bb3b0858db0b09f84fe84e6797fccb2efb",
+   "stratum": "wm_top",
+   "tokens": [
+    [
+     "plain"
+    ]
+   ],
+   "trigger": "wall",
+   "uncovered": [],
+   "wm": {
+    "feasible": 1.0,
+    "gain_vs_base": 825.49,
+    "gain_vs_base_lcb": null,
+    "score": null
+   },
+   "zone": "full",
+   "zone_d": null
+  },
+  {
+   "draw_rank": 10,
+   "extended": false,
+   "family": "rand_8c424a6c16394b5e",
+   "form": "rolling",
+   "hold_s": [
+    20,
+    45,
+    180
+   ],
+   "key": "8c424a6c16394b5e",
+   "mech": false,
+   "n_roles": 4,
+   "name": "rand_8c424a6c16394b5e",
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "rand_8c424a6c16394b5e",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 20,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 40,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 45,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 24.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 45,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 14.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   },
+   "strategy_sha256": "d2a586b3ddceb9504ef6a3cdb1dfa992ea2b1c3a07afa31d9292110a65f035db",
+   "stratum": "wm_top",
+   "tokens": [
+    [
+     "plain"
+    ]
+   ],
+   "trigger": "lanes",
+   "uncovered": [],
+   "wm": {
+    "feasible": 0.0,
+    "gain_vs_base": 0.0,
+    "gain_vs_base_lcb": null,
+    "score": 0.0
+   },
+   "zone": "full",
+   "zone_d": null
+  },
+  {
+   "draw_rank": 11,
+   "extended": true,
+   "family": "mut_356e1670d007b933",
+   "form": "zone",
+   "hold_s": [
+    20,
+    30,
+    90,
+    120
+   ],
+   "key": "356e1670d007b933",
+   "mech": true,
+   "n_roles": 4,
+   "name": "mut_356e1670d007b933",
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "mut_356e1670d007b933",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 20,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 16.0
+     },
+     {
+      "dmax": 1.0,
+      "dv_rel": 8.0,
+      "hold_s": 30,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 16.0
+     },
+     {
+      "dmax": 1.0,
+      "dv_rel": 4.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 12.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 40,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "custom",
+    "zone_d": [
+     400.0,
+     200.0
+    ]
+   },
+   "strategy_sha256": "8ecf8a9a2bb941159fdd594cbba6832a5f47a6b84640b5d32490d236348f998f",
+   "stratum": "wm_top",
+   "tokens": [
+    [
+     "ext_roles",
+     "onset"
+    ],
+    [
+     "ext_trigger",
+     "lanes"
+    ],
+    [
+     "ext_zone",
+     "custom"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ],
+   "trigger": "lanes",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ],
+   "wm": {
+    "feasible": 0.1111111111111111,
+    "gain_vs_base": 7.54,
+    "gain_vs_base_lcb": null,
+    "score": -13.01
+   },
+   "zone": "custom",
+   "zone_d": [
+    400.0,
+    200.0
+   ]
+  },
+  {
+   "draw_rank": 12,
+   "extended": true,
+   "family": "mut_2bb5c7d8fd9aec2e",
+   "form": "pulse",
+   "hold_s": [
+    20,
+    60,
+    120
+   ],
+   "key": "2bb5c7d8fd9aec2e",
+   "mech": true,
+   "n_roles": 4,
+   "name": "mut_2bb5c7d8fd9aec2e",
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "mut_2bb5c7d8fd9aec2e",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "dv_rel": 4.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 12.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 60,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 60,
+      "pulse_off_s": 10,
+      "pulse_on_s": 10,
+      "rank": 1,
+      "v_w": 12.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 20,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "taper_in_s": 10,
+      "taper_out_s": 10,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 20,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 60,
+      "rank": 0,
+      "v_w": 16.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "merge"
+   },
+   "strategy_sha256": "0812382e8ef16b2dfc8ffaa8147bdbf458b9fc0b5632a0842d7801c2cb110558",
+   "stratum": "wm_top",
+   "tokens": [
+    [
+     "ext_roles",
+     "onset"
+    ],
+    [
+     "ext_trigger",
+     "lanes"
+    ],
+    [
+     "ext_zone",
+     "merge"
+    ],
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     ""
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ],
+    [
+     "role",
+     "onset",
+     "io"
+    ],
+    [
+     "role",
+     "onset",
+     "p"
+    ]
+   ],
+   "trigger": "lanes",
+   "uncovered": [
+    [
+     "onset_delay",
+     "onset"
+    ],
+    [
+     "role",
+     "onset",
+     "d"
+    ]
+   ],
+   "wm": {
+    "feasible": 0.16666666666666666,
+    "gain_vs_base": 209.41,
+    "gain_vs_base_lcb": null,
+    "score": 55.21
+   },
+   "zone": "merge",
+   "zone_d": null
+  }
+ ],
+ "candidates_by_form": {
+  "gap": 1,
+  "pulse": 3,
+  "rolling": 3,
+  "taper": 2,
+  "zone": 3
+ },
+ "cell": "D2800_p60",
+ "covered_tokens": [
+  [
+   "ext_roles",
+   "gap"
+  ],
+  [
+   "ext_roles",
+   "onset"
+  ],
+  [
+   "ext_trigger",
+   "lanes"
+  ],
+  [
+   "ext_zone",
+   "custom"
+  ],
+  [
+   "ext_zone",
+   "far"
+  ],
+  [
+   "ext_zone",
+   "merge"
+  ],
+  [
+   "ext_zone",
+   "mid"
+  ],
+  [
+   "gap_drop",
+   true
+  ],
+  [
+   "gap_events_multi",
+   true
+  ],
+  [
+   "gap_release",
+   "clear"
+  ],
+  [
+   "plain"
+  ],
+  [
+   "role",
+   "gap",
+   "d"
+  ],
+  [
+   "role",
+   "onset",
+   ""
+  ],
+  [
+   "role",
+   "onset",
+   "io"
+  ],
+  [
+   "role",
+   "onset",
+   "p"
+  ]
+ ],
+ "doc_sha256": "8ae4475304ddb20e605ea4650d6bc1069945481b39c7252a71961e0f384c6306",
+ "executor": {
+  "a75_sha256": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+  "module": "tools/coopmwm/a75_holdforms.py"
+ },
+ "form_rule": "form family of a plan (first match, fixed before any outcome): gap (a role with start gap) > pulse (a pulsed role) > taper (a tapered role) > zone (zone mid / merge / custom) > rolling (>= 2 roles with >= 2 distinct onset_s) > short (every hold_s <= 45) > other. A75-D2 drew one form per plan; WM plans can combine forms, hence the order and the extra family \"other\"",
+ "mapping_rule": "per row of the pinned file: the row keys are exactly the a75ss writer keys; offer_condition keys within the writer keys (+ zone_d), situation = {unconditional: true}, gate / start_gate / phases = null (the search cfg is unconditional), every role key within the executor role fields; spec = a75_holdforms.spec_of(family, offer_condition) has strategy_key == the row strategy_key and executor_refusal None; a75_holdforms.bank_doc of the spec gives back the identical offer_condition (round trip) and a75_bank_plans accepts it with no refusal and the same extended flag; families and keys unique; 1 <= rows <= 12. Any failure: STOP (no approximation)",
+ "mech_plans": [
+  "mut_2d63cd1d82262ffe",
+  "rand_d86c59950501b868",
+  "mut_1fca373046a3c66e",
+  "rand_fc669b0881c3202a",
+  "mut_b80c232749756e25",
+  "rand_d93996c482e115fc",
+  "rand_c558b66748f20a32",
+  "mut_356e1670d007b933",
+  "mut_2bb5c7d8fd9aec2e"
+ ],
+ "mech_rule": "tokens = form_tokens(plan) (trigger / zone of extended plans, per-role form combination and start kind, gap release / multi-event / drop window, delayed onsets, mixed gap+onset roles; \"plain\" for plans run by the inherited A44 path, exercised by the A75-D2 identity check). Uncovered = tokens of a candidate not produced by any EXAMPLE_PLANS strategy (A75-D2 mechanics PASS). Each candidate with an uncovered token runs its first 2 verification episodes (worlds 992500 / 992501). PASS iff every such record loaded executor MAPPO60C and a75_sha256 d1af7e0f with a75 receipts, no executor refusal, collisions = 0 and teleports = 0, no receipt invariant violation (plan_checks) and every activation x of every member (vehicle log s + S_OFF) inside the plan's zone (+-1 m). A token never exercised on those 2 worlds is reported NOT EXERCISED (not a failure); the receipt invariants are re-checked on every verification record before admission",
+ "n_candidates": 12,
+ "n_extended": 9,
+ "schema": "coopmwm.a80.candidates.v1",
+ "source": {
+  "file": "TOP_OFFER_CONDITIONS_D2800_p60.json",
+  "rows": 12,
+  "sha256": "03e80fe28e95b1beedc0488b733328c4067c21e277aa22cdc7324490158fadd7"
+ },
+ "stage": "S2B",
+ "world_model": "plans and their order come from the WM search file; no WM number is used by any SUMO rule",
+ "writer": "a75ss.main TOP_OFFER_CONDITIONS (a75ss cae54dc1, A79 S2b)"
+}

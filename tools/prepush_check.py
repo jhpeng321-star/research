@@ -59,7 +59,7 @@ NAME_CODE_DIRS = {"protocols", "tests", "tools", "traffic_shepherd", "src", "doc
 RUNS_TEXT_EXT = {".md", ".json", ".txt", ".toml", ".csv", ".log", ".jsonl", ".out", ".time", ".ps1", ".py", ".sh"}
 BINARY_EXT = {".pt", ".pth", ".ckpt", ".pkl", ".npy", ".npz", ".parquet", ".zst", ".zip",
               ".tgz", ".tbz", ".tbz2", ".txz"}
-# other model / array / archive formats: not on the block list, so WARN only
+# other model / array / archive formats: not in the owner's list, so WARN only
 OTHER_BINARY_EXT = {".7z", ".rar", ".safetensors", ".onnx", ".h5", ".hdf5", ".pickle", ".joblib",
                     ".feather", ".arrow", ".bin"}
 # .tar and compressed tars; checksum sidecars such as x.tar.sha256 are text and not matched

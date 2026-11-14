@@ -1,0 +1,286 @@
+{
+ "admitted": [
+  "9c16d14916c5d00074d054b79bcec3c275afa468ab1125c1804fef9caedfb39d",
+  "f3f30dae1be2c58d4aedbc12c5c08932dbd9fead3ab1dc2c03fa0e8e6faf1619",
+  "3f98f94a1fee356e6b80b6b19589e1e9110455964bb764944c1713b2432b9039",
+  "6d44275bdaf0b541aaf9e297ab73bb2ca21dcc50fdf4dfa5fb136f3805a600f2",
+  "e745e81b26d9f867aaf1da0bac65161de25ba38428bf798df53146795c6c8dfd",
+  "9e517e0f38643908cd3e56874bd022386031f6d6ef0abcbab421812c2cf6d9bd",
+  "3e463a68cee8a313238ea710ef4193600347556687a4b0042660fee9f4ce41e0",
+  "3c3ae5d57d3bfb5cdb3dd49d0709d13267b1a6e095dc2406c202ae549d2d2427",
+  "602c654c54ca58d40236e6d94fffa094a288045cbbf2bffc1dab2b73caad5852"
+ ],
+ "doc_sha256": "05a9e35e8a4de20afaf2c7d06954a1108013241283fcfe07c57558fd6fac1ee6",
+ "results_sha256": "529098810cf021a3eb553541db575100d1dec635afd34bc9b25136dc3044b42b",
+ "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+ "run_id": "20261113_0231",
+ "schema": "claim_validation.e1.admission.v1",
+ "search_seed": 89,
+ "verdicts": {
+  "22c8a5333b465dd877f1ef7616809c52e198d43a88ea63ca7b69aa1b2c85504f": {
+   "PASS": false,
+   "activations_per_ep": 4.333333333333333,
+   "allowed": true,
+   "benefit": 0.75,
+   "ci95": [
+    -4640.139404513785,
+    409.2180817522388
+   ],
+   "family": "e1s89_cfe48f7489fc0ddd",
+   "key": "cfe48f7489fc0ddd",
+   "lb95_gain_veh_s": -409.2180817522388,
+   "mean": -2115.3907947508105,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "RANDOM": 1
+   },
+   "size": 4,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 0.8636195985388486
+  },
+  "3c3ae5d57d3bfb5cdb3dd49d0709d13267b1a6e095dc2406c202ae549d2d2427": {
+   "PASS": true,
+   "activations_per_ep": 3.5833333333333335,
+   "allowed": true,
+   "benefit": 0.75,
+   "ci95": [
+    -7512.406617149707,
+    -144.68129769468229
+   ],
+   "family": "e1s89_4a903a79b2494a12",
+   "key": "4a903a79b2494a12",
+   "lb95_gain_veh_s": 144.68129769468229,
+   "mean": -3829.8257043872914,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "RANDOM": 5
+   },
+   "size": 4,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 3.063437398374473
+  },
+  "3e463a68cee8a313238ea710ef4193600347556687a4b0042660fee9f4ce41e0": {
+   "PASS": true,
+   "activations_per_ep": 4.083333333333333,
+   "allowed": true,
+   "benefit": 0.5833333333333334,
+   "ci95": [
+    -6097.281184932359,
+    -326.9327605590299
+   ],
+   "family": "e1s89_93f84d0c79a08cff",
+   "key": "93f84d0c79a08cff",
+   "lb95_gain_veh_s": 326.9327605590299,
+   "mean": -3087.8737818875493,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "RANDOM": 4
+   },
+   "size": 6,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 2.53250932398538
+  },
+  "3f98f94a1fee356e6b80b6b19589e1e9110455964bb764944c1713b2432b9039": {
+   "PASS": true,
+   "activations_per_ep": 7.708333333333333,
+   "allowed": true,
+   "benefit": 0.8333333333333334,
+   "ci95": [
+    -13287.361211273508,
+    -6436.456481450555
+   ],
+   "family": "e1s89_20082703bf3a2222",
+   "key": "20082703bf3a2222",
+   "lb95_gain_veh_s": 6436.456481450555,
+   "mean": -9719.616971173886,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "WM": 3
+   },
+   "size": 3,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 4.291481799510151
+  },
+  "49b685aa5d2ebcbab9b4b91d5cac2aa8527e8973edef8e722fb146f308475e8f": {
+   "PASS": false,
+   "activations_per_ep": 3.3333333333333335,
+   "allowed": true,
+   "benefit": 0.7083333333333334,
+   "ci95": [
+    -4556.761185843037,
+    437.2204609977595
+   ],
+   "family": "e1s89_731a5b13c434976c",
+   "key": "731a5b13c434976c",
+   "lb95_gain_veh_s": -437.2204609977595,
+   "mean": -2079.3398699497243,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "RANDOM": 2
+   },
+   "size": 5,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 2.3342287552614045
+  },
+  "602c654c54ca58d40236e6d94fffa094a288045cbbf2bffc1dab2b73caad5852": {
+   "PASS": true,
+   "activations_per_ep": 4.833333333333333,
+   "allowed": true,
+   "benefit": 0.6666666666666666,
+   "ci95": [
+    -8467.929450898535,
+    -1921.1750022904398
+   ],
+   "family": "e1s89_99b5adbf5c6c51d2",
+   "key": "99b5adbf5c6c51d2",
+   "lb95_gain_veh_s": 1921.1750022904398,
+   "mean": -5082.352742289536,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "RANDOM": 6
+   },
+   "size": 6,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 3.117458083483482
+  },
+  "61970efae563bce073310d5926a74d11271543687b04535f919f72fd2d51bcb7": {
+   "PASS": false,
+   "activations_per_ep": 3.4166666666666665,
+   "allowed": true,
+   "benefit": 0.6666666666666666,
+   "ci95": [
+    -4868.1733491892865,
+    187.93633675317656
+   ],
+   "family": "e1s89_a6abc4a7ca8f05da",
+   "key": "a6abc4a7ca8f05da",
+   "lb95_gain_veh_s": -187.93633675317656,
+   "mean": -2341.8052882442094,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "RANDOM": 3
+   },
+   "size": 6,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 1.6186964260092018
+  },
+  "6d44275bdaf0b541aaf9e297ab73bb2ca21dcc50fdf4dfa5fb136f3805a600f2": {
+   "PASS": true,
+   "activations_per_ep": 5.0,
+   "allowed": true,
+   "benefit": 0.7916666666666666,
+   "ci95": [
+    -12638.539448220572,
+    -5861.357029579689
+   ],
+   "family": "e1s89_5976fa4f97a64aa4",
+   "key": "5976fa4f97a64aa4",
+   "lb95_gain_veh_s": 5861.357029579689,
+   "mean": -9119.532330761762,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "WM": 4
+   },
+   "size": 4,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 5.520325595529322
+  },
+  "9c16d14916c5d00074d054b79bcec3c275afa468ab1125c1804fef9caedfb39d": {
+   "PASS": true,
+   "activations_per_ep": 4.958333333333333,
+   "allowed": true,
+   "benefit": 0.8333333333333334,
+   "ci95": [
+    -12761.558003184973,
+    -5162.878678170102
+   ],
+   "family": "e1s89_7b4449738b63fc67",
+   "key": "7b4449738b63fc67",
+   "lb95_gain_veh_s": 5162.878678170102,
+   "mean": -8859.890364662258,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "WM": 1
+   },
+   "size": 4,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 4.608074988141586
+  },
+  "9e517e0f38643908cd3e56874bd022386031f6d6ef0abcbab421812c2cf6d9bd": {
+   "PASS": true,
+   "activations_per_ep": 4.5,
+   "allowed": true,
+   "benefit": 0.7916666666666666,
+   "ci95": [
+    -9442.819647049457,
+    -3366.0384701470944
+   ],
+   "family": "e1s89_d4c8bcd72b4225a8",
+   "key": "d4c8bcd72b4225a8",
+   "lb95_gain_veh_s": 3366.0384701470944,
+   "mean": -6424.798122947176,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "WM": 6
+   },
+   "size": 5,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 4.975677118488831
+  },
+  "e745e81b26d9f867aaf1da0bac65161de25ba38428bf798df53146795c6c8dfd": {
+   "PASS": true,
+   "activations_per_ep": 4.958333333333333,
+   "allowed": true,
+   "benefit": 0.75,
+   "ci95": [
+    -9831.105080080173,
+    -3193.735263882942
+   ],
+   "family": "e1s89_a0f2716f1890d3ca",
+   "key": "a0f2716f1890d3ca",
+   "lb95_gain_veh_s": 3193.735263882942,
+   "mean": -6458.517869920969,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "WM": 5
+   },
+   "size": 4,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 3.4749393257203374
+  },
+  "f3f30dae1be2c58d4aedbc12c5c08932dbd9fead3ab1dc2c03fa0e8e6faf1619": {
+   "PASS": true,
+   "activations_per_ep": 4.916666666666667,
+   "allowed": true,
+   "benefit": 0.75,
+   "ci95": [
+    -12747.401131643475,
+    -4692.828641689596
+   ],
+   "family": "e1s89_86acbabd4a634f48",
+   "key": "86acbabd4a634f48",
+   "lb95_gain_veh_s": 4692.828641689596,
+   "mean": -8469.532215094523,
+   "n": 24,
+   "rule": "(plan - U0) total delay CI95 upper < 0 AND each of the five group means <= +10 s (U0 labels)",
+   "selected_by": {
+    "WM": 2
+   },
+   "size": 4,
+   "worst_group": "origin:L2",
+   "worst_group_inc": 5.165860364499484
+  }
+ },
+ "verify_plan_sha256": "dd12dbdcd467975769de18c95538803049116791cce61b51282866a30779d118"
+}

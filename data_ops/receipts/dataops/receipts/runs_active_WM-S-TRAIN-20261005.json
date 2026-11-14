@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/WM-S-TRAIN-20261005",
+ "name": "WM-S-TRAIN-20261005",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\WM-S-TRAIN-20261005",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-S-TRAIN-20261005/WM-S-TRAIN-20261005.tar.zst",
+ "bytes": 29358621,
+ "files": 19,
+ "archive_bytes": 22093191,
+ "archive_md5": "d0f4667a5cf72584050775468c6a78e1",
+ "member_manifest": "manifests/members/runs_active_WM-S-TRAIN-20261005.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 61.2,
+ "timestamp": "2026-10-10T04:14:53"
+}

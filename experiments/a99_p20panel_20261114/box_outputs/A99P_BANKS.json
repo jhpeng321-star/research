@@ -1,0 +1,54 @@
+{
+ "amendment": "99",
+ "banks": {
+  "BANK_HAND_20C": {
+   "executor_priority": [
+    [
+     "wall_g_duo12_stagger40",
+     2523.6488193531786,
+     "LcStrategyCore"
+    ],
+    [
+     "wall_g_duo12",
+     796.771215040289,
+     "LcStrategyCore"
+    ]
+   ],
+   "families": [
+    "wall_g_duo12_stagger40",
+    "wall_g_duo12"
+   ],
+   "file_sha256": "59acb7471c51da728ffe7e1f0600082a8e6486a0455108a21df41d7b851bd946",
+   "source": "/root/a99adm_hand/root/a96_banks/A96_BANK_D2800_p20.json",
+   "what": "BANK_HAND_20C"
+  },
+  "BANK_S4_20C": {
+   "executor_priority": [
+    [
+     "mut_4d472232b8df5b18",
+     3060.3243767282106,
+     "LcStrategyCore"
+    ],
+    [
+     "mut_a60055829df5f83b",
+     1297.2013654918085,
+     "HoldFormCore"
+    ]
+   ],
+   "families": [
+    "mut_4d472232b8df5b18",
+    "mut_a60055829df5f83b"
+   ],
+   "file_sha256": "682c01ae1deb28c774701ff0a5102cd77c2addf2ca302e4e42a90409b7302ab2",
+   "source": "/root/a99adm_s4/root/a96_banks/A96_BANK_D2800_p20.json",
+   "what": "BANK_S4_20C"
+  }
+ },
+ "hand_run": true,
+ "omitted": {
+  "BANK_S5_20C": "empty: S5-p20 admitted 0/12 on MAPPO20C (/root/a99adm_s5 wrote no bank file); not run"
+ },
+ "part": "c",
+ "receipt_sha256": "78bfdbb5c494544e15fe286b2617f37d3fd406072a37265b67f4fb91c0daec5c",
+ "schema": "coopmwm.a99p.banks.v1"
+}

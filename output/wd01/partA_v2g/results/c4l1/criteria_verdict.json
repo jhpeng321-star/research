@@ -1,0 +1,25 @@
+{
+ "H": 30,
+ "a": {
+  "value": 0.01048248795562134,
+  "limit": "<= 1.0",
+  "ok": true
+ },
+ "c": {
+  "delay_mae_v2g": 32.47281296168149,
+  "delay_mae_const_speed": 69.89668900558355,
+  "mae_ok": true,
+  "mean_signed_delay_err": -1.9935841036914206,
+  "mean_truth_tracked_delay": 925.9730347603471,
+  "bias_limit": 138.89595521405207,
+  "bias_ok": true
+ },
+ "d": {
+  "v_rmse_v2g": 4.958945989871757,
+  "v_rmse_const_speed": 8.069261735572699,
+  "v_rmse_p3o_replica": 5.833533356015633,
+  "limit": 6.125210023816415,
+  "ok": true
+ },
+ "passed": true
+}

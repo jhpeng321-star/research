@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# POLICYV5: launch the C4 final policy (Dreamer trainer) for the v5 world model on the GPU host.  LF only.
-# Note: this starts a multi-hour GPU training run.
+# POLICYV5: launch the C4 final policy (Dreamer trainer) for the v5 world model on gpuW.  LF only.
+# OWNER APPROVAL REQUIRED before running this (it starts a multi-hour GPU training run).
 #
 #   bash scripts/c4/launch_policy_v5.sh WM_CKPT OUT [extra train_cli args, e.g. --max-updates 50]
 #
 #   WM_CKPT  the selected v5 WM checkpoint (wm_s*.pt; physics.json and TRAIN_RECEIPT.json next to it)
 #   OUT      a NEW output directory (refused if it exists); train.log, pid, LAUNCH.txt go there too
 #
-# Run from (or with this script inside) the unpacked code root /workspace/c4/v5/repo_<commit>.
+# Run from (or with this script inside) the unpacked code root /root/autodl-tmp/c4/v5/repo_<commit>.
 # Env overrides: PY (default /root/miniconda3/bin/python), CONFIG (default configs/c4_policy_v5.toml),
-#   C4_V5_ROOT (default /workspace/c4/v5), C4_V5_DATA (default $C4_V5_ROOT/data),
+#   C4_V5_ROOT (default /root/autodl-tmp/c4/v5), C4_V5_DATA (default $C4_V5_ROOT/data),
 #   DEVICE (default cuda), C4_GPU_MEM_FRACTION (optional, passed through), ALLOW_OTHER_REPO=1.
 #
 # Interface (src/wms/control/train_cli.py, same as scripts/c4/run_policy.sh):
@@ -23,7 +23,7 @@ die() { printf 'REFUSED: %s\n' "$*" >&2; exit 2; }
 [[ $# -ge 2 ]] || die "usage: launch_policy_v5.sh WM_CKPT OUT [extra train_cli args]"
 WM_CKPT=$1; OUT=$2; shift 2
 REPO=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
-C4_V5_ROOT=${C4_V5_ROOT:-/workspace/c4/v5}
+C4_V5_ROOT=${C4_V5_ROOT:-/root/autodl-tmp/c4/v5}
 C4_V5_DATA=${C4_V5_DATA:-$C4_V5_ROOT/data}
 PY=${PY:-/root/miniconda3/bin/python}
 CONFIG=${CONFIG:-configs/c4_policy_v5.toml}

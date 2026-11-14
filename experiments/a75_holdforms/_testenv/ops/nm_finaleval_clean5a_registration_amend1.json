@@ -1,0 +1,175 @@
+{
+ "allocation": {
+  "authority": "MAIN 2026-11-06 under the owner authorisation to act on its recommendations: v2v_final raised 690,000 -> 1,040,000 (F6: 7 arms + branches) -> <= 1,200,000 (RULE arm in 3a and 3c, claim 3c); pre-run spend in the evaluation root ledger counts against the same cap",
+  "margin_over_core": 0.1792,
+  "margin_over_total": 0.0301,
+  "phase": "v2v_final",
+  "sim_s": 1200000,
+  "slack": 35040,
+  "total_ceiling": 1164960
+ },
+ "amendment": 1,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration.json",
+  "registration_sha256": "2d9b8c0ebb8893fbf5e11d980924403aeda567e0ca5ed506476bf1c9e4af61b8"
+ },
+ "analyses": {
+  "claim3a": {
+   "arms": [
+    "A",
+    "B",
+    "R",
+    "U0",
+    "RULE",
+    "NATIVE"
+   ],
+   "new_contrasts": [
+    "X-RULE for every arm",
+    "B-RULE, R-RULE (total benefit vs RULE)",
+    "per-seed vs RULE"
+   ],
+   "seal": "CLAIM3A_TABLES.json analysis_sha256"
+  },
+  "claim3b": {
+   "note": "unchanged; RULE rows appear as context",
+   "per_comparator": [
+    "MAPPO_SPEED",
+    "MAPPO_LANE"
+   ]
+  },
+  "claim3c": {
+   "arms": [
+    "B",
+    "R",
+    "U0",
+    "RULE",
+    "NATIVE"
+   ],
+   "panel_file": "ops/nm_eval_panel_wz3to2_claim3c_D2400.json",
+   "panel_sha256": "d43510e9c75308b575cf97c4309c68da06555dfa442ffc73f3cbbec04dbef3fb",
+   "primary": "descriptive no-harm check: B vs BASE (= A = U0) and vs NATIVE, CI + per-seed harm fraction",
+   "seal": "CLAIM3C_TABLES.json analysis_sha256 (own seal; opens with 3a)",
+   "worlds": "24 held-out seeds 989600-989623, N1 cell D2400_p60 (world()), 1200 s"
+  }
+ },
+ "arms": {
+  "RULE": {
+   "execution": "the U0 episode (same plant, policy, executor and residual, deterministic, noise seed = world seed) with RuleHook(wall_h_solo2) wrapped on the controller after the U0 hook, as regimeu0.worker; the record carries rule_sha256_loaded and executor_sha256_loaded; HDVs are never commanded",
+   "label": "RULE: U0 + the S-REGIMEU0 wall_h_solo2 rule (one CAV holds in SUMO lane 2 at 15 m/s for 90 s, cooldown = hold), always on",
+   "module": "tools.coopmwm.regimeu0 (byte-identical copy of c4/imitreplay blob 2e267403; imitreplay.py blob d5042c33)",
+   "rule_digest": "nm_eval_runner.rule_digest: sha256 over the source of sumo_lane, pick_wall, RuleHook, imitreplay.Recorder and the rule constants (X_B, S_OFF, ZONE_S, WALL_SPREAD, RELEASE_S, WALL_H, STRATEGIES); identical at c4/imitreplay 385c4b8f, 52248a4b, d02228cf",
+   "rule_sha256": "887285923ca0b4ac1a7f728f3d687c57b49e944d3ec7abf62bddb4249d6690b4",
+   "strategy": "wall_h_solo2"
+  }
+ },
+ "authority": [
+  "MAIN registration 2026-11-06 (pre-results): clean5a base is u0 (d9042cc5), so A = U0; secondary claim 3c \"condition-aware: no harm in light traffic\" on 24 held-out D2400_p60 worlds 989600-989623, arms B, R, U0, NATIVE, separate seal, opens with 3a",
+  "MAIN registration 2026-11-06 (pre-results): RULE arm = U0 + the solo2 rule always on (exact S-REGIMEU0 c4/imitreplay tools/coopmwm/regimeu0.py) in 3a and 3c; v2v_final <= 1,200,000; PRE-RUN NATIVE, U0, RULE for 3a and 3c on cpuZ (else cpuV <= 16 workers); results SEALED (F12) until clean5a A/B/R are bound and the 3a seal opens",
+  "MAIN 2026-11-06: IMITREPLAY operates the pre-run on cpuZ (up to 44 workers), stop at a wave boundary when N4 signals, continue on cpuV; identical absolute paths /home/ubuntu/nm_finaleval_clean5a",
+  "N4 2026-11-06: clean5a A = frozen_control_arm (collects as an evaluation arm every update, no PPO), A_checkpoint_<u> = the u0 weights (trunk d9042cc5 + residual 5ea22964); only B and R train"
+ ],
+ "base": {
+  "A": "clean5a A u24 = the frozen u0 (evaluation-only arm, identical weights); BASE alias = A",
+  "U0": "bound frozen d9042cc5 executor + the bound common u0 residual (residual_sha256 must equal the clean5a common_checkpoint_sha256; checked at register and before the episodes)",
+  "clean5a_base": "u0 = frozen d9042cc5 trunk + common residual A_checkpoint_000 (5ea22964...)"
+ },
+ "code": {
+  "branch": "c4/nm-finaleval",
+  "launcher": "ops/nm_finaleval.py",
+  "rule": "tools/coopmwm/regimeu0.py + tools/coopmwm/imitreplay.py (exact copies)",
+  "runner": "tools/coopmwm/nm_eval_runner.py"
+ },
+ "prerun": {
+  "arms": [
+   "NATIVE",
+   "U0",
+   "RULE"
+  ],
+  "cap_sim_s": 432000,
+  "chunks": "dispatch in chunks (default 2 x workers) published as WAVE_<wave>__<a>-<b>.json; STOP_PRERUN in the final root stops after the chunk in flight; resume on any host with the same absolute paths; an interrupted chunk is never replayed",
+  "ledger": "<final_root>/CHARGES.jsonl (the evaluation root; counted against v2v_final by this launcher)",
+  "panels": [
+   "3acb2b565fcb61f4978834b3ba47f0b574fe2d5da7ca028210ef75830c19a130",
+   "d43510e9c75308b575cf97c4309c68da06555dfa442ffc73f3cbbec04dbef3fb"
+  ],
+  "phase": "v2v_final_prerun",
+  "plant": "<final_root>/prerun_plant/CONFIG.json = the clean5a CONFIG with run_root = the plant root; A_checkpoint_000.pt = the common u0 copy (sha re-verified); sealed in PRERUN_PLAN.json",
+  "reuse": "the main run reuses every pre-run wave unchanged iff the clean5a plant view ['runtime', 'checkpoint', 'warm_history', 'accel_bounds', 'v2v', 'v2v_intent', 'common_checkpoint_sha256', 'initial_checkpoint', 'launch_optimization'] and common u0 equal PRERUN_PLAN (prerun_compat, at register and before the episodes); otherwise the main run blocks (never mixes plants)",
+  "sealed": "F12: no pre-run table, summary or J is produced or opened; prerun-run prints receipt shas and counts only; the 3a seal opens them together with clean5a A/B/R"
+ },
+ "quote": {
+  "allocation_authority": "MAIN 2026-11-06 under the owner authorisation to act on its recommendations: v2v_final raised 690,000 -> 1,040,000 (F6: 7 arms + branches) -> <= 1,200,000 (RULE arm in 3a and 3c, claim 3c); pre-run spend in the evaluation root ledger counts against the same cap",
+  "allocation_sim_s": 1200000,
+  "base": "mappo_frozen",
+  "basis": {
+   "charging": "planned sim-s precharged per job; whole wave reserved before dispatch",
+   "claim3c": "5 arms x 24 held-out D2400_p60 worlds x 1200 s",
+   "decisions": "2 arms x 8 registered worlds x <=1 decision x (all + background + <=3 solos) x <= 1200 s (prefix replay from 0 to t_s+360); only captured decisions are reserved",
+   "episodes": "8 arms x 96 worlds x 1200 s",
+   "parity_f11": "2 TRAIN worlds x 2 paths (eval plant, training env) x 2 comparators x 420 s"
+  },
+  "claim3c_sim_s": 144000,
+  "core_ceiling_sim_s": 1017600,
+  "decisions_ceiling_sim_s": 96000,
+  "episodes_sim_s": 921600,
+  "fits": true,
+  "margin_over_core": 0.1792,
+  "margin_over_total": 0.0301,
+  "need_ceiling": {
+   "claim3c_B": 28800,
+   "claim3c_NATIVE": 28800,
+   "claim3c_R": 28800,
+   "claim3c_RULE": 28800,
+   "claim3c_U0": 28800,
+   "decisions_B": 48000,
+   "decisions_R": 48000,
+   "episodes_A": 115200,
+   "episodes_B": 115200,
+   "episodes_MAPPO_LANE": 115200,
+   "episodes_MAPPO_SPEED": 115200,
+   "episodes_NATIVE": 115200,
+   "episodes_R": 115200,
+   "episodes_RULE": 115200,
+   "episodes_U0": 115200,
+   "parity_f11": 3360
+  },
+  "parity_sim_s": 3360,
+  "phase": "v2v_final",
+  "prerun_arms": [
+   "NATIVE",
+   "U0",
+   "RULE"
+  ],
+  "prerun_sim_s": 432000,
+  "slack_sim_s": 35040,
+  "total_ceiling_sim_s": 1164960,
+  "wall_time": {
+   "hours": [
+    1.5,
+    2.25
+   ],
+   "sim_s_per_worker_s": "6-9 (newmap_probe cpuV: ~148k sim-s in ~22-25 min on <=12 workers)",
+   "workers": 24
+  }
+ },
+ "registered_utc": "2026-11-06T12:31:38.845326+00:00",
+ "registration_sha256": "26c52f2f8d86d8118756365c7ef5f24d49882cefc931cb0e0e7ac865bbc8ef2f",
+ "reporting": {
+  "every_arm_vs": [
+   "NATIVE",
+   "U0",
+   "RULE",
+   "MAPPO_SPEED",
+   "MAPPO_LANE"
+  ],
+  "total_benefit_vs": [
+   "BASE",
+   "NATIVE",
+   "RULE",
+   "MAPPO_SPEED",
+   "MAPPO_LANE"
+  ]
+ },
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: no clean5a result exists; nothing of the held-out panels has been opened"
+}

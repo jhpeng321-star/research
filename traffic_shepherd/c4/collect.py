@@ -21,20 +21,20 @@ from __future__ import annotations
 import os as _os
 
 # One SUMO + one policy per worker process: keep BLAS/OpenMP single-threaded, otherwise every worker
-# spawns one thread per visible core (127 on the cloud vGPU box with a 16-core quota) and the box
+# spawns one thread per visible core (127 on the AutoDL vGPU box with a 16-core quota) and the box
 # thrashes (2026-10-13: >18 min/episode instead of ~25 s).
 for _var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
     _os.environ.setdefault(_var, "1")
 
-import argparse  # noqa: E402
-import json  # noqa: E402
-import multiprocessing as mp  # noqa: E402
-import os  # noqa: E402
-import re  # noqa: E402
-import time  # noqa: E402
-import traceback  # noqa: E402
-from datetime import datetime, timezone  # noqa: E402
-from pathlib import Path  # noqa: E402
+import argparse
+import json
+import multiprocessing as mp
+import os
+import re
+import time
+import traceback
+from datetime import datetime, timezone
+from pathlib import Path
 
 FORBIDDEN = ("holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1", "sealed")
 
@@ -258,9 +258,9 @@ def main(argv=None) -> int:
                     help="per-step RSU-cell and sensor parity checks (slower)")
     ap.add_argument("--no-ttc", action="store_true")
     ap.add_argument("--cav-vtype", default="normal_car",
-                    help="vType of every CAV (default normal_car); 'legacy' = drawn driver type")
+                    help="vType of every CAV (owner 2026-10-14: normal_car); 'legacy' = drawn driver type")
     ap.add_argument("--population", choices=("legacy3", "textbook"), default="legacy3",
-                    help="HDV driver population: legacy3 = 3 discrete vTypes; "
+                    help="HDV driver population (owner 2026-10-14): legacy3 = 3 discrete vTypes; "
                          "textbook = continuous per-vehicle IDM/LC2013 params, CAVs on cav_typical "
                          "(--cav-vtype is then ignored); see traffic_shepherd/c4/population.py")
     ap.add_argument("--no-physics-log", action="store_true",

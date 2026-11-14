@@ -8,7 +8,7 @@ between :mod:`wms.config.eval` and the per-state scorer / comparison of this pac
 * each model is rolled out once per state and arm (CAVs teacher-forced), reduced to the compact
   per-state result of :func:`wms.eval.score.evaluate_state` and kept per set;
 * every non-reference model is compared with the single previous best through
-  :func:`wms.eval.compare.compare`.
+  :func:`wms.eval.compare.compare` (owner rule 2026-10-09: no N-way leaderboard).
 """
 
 from __future__ import annotations

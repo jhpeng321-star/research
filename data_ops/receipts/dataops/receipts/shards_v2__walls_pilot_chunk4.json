@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "shards_v2__walls_pilot_chunk4",
+ "name": "shards_v2__walls_pilot_chunk4",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "unverified shards_v2 part truncated on Drive; re-upload",
+ "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\walls_pilot_chunk4",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v2__walls_pilot_chunk4/shards_v2__walls_pilot_chunk4.tar.zst",
+ "bytes": 2447917651,
+ "files": 3675,
+ "archive_bytes": 491656004,
+ "archive_md5": "749e0432d9f6df303f3a0bc0bf500e31",
+ "member_manifest": "manifests/members/shards_v2__walls_pilot_chunk4.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 130.4,
+ "timestamp": "2026-10-09T23:08:48"
+}

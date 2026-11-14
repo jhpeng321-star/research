@@ -47,12 +47,12 @@ from pathlib import Path
 
 import numpy as np
 
-V04A_ROOT = Path("output/wd01_partB_v0data_v04a")
-# WM-N1 label coverage build: fresh root holding
+V04A_ROOT = Path("E:/research-dense/output/wd01_partB_v0data_v04a")
+# WM-N1 label coverage build (owner-approved 2026-10-04): fresh root holding
 # the label parquets that the frozen v0.4a root lacks (M/N classes).  The
 # frozen root is always consulted FIRST and is never written.
 V04A_COV_ROOT = Path(
-    "output/wd01_partB_v0data_v04a_cov_20261004")
+    "E:/research-dense/output/wd01_partB_v0data_v04a_cov_20261004")
 LABELS_SUFFIX = "_labels.parquet"
 TARGET_COLUMNS = (
     "time_on_section_s", "free_flow_ref_s", "traversed_m",

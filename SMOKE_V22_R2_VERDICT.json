@@ -1,0 +1,166 @@
+{
+  "schema": "wm59_walls_v22_smoke_verdict/1",
+  "created_utc": "2026-10-01T06:51:05.862815+00:00",
+  "law_version": "wall-v2.2-merge-release",
+  "fixture": "output\\campaign_walls_v1\\SMOKE_V22_R2.json",
+  "fixture_sha256": "c5df40b0c852b7d7d63c4a942ae377ab1a5ae1ed6c8a942237aea7a29095c600",
+  "fixture_lf_sha256": "c5df40b0c852b7d7d63c4a942ae377ab1a5ae1ed6c8a942237aea7a29095c600",
+  "fixture_schema": "wm59_walls_v22_smoke_r2_fixture/1",
+  "registration": "E:\\research-dense\\output\\campaign_walls_v1\\REGISTRATION_WALL_V22.md",
+  "registration_lf_sha256": "e7fd353616eea9ef2ab0440c751c8c9211f11a3f5de97f1b911b7a528f6f01e7",
+  "v22_registration_gate": {
+    "allowed_via": "allow_list",
+    "registration_lf_sha256": "e7fd353616eea9ef2ab0440c751c8c9211f11a3f5de97f1b911b7a528f6f01e7"
+  },
+  "plan": "E:\\research-dense\\output\\campaign_walls_v1\\results_plan\\WORLD_PLAN.json",
+  "plan_sha256": "ee6c3840c5e3a55828c17b9f2463d67616b87099a0e1b304fac4e08c1f1b95cd",
+  "bases_root": "E:/research-dense/runs/campaign_stage1_chunk4",
+  "runs_root": "E:\\research-dense\\runs\\campaign_walls_v22_smoke_r2",
+  "horizon_ticks": 300,
+  "simulated_seconds_total": 900,
+  "hold_override_s": null,
+  "smoke_min_free_gb": 5.0,
+  "disk_preflight": {
+    "drive": "E:\\",
+    "free_gb": 31.874,
+    "min_free_gb": 5.0
+  },
+  "disk_preflight_min_free_gb_declared": 25.0,
+  "disk_floor_note": "SMOKE-ONLY floor override (default 5 GB): the declared smoke writes < 1 GB (3 x 300 sim-s mechanics fixtures); the campaign floor (25 GB) is NOT applied to smoke runs and is unchanged",
+  "passed": true,
+  "runs": [
+    {
+      "run": "w8661m2600p10t240__w-mid-early",
+      "world": "w8661m2600p10t240",
+      "arm": "W-mid-early",
+      "exit_code": 0,
+      "checks_ok": true,
+      "checks": [
+        {
+          "id": "RC1_law_version_v22",
+          "ok": true,
+          "detail": "wall_events.jsonl read; 0 rows with a non-v2.2 law_version ([]); branch_record.law_version='wall-v2.2-merge-release', receipt.law_version='wall-v2.2-merge-release' (want 'wall-v2.2-merge-release')"
+        },
+        {
+          "id": "RC2_no_member_left_network",
+          "ok": true,
+          "detail": "0 safety_abort row(s) ([]); 0 registered abort(s) recorded and tolerated; failing aborts: []"
+        },
+        {
+          "id": "RC3_hold_cap_row_and_receipt",
+          "ok": true,
+          "detail": "hold_cap rows=1 (requested=240.0 want 240, cap_point_s=2644.2 want 2644.2); receipt present: wall_summary=True, exit_status='complete', load_state_calls=1, horizon_mode='smoke_cap', physics_rows_written=600 (want 600)"
+        },
+        {
+          "id": "RC4_no_terminal_event_past_merge_start",
+          "ok": true,
+          "detail": "outcome='merge_released'; merge_release rows=1 at release_point_s=[2644.2] (want 2644.2); lead_s_road_at_release_m=2651.981311570593 vs release window [2644.2, 2666.72) / non-release bound <= 2644.2; v_wall=22.5192"
+        },
+        {
+          "id": "RC4b_no_member_past_merge_start_in_wall",
+          "ok": true,
+          "detail": "assembled_ts=313.0, finish_ts=416.0; 117 wall_member_lanes row(s), 0 member observation(s) on ['1487606178', '1487606179'] or past s_road 2644.2 while in the wall: []"
+        },
+        {
+          "id": "RC6_no_collision_no_teleport",
+          "ok": true,
+          "detail": "receipt collisions=0, teleports=0 (want 0/0; integrity counts only)"
+        }
+      ]
+    },
+    {
+      "run": "w8697m2700p40t240__w-mid-early",
+      "world": "w8697m2700p40t240",
+      "arm": "W-mid-early",
+      "exit_code": 0,
+      "checks_ok": true,
+      "checks": [
+        {
+          "id": "RC1_law_version_v22",
+          "ok": true,
+          "detail": "wall_events.jsonl read; 0 rows with a non-v2.2 law_version ([]); branch_record.law_version='wall-v2.2-merge-release', receipt.law_version='wall-v2.2-merge-release' (want 'wall-v2.2-merge-release')"
+        },
+        {
+          "id": "RC2_no_member_left_network",
+          "ok": true,
+          "detail": "1 safety_abort row(s) (['non_member_rear_end_risk:ramp.36']); 1 registered abort(s) recorded and tolerated; failing aborts: []"
+        },
+        {
+          "id": "RC3_hold_cap_row_and_receipt",
+          "ok": true,
+          "detail": "hold_cap rows=1 (requested=240.0 want 240, cap_point_s=2644.2 want 2644.2); receipt present: wall_summary=True, exit_status='complete', load_state_calls=1, horizon_mode='smoke_cap', physics_rows_written=600 (want 600)"
+        },
+        {
+          "id": "RC4_no_terminal_event_past_merge_start",
+          "ok": true,
+          "detail": "outcome='aborted_in_hold'; merge_release rows=0 at release_point_s=[] (want 2644.2); lead_s_road_at_release_m=2623.65358364426 vs release window [2644.2, 2658.36) / non-release bound <= 2644.2; v_wall=14.1556"
+        },
+        {
+          "id": "RC4b_no_member_past_merge_start_in_wall",
+          "ok": true,
+          "detail": "assembled_ts=241.0, finish_ts=418.0; 179 wall_member_lanes row(s), 0 member observation(s) on ['1487606178', '1487606179'] or past s_road 2644.2 while in the wall: []"
+        },
+        {
+          "id": "RC6_no_collision_no_teleport",
+          "ok": true,
+          "detail": "receipt collisions=0, teleports=0 (want 0/0; integrity counts only)"
+        }
+      ]
+    },
+    {
+      "run": "w8700m2600p40t420__w-mid-late",
+      "world": "w8700m2600p40t420",
+      "arm": "W-mid-late",
+      "exit_code": 0,
+      "checks_ok": true,
+      "checks": [
+        {
+          "id": "RC1_law_version_v22",
+          "ok": true,
+          "detail": "wall_events.jsonl read; 0 rows with a non-v2.2 law_version ([]); branch_record.law_version='wall-v2.2-merge-release', receipt.law_version='wall-v2.2-merge-release' (want 'wall-v2.2-merge-release')"
+        },
+        {
+          "id": "RC2_no_member_left_network",
+          "ok": true,
+          "detail": "0 safety_abort row(s) ([]); 0 registered abort(s) recorded and tolerated; failing aborts: []"
+        },
+        {
+          "id": "RC3_hold_cap_row_and_receipt",
+          "ok": true,
+          "detail": "hold_cap rows=1 (requested=240.0 want 240, cap_point_s=2644.2 want 2644.2); receipt present: wall_summary=True, exit_status='complete', load_state_calls=1, horizon_mode='smoke_cap', physics_rows_written=600 (want 600)"
+        },
+        {
+          "id": "RC4_no_terminal_event_past_merge_start",
+          "ok": true,
+          "detail": "outcome='merge_released'; merge_release rows=1 at release_point_s=[2644.2] (want 2644.2); lead_s_road_at_release_m=2644.58095821484 vs release window [2644.2, 2665.53) / non-release bound <= 2644.2; v_wall=21.3293"
+        },
+        {
+          "id": "RC4b_no_member_past_merge_start_in_wall",
+          "ok": true,
+          "detail": "assembled_ts=490.0, finish_ts=596.0; 117 wall_member_lanes row(s), 0 member observation(s) on ['1487606178', '1487606179'] or past s_road 2644.2 while in the wall: []"
+        },
+        {
+          "id": "RC6_no_collision_no_teleport",
+          "ok": true,
+          "detail": "receipt collisions=0, teleports=0 (want 0/0; integrity counts only)"
+        }
+      ]
+    }
+  ],
+  "note": "declared mechanics smoke (SMOKE_V22.md / SMOKE_V22_R2.md); smoke runs are NEVER data and never read as outcomes",
+  "checks_rule": "SMOKE_V22_R2.json: RC1/RC2/RC3/RC4/RC4b/RC6 per run + RC5 across runs; a registered v2.2 safety abort is recorded and fails nothing; NO stop-on-fail (all three runs execute)",
+  "registered_aborts": [
+    {
+      "run": "w8697m2700p40t240__w-mid-early",
+      "reason": "non_member_rear_end_risk:ramp.36",
+      "registered_reason": "non_member_rear_end_risk",
+      "timestamp_s": 418.0,
+      "wall_id": "w8697m2700p40t240__w-mid-early:wall1"
+    }
+  ],
+  "rc5": {
+    "id": "RC5_merge_release_observed",
+    "ok": true,
+    "detail": "2 qualifying merge_released run(s) (['w8661m2600p10t240__w-mid-early', 'w8700m2600p40t420__w-mid-late']) of 2 candidate(s) (['w8661m2600p10t240__w-mid-early', 'w8700m2600p40t420__w-mid-late']); no other candidates"
+  }
+}

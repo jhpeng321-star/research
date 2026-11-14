@@ -4,13 +4,13 @@
 # constant without gradient and the critic could not see it.
 #  - source_wait_grad: reward value = exact imagined backlog, gradient = differentiable insertion-blocking surrogate;
 #  - critic_entry_backlog: the TeamCritic sees the per-entrance backlog (fresh critic; old critics do not load).
-extends = "c4_policy_base_p4.toml"
+extends = "c4_policy_gpuw_p4.toml"
 
 [run]
 output_dir = "runs/active/C4-POLICY-FINAL"
 
 [trainer]
-# Longer foresight: 0.99 per 1 s control step = ~100 s effective horizon; cooperative
+# Longer foresight (owner discussion 2026-10-13 ~18:00): 0.99 per 1 s control step = ~100 s effective horizon; cooperative
 # payoffs (gap opening for merges, walls) build over 2-5 min -> 0.995 (~200 s). The critic carries it beyond imagination.
 gamma = 0.995
 source_wait_grad = true
@@ -21,7 +21,7 @@ critic_entry_backlog = true
 cav_exec_cap = "idm_normal:textbook" # INFRAV5: fixed CAV vType settings in the cap (textbook cav_typical; "idm_normal:legacy" = normal_car for the legacy SUMO population)
 
 [policy]
-# ACCELCAP_NOTES.md: actor action cap raised from the legacy 1.5 to the normal_car
+# ACCELCAP_NOTES.md (owner-approved 2026-10-13 evening): actor action cap raised from the legacy 1.5 to the normal_car
 # human accel 2.6 m/s^2 (scenarios/idm/driver_routes.rou.xml; aggressive 3.0, cautious 2.0). Stored in the checkpoint;
 # older checkpoints keep decoding with 1.5.
 accel_max_mps2 = 2.6

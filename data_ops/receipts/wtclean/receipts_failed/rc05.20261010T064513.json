@@ -1,0 +1,54 @@
+{
+  "name": "rc05",
+  "path": "E:\\rd-wt\\rc05",
+  "class": "worktree",
+  "manual": false,
+  "branch": "HEAD",
+  "headBefore": "7350ee15d73fb48c139e6bcb5cf5c674a2dbf3b9",
+  "headType": "detached",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": "refs/heads/wip-preserve/rc05",
+  "dest": "gdrive:research-archive/worktrees/rc05",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\rc05.tar.txt",
+  "uploadCount": 361,
+  "uploadBytes": 24518010,
+  "upload": {
+    "ran": false,
+    "exit": null,
+    "log": null
+  },
+  "check": {
+    "ran": false,
+    "exit": null,
+    "result": null,
+    "log": null
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 5,
+  "skippedSensitiveSample": [
+    "protocols/holdout_exclusions.json",
+    "tests/planner/test_holdout_guard.py",
+    "tests/test_holdout_exclusions.py",
+    "tools/holdout_guard.py",
+    "traffic_shepherd/planner/holdout.py"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "error",
+  "error": "local verify failed ok_tar_t=True ok_sha=False listed=361 seen=361 bad=[]",
+  "timestamp": "2026-10-10T06:45:13.605639+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "c77ff40ce9eb277507842c94564de90cf76eafd1",
+  "skippedSensitive": [
+    "protocols/holdout_exclusions.json",
+    "tests/planner/test_holdout_guard.py",
+    "tests/test_holdout_exclusions.py",
+    "tools/holdout_guard.py",
+    "traffic_shepherd/planner/holdout.py"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": []
+}

@@ -18,17 +18,17 @@ ANALYTICAL_PILOT_SEEDS = tuple(range(4101, 4107))
 # Added only after the 4107--4120 feature-family diagnosis was complete.
 # These remain model-development evidence and never enter checkpoint acceptance.
 CONTROLLER_FEATURE_VALIDATION_SEEDS = tuple(range(4121, 4133))
-# 2026-09-10, registered (OE-17 duration-selection pilot directive):
+# 2026-09-10, owner-authorized (OE-17 duration-selection pilot directive):
 # audited development-evaluation block for the prospective arm of the
 # duration-selection study. Audit (OE-17 registration) found zero prior use in
 # any registry, the ledger, runs/active, output, docs or the archive, and no
 # sealed overlap. Development evidence only; never prospective/acceptance data.
 OE17_DURATION_SELECTION_SEEDS = (4145, 4146, 4147, 4148)
-# OE-32 registered fixed-interface observation study, 2026-09-10.
+# OE-32 owner-authorized fixed-interface observation study, 2026-09-10.
 # Metadata exposure audit: output/observation_mode27_v1/design/SEED_AUDIT.json.
 # Internal fit/holdout are development evidence, never sealed acceptance.
 OE32_OBSERVATION_DEVELOPMENT_SEEDS = tuple(range(4149, 4161))
-# OE-34 registered spatial/temporal observation validation, 2026-09-11.
+# OE-34 owner-authorized spatial/temporal observation validation, 2026-09-11.
 # Metadata audits: output/observation_relational_v1/evidence/SEED_AUDIT_V2.json
 # and SEED_AUDIT_SUPPLEMENT.json. Fit/validation are development, not acceptance.
 OE34_RELATIONAL_DEVELOPMENT_SEEDS = tuple(range(90001, 90061))
@@ -59,7 +59,7 @@ OE62_CONDITIONAL_SCREEN_SEEDS = tuple(range(920005, 920008))
 # four discovery, last two evaluation, loadings in the frozen order 1900,
 # 2000, 2100, 2200, 2600, 2700); development role, never sealed acceptance.
 OE65_DATASET_SEEDS = tuple(range(920008, 920044))
-# 2026-09-09, registered (OE-09 execution directive): audited unrestricted
+# 2026-09-09, owner-authorized (OE-09 execution directive): audited unrestricted
 # development block for the entry-pairs block-2 campaign. Audit found no archived
 # assignment, no current-era execution, no sealed overlap and no s-context mention.
 # Development evidence only; never prospective/acceptance data.
@@ -138,7 +138,7 @@ CV29_CORPUS_EXTENSION_SEEDS = tuple(range(7301, 7307))
 CV31_COVERAGE_EXTENSION_SEEDS = tuple(range(7531, 7537))
 # 2026-09-25: WM-28 fresh-world validation block (revision v3).
 # 80 identities 920044-920123, audited 2026-09-24/25 as provably unused
-# (successor of the OE-59/62/65 92xxx blocks) and registered in
+# (successor of the OE-59/62/65 92xxx blocks) and owner-authorized in
 # chat; each seed is accepted ONLY with its own planned mainline loading
 # from the registered plan (REGISTRATION_V2/V3, plan seed 20260926).
 WM28_FRESH_VALIDATION_SEEDS = frozenset(range(920044, 920124))
@@ -164,7 +164,7 @@ WM28_SEED_LOADING_MAP = {
     920116: 2700, 920117: 2700, 920118: 2700, 920119: 2700,
     920120: 2600, 920121: 2700, 920122: 2700, 920123: 2700
 }
-# 2026-09-25: WM-34 clean-retest fresh-world block (registered in chat,
+# 2026-09-25: WM-34 clean-retest fresh-world block (owner-approved in chat,
 # 2026-09-25). 100 identities 920144-920243: the first contiguous provably
 # unused run of the audited pool 920124-920243 (successor of the WM-28 block
 # 920044-920123; the pool tail 920124-920143 is left untouched - the WM-28
@@ -202,7 +202,7 @@ WM34_SEED_LOADING_MAP = {
     920236: 2700, 920237: 2600, 920238: 2600, 920239: 2700,
     920240: 2700, 920241: 2700, 920242: 2600, 920243: 2700,
 }
-# 2026-09-25: WM-41 campaign pilot block (2026-09-25;
+# 2026-09-25: WM-41 campaign pilot block (owner-approved in chat, 2026-09-25;
 # 5% CAV penetration, 6 new worlds, 3 TRAIN + 3 TEST).  Identities 8401-8406:
 # the first contiguous provably-unused run of the declared WM-41 candidate
 # pool 8401-8600 (a fresh region strictly after the STAGE2 block 8001-8360;
@@ -219,7 +219,8 @@ WM41_SEED_LOADING_MAP = {
     8401: 2700, 8402: 2700, 8403: 2700,
     8404: 2600, 8405: 2700, 8406: 2600,
 }
-# 2026-09-26: WM-43 wall-mechanics fixture block (PREPARED; consumed ONLY by the WM-43
+# 2026-09-26: WM-43 wall-mechanics fixture block (PREPARED, owner
+# authorization pending as of registration; consumed ONLY by the WM-43
 # fixture preflight/runner).  5 identities 920244-920248: the first
 # contiguous provably-unused run after the WM-34 fresh-world block
 # (920144-920243) of the audited 92xxx series; the token 920244 occurs in
@@ -233,7 +234,8 @@ WM43_WALL_MECHANICS_SEEDS = frozenset(range(920244, 920249))
 WM43_SEED_LOADING_MAP = {
     920244: 2000, 920245: 2000, 920246: 2000, 920247: 2000, 920248: 2000,
 }
-# 2026-09-30: WM-43B wall-closure re-validation fixture block (DRAFT; consumed ONLY by the WM-43B fixture
+# 2026-09-30: WM-43B wall-closure re-validation fixture block (DRAFT, owner
+# authorization pending; consumed ONLY by the WM-43B fixture
 # preflight/runner, output/action_model_v1/fixture_v2).  25 identities
 # 920249-920273: the block right after WM43_WALL_MECHANICS_SEEDS
 # (920244-920248), 5 per arm A1..A5 in order.  Exposure audit:
@@ -271,7 +273,7 @@ WM58_CHUNK5_SEEDS = frozenset(range(8707, 8737))
 WM58_CHUNK5_LOADING_MAP = {8707: 2400, 8708: 2400, 8709: 2400, 8710: 2400, 8711: 2400, 8712: 2400, 8713: 2400, 8714: 2400, 8715: 2400, 8716: 2400, 8717: 2600, 8718: 2600, 8719: 2600, 8720: 2600, 8721: 2600, 8722: 2600, 8723: 2600, 8724: 2600, 8725: 2600, 8726: 2600, 8727: 2700, 8728: 2700, 8729: 2700, 8730: 2700, 8731: 2700, 8732: 2700, 8733: 2700, 8734: 2700, 8735: 2700, 8736: 2700}
 
 
-# WM-N1-REPL Part R fresh TEST_REPL block (
+# WM-N1-REPL Part R fresh TEST_REPL block (owner-approved 2026-10-05;
 # registration runs/active/WM-N1-REPL-CL-20261005/REGISTRATION.md, seed audit
 # SEED_AUDIT.json).  30 identities 930001-930030: exact-token audit found no
 # prior use (highest reserved identity 920273 + the PLWM1 98xx block).  Each
@@ -304,19 +306,19 @@ C4_GENRAND_LOADINGS = (2400, 2700)
 # the seed tables, protocols/experiment_history.json and runs/active/**/eval_seeds.json (no hit); the
 # integrator registers the block and runs the holdout-guard membership check before collection.
 C4_WALLREGEN_EVAL_SEEDS = frozenset(range(962000, 962200))
-# loadings: any multiple of 50 veh/h in [1000, 2800] (demand levels are an design choice; the
+# loadings: any multiple of 50 veh/h in [1000, 2800] (demand levels are an owner choice; the
 # textbook population saturates near 1930 veh/h)
 C4_WALLREGEN_EVAL_LOADINGS = tuple(range(1000, 2801, 50))
-# C4 V5 blocks (2026-10-14): textbook-population
+# C4 V5 blocks (2026-10-14, owner-approved): textbook-population
 # v5 WM/policy TRAINING data (native + generic_random + paired branches + MAPPO fine-tune) and the
 # final v5 policy EVALUATION worlds.  Scan of the seed tables and the ledger: no overlap.
 C4_V5_TRAIN_SEEDS = frozenset(range(963000, 964000))
 C4_V5_EVAL_SEEDS = frozenset(range(964000, 964200))
 C4_V5_LOADINGS = tuple(range(1900, 2801, 50))
-# C4 V6 long-branch TRAINING block: 120-300 s paired SUMO branches
+# C4 V6 long-branch TRAINING block (owner-approved 2026-10-15 ~14:55): 120-300 s paired SUMO branches
 # (undirected random arms + native) for the v6 WM. TRAINING only. Scan of seed tables + ledger: no overlap.
 C4_V6_LONGPAIR_SEEDS = frozenset(range(965000, 966000))
-# C4 Dreamer-loop TRAINING block: SUMO episodes collected with the learned
+# C4 Dreamer-loop TRAINING block (owner-approved 2026-10-16 ~04:00): SUMO episodes collected with the learned
 # policy for continuous WM refresh. TRAINING only. Scan of seed tables + ledger: no overlap.
 C4_LOOP_TRAIN_SEEDS = frozenset(range(966000, 970000))
 # Every partition that may not enter a future prospective (final-test)

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="380">
+<rect width="100%" height="100%" fill="white"/>
+<text x="60" y="20" font-size="14">median |ds| (m, all vehicles) vs horizon (s)</text>
+<polyline fill="none" stroke="#174a7e" stroke-width="2" points="60.0,319.9 166.7,319.6 273.3,317.8 380.0,310.4 486.7,135.0 593.3,30.0 700.0,94.8"/>
+<polyline fill="none" stroke="#b5651d" stroke-width="2" points="60.0,319.6 166.7,318.9 273.3,316.3 380.0,312.2 486.7,193.1 593.3,63.9"/>
+<polyline fill="none" stroke="#2e7d32" stroke-width="2" points="60.0,319.9 166.7,319.7 273.3,319.3 380.0,317.9 486.7,300.5 593.3,290.3"/>
+<polyline fill="none" stroke="#c62828" stroke-width="2" points="60.0,319.9 166.7,319.9 273.3,300.8 380.0,206.8 486.7,139.6 593.3,108.6"/>
+<polyline fill="none" stroke="#6a1b9a" stroke-width="2" points="60.0,319.9 166.7,319.9 273.3,319.6 380.0,312.4 486.7,299.7 593.3,279.9"/>
+<polyline fill="none" stroke="#00838f" stroke-width="2" points="60.0,319.9 166.7,319.8 273.3,319.4 380.0,318.1 486.7,295.5 593.3,287.6"/>
+<polyline fill="none" stroke="#ef6c00" stroke-width="2" points="60.0,319.9 166.7,319.7 273.3,319.3 380.0,317.9 486.7,300.5 593.3,290.3"/>
+<text x="60.0" y="338" font-size="11" text-anchor="middle">5</text>
+<text x="166.7" y="338" font-size="11" text-anchor="middle">10</text>
+<text x="273.3" y="338" font-size="11" text-anchor="middle">30</text>
+<text x="380.0" y="338" font-size="11" text-anchor="middle">60</text>
+<text x="486.7" y="338" font-size="11" text-anchor="middle">120</text>
+<text x="593.3" y="338" font-size="11" text-anchor="middle">180</text>
+<text x="700.0" y="338" font-size="11" text-anchor="middle">300</text>
+<text x="10" y="36" font-size="11">2335</text>
+<text x="70" y="44" font-size="11" fill="#174a7e">keep_speed</text>
+<text x="70" y="58" font-size="11" fill="#b5651d">pure_physics</text>
+<text x="70" y="72" font-size="11" fill="#2e7d32">wms_run1</text>
+<text x="70" y="86" font-size="11" fill="#c62828">wms_stage10</text>
+<text x="70" y="100" font-size="11" fill="#6a1b9a">wms_stage30</text>
+<text x="70" y="114" font-size="11" fill="#00838f">wms_stage60</text>
+<text x="70" y="128" font-size="11" fill="#ef6c00">wms_stage120</text>
+</svg>

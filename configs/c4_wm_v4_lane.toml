@@ -1,5 +1,5 @@
 # WM-S-C4 v4-lane (2026-10-14, LANEFIX_NOTES.md): configs/c4_wm_v3.toml + the lane-change fixes
-# of the 2026-10-13/14 lane diagnosis (runs/scratch/lanediag):
+# of the 2026-10-13/14 lane diagnosis (E:/agent-work/tmp/lanediag):
 #   1. model.lane_decision = "sample": rollout lane decisions are drawn from the masked hazard
 #      categorical (seeded; evaluation / validation / imagination fix the draws) instead of the
 #      argmax that made every discretionary change (p << 0.5) impossible in rollouts.
@@ -11,7 +11,7 @@
 #   4. model.merge_hazard_zone = "full": the hazard owns ramp merges from the start of the
 #      acceleration lane (physics forces only the last 5 m); model.gap_stopped_relax = true:
 #      stopped ramp mergers need 0.5 m clearances (no anticipation; follower stopping term kept).
-# Everything else is v3 unchanged.  NOT trained yet.
+# Everything else is v3 unchanged.  NOT trained yet: the owner decides the next WM run.
 schema_version = 2
 name = "WM-S-C4-V4LANE"
 extends = "c4_wm_v3.toml"

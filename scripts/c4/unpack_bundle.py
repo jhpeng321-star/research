@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Unpack a C4 bundle (made by pack_bundle.py) into a repo root on the box.
 
-    python unpack_bundle.py --bundle /workspace/c4/bundle --root /workspace/c4/rd
+    python unpack_bundle.py --bundle /root/autodl-tmp/c4/bundle --root /root/autodl-tmp/c4/rd
 
 1. verifies every tar against SHA256SUMS (skip with --no-verify-tars);
 2. extracts members (repo-relative names; absolute / '..' names are refused);

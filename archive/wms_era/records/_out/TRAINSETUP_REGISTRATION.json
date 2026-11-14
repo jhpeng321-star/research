@@ -1,0 +1,18 @@
+{
+  "id": "WM-S-TRAINSETUP-20261009",
+  "kind": "engineering_verification",
+  "scope": "CPU-only preparation; zero SUMO, zero real-data fits, zero GPU allocations",
+  "source_recipe": ["_in/run3_chain.sh", "_in/C1_struct_TRAIN_RECEIPT.json", "_in/hetpack_switching/switching.py", "_in/swpack_meta/ACTION_TIMELINE_INDEX_train.json", "_in/swpack_meta/identities_switching_train", "_in/swpack_meta/ZERO_SHOT_HELDOUT.json"],
+  "closest_prior": "C1 structured training receipt and supplied run3 chain; mixed switching timelines and leave-PI-and-wall-out filtering were the unanswered engineering difference",
+  "comparator": "existing original-pack/teacher-forced trainer path",
+  "requested_future_gpu_run": {"launched": false, "stages_s": [10,30,60,120], "stage_steps": [2500,2500,1875,1250], "smoke_stage_steps": [6,6,6,6], "hard_projected_hours_cap": 10},
+  "cpu_cli_allocations": [
+    {"output": "_out/trainsetup_cpu_20261009_01", "requested_steps": [1,1,1,1], "actual_steps": 1, "status": "interrupted", "reason": "120 s harness timeout; partial logs preserved"},
+    {"output": "_out/trainsetup_cpu_20261009_02", "requested_steps": [1,1,1,1], "actual_steps": 4, "status": "completed", "changed_variable": "8-slot synthetic slice to reduce CPU cost; copied TRAIN identities and exclusion metadata retained"}
+  ],
+  "physical_vector": null,
+  "scientific_conclusions_changed": false,
+  "criteria": ["mixed original and switching sources with slot-bound timelines", "no held-world or held-family bypass", "PI/wall absent in every training and monitoring window", "teacher CAV trajectories default", "optional full timeline controller callback", "finite CPU train argv at all four stages", "per-Python memory under 6 GB", "new-output guarded shell with no launch in this task"],
+  "evidence": "_out/TRAINSETUP_READY.md",
+  "master_scientific_ledger": "protocols/experiment_history.json: WM-S-TRAINSETUP-20261009 protocol/engineering-only entry; synthetic checks are task verification, not independent physical runs or scientific outcomes."
+}

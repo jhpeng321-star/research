@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/.repp_h1h2.lock",
+ "name": ".repp_h1h2.lock",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\.repp_h1h2.lock",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/.repp_h1h2.lock.tar.zst",
+ "bytes": 1,
+ "files": 1,
+ "archive_bytes": 104,
+ "archive_md5": "280069401da61a98d5ee392069bf644c",
+ "member_manifest": "manifests/members/runs_active_.repp_h1h2.lock.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 10.4,
+ "timestamp": "2026-10-10T03:48:33"
+}

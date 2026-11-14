@@ -1,0 +1,97 @@
+{
+ "horizon_ticks": 240,
+ "directmix": {
+  "train": {
+   "n_items": 1458,
+   "drop_option": {
+    "kept": 4,
+    "dropped_damping": 1454,
+    "drop_fraction": 0.9973
+   },
+   "clean_for_stage": {
+    "10s": 128,
+    "30s": 49,
+    "60s": 19,
+    "120s": 4
+   },
+   "prefix_ticks_quantiles": {
+    "0.1": 0.0,
+    "0.25": 0.0,
+    "0.5": 0.0,
+    "0.75": 0.0,
+    "0.9": 18.0
+   },
+   "mask_option": {
+    "kept_prefix_ge_10s": 128,
+    "supervised_tick_fraction": 0.0282
+   },
+   "cohort_cav_hours_by_recorded_controller_before": {
+    "native": 156.549,
+    "damping": 85.433,
+    "pi-external-u": 0.0,
+    "direct": 122.462
+   },
+   "cohort_cav_hours_by_recorded_controller_after_drop": {
+    "native": 0.007,
+    "damping": 0.0,
+    "pi-external-u": 0.0,
+    "direct": 0.008
+   },
+   "non_cohort_cav_hours_before": 168.678,
+   "identity_and_schedule_check": {
+    "cohort_cav_rows": 2623995,
+    "other_cav_rows": 1168018,
+    "unknown_cav_rows": 46463,
+    "recorded_damping_steps": 306801,
+    "recorded_damping_not_scheduled": 0,
+    "scheduled_damping_recorded_other": 128858
+   }
+  },
+  "val": {
+   "n_items": 162,
+   "drop_option": {
+    "kept": 0,
+    "dropped_damping": 162,
+    "drop_fraction": 1.0
+   },
+   "clean_for_stage": {
+    "10s": 13,
+    "30s": 5,
+    "60s": 2,
+    "120s": 0
+   },
+   "prefix_ticks_quantiles": {
+    "0.1": 0.0,
+    "0.25": 0.0,
+    "0.5": 0.0,
+    "0.75": 0.0,
+    "0.9": 12.0
+   },
+   "mask_option": {
+    "kept_prefix_ge_10s": 13,
+    "supervised_tick_fraction": 0.0245
+   },
+   "cohort_cav_hours_by_recorded_controller_before": {
+    "native": 26.727,
+    "damping": 12.993,
+    "pi-external-u": 0.0,
+    "direct": 21.792
+   },
+   "cohort_cav_hours_by_recorded_controller_after_drop": {
+    "native": 0.0,
+    "damping": 0.0,
+    "pi-external-u": 0.0,
+    "direct": 0.0
+   },
+   "non_cohort_cav_hours_before": 26.797,
+   "identity_and_schedule_check": {
+    "cohort_cav_rows": 442883,
+    "other_cav_rows": 186839,
+    "unknown_cav_rows": 6101,
+    "recorded_damping_steps": 46662,
+    "recorded_damping_not_scheduled": 0,
+    "scheduled_damping_recorded_other": 24801
+   }
+  }
+ }
+}

@@ -1,0 +1,29 @@
+priority below-normal: False
+=== WD-01 part 3m TASK C: ensemble spread recalibration (TRAIN-internal) ===
+ZERO simulation; holdout blocked in root_arrays (never passed).
+device=cpu torch_threads=2
+calibration roots (TRAIN, held out of every fit): ['cv20_7002m2000', 'cv20_7003m2000', 'cv20_7004m2000', 'cv20_7007m2700']; t0 (120, 180, 240, 300, 360, 420, 480) -> 28 windows
+fit roots (NOT rolled here): ['cv17', 'cv19_4107', 'cv19_4108', 'cv20_7001m2000']; validation ['cv20_7005m2000', 'cv20_7006m2000', 'cv30_7305m2700', 'seed_7535m2400'] NOT used here; holdout blocked
+L6 member configs (from fit_p3m.json):
+  member 0: seed=1 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0, 'end_force_s': 150.0, 'v_merge_blend': 0.0} dawdle_scale=1.0
+  member 1: seed=18 lc_scale=0.003 merge_params={'tau_accept': 1.9, 'b_accept': 5.0, 'p_coop_scale': 0.25, 'end_force_s': 150.0, 'v_merge_blend': 0.5} dawdle_scale=1.0
+  member 2: seed=35 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.25, 'end_force_s': 150.0, 'v_merge_blend': 0.0} dawdle_scale=1.5
+  member 3: seed=52 lc_scale=0.002 merge_params={'tau_accept': 2.4, 'b_accept': 5.0, 'p_coop_scale': 0.25, 'end_force_s': 150.0, 'v_merge_blend': 0.5} dawdle_scale=1.25
+  member 4: seed=69 lc_scale=0.002 merge_params={'tau_accept': 2.4, 'b_accept': 4.0, 'p_coop_scale': 0.0, 'end_force_s': 150.0, 'v_merge_blend': 0.0} dawdle_scale=1.25
+[   0.0s] rolling L6 member 0 (seed 1, dawdle 1.0) ...
+[  66.2s] rolling L6 member 1 (seed 18, dawdle 1.0) ...
+[ 134.8s] rolling L6 member 2 (seed 35, dawdle 1.5) ...
+[ 211.6s] rolling L6 member 3 (seed 52, dawdle 1.25) ...
+[ 284.5s] rolling L6 member 4 (seed 69, dawdle 1.25) ...
+[ 348.6s] wrote 280 calibration rows to D:\rd-wt\wd01k\output\wd01\part3m\results\raw\raw_calibration_p3m.jsonl
+
+== spread calibration per (output, H) on the TRAIN calibration split ==
+  delay_phys@H30: raw_cov=0.3929 s_out=2.5198 cov_mean=0.8214 crps 33.279->32.024 mean_shift=0.0
+  delay_phys@H60: raw_cov=0.3929 s_out=2.2974 cov_mean=0.8214 crps 76.013->76.036 mean_shift=0.0
+  ttc3@H30: raw_cov=0.5357 s_out=7.6387 cov_mean=0.8214 crps 2.74->6.138 mean_shift=0.0
+  ttc3@H60: raw_cov=0.1786 s_out=14.5876 cov_mean=0.8214 crps 5.806->16.06 mean_shift=0.0
+[ 349.6s] FROZEN D:\rd-wt\wd01k\output\wd01\part3m\results\calibration_p3m.json
+[ 349.6s]   sha256=968d20ba26d8552014807f0fbd3a2d9d2bf0b87c41d5aa49410d4ae804b97334
+[ 349.6s]   frozen_utc=2026-09-26T20:24:17.243056+00:00
+
+DONE part 3m TASK C calibration (factors frozen before validation).

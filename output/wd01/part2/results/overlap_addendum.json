@@ -1,0 +1,123 @@
+{
+ "experiment": "WD-01 part 2A addendum (corrected RAW overlap + C2)",
+ "registration_addendum_sha256": "52e95ac3ba391a016155344d7deab43165830856c6e213b4f21ca0edb680259a",
+ "checkpoint": "D:\\research-dense\\output\\worldmodel_v3_vehicle\\vehicle_dynamics.pt",
+ "checkpoint_sha256": "ded83907b8d218574d3f5359c332408f17167da055574afbe29eaecb59d4a8f5",
+ "device": "cpu",
+ "horizons": [
+  30,
+  60,
+  90,
+  120
+ ],
+ "n_evals_per_H": 147,
+ "corrected_overlap_definition": "pairs adjacent in the d-order at t within a lane group whose order is inverted at t+1 (d_follower <= d_leader); follower flagged; rate per 1000 vehicle-steps",
+ "corrected_raw_C2": "zero vehicle-steps above 1.2 x lane-group train max AND corrected overlap rate <= 1 per 1000 vehicle-steps",
+ "constrained_C2": "unchanged from part-1 REGISTRATION.md section 6",
+ "verdicts": {
+  "RAW@H30": {
+   "n_evals": 147,
+   "vehicle_steps": 446100,
+   "overlap_events": 4026,
+   "overlap_per_1000": 9.024882,
+   "overlap_events_defective_counter": 0,
+   "capviol_steps": 0,
+   "negspeed_steps": 0,
+   "max_speed_mps": 33.3779771971732,
+   "part1_overlap_events": 0,
+   "part1_overlap_per_1000": 0.0,
+   "C2_corrected_pass": false
+  },
+  "RAW@H60": {
+   "n_evals": 147,
+   "vehicle_steps": 892200,
+   "overlap_events": 8369,
+   "overlap_per_1000": 9.380184,
+   "overlap_events_defective_counter": 0,
+   "capviol_steps": 0,
+   "negspeed_steps": 0,
+   "max_speed_mps": 34.45373180985745,
+   "part1_overlap_events": 0,
+   "part1_overlap_per_1000": 0.0,
+   "C2_corrected_pass": false
+  },
+  "RAW@H90": {
+   "n_evals": 147,
+   "vehicle_steps": 1338300,
+   "overlap_events": 13177,
+   "overlap_per_1000": 9.846073,
+   "overlap_events_defective_counter": 0,
+   "capviol_steps": 0,
+   "negspeed_steps": 0,
+   "max_speed_mps": 34.9952687966853,
+   "part1_overlap_events": 0,
+   "part1_overlap_per_1000": 0.0,
+   "C2_corrected_pass": false
+  },
+  "RAW@H120": {
+   "n_evals": 147,
+   "vehicle_steps": 1784400,
+   "overlap_events": 16292,
+   "overlap_per_1000": 9.13024,
+   "overlap_events_defective_counter": 0,
+   "capviol_steps": 0,
+   "negspeed_steps": 0,
+   "max_speed_mps": 35.27178511500653,
+   "part1_overlap_events": 0,
+   "part1_overlap_per_1000": 0.0,
+   "C2_corrected_pass": false
+  },
+  "CONSTRAINED@H30": {
+   "n_evals": 147,
+   "vehicle_steps": 446100,
+   "overlap_events": 7031,
+   "overlap_per_1000": 15.76104,
+   "overlap_events_defective_counter": 0,
+   "capviol_steps": 0,
+   "negspeed_steps": 0,
+   "max_speed_mps": 33.3779771971732,
+   "part1_overlap_events": 7031,
+   "part1_overlap_per_1000": 15.761040125532391,
+   "C2_corrected_pass": false
+  },
+  "CONSTRAINED@H60": {
+   "n_evals": 147,
+   "vehicle_steps": 892200,
+   "overlap_events": 10876,
+   "overlap_per_1000": 12.190092,
+   "overlap_events_defective_counter": 0,
+   "capviol_steps": 0,
+   "negspeed_steps": 0,
+   "max_speed_mps": 34.45373180985745,
+   "part1_overlap_events": 10876,
+   "part1_overlap_per_1000": 12.190091907644026,
+   "C2_corrected_pass": false
+  },
+  "CONSTRAINED@H90": {
+   "n_evals": 147,
+   "vehicle_steps": 1338300,
+   "overlap_events": 13997,
+   "overlap_per_1000": 10.458791,
+   "overlap_events_defective_counter": 0,
+   "capviol_steps": 0,
+   "negspeed_steps": 0,
+   "max_speed_mps": 34.9952687966853,
+   "part1_overlap_events": 13997,
+   "part1_overlap_per_1000": 10.458791003511918,
+   "C2_corrected_pass": false
+  },
+  "CONSTRAINED@H120": {
+   "n_evals": 147,
+   "vehicle_steps": 1784400,
+   "overlap_events": 15356,
+   "overlap_per_1000": 8.605694,
+   "overlap_events_defective_counter": 0,
+   "capviol_steps": 0,
+   "negspeed_steps": 0,
+   "max_speed_mps": 35.538544602566645,
+   "part1_overlap_events": 15356,
+   "part1_overlap_per_1000": 8.605693790629903,
+   "C2_corrected_pass": false
+  }
+ }
+}

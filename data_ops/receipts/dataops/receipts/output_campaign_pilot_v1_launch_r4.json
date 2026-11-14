@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/campaign_pilot_v1_launch_r4",
+ "name": "campaign_pilot_v1_launch_r4",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\campaign_pilot_v1_launch_r4",
+ "drive": "gdrive:research-archive/repo-evidence/output/campaign_pilot_v1_launch_r4/campaign_pilot_v1_launch_r4.tar.zst",
+ "bytes": 36852,
+ "files": 9,
+ "archive_bytes": 4861,
+ "archive_md5": "422df3e35231640ae61645d64867035c",
+ "member_manifest": "manifests/members/output_campaign_pilot_v1_launch_r4.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 60.0,
+ "timestamp": "2026-10-10T01:31:53"
+}

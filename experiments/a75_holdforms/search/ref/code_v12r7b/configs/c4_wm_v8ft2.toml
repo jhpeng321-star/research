@@ -1,0 +1,32 @@
+# V8FT2 (owner-approved 2026-10-17): c4_wm_v8ft.toml + the lane-end physics fixes of RAMP_DIAG
+# (runs/active/C4-V7FT-20261017/ramp_diag/RAMP_DIAG.md §0, §2-4).
+#   * forced_window_mode = "hazard": the last 5 m of the accel lane no longer force a feasible merge
+#     at P = 1 (~70 % of WM ramp departures, SUMO ~0.05 per 0.5 s step there); the learned merge
+#     head acts there too (floor forced_window_min_hazard = 0.02 per step), and the window's rows
+#     join the lane-v5 rows / AP and the merge_timing survival loss.
+#   * mainline_merge_yield_scope = "zone": zipper - the lane-1 follower (and a slower overlapping car)
+#     of any in-zone merger blocked only from behind / beside yields (wms.physics.merge_v6).
+#   * merge_end_wait follower secure gap s0 1.0 m / T 0.6 s (road IDM 2.6 m / 1.135 s vetoed 53 % of
+#     SUMO's lane-end merge configurations; only together with the hazard window).
+# Training vs inference physics (decision):
+#   - [physics.overrides] apply to the TRAINING physics and therefore also to physics.json.
+#   - forced_window_mode = "hazard" is ON IN TRAINING: the merge head must learn the lane-end rate
+#     from the forced-window rows (RAMP_DIAG §4.1) and the rollout it is trained on must use it.
+#   - merge_end_wait / mainline_merge_yield stay OFF in training and ON at inference (v8ft rationale:
+#     trained with the veto ON the learned parts leaned on it), so yield scope "zone" and the
+#     merge_end_wait follower constants are inert in training and act at inference only.
+#   - With merge_end_wait OFF a ramp car may still not pass the lane end in hazard mode (wms.py clamp).
+# Launch: --set model.init_from=<abs path of the v5m checkpoint (wm_s_best_ap.pt)>.
+schema_version = 2
+name = "WM-S-C4-V8FT2"
+extends = "c4_wm_v8ft.toml"
+
+[physics.overrides]
+forced_window_mode = "hazard"
+forced_window_min_hazard = 0.02
+mainline_merge_yield_scope = "zone"
+merge_end_wait_s0_follow_m = 1.0
+merge_end_wait_t_follow_s = 0.6
+
+[runtime]
+out_dir = "runs/active/c4_wm_v8ft2"

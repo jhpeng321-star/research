@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/evidence_regeneration_v1/DEDUP_HARDLINKS_20260927.json",
+ "name": "DEDUP_HARDLINKS_20260927.json",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\DEDUP_HARDLINKS_20260927.json",
+ "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/DEDUP_HARDLINKS_20260927.json.tar.zst",
+ "bytes": 18948,
+ "files": 1,
+ "archive_bytes": 1576,
+ "archive_md5": "9691669865d567eab9e9119512c9d235",
+ "member_manifest": "manifests/members/output_evidence_regeneration_v1_DEDUP_HARDLINKS_20260927.json.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 9.1,
+ "timestamp": "2026-10-10T01:30:37"
+}

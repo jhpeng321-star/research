@@ -78,7 +78,7 @@ print(json.dumps({'population_arg': has, 'n_worlds': p['n_worlds'], 'workers': $
     c4_prepare_run "wallregen_smoke"
     DEMANDS=${DEMANDS:-1800} FOREGROUND=1 c4_launch wallregen_smoke bash -c "pipeline '$OUT_DIR' 962199 182 1" ;;
   run)
-    [[ -n "$DEMANDS" ]] || c4_die "set DEMANDS=<veh/h,...> (textbook saturates ~1930 veh/h)"
+    [[ -n "$DEMANDS" ]] || c4_die "set DEMANDS=<veh/h,...> (owner decision; textbook saturates ~1930 veh/h)"
     c4_require_disk "${MIN_FREE_GB:-10}"
     c4_prepare_run "wallregen"
     c4_launch wallregen bash -c "pipeline '$OUT_DIR' '$SEEDS' '$BRANCH_S' '$WORKERS'" ;;

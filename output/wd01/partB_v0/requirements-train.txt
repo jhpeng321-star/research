@@ -1,0 +1,10 @@
+# partB_v0 training deps EXCEPT torch.
+# torch itself: install the matching build for the target
+#   - cloud GPU image (addendum 3): official pytorch/pytorch CUDA 12.x
+#     runtime base image, torch >= 2.1
+#   - local smoke env: torch 2.12.1+cpu
+# Everything below is pinned to the versions the local smoke env
+# (rl_driving) runs; all are torch-2.1-compatible ranges in practice.
+numpy==2.2.6
+pandas==2.3.3
+pyarrow==24.0.0

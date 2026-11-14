@@ -1,0 +1,11 @@
+{
+  "task_id": "WM-S-TRAINSETUP-20261009",
+  "status": "interrupted",
+  "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe _out/trainsetup_cpu.py --out _out/trainsetup_cpu_20261009_01",
+  "reason": "harness 120000 ms timeout; one finite 10 s optimizer step logged; no surviving task Python process found",
+  "recorded_steps": 1,
+  "rss": "final sampled receipt unavailable because wrapper was terminated",
+  "physical_data": false,
+  "artifacts_preserved": true,
+  "successor_purpose": "new output, narrower 8-slot synthetic fixture, same real TRAIN metadata and 1 step at each 10/30/60/120 s stage; no GPU or real-data fitting"
+}

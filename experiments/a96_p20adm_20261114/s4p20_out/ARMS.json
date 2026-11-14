@@ -1,0 +1,949 @@
+{
+ "D2800_p20": {
+  "wm": [
+   {
+    "name": "mut_a60055829df5f83b",
+    "trigger": "wall",
+    "zone": "near",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 0,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 10
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 2.0
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 24.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 20,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   },
+   {
+    "name": "mut_4d472232b8df5b18",
+    "trigger": "lanes",
+    "zone": "near",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 20,
+      "onset_s": 0,
+      "lc_target": null
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 18.0,
+      "dmax": 1.0,
+      "hold_s": 120,
+      "onset_s": 40,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 90
+   },
+   {
+    "name": "rand_1c385c46eab29705",
+    "trigger": "lanes",
+    "zone": "near",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 0,
+      "lc_target": null
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 24.0,
+      "dmax": 1.0,
+      "hold_s": 90,
+      "onset_s": 60,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   },
+   {
+    "name": "mut_43b49f9847ef4f37",
+    "trigger": "lanes",
+    "zone": "custom",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.0,
+      "hold_s": 180,
+      "onset_s": 0,
+      "lc_target": null,
+      "taper_in_s": 10
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 60,
+      "onset_s": 40,
+      "lc_target": null,
+      "dv_rel": 2.0
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140,
+    "zone_d": [
+     1400.0,
+     400.0
+    ]
+   }
+  ],
+  "wm_fairer": [
+   {
+    "name": "rand_4f5f80fe91595403",
+    "trigger": "lanes",
+    "zone": "full",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.5,
+      "hold_s": 30,
+      "onset_s": 20,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 1,
+      "v_w": 0.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 0,
+      "lc_target": null,
+      "dv_rel": 4.0
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 60
+   },
+   {
+    "name": "rand_cfdf6cdcc8f71631",
+    "trigger": "lanes",
+    "zone": "far",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 20.0,
+      "dmax": 1.5,
+      "hold_s": 10,
+      "onset_s": 60,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 24.0,
+      "dmax": 1.0,
+      "hold_s": 180,
+      "onset_s": 0,
+      "lc_target": null
+     },
+     {
+      "lane": 0,
+      "rank": 1,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 90,
+      "onset_s": 60,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 90
+   },
+   {
+    "name": "mut_ea02b3a3a1e12177",
+    "trigger": "lanes",
+    "zone": "merge",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.0,
+      "hold_s": 180,
+      "onset_s": 40,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 20
+     },
+     {
+      "lane": 0,
+      "rank": 1,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 180,
+      "onset_s": 20,
+      "lc_target": null
+     },
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.0,
+      "hold_s": 45,
+      "onset_s": 20,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 5
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 12.0,
+      "dmax": 1.5,
+      "hold_s": 20,
+      "onset_s": 20,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 5
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   },
+   {
+    "name": "mut_3f683a4f0a906128",
+    "trigger": "lanes",
+    "zone": "merge",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.5,
+      "hold_s": 60,
+      "onset_s": 40,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 20
+     },
+     {
+      "lane": 0,
+      "rank": 1,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 60,
+      "onset_s": 20,
+      "lc_target": null,
+      "dv_rel": 6.0
+     },
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 120,
+      "onset_s": 60,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 5
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 60,
+      "onset_s": 20,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 5
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 90
+   }
+  ],
+  "wm_bounded": [
+   {
+    "name": "mut_2b90c60b916cd53d",
+    "trigger": "lanes",
+    "zone": "near",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 10,
+      "onset_s": 0,
+      "lc_target": null
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 18.0,
+      "dmax": 1.5,
+      "hold_s": 120,
+      "onset_s": 40,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 90
+   },
+   {
+    "name": "rand_812fde106160abc8",
+    "trigger": "lanes",
+    "zone": "full",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.0,
+      "hold_s": 90,
+      "onset_s": 0,
+      "lc_target": null,
+      "taper_in_s": 10
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 180,
+      "onset_s": 60,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140
+   },
+   {
+    "name": "mut_94d35fb27bb4fa3f",
+    "trigger": "lanes",
+    "zone": "full",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.0,
+      "hold_s": 60,
+      "onset_s": 0,
+      "lc_target": null,
+      "taper_in_s": 10
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 22.0,
+      "dmax": 1.5,
+      "hold_s": 120,
+      "onset_s": 60,
+      "lc_target": null,
+      "taper_in_s": 10,
+      "taper_out_s": 5,
+      "pulse_on_s": 20,
+      "pulse_off_s": 10
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   },
+   {
+    "name": "rand_83805274de9e89db",
+    "trigger": "lanes",
+    "zone": "near",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 90,
+      "onset_s": 0,
+      "lc_target": null
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 120,
+      "onset_s": 20,
+      "lc_target": null,
+      "dv_rel": 6.0
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   }
+  ],
+  "wm_fair": [],
+  "wm_F": [
+   {
+    "name": "rand_fbadc43ff0f9965e",
+    "trigger": "wall",
+    "zone": "near",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 60,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 10
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 90,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 2.0
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 24.0,
+      "dmax": 1.5,
+      "hold_s": 120,
+      "onset_s": 20,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 90
+   },
+   {
+    "name": "mut_5a00001912a9936b",
+    "trigger": "wall",
+    "zone": "near",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.5,
+      "hold_s": 180,
+      "onset_s": 60,
+      "lc_target": null
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.0,
+      "hold_s": 30,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 2.0
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 24.0,
+      "dmax": 1.5,
+      "hold_s": 120,
+      "onset_s": 20,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   },
+   {
+    "name": "rand_644f9dc2251a9087",
+    "trigger": "lanes",
+    "zone": "near",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.0,
+      "hold_s": 90,
+      "onset_s": 40,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 24.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 20,
+      "lc_target": null
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 180,
+      "onset_s": 40,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 5
+     },
+     {
+      "lane": 1,
+      "rank": 1,
+      "v_w": 24.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 40,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   },
+   {
+    "name": "rand_927d22a5bedc0fe3",
+    "trigger": "lanes",
+    "zone": "near",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 14.0,
+      "dmax": 1.0,
+      "hold_s": 90,
+      "onset_s": 40,
+      "lc_target": null,
+      "taper_in_s": 5,
+      "taper_out_s": 20
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 20.0,
+      "dmax": 1.0,
+      "hold_s": 5,
+      "onset_s": 40,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": -10.0,
+      "gap_dx_hi": 40.0,
+      "gap_drop_m": 300.0,
+      "gap_arm_s": 60,
+      "gap_release": "clear",
+      "gap_events": 3
+     },
+     {
+      "lane": 0,
+      "rank": 1,
+      "v_w": 16.0,
+      "dmax": 1.0,
+      "hold_s": 180,
+      "onset_s": 40,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 10
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   }
+  ],
+  "wm_D": [
+   {
+    "name": "mut_6f4723b8af3e79d3",
+    "trigger": "lanes",
+    "zone": "near",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 180,
+      "onset_s": 0,
+      "lc_target": null
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 16.0,
+      "dmax": 1.0,
+      "hold_s": 120,
+      "onset_s": 40,
+      "lc_target": null,
+      "dv_rel": 6.0
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   }
+  ],
+  "incumbent": {
+   "name": "wall_g_solo2",
+   "trigger": "wall",
+   "zone": "full",
+   "spread_m": 200.0,
+   "cooldown_s": 120,
+   "slots": 1,
+   "gate": null,
+   "start_gate": null,
+   "phases": null,
+   "roles": [
+    {
+     "lane": 2,
+     "rank": 0,
+     "v_w": 22.0,
+     "dmax": 1.0,
+     "hold_s": 120,
+     "onset_s": 0,
+     "lc_target": null
+    }
+   ]
+  },
+  "best": {
+   "delay": {
+    "name": "mut_a60055829df5f83b",
+    "trigger": "wall",
+    "zone": "near",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 0,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 10
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 2.0
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 24.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 20,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   },
+   "bounded": {
+    "name": "mut_a60055829df5f83b",
+    "trigger": "wall",
+    "zone": "near",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 0,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 10
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 2.0
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 24.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 20,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   },
+   "fairer": {
+    "name": "rand_4f5f80fe91595403",
+    "trigger": "lanes",
+    "zone": "full",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.5,
+      "hold_s": 30,
+      "onset_s": 20,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 1,
+      "v_w": 0.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 0,
+      "lc_target": null,
+      "dv_rel": 4.0
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 60
+   },
+   "fair": null,
+   "F": {
+    "name": "mut_a60055829df5f83b",
+    "trigger": "wall",
+    "zone": "near",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 0,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 10
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 2.0
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 24.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 20,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   },
+   "D": {
+    "name": "mut_a60055829df5f83b",
+    "trigger": "wall",
+    "zone": "near",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 0,
+      "lc_target": null,
+      "pulse_on_s": 10,
+      "pulse_off_s": 10
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 2.0
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 24.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 20,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   }
+  },
+  "comparators": {
+   "solo2": {
+    "gain_vs_base": 265.98,
+    "gain_vs_base_lcb": 119.47,
+    "group_inc": {
+     "lane0": -1.56,
+     "lane1": -1.782,
+     "lane2": 1.328,
+     "hdv": -0.788,
+     "cav": -0.617
+    },
+    "worst_group_inc": 1.328,
+    "cvar90_inc": -2.69,
+    "bounded": true
+   },
+   "wall_g_solo2": {
+    "gain_vs_base": 101.74,
+    "gain_vs_base_lcb": -0.67,
+    "group_inc": {
+     "lane0": -0.461,
+     "lane1": -0.54,
+     "lane2": 0.286,
+     "hdv": -0.272,
+     "cav": -0.339
+    },
+    "worst_group_inc": 0.286,
+    "cvar90_inc": -0.736,
+    "bounded": true
+   }
+  },
+  "fairness": "per-vehicle"
+ }
+}

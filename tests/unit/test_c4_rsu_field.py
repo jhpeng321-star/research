@@ -1,4 +1,4 @@
-"""RSU own-sensor field and its use in the group signal."""
+"""RSU own-sensor field and its use in the group signal (owner 2026-10-12)."""
 import torch
 
 from wms.control.contract import F_RSU_CELL, GROUP_SIGNAL_DIM

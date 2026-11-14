@@ -1,0 +1,16 @@
+priority below-normal: False
+=== WD-01 partA_act A2 validation: 30 s commit windows on chunk-1 TRAIN ===
+ZERO simulation; TRAIN only; HOLDOUT/CALIBRATION never opened.
+device=cpu torch_threads=2
+49 TRAIN worlds x 7 arms (complete receipts only); H=30 s from the branch t0; engine kind 'idm_action' (exec rule kin_idm, p3m selected member knobs) + per-arm CAVs-as-native naive baseline
+[ 416.6s] [5/49 worlds] 70 rows
+[ 834.3s] [10/49 worlds] 140 rows
+[1308.3s] [15/49 worlds] 208 rows
+[1803.4s] [20/49 worlds] 278 rows
+[2352.2s] [25/49 worlds] 348 rows
+[2899.3s] [30/49 worlds] 418 rows
+[3548.8s] [35/49 worlds] 488 rows
+[4076.4s] [40/49 worlds] 556 rows
+[4667.4s] [45/49 worlds] 618 rows
+[5009.7s] done: 664 raw rows -> D:\rd-wt\wd01m\output\wd01\partA_act\results\raw\raw_metrics_act.jsonl
+[5009.7s] 11 skipped (world, arm) entries -> D:\rd-wt\wd01m\output\wd01\partA_act\results\skipped.json

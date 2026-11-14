@@ -28,10 +28,10 @@ class TripRequest:
 
 def request_schedule(seed: int, mainline_vph: int, *, penetration: float, role: str = "exposed",
                      cav_vtype: str | None = None, population: str = "legacy3") -> list[TripRequest]:
-    """``cav_vtype``: CAVs use this single vType (e.g. "normal_car") instead of the
+    """``cav_vtype`` (owner 2026-10-14): CAVs use this single vType (e.g. "normal_car") instead of the
     driver-type draw; HDV draws are unchanged.  None = legacy (CAVs keep their drawn driver type).
 
-    ``population``: "legacy3" (default) = the three discrete vTypes above;
+    ``population`` (owner 2026-10-14): "legacy3" (default) = the three discrete vTypes above;
     "textbook" = one continuous-parameter vType per HDV (``tb.<vehicle_id>``, parameters from
     :func:`traffic_shepherd.c4.population.sample_driver`) and every CAV on ``cav_typical``.
     Departures and CAV identities do not depend on ``population``."""

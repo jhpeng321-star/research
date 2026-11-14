@@ -1,0 +1,22 @@
+{
+  "command": [
+    "C:\\Users\\jpeng\\miniconda3\\envs\\rl_driving\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_experiment_history_ledger.py",
+    "-k",
+    "not source and not verification and not mismatched and not nan_and_infinity and not checksum and not partial_review",
+    "--basetemp=_out/pytest_main2_ledger_metadata",
+    "--junitxml=_out/MAIN2_LEDGER_METADATA.xml"
+  ],
+  "returncode": 1,
+  "status": "failed",
+  "peak_sampled_rss_bytes": 54034432,
+  "peak_os_working_set_bytes": 61612032,
+  "memory_limit_bytes": 6000000000,
+  "memory_limit_exceeded": false,
+  "wall_seconds": 2.671,
+  "log": "E:\\rd-wt\\ws-main2\\_out\\brakefix_verification\\main2_ledger_metadata\\command.log",
+  "device": "cpu"
+}

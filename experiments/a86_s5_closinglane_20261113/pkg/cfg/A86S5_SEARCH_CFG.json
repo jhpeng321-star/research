@@ -1,0 +1,227 @@
+{
+ "seed": 20261187,
+ "hold_only": true,
+ "dense": true,
+ "unconditional": true,
+ "f_vs_base": true,
+ "novelty_weight": 40.0,
+ "min_roles": 2,
+ "max_roles": 4,
+ "max_roles_mutation": 4,
+ "role_counts": [
+  2,
+  2,
+  3,
+  3,
+  4,
+  4
+ ],
+ "search_grid": {
+  "v_w": [
+   12.0,
+   14.0,
+   16.0,
+   18.0,
+   20.0,
+   22.0,
+   24.0
+  ],
+  "dmax": [
+   1.0,
+   1.5
+  ],
+  "hold_s": [
+   10,
+   20,
+   30,
+   45,
+   60,
+   90,
+   120,
+   180
+  ],
+  "onset_s": [
+   0,
+   20,
+   40,
+   60
+  ]
+ },
+ "onset_max": null,
+ "zones": [
+  "full",
+  "near",
+  "far",
+  "mid",
+  "merge"
+ ],
+ "cooldown_grid": [
+  30,
+  60,
+  90,
+  140,
+  200
+ ],
+ "descriptor_v2": true,
+ "rank_activated_first": true,
+ "n_init": 72,
+ "generations": 3,
+ "n_children": 20,
+ "n_immigrants": 12,
+ "p_mutate": 0.55,
+ "n_screen_states": 18,
+ "n_final_states": 30,
+ "finalists": 18,
+ "K_final": 6,
+ "extra_seeds": [],
+ "lane2_extra_margin_s": 0.0,
+ "harm_cal": {
+  "lane0": {
+   "a": -3.9181472625749167,
+   "b": 15.29777813742739,
+   "margin": 7.898504742795293,
+   "loo_rmse": 8.421302544110524,
+   "n": 16
+  },
+  "lane1": {
+   "a": -2.1499267835107725,
+   "b": 8.493370340962649,
+   "margin": 6.537214668319264,
+   "loo_rmse": 8.006179050229429,
+   "n": 16
+  },
+  "lane2": {
+   "a": 3.887780052970939,
+   "b": 2.501040392039844,
+   "margin": 2.911111861671923,
+   "loo_rmse": 3.3553147245504054,
+   "n": 16
+  },
+  "hdv": {
+   "a": -1.2629356145372017,
+   "b": 14.127612242136166,
+   "margin": 5.909415733464174,
+   "loo_rmse": 5.968806217576539,
+   "n": 16
+  },
+  "cav": {
+   "a": -0.4070513746069852,
+   "b": 11.319378064636005,
+   "margin": 5.20008756771573,
+   "loo_rmse": 5.822610871909859,
+   "n": 16
+  }
+ },
+ "zone_d_grid": {
+  "p": 0.15,
+  "d_up": [
+   1800.0,
+   1400.0,
+   1000.0,
+   700.0,
+   400.0
+  ],
+  "d_down": [
+   1000.0,
+   600.0,
+   400.0,
+   200.0,
+   100.0
+  ],
+  "min_width": 200.0
+ },
+ "holdforms": {
+  "p_gap": 0.35,
+  "gap": {
+   "gap_dx_lo": [
+    -20.0,
+    -10.0,
+    0.0
+   ],
+   "gap_dx_hi": [
+    20.0,
+    40.0,
+    60.0
+   ],
+   "gap_drop_m": [
+    null,
+    150.0,
+    300.0,
+    600.0
+   ],
+   "gap_arm_s": [
+    30,
+    60,
+    120
+   ],
+   "gap_release": [
+    "timer",
+    "clear"
+   ],
+   "gap_events": [
+    1,
+    3
+   ],
+   "hold_s": [
+    5,
+    10,
+    15,
+    20
+   ]
+  },
+  "p_dv_rel": 0.25,
+  "dv_rel": [
+   2.0,
+   4.0,
+   6.0,
+   8.0
+  ],
+  "dv_floor": [
+   0.0,
+   12.0,
+   16.0
+  ],
+  "p_taper": 0.2,
+  "taper_in_s": [
+   0,
+   5,
+   10,
+   20
+  ],
+  "taper_out_s": [
+   0,
+   5,
+   10,
+   20
+  ],
+  "p_pulse": 0.2,
+  "pulse_on_s": [
+   5,
+   10,
+   20
+  ],
+  "pulse_off_s": [
+   5,
+   10,
+   20
+  ]
+ },
+ "exclude_lane_sets": [
+  [
+   1
+  ],
+  [
+   2
+  ],
+  [
+   1,
+   2
+  ]
+ ],
+ "niching": {
+  "definition": "a80_form_family x role_lane_set",
+  "parents": true,
+  "finalists": true,
+  "top_cap": 2
+ }
+}

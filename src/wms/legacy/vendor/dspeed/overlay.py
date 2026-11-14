@@ -13,7 +13,7 @@ dspeed label root.
 
 Fail-closed invariants:
 
-* only zero-row TRAIN items are overlaid; rule-(b) ``base``/``native_base``
+* only zero-row TRAIN items are overlaid; owner-(b) ``base``/``native_base``
   arms are excluded with a reason;
 * per-item ALIGNMENT before acceptance: the shard ``meta.json`` must carry
   the branch origin (``t_origin == t0_s``), matching identity, and the raw
@@ -22,7 +22,7 @@ Fail-closed invariants:
   'trajectory'``, ``chunk_id``, ``split == 'TRAIN'`` and ``t0_s``;
 * the ``t == t0`` row pick is exact: a duplicate tau at t0 fails closed, and
   the receipt records ``label_t0_rows`` / ``label_t0_violations`` telemetry;
-* every zero-row TRAIN item is accepted, excluded with a reason, or rule-(b)
+* every zero-row TRAIN item is accepted, excluded with a reason, or owner-(b)
   excluded (coverage).
 
 Output (FRESH; never overwritten): ``overlay_outcomes.parquet``,
@@ -108,7 +108,7 @@ def build(limit_worlds: set | None = None) -> dict:
         rec = dict(batch=batch, chunk=chunk, world=world, arm=arm,
                    split="TRAIN", t0_s=t0, policy=it.get("policy"), key=str(key))
         if arm.lower() in OWNER_EXCLUDED_ARMS:
-            rec["reason"] = ("decision (b): arm is outcome-supervision "
+            rec["reason"] = ("owner decision (b): arm is outcome-supervision "
                              "excluded")
             excluded.append(rec)
             continue
@@ -183,7 +183,7 @@ def build(limit_worlds: set | None = None) -> dict:
                                                 / "manifest.json")),
         identity_columns=["batch", "chunk", "world", "arm", "split", "t0_s"],
         labels_root=str(D.LABELS_ROOT), shards_root=str(D.SHARDS_ROOT),
-        overlay_policy=("zero-row TRAIN items only; rule-(b) arms and "
+        overlay_policy=("zero-row TRAIN items only; owner-(b) arms and "
                         "misaligned shards excluded with reasons; first "
                         "physics row must be t0+0.5 s"),
         n_zero_row_items=n_zero, n_accepted_groups=len(groups),

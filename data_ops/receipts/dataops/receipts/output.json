@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output",
+ "name": "output",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output",
+ "drive": "gdrive:research-archive/repo-evidence/output/output.tar.zst",
+ "bytes": 22892437377,
+ "files": 34509,
+ "archive_bytes": 3199178243,
+ "archive_md5": "2b1f4f4c56f0b1d8d0279b969cd727dc",
+ "member_manifest": "manifests/members/output.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 791.8,
+ "timestamp": "2026-10-10T04:22:06"
+}

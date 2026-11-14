@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe64_w3_ownership_v1",
+ "name": "oe64_w3_ownership_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe64_w3_ownership_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe64_w3_ownership_v1/oe64_w3_ownership_v1.tar.zst",
+ "bytes": 68296,
+ "files": 7,
+ "archive_bytes": 20497,
+ "archive_md5": "102bd1865351269e732b9a704a28f8aa",
+ "member_manifest": "manifests/members/output_oe64_w3_ownership_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 46.4,
+ "timestamp": "2026-10-10T01:34:51"
+}

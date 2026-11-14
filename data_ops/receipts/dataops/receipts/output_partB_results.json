@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/partB_results",
+ "name": "partB_results",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\partB_results",
+ "drive": "gdrive:research-archive/repo-evidence/output/partB_results/partB_results.tar.zst",
+ "bytes": 995001551,
+ "files": 128,
+ "archive_bytes": 644479839,
+ "archive_md5": "e65fb1bcc8e718342b76b186e6983dbf",
+ "member_manifest": "manifests/members/output_partB_results.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 782.7,
+ "timestamp": "2026-10-10T00:59:42"
+}

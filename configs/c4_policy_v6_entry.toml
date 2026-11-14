@@ -11,7 +11,7 @@
 # measured on the v5 recordings it matches SUMO's per-entrance insertions and entry speeds, and
 # the imagination grows an entry queue under the recorded policy accelerations.
 #
-# One change at a time (the V6ENTRY change).
+# Owner approval required (one-fix-at-a-time; record as the V6ENTRY change in the registration).
 # The WM side of the switch is data.entry_insert_rule (configs/c4_wm_v6*.toml); use the SAME
 # rule for a WM trained with entries on and its policy.
 extends = "c4_policy_v5.toml"

@@ -1,0 +1,76 @@
+{
+  "name": "ws-bisect-settings",
+  "path": "E:\\rd-wt\\ws-bisect-settings",
+  "class": "worktree",
+  "manual": false,
+  "branch": "wms/bisect-settings",
+  "headBefore": "45d6242927556a3e71a256f78ee413fab58d54d1",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-bisect-settings",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-bisect-settings.tar.txt",
+  "uploadCount": 46,
+  "uploadBytes": 132978085,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-bisect-settings.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 f076e7db038a95101392cb7d5edbb9f0 local f076e7db038a95101392cb7d5edbb9f0; size 59359414/59359414; manifest md5 match size match; members=46 (tar -t 46, sha256 46); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-bisect-settings.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 2,
+  "skippedSensitiveSample": [
+    "_out/bisect_settings/runs/subset20/ckpt__c_merge_cal_on/wm_s.pt",
+    "_out/bisect_settings/runs/subset20/ckpt__n_merge_cal_off/wm_s.pt"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T07:18:37.239700+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "45d6242927556a3e71a256f78ee413fab58d54d1",
+  "skippedSensitive": [
+    "_out/bisect_settings/runs/subset20/ckpt__c_merge_cal_on/wm_s.pt",
+    "_out/bisect_settings/runs/subset20/ckpt__n_merge_cal_off/wm_s.pt"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-bisect-settings/ws-bisect-settings.tar.zst",
+    "name": "ws-bisect-settings.tar.zst",
+    "size": 59359414,
+    "md5": "f076e7db038a95101392cb7d5edbb9f0",
+    "sha256": "efd880aab4209c749dc97f508871adb14d2f79a4542d4439bf43198bca9a77cf",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-bisect-settings/ws-bisect-settings.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-bisect-settings.manifest.json",
+    "manifest_size": 8301,
+    "manifest_md5": "8e67ad4b135f232220ff49871e28f5ea",
+    "member_count": 46,
+    "member_bytes": 132978085,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 6.0,
+    "verify_seconds": 3.6,
+    "upload_seconds": 40.0,
+    "upload_MBps": 1.48,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 46,
+  "memberBytes": 132978085,
+  "junctionsFound": []
+}

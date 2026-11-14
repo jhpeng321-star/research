@@ -13,10 +13,10 @@ MODE=${1:-preflight}; [[ $# -eq 0 ]] || shift
 case "$MODE" in preflight|run) ;; *) die "mode must be preflight or run, got $MODE" ;; esac
 CODE_ROOT=${CODE_ROOT:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)}
 CONFIG=${CONFIG:-$CODE_ROOT/configs/r3.toml}
-PY=${PY:-/workspace/gpu1/env/rd_gpu/bin/python}
+PY=${PY:-/root/autodl-tmp/gpu1/env/rd_gpu/bin/python}
 command -v "$PY" >/dev/null || die "missing interpreter $PY"
 OMP=${OMP:-2}; [[ "$OMP" =~ ^[1-9][0-9]*$ ]] || die 'OMP must be a positive integer'
-ORIGINAL_ROOT=${ORIGINAL_ROOT:-/workspace}
+ORIGINAL_ROOT=${ORIGINAL_ROOT:-/root/autodl-tmp}
 SIDECAR_ROOT=${SIDECAR_ROOT:-$ORIGINAL_ROOT/wmn1_a11_20261004T172721Z/work/sidecars}
 : "${SW_ROOT:?set SW_ROOT to the TRAIN switching export}"
 # Logical dataset name -> box path (WMS_DATA_<NAME>); already-set variables win.

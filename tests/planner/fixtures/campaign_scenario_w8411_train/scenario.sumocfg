@@ -1,0 +1,10 @@
+<configuration>
+  <input>
+    <net-file value="E:\research-dense\assets\research\highway_merge_shepherd_long\osm.net.xml.gz" />
+    <route-files value="requests.rou.xml" />
+  </input>
+  <processing>
+    <time-to-teleport value="-1" />
+    <collision.action value="warn" />
+  </processing>
+</configuration>

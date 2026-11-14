@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe62_w4_analysis_v1",
+ "name": "oe62_w4_analysis_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe62_w4_analysis_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe62_w4_analysis_v1/oe62_w4_analysis_v1.tar.zst",
+ "bytes": 177945,
+ "files": 23,
+ "archive_bytes": 42516,
+ "archive_md5": "7e9c065a3eecabdbd6136adead53d476",
+ "member_manifest": "manifests/members/output_oe62_w4_analysis_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 11.5,
+ "timestamp": "2026-10-10T01:42:23"
+}

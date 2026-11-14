@@ -23,7 +23,7 @@ from wms.core.errors import ConfigError
 REPO = Path(__file__).resolve().parents[2]
 V5 = REPO / "configs" / "c4_wm_v5.toml"
 V5_BASE = REPO / "configs" / "c4_wm_v5_base.toml"
-SCRATCH = Path("runs/scratch/v5data")
+SCRATCH = Path("E:/agent-work/tmp/v5data")
 
 
 # ============================================================================ 1. config

@@ -1,0 +1,19 @@
+{
+ "schema": "entries_score_receipt/1",
+ "generated_utc": "2026-10-09T07:42:59Z",
+ "command": "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe _out/entries_score.py --models pure_physics --sets wall_same --workers 2 --inflight 2 --threads 2 --entries-v2",
+ "workers": 2,
+ "entries_v2": true,
+ "entries": true,
+ "horizon_s": 120.0,
+ "cav_mode": "teacher-forced recorded arm",
+ "entry_source": "RSU-observable t0 state['counter'] [2,30]; no future interior state",
+ "models": {
+  "pure_physics": {
+   "entry_path": "closedloop.rollout_entries.EntryProcess (observed-counter v1)",
+   "spec": "pure_physics",
+   "checkpoint": null,
+   "forcings": "teacher-forced recorded arm"
+  }
+ }
+}

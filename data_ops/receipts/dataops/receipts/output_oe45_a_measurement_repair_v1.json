@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe45_a_measurement_repair_v1",
+ "name": "oe45_a_measurement_repair_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe45_a_measurement_repair_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe45_a_measurement_repair_v1/oe45_a_measurement_repair_v1.tar.zst",
+ "bytes": 118515,
+ "files": 8,
+ "archive_bytes": 28884,
+ "archive_md5": "59698cd581035b64d0a47053768309b2",
+ "member_manifest": "manifests/members/output_oe45_a_measurement_repair_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 62.7,
+ "timestamp": "2026-10-10T01:38:53"
+}

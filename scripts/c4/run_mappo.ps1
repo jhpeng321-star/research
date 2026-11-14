@@ -1,4 +1,4 @@
-# C4 MAPPO baseline launcher for a Windows spot instance (48 cores).
+# C4 MAPPO baseline launcher for the Windows box (Tencent 48-core spot, SSH alias 'rented').
 # Linux equivalent: scripts/c4/run_mappo.sh.
 #
 #   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\c4\run_mappo.ps1 -Mode check
@@ -19,7 +19,7 @@
 # stdout/stderr logs (one pair per session), and writes STATE = running | done | stopped_spot |
 # stopped | failed:<rc>.  No retry loops.
 #
-# Spot reclaim (spot instances can be reclaimed at any time, ~2 min notice): the wrapper
+# Spot reclaim (Tencent spot instances can be reclaimed at any time, ~2 min notice): the wrapper
 # polls the termination notice every 5 s (SPOT_NOTICE_URL, default
 # http://metadata.tencentyun.com/latest/meta-data/spot/termination-time; 404 = none) and on a
 # notice writes <run>\out\STOP_REQUESTED; the trainer checks it between episodes, while waiting
@@ -55,7 +55,7 @@ function EnvOr([string]$name, [string]$default) {
 }
 
 # ------------------------------------------------------------------ spot termination notice
-# Cloud spot metadata: GET <metadata>/spot/termination-time -> 404 = no notice, 200 + time = reclaim
+# Tencent Cloud spot: GET <metadata>/spot/termination-time -> 404 = no notice, 200 + time = reclaim
 # scheduled (about 2 minutes ahead).  SPOT_NOTICE_FILE (a local file that exists) simulates a notice.
 function Get-SpotNotice([string]$url, [string]$file) {
     if ($file -and (Test-Path -LiteralPath $file)) { return "file:" + (Get-Content -Raw -LiteralPath $file) }

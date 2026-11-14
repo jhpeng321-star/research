@@ -1,0 +1,55 @@
+# Dreamer-loop WM refresh with a v5 base + the merge-zone rules (2026-10-16). Candidate loop base because v5 predicts
+# unseen walls better than v6 (h60full: v5 3.64/12.9/27.9/92.2 m vs v6 5.05/14.3/42.1/109; v5 with the merge rules ON
+# at inference 12.1/28.2/84.1 m and 7/139 blow-ups). Keeps v5's model settings (legacy driver encoder etc.).
+# Sources: v5 native/random + the policy's own SUMO episodes + v5 paired branches.  init_from = v5 / previous refresh.
+schema_version = 2
+name = "WM-S-C4-V5M-REFRESH"
+extends = "c4_wm_v5.toml"
+
+[physics]
+merge_end_wait = true
+mainline_merge_yield = true
+
+[model]
+init_from = "ckpt_v5"   # launch: --set model.init_from=<abs path>
+
+[[data.c4_sources]]
+name = "native_v5"
+path = "v5_native"
+mix_ratio = 0.45
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain"
+mix_ratio = 0.25
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "v6_policy"
+path = "v6_policy"          # WMS_DATA_V6_POLICY
+mix_ratio = 0.25
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_branch"
+path = "genrand_branch"     # WMS_DATA_GENRAND_BRANCH (v5 60 s branches)
+mix_ratio = 0.05
+window_stride_s = 10.0
+use_val = true
+paired = true
+
+[curriculum]
+unroll_s = [60.0, 120.0]
+stage_steps = [60, 40]
+truncation_steps_per_stage = [120, 120]
+max_hours = 2.0
+
+[optim]
+lr_per_stage = [1.0e-4, 5.0e-5]
+
+[runtime]
+out_dir = "runs/active/c4_wm_v5m_refresh"

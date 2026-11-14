@@ -1,0 +1,73 @@
+{
+ "s_out": {
+  "delay_phys": {
+   "30": 2.7638,
+   "60": 2.5198
+  },
+  "ttc3": {
+   "30": 3.0314,
+   "60": 6.3496
+  }
+ },
+ "coverage": {
+  "delay_phys@H30": {
+   "raw_coverage": 0.3571,
+   "s_out": 2.7638,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8214,
+   "crps_raw_mean": 35.609,
+   "crps_widened_mean": 32.641
+  },
+  "delay_phys@H60": {
+   "raw_coverage": 0.3571,
+   "s_out": 2.5198,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8571,
+   "crps_raw_mean": 83.323,
+   "crps_widened_mean": 82.641
+  },
+  "ttc3@H30": {
+   "raw_coverage": 0.5,
+   "s_out": 3.0314,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8214,
+   "crps_raw_mean": 2.832,
+   "crps_widened_mean": 3.218
+  },
+  "ttc3@H60": {
+   "raw_coverage": 0.3214,
+   "s_out": 6.3496,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8214,
+   "crps_raw_mean": 5.627,
+   "crps_widened_mean": 8.549
+  }
+ },
+ "meta": {
+  "part": "3o",
+  "task": "freeze",
+  "iteration": 2,
+  "calibration_roots": [
+   "cv20_7002m2000",
+   "cv20_7003m2000",
+   "cv20_7004m2000",
+   "cv20_7007m2700"
+  ],
+  "windows": 28,
+  "members": 5,
+  "source_raw": [
+   "raw_train_internal_iter2_m0.jsonl",
+   "raw_train_internal_iter2_m1.jsonl",
+   "raw_train_internal_iter2_m2.jsonl",
+   "raw_train_internal_iter2_m3.jsonl",
+   "raw_train_internal_iter2_m4.jsonl"
+  ],
+  "gate_json": "gate_train_internal_iter2.json",
+  "candidate_json": "candidate_p3o_iter2.json",
+  "holdout_accessed": false,
+  "simulation": false,
+  "validation_used": false,
+  "validation_loaded": false,
+  "note": "frozen factors for a POSSIBLE single validation look (NOT run in part 3o), fitted on the FULL TRAIN-internal calibration split; mechanism A = mean-centred widening, mean exactly invariant; s_out = smallest grid factor reaching 80 % coverage"
+ }
+}

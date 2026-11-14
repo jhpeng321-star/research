@@ -108,8 +108,8 @@ class CavPolicy(nn.Module):
         [-3, 1.2] bounds), so a random start mostly brakes (the v5 run opened at a -0.67 mean
         command).  This zeroes the acceleration MEAN row of the head and biases it so the
         decoded mean is 0 m/s^2 on any input; the log-std row and every other weight keep
-        their random defaults, so it is an initialisation, not a designed controller (no imitation / hand-designed
-        behaviour).  ``set_accel_bounds`` re-centres the
+        their random defaults, so it is an initialisation, not a designed controller (owner
+        rule: no imitation / hand-designed behaviour).  ``set_accel_bounds`` re-centres the
         bias while the flag is set, so fresh actors stay zero-mean under a configured cap;
         loading a state dict overwrites the bias as usual.
         """
@@ -240,7 +240,7 @@ class RsuGroupEncoder(nn.Module):
         super().__init__()
         self.input = nn.Linear(F_OWN + 1, hidden_dim)
         self.set_block = _SetBlock(hidden_dim, n_heads)
-        # RSU own-sensor field: each CAV attends over the RSU cells.
+        # RSU own-sensor field (owner 2026-10-12): each CAV attends over the RSU cells.
         self.field_input = nn.Sequential(nn.Linear(F_RSU_CELL + 4, hidden_dim), nn.SiLU(),
                                          nn.Linear(hidden_dim, hidden_dim))
         self.field_attention = nn.MultiheadAttention(hidden_dim, n_heads, batch_first=True)

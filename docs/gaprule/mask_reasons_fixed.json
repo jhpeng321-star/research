@@ -1,0 +1,86 @@
+{
+ "overtake": {
+  "recorded": 621,
+  "masked": 386,
+  "lead_gap<6m": 230,
+  "recorded_dangerous": 52,
+  "masked_t_and_t1": 215,
+  "follow_gap<6m": 156,
+  "follower_brake>6": 153,
+  "median_lead_gap_m": 1.78125,
+  "median_follow_gap_m": 14.78125,
+  "median_speed_mps": 2.37109375
+ },
+ "return": {
+  "recorded": 171,
+  "masked": 29,
+  "lead_gap<6m": 5,
+  "recorded_dangerous": 27,
+  "masked_t_and_t1": 18,
+  "follow_gap<6m": 23,
+  "follower_brake>6": 20,
+  "follower_brake>4": 4,
+  "median_lead_gap_m": 99.625,
+  "median_follow_gap_m": 1.0,
+  "median_speed_mps": 27.796875
+ },
+ "merge": {
+  "recorded": 160,
+  "recorded_dangerous": 44,
+  "masked": 152,
+  "masked_t_and_t1": 144,
+  "follow_gap<6m": 106,
+  "follower_brake>6": 38,
+  "lead_gap<6m": 91,
+  "follower_brake>4": 1,
+  "median_lead_gap_m": 4.37109375,
+  "median_follow_gap_m": 4.125,
+  "median_speed_mps": 0.0
+ },
+ "total": {
+  "recorded": 952,
+  "masked": 567,
+  "masked_frac": 0.5955882352941176,
+  "masked_t_and_t1": 377,
+  "masked_t_and_t1_frac": 0.3960084033613445
+ },
+ "false_feasible_nonchange": {
+  "merge": {
+   "nonchange_states": 7658,
+   "feasible": 246,
+   "dangerous": 6043,
+   "feasible_and_dangerous": 26,
+   "feasible_frac": 0.03212326978323322,
+   "feasible_and_dangerous_frac": 0.0033951423348132673,
+   "feasible_given_dangerous": 0.004302498758894589
+  },
+  "overtake": {
+   "nonchange_states": 370927,
+   "feasible": 92138,
+   "dangerous": 217875,
+   "feasible_and_dangerous": 7374,
+   "feasible_frac": 0.2483992807210044,
+   "feasible_and_dangerous_frac": 0.01987992246452806,
+   "feasible_given_dangerous": 0.03384509466437177
+  },
+  "return": {
+   "nonchange_states": 297347,
+   "feasible": 135324,
+   "dangerous": 131526,
+   "feasible_and_dangerous": 14363,
+   "feasible_frac": 0.45510464205120615,
+   "feasible_and_dangerous_frac": 0.04830383356818801,
+   "feasible_given_dangerous": 0.10920274318385718
+  },
+  "all": {
+   "nonchange_states": 675932,
+   "feasible": 227708,
+   "dangerous": 355444,
+   "feasible_and_dangerous": 21763,
+   "feasible_frac": 0.3368800411875751,
+   "feasible_and_dangerous_frac": 0.03219702573631667,
+   "feasible_given_dangerous": 0.06122764767445786
+  }
+ },
+ "gap_rule": "fixed"
+}

@@ -1,4 +1,4 @@
-"""LANEV5 (2026-10-14): one shared lane-change network, one logit per ROAD
+"""LANEV5 (2026-10-14, owner-approved): one shared lane-change network, one logit per ROAD
 transition.
 
 ``model.lane_model = "hazard_v5"`` replaces the v4 hazard (one shared left/right output,

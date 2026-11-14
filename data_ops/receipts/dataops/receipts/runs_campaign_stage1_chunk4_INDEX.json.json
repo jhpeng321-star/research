@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_stage1_chunk4/INDEX.json",
+ "name": "INDEX.json",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_stage1_chunk4\\INDEX.json",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk4/INDEX.json.tar.zst",
+ "bytes": 155304,
+ "files": 1,
+ "archive_bytes": 5387,
+ "archive_md5": "24c30c2f705042fe35c71e523f968494",
+ "member_manifest": "manifests/members/runs_campaign_stage1_chunk4_INDEX.json.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 28.8,
+ "timestamp": "2026-10-10T03:54:49"
+}

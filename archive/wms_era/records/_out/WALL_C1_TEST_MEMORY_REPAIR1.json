@@ -1,0 +1,31 @@
+{
+  "schema": "lpwo_cpu_memory/1",
+  "command": [
+    "C:\\Users\\jpeng\\miniconda3\\envs\\rl_driving\\python.exe",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=E:/rd-wt/ws-wallc1/_out/wallc1_regression_repair1_tmp",
+    "E:/rd-wt/ws-wallc1/output/wd01/wm_n1/lpwo/tests",
+    "E:/rd-wt/ws-wallc1/tests/test_wms_eval_materialize.py",
+    "E:/rd-wt/ws-wallc1/tests/test_wms_eval_horizon_report.py",
+    "E:/rd-wt/ws-wallc1/tests/test_wms_eval_c1sets.py",
+    "E:/rd-wt/ws-wallc1/tests/test_wms_eval_c1.py"
+  ],
+  "status": "failed",
+  "returncode": 1,
+  "limit_bytes": 5500000000,
+  "sampling_interval_s": 0.05,
+  "peak_rss_by_pid_bytes": {
+    "23404": 243449856,
+    "29904": 8814592,
+    "32664": 32608256,
+    "32792": 30265344
+  },
+  "max_sampled_process_rss_bytes": 243449856,
+  "elapsed_s": 123.76500000001397,
+  "caveat": "sampled RSS, not an instantaneous operating-system memory quota"
+}

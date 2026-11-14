@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/WM-N1-DSPEED-PLAN-20261004",
+ "name": "WM-N1-DSPEED-PLAN-20261004",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\WM-N1-DSPEED-PLAN-20261004",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-DSPEED-PLAN-20261004/WM-N1-DSPEED-PLAN-20261004.tar.zst",
+ "bytes": 154809,
+ "files": 10,
+ "archive_bytes": 24407,
+ "archive_md5": "63fce6fdb441f27661b4c2f34b9cd00a",
+ "member_manifest": "manifests/members/runs_active_WM-N1-DSPEED-PLAN-20261004.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 12.6,
+ "timestamp": "2026-10-10T03:54:46"
+}

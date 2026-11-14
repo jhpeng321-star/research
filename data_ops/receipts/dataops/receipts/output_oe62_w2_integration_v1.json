@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe62_w2_integration_v1",
+ "name": "oe62_w2_integration_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe62_w2_integration_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe62_w2_integration_v1/oe62_w2_integration_v1.tar.zst",
+ "bytes": 120896,
+ "files": 12,
+ "archive_bytes": 35705,
+ "archive_md5": "fc6d7ada73cb07779a8ae39c7de9fab0",
+ "member_manifest": "manifests/members/output_oe62_w2_integration_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 48.2,
+ "timestamp": "2026-10-10T01:38:55"
+}

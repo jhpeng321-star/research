@@ -1,0 +1,38 @@
+{
+ "root": "E:\\research-dense\\output\\wd01_partB_v0data_v04a",
+ "manifest_sha256": "3c414eecc17678812fad5f88f819166c5d9e991709079d782f7e07dedd3e2dd7",
+ "n_train_sources": 1204,
+ "rows_read": 256238,
+ "per_tau": {
+  "30": {
+   "n_all": 73642,
+   "mean_all": 1787.2199633597272,
+   "n_primary": 52428,
+   "mean_primary": 1765.6191995645459
+  },
+  "60": {
+   "n_all": 70030,
+   "mean_all": 3572.309428585033,
+   "n_primary": 49845,
+   "mean_primary": 3528.4545729498345
+  },
+  "120": {
+   "n_all": 62806,
+   "mean_all": 7138.012819358558,
+   "n_primary": 44679,
+   "mean_primary": 7049.203160651156
+  },
+  "300": {
+   "n_all": 41134,
+   "mean_all": 17801.414620869706,
+   "n_primary": 29181,
+   "mean_primary": 17578.16176043946
+  },
+  "570": {
+   "n_all": 8626,
+   "mean_all": 33284.55306922015,
+   "n_primary": 5934,
+   "mean_primary": 32934.93388381457
+  }
+ }
+}

@@ -1,0 +1,8 @@
+Attempt 3 (14:17:17, pid 28156) hard-killed with the SAME signature as
+attempt 2: only header lines in .out, empty .err, no shard file, dead
+before the first world finished.  Both kills hit the spawn-pool phase;
+the single-process preflight (13:58) survived.  Conclusion: freshly
+spawned python children are being killed externally while the wall
+campaign launches branches; cause outside this task.  Attempt 4 runs
+--workers 1 (the code path executes the worker IN-PROCESS, no
+multiprocessing at all; still <= 2 workers and BelowNormal priority).

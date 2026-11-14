@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # V6 long paired TRAIN collection; based on collect_v5.sh's resumable boxops phases.
-# TODO: supply a registered, exposure-audited TRAIN seed block via SEEDS,
+# TODO(integrator): supply a registered, exposure-audited TRAIN seed block via SEEDS,
 # split disjointly between boxes. No new block is allocated or defaulted here.
 #
 # MEASURED real smoke (2026-10-15, SUMO 1.27.1, CPU-only, affinity <=2 CPUs,
@@ -41,7 +41,7 @@ usage() {
 }
 if [[ ${1:-} == --help ]]; then usage; exit 0; fi
 [[ $# == 1 ]] || { usage >&2; exit 2; }
-: "${SEEDS:?SEEDS is mandatory; supply a registered TRAIN block}"
+: "${SEEDS:?SEEDS is mandatory; TODO integrator: supply a registered TRAIN block}"
 POPULATION=${POPULATION:-textbook}
 PENETRATIONS=${PENETRATIONS:-0.05,0.1,0.2,0.4}
 PEN_WEIGHTS=${PEN_WEIGHTS:-1,1,2,2}

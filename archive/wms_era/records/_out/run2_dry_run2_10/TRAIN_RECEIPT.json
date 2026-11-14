@@ -1,0 +1,139 @@
+{
+  "checkpoint": "E:\\rd-wt\\ws-run2\\_out\\run2_dry_run2_10\\wm_s.pt",
+  "config": {
+    "batch_size": 4,
+    "black_box": false,
+    "checkpoint_residual": false,
+    "controller_embed_dim": 16,
+    "device": "cpu",
+    "entries_v2": true,
+    "entry_pad": 8,
+    "epochs_per_stage": 1,
+    "exclude_window_list": [
+      "E:/rd-wt/ws-p5/_out/lpo/pi_excluded_runs.json"
+    ],
+    "grad_clip": 1.0,
+    "history_features": 6,
+    "lane_weight": 1.0,
+    "lr": 0.001,
+    "n_controllers": 6,
+    "num_workers": 0,
+    "out_dir": "E:\\rd-wt\\ws-run2\\_out\\run2_dry_run2_10",
+    "position_huber_delta_m": 5.0,
+    "position_weight": 1.0,
+    "seed": 101,
+    "speed_huber_delta_mps": 1.0,
+    "speed_weight": 1.0,
+    "stage_steps": null,
+    "state_noise_std_m": 0.0,
+    "state_noise_std_mps": 0.0,
+    "step_weight_decay": 0.01,
+    "steps_per_epoch": 2,
+    "threads": 4,
+    "traffic_bin_s": 30.0,
+    "traffic_free_speed_mps": 13.89,
+    "traffic_loss": true,
+    "traffic_ramp_end_s": 120.0,
+    "traffic_ramp_start_s": 30.0,
+    "traffic_weight": 0.1,
+    "truncation_steps": 20,
+    "unroll_curriculum_s": [
+      10.0
+    ],
+    "val_batches": 8,
+    "val_window_list": null,
+    "weight_decay": 0.0,
+    "window_list": "E:/rd-wt/ws-p5/_out/lpo/windows_train_noPI.json"
+  },
+  "curriculum_s": [
+    10.0
+  ],
+  "data": {
+    "exclude_keys_requested": 0,
+    "excluded_records": 0,
+    "horizon_steps": 20,
+    "identity_rows": 3,
+    "identity_sidecars": [
+      "E:/tmp/wmn1_train_runs_20261002/sidecars3_20261003T0005CN/identities",
+      "E:/rd-wt/a9/_out/identities_dspeed",
+      "E:/rd-wt/damping-snap/_out/identities_damping"
+    ],
+    "kept_by_pack": {
+      "pack_damping": 231,
+      "pack_dspeed": 560,
+      "pack_v3": 516
+    },
+    "mode": "a11-index-window",
+    "n_corpus_windows": 3060,
+    "n_records": 1307,
+    "overlays": [
+      "E:/rd-wt/dspeed-data/_out/labels_overlay_dspeed",
+      "E:/rd-wt/damping-snap/_out/labels_overlay_damping"
+    ],
+    "packs": [
+      "D:/rd-staging/wmn1_feat/pack_v3",
+      "E:/rd-wt/dspeed-data/_out/pack_dspeed",
+      "E:/rd-wt/damping-snap/_out/pack_damping"
+    ],
+    "select_windows_requested": null,
+    "split": "TRAIN",
+    "start_shift_prob": 0.75,
+    "total_by_pack": {
+      "pack_damping": 231,
+      "pack_dspeed": 560,
+      "pack_v3": 516
+    },
+    "window_filter": {
+      "dropped": 1753,
+      "exclude_window_list": [
+        "E:/rd-wt/ws-p5/_out/lpo/pi_excluded_runs.json"
+      ],
+      "kept": 1307,
+      "matched": 1307,
+      "requested": 1307,
+      "window_list": "E:/rd-wt/ws-p5/_out/lpo/windows_train_noPI.json"
+    }
+  },
+  "device": "cpu",
+  "log": "E:\\rd-wt\\ws-run2\\_out\\run2_dry_run2_10\\train_log.jsonl",
+  "physics": {
+    "accel_max_mps2": 3.0,
+    "accel_min_mps2": -9.0,
+    "b_accept_base_mps2": 4.0,
+    "b_accept_end_mps2": 6.0,
+    "b_safe_base_mps2": 4.0,
+    "b_safe_end_mps2": 6.0,
+    "b_yield_max_mps2": 1.75,
+    "dt_s": 0.5,
+    "end_obstacle_range_m": 25.0,
+    "free_road_gap_m": 250.0,
+    "gap_floor_m": 0.3,
+    "lane_gap_m": 5.0,
+    "lane_incentive_mps": 0.4,
+    "lane_safe_gap_m": 6.0,
+    "max_gap_steps": 240,
+    "merge_cal": true,
+    "merge_lane": 2,
+    "merge_target_lane": 1,
+    "merge_zone_s0_m": 0.0,
+    "merge_zone_s1_m": 75.44,
+    "mobil_threshold_mps2": 0.1,
+    "open_road": true,
+    "speed_factor": 1.0,
+    "speed_limit_mps": 31.29,
+    "sumo_fidelity": true,
+    "sumo_idm": true,
+    "t_lead_base_s": 1.0,
+    "t_lead_end_s": 0.1,
+    "u_yield": 0.35,
+    "yield_lookahead_m": 120.0,
+    "yield_min_merger_speed_mps": 3.5,
+    "yield_min_speed_mps": 2.5
+  },
+  "schema": "wm_s_train_receipt/1",
+  "split": "TRAIN",
+  "steps": 2,
+  "threads": 4,
+  "val_by_stage": [],
+  "val_monitoring": null
+}

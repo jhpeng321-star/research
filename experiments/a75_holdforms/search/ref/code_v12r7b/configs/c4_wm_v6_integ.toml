@@ -1,0 +1,23 @@
+# WM-S-C4 v6 integration candidate (2026-10-15).
+# Extends v5 with stop-time integration, emergency braking, simultaneous lane-conflict
+# resolution and the existing minimum-gap projection. CPU configuration, two threads.
+schema_version = 2
+name = "WM-S-C4-V6-INTEG"
+extends = "c4_wm_v5.toml"
+
+[physics]
+stop_time_integration = true
+emergency_decel_mps2 = 9.0
+
+[model]
+lane_conflict_resolve = true
+
+[model.projection]
+enabled = true
+min_gap_m = 2.0
+
+[runtime]
+device = "cpu"
+threads = 2
+omp = 2
+out_dir = "runs/active/c4_wm_v6_integ"

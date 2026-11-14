@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/action_model_v1",
+ "name": "action_model_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\action_model_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/action_model_v1/action_model_v1.tar.zst",
+ "bytes": 689613,
+ "files": 65,
+ "archive_bytes": 122016,
+ "archive_md5": "8892cb16502161f2aac7bbb33d097391",
+ "member_manifest": "manifests/members/output_action_model_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 63.7,
+ "timestamp": "2026-10-10T01:44:49"
+}

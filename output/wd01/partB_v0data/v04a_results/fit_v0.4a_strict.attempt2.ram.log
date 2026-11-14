@@ -1,0 +1,4 @@
+﻿[2026-09-30T04:42:53Z] job=fit_v0.4a_strict free_ram_gb=11.51 priority=BelowNormal wd_forbid_d=1 threads<=2(fit)/1(predict) gate_min_gb=12
+GATE-REFUSE: free RAM 11.51 GB < 12 GB; NOT launched
+[2026-09-30T05:10:06Z] job=fit_v0.4a_strict free_ram_gb=12.34 priority=BelowNormal wd_forbid_d=1 threads<=2(fit)/1(predict) gate_min_gb=12
+[2026-09-30T05:10:06Z] launched pid=12108

@@ -1,4 +1,4 @@
-# WM-S-C4 v5 lane model (LANEV5; LANEV5_NOTES.md).
+# WM-S-C4 v5 lane model (LANEV5, owner-approved 2026-10-14 ~20:40; LANEV5_NOTES.md).
 # = c4_wm_v4.toml with the v4 hazard replaced by the per-transition lane network:
 #   model.lane_model = "hazard_v5"   one shared trunk over scaled situation features + road
 #                                    context, one head per ROAD transition (overtake 1->0,
@@ -16,7 +16,7 @@
 #   (the v5 network has its own features and always owns merges, forced in the last 5 m).
 # Optional offline pre-fit (tools/lanev5_pretrain.py, TRAIN windows only):
 #   model.lane_v5_pretrain = "<path to the pre-fit .pt>"
-# Code + CPU smoke only on c4/lanev5; combined with the other v5 changes in c4_wm_v5.toml.
+# Code + CPU smoke only on c4/lanev5; the integrator combines this with the other v5 changes.
 schema_version = 2
 name = "WM-S-C4-V5LANE"
 extends = "c4_wm_v4.toml"

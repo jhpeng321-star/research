@@ -1,4 +1,4 @@
-"""Counterfactual difference rewards: cooperation as the main training signal.
+"""Counterfactual difference rewards: cooperation as the main training signal (owner 2026-10-12 late).
 
 Per selected start state, every variant is replayed with common random numbers (same start,
 same WM members, same policy noise per (start, control step, slot)):
@@ -106,7 +106,7 @@ class CounterfactualConfig:
             raise ValueError("curriculum weights must be finite and nonnegative")
         for name, value in zip(names, knots):
             setattr(self, name, value)
-        # Anti-gaming guard: C_G = D_G - sum D_i rewards worse solo behaviour; keep every
+        # Anti-gaming guard (owner): C_G = D_G - sum D_i rewards worse solo behaviour; keep every
         # individual benefit's net weight w_ind - w_coop >= 0 (linear schedule: knots suffice).
         if any(c > i + 1e-12 for c, i in zip(self.w_coop, self.w_individual)):
             raise ValueError("anti-gaming guard: w_coop must not exceed w_individual at any knot")

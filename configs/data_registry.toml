@@ -61,7 +61,7 @@ path = "runs/active/smoke_lists"
 [datasets.ckpt_smoke_local]
 path = "runs/active/int_smoke_local2/wm_s.pt"
 
-# Switching/direct-output pack (copied from the GPU box, 39/39 files sha256-verified against BOX_SHA256SUMS.txt).
+# Switching/direct-output pack (copied from gpuA, 39/39 files sha256-verified against BOX_SHA256SUMS.txt).
 [datasets.pack_switching_train]
 path = "data_cache/wmn1_switching_train/pack_switching_train"
 
@@ -100,8 +100,8 @@ path = "data_cache/wmn1_switching_train/ZERO_SHOT_HELDOUT.json"
 path = "runs/active/c4_episodes"
 
 # PAIRLOSS (configs/c4_wm_v4_data.toml): C4-GENRAND-20261014 converted sources on the training
-# box. Point WMS_DATA_GENRAND_PLAIN / WMS_DATA_GENRAND_BRANCH at the c4_episodes dirs (the GPU host:
-# /workspace/c4/data_genrand/C4-GENRAND-20261014/{,branches/}c4_episodes); these
+# box. Point WMS_DATA_GENRAND_PLAIN / WMS_DATA_GENRAND_BRANCH at the c4_episodes dirs (gpuW:
+# /root/autodl-tmp/c4/data_genrand/C4-GENRAND-20261014/{,branches/}c4_episodes); these
 # defaults are only the local convention.
 [datasets.genrand_plain]
 path = "runs/active/C4-GENRAND-20261014/c4_episodes"

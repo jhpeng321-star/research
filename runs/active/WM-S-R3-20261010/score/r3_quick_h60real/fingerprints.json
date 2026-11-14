@@ -1,0 +1,744 @@
+{
+ "cand_last": {
+  "residual_cap_mps2": null,
+  "n_states": 20,
+  "hdv_steps": 163414,
+  "g_delta_mean_abs": 1.1204144810633125,
+  "g_delta_p95_abs": 4.01517333984375,
+  "g_delta_mean": -0.010643485708486921,
+  "g_delta_frac_pos": 0.39347301944753815,
+  "cap_bind_rate": 0.0,
+  "lane_rate_pred": 0.025846553483625568,
+  "lane_rate_rec": 0.013353391278508283,
+  "speed_bias_mean": -1.653252480739781,
+  "speed_bias_median_states": -1.6438179024747352,
+  "jam_free": {
+   "jam": {
+    "n_states": 20,
+    "ds_med_60": 28.312240600585938,
+    "ds_med_120": 84.2242431640625
+   },
+   "free": {
+    "n_states": 0,
+    "ds_med_60": null,
+    "ds_med_120": null
+   }
+  },
+  "slow_hdv_ds": {
+   "ds_med_60": 38.199371337890625,
+   "n_states_with_slow_60": 19,
+   "ds_med_120": 84.2242431640625,
+   "n_states_with_slow_120": 19
+  },
+  "wrong_lane_share": {
+   "60": 0.23586239046286023,
+   "60_n_lane": 100,
+   "120": 0.12251547489522999,
+   "120_n_lane": 86
+  },
+  "states": [
+   {
+    "world": "w8660m2700p10t300",
+    "t0_s": 360.5,
+    "key": "walls_pilot_chunk4/w8660m2700p10t300__w-lo-late",
+    "jam": true,
+    "n_slow_ids": 38
+   },
+   {
+    "world": "w8661m2600p10t240",
+    "t0_s": 300.5,
+    "key": "walls_pilot_chunk4/w8661m2600p10t240__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 26
+   },
+   {
+    "world": "w8662m2600p10t300",
+    "t0_s": 360.5,
+    "key": "walls_pilot_chunk4/w8662m2600p10t300__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 46
+   },
+   {
+    "world": "w8663m2700p10t480",
+    "t0_s": 540.5,
+    "key": "walls_pilot_chunk4/w8663m2700p10t480__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 30
+   },
+   {
+    "world": "w8664m2600p10t360",
+    "t0_s": 420.5,
+    "key": "walls_pilot_chunk4/w8664m2600p10t360__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 48
+   },
+   {
+    "world": "w8665m2700p10t240",
+    "t0_s": 300.5,
+    "key": "walls_pilot_chunk4/w8665m2700p10t240__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 9
+   },
+   {
+    "world": "w8668m2600p10t240",
+    "t0_s": 300.5,
+    "key": "walls_pilot_chunk4/w8668m2600p10t240__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 45
+   },
+   {
+    "world": "w8670m2700p10t300",
+    "t0_s": 360.5,
+    "key": "walls_pilot_chunk4/w8670m2700p10t300__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 49
+   },
+   {
+    "world": "w8676m2700p20t360",
+    "t0_s": 420.5,
+    "key": "walls_pilot_chunk4/w8676m2700p20t360__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 18
+   },
+   {
+    "world": "w8677m2700p20t360",
+    "t0_s": 420.5,
+    "key": "walls_pilot_chunk4/w8677m2700p20t360__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 38
+   },
+   {
+    "world": "w8678m2700p20t300",
+    "t0_s": 360.5,
+    "key": "walls_pilot_chunk4/w8678m2700p20t300__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 35
+   },
+   {
+    "world": "w8679m2400p20t540",
+    "t0_s": 600.5,
+    "key": "walls_pilot_chunk4/w8679m2400p20t540__w-lo-late",
+    "jam": true,
+    "n_slow_ids": 25
+   },
+   {
+    "world": "w8680m2600p20t300",
+    "t0_s": 360.5,
+    "key": "walls_pilot_chunk4/w8680m2600p20t300__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 53
+   },
+   {
+    "world": "w8681m2700p20t420",
+    "t0_s": 480.5,
+    "key": "walls_pilot_chunk4/w8681m2700p20t420__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 28
+   },
+   {
+    "world": "w8682m2400p20t240",
+    "t0_s": 300.5,
+    "key": "walls_pilot_chunk4/w8682m2400p20t240__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 20
+   },
+   {
+    "world": "w8683m2400p20t540",
+    "t0_s": 600.5,
+    "key": "walls_pilot_chunk4/w8683m2400p20t540__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 40
+   },
+   {
+    "world": "w8684m2700p20t360",
+    "t0_s": 420.5,
+    "key": "walls_pilot_chunk4/w8684m2700p20t360__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 49
+   },
+   {
+    "world": "w8685m2700p20t480",
+    "t0_s": 540.5,
+    "key": "walls_pilot_chunk4/w8685m2700p20t480__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 21
+   },
+   {
+    "world": "w8686m2600p20t240",
+    "t0_s": 300.5,
+    "key": "walls_pilot_chunk4/w8686m2600p20t240__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 35
+   },
+   {
+    "world": "w8687m2600p20t480",
+    "t0_s": 540.5,
+    "key": "walls_pilot_chunk4/w8687m2600p20t480__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 7
+   }
+  ],
+  "lane_changes_pred": 4179,
+  "lane_steps_pred": 161685,
+  "lane_changes_rec": 2157,
+  "lane_steps_rec": 161532,
+  "window_s": 60.0,
+  "full": {
+   "residual_cap_mps2": null,
+   "n_states": 20,
+   "hdv_steps": 247570,
+   "g_delta_mean_abs": 1.8064450258973344,
+   "g_delta_p95_abs": 7.1287943601608275,
+   "g_delta_mean": 0.41728136386032766,
+   "g_delta_frac_pos": 0.4432604919820657,
+   "cap_bind_rate": 0.0,
+   "lane_rate_pred": 0.052908180490642324,
+   "lane_rate_rec": 0.014410797489942635,
+   "speed_bias_mean": -2.2008316144836875,
+   "speed_bias_median_states": -2.0096178792759516,
+   "jam_free": {
+    "jam": {
+     "n_states": 20,
+     "ds_med_60": 28.312240600585938,
+     "ds_med_120": 84.2242431640625
+    },
+    "free": {
+     "n_states": 0,
+     "ds_med_60": null,
+     "ds_med_120": null
+    }
+   },
+   "slow_hdv_ds": {
+    "ds_med_60": 38.199371337890625,
+    "n_states_with_slow_60": 19,
+    "ds_med_120": 84.2242431640625,
+    "n_states_with_slow_120": 19
+   },
+   "wrong_lane_share": {
+    "60": 0.23586239046286023,
+    "60_n_lane": 100,
+    "120": 0.12251547489522999,
+    "120_n_lane": 86
+   },
+   "states": [
+    {
+     "world": "w8660m2700p10t300",
+     "t0_s": 360.5,
+     "key": "walls_pilot_chunk4/w8660m2700p10t300__w-lo-late",
+     "jam": true,
+     "n_slow_ids": 38
+    },
+    {
+     "world": "w8661m2600p10t240",
+     "t0_s": 300.5,
+     "key": "walls_pilot_chunk4/w8661m2600p10t240__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 26
+    },
+    {
+     "world": "w8662m2600p10t300",
+     "t0_s": 360.5,
+     "key": "walls_pilot_chunk4/w8662m2600p10t300__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 46
+    },
+    {
+     "world": "w8663m2700p10t480",
+     "t0_s": 540.5,
+     "key": "walls_pilot_chunk4/w8663m2700p10t480__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 30
+    },
+    {
+     "world": "w8664m2600p10t360",
+     "t0_s": 420.5,
+     "key": "walls_pilot_chunk4/w8664m2600p10t360__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 48
+    },
+    {
+     "world": "w8665m2700p10t240",
+     "t0_s": 300.5,
+     "key": "walls_pilot_chunk4/w8665m2700p10t240__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 9
+    },
+    {
+     "world": "w8668m2600p10t240",
+     "t0_s": 300.5,
+     "key": "walls_pilot_chunk4/w8668m2600p10t240__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 45
+    },
+    {
+     "world": "w8670m2700p10t300",
+     "t0_s": 360.5,
+     "key": "walls_pilot_chunk4/w8670m2700p10t300__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 49
+    },
+    {
+     "world": "w8676m2700p20t360",
+     "t0_s": 420.5,
+     "key": "walls_pilot_chunk4/w8676m2700p20t360__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 18
+    },
+    {
+     "world": "w8677m2700p20t360",
+     "t0_s": 420.5,
+     "key": "walls_pilot_chunk4/w8677m2700p20t360__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 38
+    },
+    {
+     "world": "w8678m2700p20t300",
+     "t0_s": 360.5,
+     "key": "walls_pilot_chunk4/w8678m2700p20t300__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 35
+    },
+    {
+     "world": "w8679m2400p20t540",
+     "t0_s": 600.5,
+     "key": "walls_pilot_chunk4/w8679m2400p20t540__w-lo-late",
+     "jam": true,
+     "n_slow_ids": 25
+    },
+    {
+     "world": "w8680m2600p20t300",
+     "t0_s": 360.5,
+     "key": "walls_pilot_chunk4/w8680m2600p20t300__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 53
+    },
+    {
+     "world": "w8681m2700p20t420",
+     "t0_s": 480.5,
+     "key": "walls_pilot_chunk4/w8681m2700p20t420__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 28
+    },
+    {
+     "world": "w8682m2400p20t240",
+     "t0_s": 300.5,
+     "key": "walls_pilot_chunk4/w8682m2400p20t240__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 20
+    },
+    {
+     "world": "w8683m2400p20t540",
+     "t0_s": 600.5,
+     "key": "walls_pilot_chunk4/w8683m2400p20t540__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 40
+    },
+    {
+     "world": "w8684m2700p20t360",
+     "t0_s": 420.5,
+     "key": "walls_pilot_chunk4/w8684m2700p20t360__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 49
+    },
+    {
+     "world": "w8685m2700p20t480",
+     "t0_s": 540.5,
+     "key": "walls_pilot_chunk4/w8685m2700p20t480__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 21
+    },
+    {
+     "world": "w8686m2600p20t240",
+     "t0_s": 300.5,
+     "key": "walls_pilot_chunk4/w8686m2600p20t240__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 35
+    },
+    {
+     "world": "w8687m2600p20t480",
+     "t0_s": 540.5,
+     "key": "walls_pilot_chunk4/w8687m2600p20t480__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 7
+    }
+   ],
+   "lane_changes_pred": 13007,
+   "lane_steps_pred": 245841,
+   "lane_changes_rec": 3532,
+   "lane_steps_rec": 245094,
+   "window_s": 120.0
+  },
+  "residual_soft_bound_mps2": 4.0
+ },
+ "ref_last": {
+  "residual_cap_mps2": null,
+  "n_states": 20,
+  "hdv_steps": 163414,
+  "g_delta_mean_abs": 2.1941408875450805,
+  "g_delta_p95_abs": 3.7723305702209506,
+  "g_delta_mean": 1.1053263717308974,
+  "g_delta_frac_pos": 0.46018700968093307,
+  "cap_bind_rate": 0.0,
+  "lane_rate_pred": 0.01152240467575842,
+  "lane_rate_rec": 0.013353391278508283,
+  "speed_bias_mean": -0.34563779191173016,
+  "speed_bias_median_states": -0.458911231099129,
+  "jam_free": {
+   "jam": {
+    "n_states": 20,
+    "ds_med_60": 16.80233097076416,
+    "ds_med_120": 64.35781860351562
+   },
+   "free": {
+    "n_states": 0,
+    "ds_med_60": null,
+    "ds_med_120": null
+   }
+  },
+  "slow_hdv_ds": {
+   "ds_med_60": 32.5445671081543,
+   "n_states_with_slow_60": 19,
+   "ds_med_120": 54.64373779296875,
+   "n_states_with_slow_120": 19
+  },
+  "wrong_lane_share": {
+   "60": 0.2790313252454822,
+   "60_n_lane": 187,
+   "120": 0.42898784466203793,
+   "120_n_lane": 182
+  },
+  "states": [
+   {
+    "world": "w8660m2700p10t300",
+    "t0_s": 360.5,
+    "key": "walls_pilot_chunk4/w8660m2700p10t300__w-lo-late",
+    "jam": true,
+    "n_slow_ids": 38
+   },
+   {
+    "world": "w8661m2600p10t240",
+    "t0_s": 300.5,
+    "key": "walls_pilot_chunk4/w8661m2600p10t240__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 26
+   },
+   {
+    "world": "w8662m2600p10t300",
+    "t0_s": 360.5,
+    "key": "walls_pilot_chunk4/w8662m2600p10t300__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 46
+   },
+   {
+    "world": "w8663m2700p10t480",
+    "t0_s": 540.5,
+    "key": "walls_pilot_chunk4/w8663m2700p10t480__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 30
+   },
+   {
+    "world": "w8664m2600p10t360",
+    "t0_s": 420.5,
+    "key": "walls_pilot_chunk4/w8664m2600p10t360__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 48
+   },
+   {
+    "world": "w8665m2700p10t240",
+    "t0_s": 300.5,
+    "key": "walls_pilot_chunk4/w8665m2700p10t240__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 9
+   },
+   {
+    "world": "w8668m2600p10t240",
+    "t0_s": 300.5,
+    "key": "walls_pilot_chunk4/w8668m2600p10t240__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 45
+   },
+   {
+    "world": "w8670m2700p10t300",
+    "t0_s": 360.5,
+    "key": "walls_pilot_chunk4/w8670m2700p10t300__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 49
+   },
+   {
+    "world": "w8676m2700p20t360",
+    "t0_s": 420.5,
+    "key": "walls_pilot_chunk4/w8676m2700p20t360__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 18
+   },
+   {
+    "world": "w8677m2700p20t360",
+    "t0_s": 420.5,
+    "key": "walls_pilot_chunk4/w8677m2700p20t360__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 38
+   },
+   {
+    "world": "w8678m2700p20t300",
+    "t0_s": 360.5,
+    "key": "walls_pilot_chunk4/w8678m2700p20t300__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 35
+   },
+   {
+    "world": "w8679m2400p20t540",
+    "t0_s": 600.5,
+    "key": "walls_pilot_chunk4/w8679m2400p20t540__w-lo-late",
+    "jam": true,
+    "n_slow_ids": 25
+   },
+   {
+    "world": "w8680m2600p20t300",
+    "t0_s": 360.5,
+    "key": "walls_pilot_chunk4/w8680m2600p20t300__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 53
+   },
+   {
+    "world": "w8681m2700p20t420",
+    "t0_s": 480.5,
+    "key": "walls_pilot_chunk4/w8681m2700p20t420__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 28
+   },
+   {
+    "world": "w8682m2400p20t240",
+    "t0_s": 300.5,
+    "key": "walls_pilot_chunk4/w8682m2400p20t240__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 20
+   },
+   {
+    "world": "w8683m2400p20t540",
+    "t0_s": 600.5,
+    "key": "walls_pilot_chunk4/w8683m2400p20t540__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 40
+   },
+   {
+    "world": "w8684m2700p20t360",
+    "t0_s": 420.5,
+    "key": "walls_pilot_chunk4/w8684m2700p20t360__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 49
+   },
+   {
+    "world": "w8685m2700p20t480",
+    "t0_s": 540.5,
+    "key": "walls_pilot_chunk4/w8685m2700p20t480__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 21
+   },
+   {
+    "world": "w8686m2600p20t240",
+    "t0_s": 300.5,
+    "key": "walls_pilot_chunk4/w8686m2600p20t240__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 35
+   },
+   {
+    "world": "w8687m2600p20t480",
+    "t0_s": 540.5,
+    "key": "walls_pilot_chunk4/w8687m2600p20t480__w-lo-early",
+    "jam": true,
+    "n_slow_ids": 7
+   }
+  ],
+  "lane_changes_pred": 1863,
+  "lane_steps_pred": 161685,
+  "lane_changes_rec": 2157,
+  "lane_steps_rec": 161532,
+  "window_s": 60.0,
+  "full": {
+   "residual_cap_mps2": null,
+   "n_states": 20,
+   "hdv_steps": 247570,
+   "g_delta_mean_abs": 9.624132892756165,
+   "g_delta_p95_abs": 55.76559181213374,
+   "g_delta_mean": 7.838903143577667,
+   "g_delta_frac_pos": 0.5168316031829382,
+   "cap_bind_rate": 0.0,
+   "lane_rate_pred": 0.13677132780943782,
+   "lane_rate_rec": 0.014410797489942635,
+   "speed_bias_mean": -0.7154333733030412,
+   "speed_bias_median_states": -0.5970266532005403,
+   "jam_free": {
+    "jam": {
+     "n_states": 20,
+     "ds_med_60": 16.80233097076416,
+     "ds_med_120": 64.35781860351562
+    },
+    "free": {
+     "n_states": 0,
+     "ds_med_60": null,
+     "ds_med_120": null
+    }
+   },
+   "slow_hdv_ds": {
+    "ds_med_60": 32.5445671081543,
+    "n_states_with_slow_60": 19,
+    "ds_med_120": 54.64373779296875,
+    "n_states_with_slow_120": 19
+   },
+   "wrong_lane_share": {
+    "60": 0.2790313252454822,
+    "60_n_lane": 187,
+    "120": 0.42898784466203793,
+    "120_n_lane": 182
+   },
+   "states": [
+    {
+     "world": "w8660m2700p10t300",
+     "t0_s": 360.5,
+     "key": "walls_pilot_chunk4/w8660m2700p10t300__w-lo-late",
+     "jam": true,
+     "n_slow_ids": 38
+    },
+    {
+     "world": "w8661m2600p10t240",
+     "t0_s": 300.5,
+     "key": "walls_pilot_chunk4/w8661m2600p10t240__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 26
+    },
+    {
+     "world": "w8662m2600p10t300",
+     "t0_s": 360.5,
+     "key": "walls_pilot_chunk4/w8662m2600p10t300__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 46
+    },
+    {
+     "world": "w8663m2700p10t480",
+     "t0_s": 540.5,
+     "key": "walls_pilot_chunk4/w8663m2700p10t480__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 30
+    },
+    {
+     "world": "w8664m2600p10t360",
+     "t0_s": 420.5,
+     "key": "walls_pilot_chunk4/w8664m2600p10t360__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 48
+    },
+    {
+     "world": "w8665m2700p10t240",
+     "t0_s": 300.5,
+     "key": "walls_pilot_chunk4/w8665m2700p10t240__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 9
+    },
+    {
+     "world": "w8668m2600p10t240",
+     "t0_s": 300.5,
+     "key": "walls_pilot_chunk4/w8668m2600p10t240__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 45
+    },
+    {
+     "world": "w8670m2700p10t300",
+     "t0_s": 360.5,
+     "key": "walls_pilot_chunk4/w8670m2700p10t300__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 49
+    },
+    {
+     "world": "w8676m2700p20t360",
+     "t0_s": 420.5,
+     "key": "walls_pilot_chunk4/w8676m2700p20t360__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 18
+    },
+    {
+     "world": "w8677m2700p20t360",
+     "t0_s": 420.5,
+     "key": "walls_pilot_chunk4/w8677m2700p20t360__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 38
+    },
+    {
+     "world": "w8678m2700p20t300",
+     "t0_s": 360.5,
+     "key": "walls_pilot_chunk4/w8678m2700p20t300__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 35
+    },
+    {
+     "world": "w8679m2400p20t540",
+     "t0_s": 600.5,
+     "key": "walls_pilot_chunk4/w8679m2400p20t540__w-lo-late",
+     "jam": true,
+     "n_slow_ids": 25
+    },
+    {
+     "world": "w8680m2600p20t300",
+     "t0_s": 360.5,
+     "key": "walls_pilot_chunk4/w8680m2600p20t300__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 53
+    },
+    {
+     "world": "w8681m2700p20t420",
+     "t0_s": 480.5,
+     "key": "walls_pilot_chunk4/w8681m2700p20t420__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 28
+    },
+    {
+     "world": "w8682m2400p20t240",
+     "t0_s": 300.5,
+     "key": "walls_pilot_chunk4/w8682m2400p20t240__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 20
+    },
+    {
+     "world": "w8683m2400p20t540",
+     "t0_s": 600.5,
+     "key": "walls_pilot_chunk4/w8683m2400p20t540__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 40
+    },
+    {
+     "world": "w8684m2700p20t360",
+     "t0_s": 420.5,
+     "key": "walls_pilot_chunk4/w8684m2700p20t360__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 49
+    },
+    {
+     "world": "w8685m2700p20t480",
+     "t0_s": 540.5,
+     "key": "walls_pilot_chunk4/w8685m2700p20t480__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 21
+    },
+    {
+     "world": "w8686m2600p20t240",
+     "t0_s": 300.5,
+     "key": "walls_pilot_chunk4/w8686m2600p20t240__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 35
+    },
+    {
+     "world": "w8687m2600p20t480",
+     "t0_s": 540.5,
+     "key": "walls_pilot_chunk4/w8687m2600p20t480__w-lo-early",
+     "jam": true,
+     "n_slow_ids": 7
+    }
+   ],
+   "lane_changes_pred": 33624,
+   "lane_steps_pred": 245841,
+   "lane_changes_rec": 3532,
+   "lane_steps_rec": 245094,
+   "window_s": 120.0
+  },
+  "residual_soft_bound_mps2": null
+ }
+}

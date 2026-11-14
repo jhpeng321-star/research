@@ -39,7 +39,7 @@ short ``hist`` and long ``driver_hist`` from ticks <= t0 (``prior_history``), op
 ``entry_feat`` (``entry_features`` on the converted counter) and the per-CAV
 ``action_timeline`` bound to the t0 slot columns (a slot whose t0 vehicle has left is
 ``native``).  Designed controllers (damping / PI) are refused unless explicitly allowed
-(WM training sees native + direct actions only).
+(owner: WM training sees native + direct actions only).
 """
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""RSU own-sensor field: per-cell aggregates over the RSU zones.
+"""RSU own-sensor field (owner 2026-10-12): per-cell aggregates over the RSU zones.
 
 The same function runs on imagined WM-S states and on states converted from SUMO, so the
 group signal sees identical inputs in training and deployment.  Only vehicles inside the

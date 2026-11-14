@@ -1,0 +1,81 @@
+{
+ "block": [
+  988600,
+  988699
+ ],
+ "box3": {
+  "charges_files": "/root/*/root/CHARGES.jsonl: 0 lines matching 9886[0-9][0-9]",
+  "code_hit_note": "the only token is inside a hex string in a CPython svnmap.txt, not a seed",
+  "code_hits": [
+   [
+    "/home/ubuntu/env/Python-3.12.16/Misc/svnmap.txt",
+    988661,
+    "k 66113 7ecec1b30c3f405317105fd835d58f0142c4b3e2 py3k 66114 988661ffd1029cb037f624fe2448c108cf85"
+   ]
+  ],
+  "n_files_scanned": 29669,
+  "n_panels": 506,
+  "panel_overlap": [],
+  "runner_overlap": [],
+  "tool": "/tmp/a91_seed_audit_box.py (byte copy of the A82/A89 seed_audit_box.py, sha 9655906c)",
+  "tops": [
+   "/root",
+   "/home/ubuntu"
+  ]
+ },
+ "date": "2026-11-14",
+ "excluded_neighbours": {
+  "a82_part_b": "988200-988583 panel / 988200-988599 A82 runner row (adjacent, no overlap)",
+  "a89": "988400-988499"
+ },
+ "forbidden_checked": [
+  [
+   964000,
+   964199
+  ],
+  [
+   962000,
+   962999
+  ],
+  [
+   977000,
+   977999
+  ],
+  [
+   989600,
+   989699
+  ],
+  [
+   992000,
+   992999
+  ],
+  [
+   996000,
+   996999
+  ]
+ ],
+ "laptop": {
+  "experiment_history_json": {
+   "path": "E:/research-dense/protocols/experiment_history.json",
+   "ranges_overlapping": 0,
+   "six_digit_tokens_in_block": 0
+  },
+  "not_done": "broad laptop working-tree grep (denied earlier by a permission rule; not attempted), git branch tips, Box 4",
+  "registration_md": {
+   "note": "one regex hit 988695 is inside a hex digest (QUOTE 2b59e77d...a988695eb...), not a seed",
+   "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
+   "ranges_overlapping": 0,
+   "six_digit_tokens_in_block": 0
+  }
+ },
+ "reserved_unused": [
+  988696,
+  988699
+ ],
+ "schema": "coopmwm.a91.seed_audit.v1",
+ "used": [
+  988600,
+  988695
+ ],
+ "verdict": "FREE"
+}

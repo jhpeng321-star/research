@@ -1,0 +1,77 @@
+{
+ "generated_utc": "2026-09-25T23:19:40.401713+00:00",
+ "weights": {
+  "member0.pt": {
+   "sha256": "342b818fc67a50e6eacce25b317d4e28b603f5f2fb485b633eafb97b561646ff",
+   "weights_only_loadable": true,
+   "meta": {
+    "member": 0,
+    "bootstrap": "full train-minus-val",
+    "best_stage": "phase1",
+    "val_speed_rmse_h60": 14.084994277805299
+   },
+   "bytes": 106861
+  },
+  "member1.pt": {
+   "sha256": "790b5ce66e7fbbfb6b1beff8f7797dfc12a42bc23ddad5d6930cb4e02ca584c6",
+   "weights_only_loadable": true,
+   "meta": {
+    "member": 1,
+    "bootstrap": [
+     "seed_7531m2700",
+     "cv30_7302m2000",
+     "cv30_7306m2700",
+     "cv17",
+     "cv21_7008m2700",
+     "cv20_7001m2000",
+     "cv30_7306m2700",
+     "seed_7301m2000",
+     "cv20_7001m2000",
+     "cv19_4107",
+     "cv20_7007m2700",
+     "cv20_7001m2000",
+     "cv21_7008m2700",
+     "cv30_7302m2000",
+     "cv19_4107",
+     "cv19_4107",
+     "cv30_7303m2000"
+    ],
+    "best_stage": "phase1"
+   },
+   "bytes": 107501
+  },
+  "member2.pt": {
+   "sha256": "b8776f28a4841ffae67e4000e55552d5c2fb361e669c3e74198597194071b5dc",
+   "weights_only_loadable": true,
+   "meta": {
+    "member": 2,
+    "bootstrap": [
+     "cv30_7302m2000",
+     "cv20_7004m2000",
+     "cv30_7306m2700",
+     "cv20_7004m2000",
+     "seed_7531m2700",
+     "cv30_7304m2700",
+     "cv30_7302m2000",
+     "cv20_7004m2000",
+     "cv30_7306m2700",
+     "cv20_7003m2000",
+     "cv19_4107",
+     "cv23_7010m2700",
+     "cv20_7004m2000",
+     "cv20_7001m2000",
+     "seed_7301m2000",
+     "cv19_4108",
+     "cv30_7306m2700"
+    ],
+    "best_stage": "phase1"
+   },
+   "bytes": 107501
+  },
+  "#pinned": {
+   "vehicle_dynamics_pt": "D:\\research-dense\\output\\worldmodel_v3_vehicle\\vehicle_dynamics.pt",
+   "vehicle_dynamics_pt_sha256": "ded83907b8d218574d3f5359c332408f17167da055574afbe29eaecb59d4a8f5",
+   "p2c_manifest_sha256": "2439004d528a860c701bfb147afcda99ab3f864a29e6187be721db81cc82dd27"
+  }
+ }
+}

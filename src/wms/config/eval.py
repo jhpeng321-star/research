@@ -6,7 +6,7 @@ from typing import Optional
 
 from .schema import config_dataclass, is_finite, require
 
-#: The only sets the previous-best comparison ranks.
+#: The only sets the previous-best comparison ranks (owner rule 2026-10-09).
 RANKED_SETS = ("wall_same", "wall_pilot", "seen_controls")
 
 

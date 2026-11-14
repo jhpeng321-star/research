@@ -1,6 +1,6 @@
 """Candidate vs previous best - the only comparison the evaluation produces.
 
-Design rule: a new checkpoint is judged against exactly one reference, the
+Owner rule (2026-10-09): a new checkpoint is judged against exactly one reference, the
 previous best, on the unseen-controller sets (``wall_same``, ``wall_pilot``) and the seen
 controls, at 60 s and 120 s, together with the blow-up rate.  There is deliberately no
 N-way leaderboard: :func:`compare` takes two :class:`ModelResult` values.

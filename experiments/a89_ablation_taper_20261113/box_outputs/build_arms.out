@@ -1,0 +1,46 @@
+{
+ "out": "/root/a89/src/ops/a89/A89_ARMS_D2800_p60.json",
+ "sha256": "de9a30a944eda470777cbd3247c6ca81db2745547549cde3e2bff154e23824c2",
+ "arms": {
+  "ROLL_BOTH": {
+   "family": "d2_d86b1d6ac653e8ad",
+   "strategy_key": "d86b1d6ac653e8ad",
+   "extended": false,
+   "n_roles": 2,
+   "executor_core": "LcStrategyCore",
+   "spec_sha256": "079efcf13458c0d95f7bae7002e22b464a6aa8509bce993244952f41d1fd5e56",
+   "template_equal_c325": true,
+   "row_equal_c325": true
+  },
+  "ROLL_L0_ONLY": {
+   "family": "a89l0_d86b1d6ac653e8ad",
+   "strategy_key": "928dfa5951710cb2",
+   "extended": false,
+   "n_roles": 1,
+   "executor_core": "LcStrategyCore",
+   "spec_sha256": "820ef5a7731ec5d41dea7d1c8d30e6c786742505b63cc207e6d02fe52040c833",
+   "condition_unchanged_except_roles": true,
+   "kept_role_identical": true
+  },
+  "ROLL_L2_ONLY": {
+   "family": "a89l2_d86b1d6ac653e8ad",
+   "strategy_key": "0bbb70f7956dae14",
+   "extended": false,
+   "n_roles": 1,
+   "executor_core": "LcStrategyCore",
+   "spec_sha256": "2084f425eac86ee831f16e423a97ef52af8d5677303ba63f9717bb138c70e217",
+   "condition_unchanged_except_roles": true,
+   "kept_role_identical": true
+  },
+  "TAPER": {
+   "family": "mut_1fca373046a3c66e",
+   "strategy_key": "1fca373046a3c66e",
+   "extended": true,
+   "n_roles": 4,
+   "executor_core": "HoldFormCore",
+   "spec_sha256": "4e5825a4e849b71210fa186a28d01875e9f07c170750588df730323afbdc60b8",
+   "template_equal_e1r": true,
+   "row_equal_e1r": true
+  }
+ }
+}

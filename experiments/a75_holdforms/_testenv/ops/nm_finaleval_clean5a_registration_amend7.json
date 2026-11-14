@@ -1,0 +1,26 @@
+{
+ "allocation": {
+  "binding": "the registered N6 cap; N6 charges only its evaluation root ledger, so the clean run CONFIG v2v_final value (r3: 1,340,000) is reported, not binding; a CONFIG without a sealed v2v_final allocation still blocks; foreign v2v_final rows in the clean ledger still block",
+  "margin": 0.1785,
+  "outlook": 1357680,
+  "sim_s": 1600000
+ },
+ "amendment": 7,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend6.json",
+  "registration_sha256": "a862ff38b68740a32a26db059035c0ed14cd4aa9e5090ec578db4369486ebe58"
+ },
+ "authority": [
+  "MAIN decision 2026-11-07 ~00:5x: raise v2v_final to 1,600,000 (>= 15% over 1,357,680 = quote 1,241,760 + write-offs 115,200 + logcheck 720); keep F11 and the u24 3c waves; clean5b/5c final-eval waves get their own registered cap"
+ ],
+ "prerun": {
+  "logcheck": "a8612e87 PASS (NATIVE, RULE; 60 ticks; 140 vehicles 83 CAV / 57 HDV; origin and depart delay coverage 1.0)",
+  "plan": "c96a380b",
+  "u0_binding": "64fbb716",
+  "void3": ".VOID3_20261107_0024"
+ },
+ "registered_utc": "2026-11-06T16:37:15.196489+00:00",
+ "registration_sha256": "1a1ad3599958393596c8a37b0c349f9f62931f9d45296571c20ae7511e60a31a",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: no result opened (pre-run running, sealed; logcheck a8612e87 PASS on a TRAIN world)"
+}

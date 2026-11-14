@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "shards_v2__chunk4",
+ "name": "shards_v2__chunk4",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "unverified shards_v2 part truncated on Drive; re-upload",
+ "local": "D:\\rd-staging\\wmn1_feat\\shards_v2\\chunk4",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/shards_v2__chunk4/shards_v2__chunk4.tar.zst",
+ "bytes": 10232743616,
+ "files": 14256,
+ "archive_bytes": 1961830689,
+ "archive_md5": "7d0ee5c5d04bc71eeee75c64e26e4f0c",
+ "member_manifest": "manifests/members/shards_v2__chunk4.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 1610.5,
+ "timestamp": "2026-10-10T03:09:17"
+}

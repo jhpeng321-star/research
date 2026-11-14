@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "c__wm_n1_full.tar",
+ "name": "wm_n1_full.tar",
+ "kind": "file",
+ "class": "ARCHIVE",
+ "producer": "C: world-model run1 full archive in temp",
+ "local": "C:\\Users\\jpeng\\AppData\\Local\\Temp\\wm_n1_full.tar",
+ "drive": "gdrive:research-archive/repo-evidence/c-drive/wm_n1_full.tar.tar.zst",
+ "bytes": 9072640,
+ "files": 1,
+ "archive_bytes": 1569246,
+ "archive_md5": "888869ea4e2d5e88860afa79c3b81ac7",
+ "member_manifest": "manifests/members/c__wm_n1_full.tar.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 11.7,
+ "timestamp": "2026-10-10T01:49:44"
+}

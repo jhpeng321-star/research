@@ -168,7 +168,7 @@ def _encoder_grad_norm(model) -> float:
     return total ** 0.5
 
 
-def _encoder_grad_vector(model) -> dict[str, torch.Tensor]:
+def _encoder_grad_vector(model) -> dict[str, Tensor]:
     return {name: p.grad.detach().clone()
             for name, p in model.driver_encoder.named_parameters()
             if p.grad is not None}
@@ -490,7 +490,7 @@ def test_r5_configs_reach_settings_and_spec(name, keys):
     if name in ("r5_f2", "r5_f23"):
         assert spec.checkpoint_step is True
     assert cfg.model.init_from == "ckpt_r4"
-    # No driver-type vocabulary anywhere in the recipe.
+    # No driver-type vocabulary anywhere in the recipe (owner rule).
     text = json.dumps(cfg.to_dict()).lower()
     for banned in ("aggressive", "cautious", "vtype", "driver_type", "true_type"):
         assert banned not in text

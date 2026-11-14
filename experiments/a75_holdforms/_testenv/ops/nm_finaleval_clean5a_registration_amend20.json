@@ -1,0 +1,24 @@
+{
+ "amendment": 20,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend19.json",
+  "registration_sha256": "f20ed796a08de76f873da3e267e24ba43938c75f2dcb61d25c73f3d2ae76aa8d"
+ },
+ "authority": [
+  "MAIN 2026-11-08: live run clean5b-F8S on c4/clean5b-g4pool d27a8cb2 (beb3b6a2 + G4 pool/floor fix; REV-5BF PASS), root /home/ubuntu/coopmwm20261108_clean5bf8s; plant identity on d27a8cb2 + overlay fe5ab464"
+ ],
+ "deploy": "u12 SRC = d27a8cb2 + overlay fe5ab464 (tmp/n6_deploy_fe5ab464, 9 files, SHA256SUMS); supersedes the beb3b6a2 u12 SRC of amendment 18",
+ "plant_identity": {
+  "diff": "beb3b6a2..d27a8cb2: g4_runtime (optional G4-only one-job spawned workers + G4 memory floor), runner (admission alerts/deadlock check), clean4_restart/clean5b_restart, tests; training orchestration only; no plant file; the N6 eval runner imports none of them",
+  "head": "d27a8cb2",
+  "verdict": "IDENTICAL to 12aee752 for NATIVE/U0/RULE/RULE_FAIR (plant files and N6-covered files unchanged)"
+ },
+ "registered_utc": "2026-11-07T18:11:33.654696+00:00",
+ "registration_sha256": "27ede9d748a593f6d43f12623f6e1695efc5d9dd7d71a1fdb886799b36eaf416",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: zero-SUMO check; no eval output exists",
+ "training_parity": {
+  "result": "369 passed, 1 failed: the same training-side Windows-path failure as amendment 18 (test_resume3_cpu real-launcher test, relative fake runtime path; no N6/overlay file in the stack). All N6 launcher/runner/parity tests and test_g4_floor_cpu pass.",
+  "tree": "d27a8cb2 + overlay fe5ab464 (tmp/n6_5bf8s_d27a8cb2)"
+ }
+}

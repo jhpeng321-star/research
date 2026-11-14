@@ -1,0 +1,47 @@
+{
+  "task_id": "WM-S-R3-HIST-20261009",
+  "branch": "wms/r3-hist",
+  "base_commit": "bf298cf",
+  "kind": "engineering_code_and_synthetic_unit_tests",
+  "simulation_seconds": 0,
+  "training_runs": 0,
+  "gpu_use": false,
+  "real_state_scoring": false,
+  "scientific_ledger_changed": false,
+  "tmp_temp": "E:/rd-wt/ws-r3-hist/_out/r3_hist_tmp",
+  "torch": "2.12.1+cpu",
+  "thread_caps": {"OMP_NUM_THREADS": 1, "MKL_NUM_THREADS": 1},
+  "tests": [
+    {
+      "command": "python -m pytest -q output/wd01/wm_n1/wms/tests tests/test_wms_eval_long_history.py tests/test_wms_eval_materialize.py tests/test_wms_eval_main_compat.py tests/test_wms_eval_wms_plugin.py tests/test_wms_eval_main_switch.py --ignore=output/wd01/wm_n1/wms/tests/test_rollout2_parity.py -o tmp_path_retention_policy=failed --basetemp=E:/rd-wt/ws-r3-hist/_out/pytest_r3_hist_full02 --junitxml=_out/R3_HIST_FULL02.xml",
+      "passed": 573,
+      "skipped": 4,
+      "failed": 0,
+      "peak_working_set_bytes": 896675840,
+      "detail": "Two real TRAIN parity fixtures excluded from synthetic-only scope; four skips require absent staged wall-session reference source."
+    },
+    {
+      "command": "python -m pytest -q output/wd01/wm_n1/wms/tests/test_long_history.py tests/test_wms_eval_long_history.py tests/test_wms_eval_materialize.py tests/test_wms_eval_main_compat.py tests/test_wms_eval_wms_plugin.py tests/test_wms_eval_main_switch.py tests/test_wms_eval_driver.py -o tmp_path_retention_policy=failed --basetemp=E:/rd-wt/ws-r3-hist/_out/pytest_r3_hist_accept03 --junitxml=_out/R3_HIST_ACCEPT03.xml",
+      "passed": 118,
+      "skipped": 0,
+      "failed": 0,
+      "peak_working_set_bytes": 373972992,
+      "detail": "After final historical-neighbour and driver-recovery integration."
+    },
+    {
+      "command": "python -m pytest -q tests/test_wms_eval_driver.py tests/test_wms_eval_long_history.py output/wd01/wm_n1/wms/tests/test_wms_hist.py -o tmp_path_retention_policy=failed --basetemp=E:/rd-wt/ws-r3-hist/_out/pytest_r3_hist_driver04 --junitxml=_out/R3_HIST_DRIVER04.xml",
+      "passed": 48,
+      "skipped": 0,
+      "failed": 0,
+      "detail": "After bounded-memory driver-state streaming change."
+    },
+    {
+      "command": "python -m ruff check output/wd01/wm_n1/wms output/wd01/wm_n1/wms_eval tests/test_wms_eval_long_history.py",
+      "status": "passed"
+    },
+    {"command": "git diff --check", "status": "passed"}
+  ],
+  "prior_attempts": "_out/R3_HIST_FAILURES.md",
+  "design_and_examples": "_out/R3_HIST.md",
+  "review_status": "CPU acceptance passed; flags-off bitwise comparison against actual base source, causal/masked inputs, encoder gradients, checkpoint/eval shape parity verified"
+}

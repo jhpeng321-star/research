@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "meta__upload_manifest_v2c.json",
+ "name": "upload_manifest_v2c.json",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "wmn1_feat v2c upload manifest",
+ "local": "D:\\rd-staging\\wmn1_feat\\upload_manifest_v2c.json",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/wmn1_feat_meta/upload_manifest_v2c.json.tar.zst",
+ "bytes": 107607,
+ "files": 1,
+ "archive_bytes": 8507,
+ "archive_md5": "22c6c427d8d82fad789a1e23df6a8ccd",
+ "member_manifest": "manifests/members/meta__upload_manifest_v2c.json.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 11.5,
+ "timestamp": "2026-10-10T01:38:39"
+}

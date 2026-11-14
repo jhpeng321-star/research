@@ -1,0 +1,43 @@
+{
+  "analysis_id": "S-DIAG-CLEAN1-20261105",
+  "date": "2026-11-06",
+  "status": "PASS_scoped_checks_with_preexisting_repository_errors",
+  "new_sim_s": 0,
+  "new_charges": 0,
+  "report": "runs/active/C4-V7FT-20261017/CLEAN1_DIAGNOSIS_20261105.md",
+  "resume_receipt": "runs/active/C4-V7FT-20261017/S_DIAG_RESUME_RECEIPT_20261106.json",
+  "scientific_arithmetic": {
+    "original_u1_u8": "PASS:128 episodes; eight update trigger/accepted counts; prefix-adjusted own/team sums; PPO acceptance; CE context counts.",
+    "additional_u9": "PASS:16 episodes;1912 selections;1215 accepted starts; own/team sums within1e-8; matched A physical arithmetic.",
+    "checkpoint_forward_check": "PASS:3060 rows;1263 nonzero offsets; network plus explicit contribution equals combined mean; all active combined changes positive.",
+    "report_structure": "PASS:plain-language opening<=15 lines; all seven requested sections; finalu9/durable owner STOP reflected.",
+    "identity": "PASS:eight newly captured receipt file hashes; six relevant source modules byte-identical across original/intermediate/final source trees; report SHA bound by resume receipt."
+  },
+  "ledger_consistency": {
+    "preexisting_hard_errors": 174,
+    "current_hard_errors": 174,
+    "new_hard_errors": 0,
+    "method": "Compare tools.experiment_history.validate(current ledger) with the same in-memory ledger after removing only this analysis entry/source registration. Existing missing-path errors retained; no outcome contents opened by validation."
+  },
+  "scoped_source_verification": {
+    "source_id": "SRC-SDIAG-CLEAN1-RESUME",
+    "registered_sha256": "48e963ae6c28a3834fb73dc8b57c735308904042b41886f801edb73d6b0c759f",
+    "current_sha256": "48e963ae6c28a3834fb73dc8b57c735308904042b41886f801edb73d6b0c759f",
+    "mismatches": 0,
+    "generic_numeric_checks": 0,
+    "scope": "Only the newly registered resume receipt, not the repository-wide allowed-source list. Scientific arithmetic separately verified above."
+  },
+  "metadata_tests": {
+    "command": "python -B -m pytest -q -p no:cacheprovider tests/test_experiment_history_ledger.py::test_ledger_loads_and_schema_is_versioned tests/test_experiment_history_ledger.py::test_coverage_metadata_and_evidence_vocabulary",
+    "passed": 2,
+    "failed": 0,
+    "warnings": "One preexisting pytest config warning: unknown cache_dir with cache provider disabled."
+  },
+  "generated_summary": {
+    "generation": "python -B tools/experiment_history.py summary --write",
+    "check": "python -B tools/experiment_history.py summary --check",
+    "result": "CURRENT; working-tree ledger SHA prefix b388bb0bdf8e"
+  },
+  "preservation": "Unrelated preexisting worktree changes retained. Close-out staging includes only S-DIAG additions and the corresponding generated-summary hash; staged summary is regenerated against the staged ledger rather than incorporating unrelated worktree entries.",
+  "unresolved": ["Causal isolated-move reward benefit", "Exact three post-filter CE context identities", "Preexisting174 repository missing-path validation errors"]
+}

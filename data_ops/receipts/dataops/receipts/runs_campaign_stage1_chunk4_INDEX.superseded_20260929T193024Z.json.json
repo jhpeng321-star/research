@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_stage1_chunk4/INDEX.superseded_20260929T193024Z.json",
+ "name": "INDEX.superseded_20260929T193024Z.json",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_stage1_chunk4\\INDEX.superseded_20260929T193024Z.json",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk4/INDEX.superseded_20260929T193024Z.json.tar.zst",
+ "bytes": 153789,
+ "files": 1,
+ "archive_bytes": 5249,
+ "archive_md5": "5b7d7269d172e31a56823a72b4e8e3e3",
+ "member_manifest": "manifests/members/runs_campaign_stage1_chunk4_INDEX.superseded_20260929T193024Z.json.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 9.8,
+ "timestamp": "2026-10-10T03:54:30"
+}

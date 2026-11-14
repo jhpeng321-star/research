@@ -1,0 +1,93 @@
+[
+  {
+    "experiment_id": "WD-01-PA2G-A",
+    "record": "analysis",
+    "record_kind": "analysis",
+    "status": "completed",
+    "execution_status": "completed",
+    "evidence_validity": "valid_with_confound",
+    "scientific_verdict": "model_error_large_attribution_confounded",
+    "recorded_utc": "2026-09-29T00:00:00Z",
+    "recorded_by": "ZCode GLM execution session (WD-01-PA2G-A close-out task); integrating agent to append",
+    "registration": {
+      "file": "output/wd01/REGISTRATION_PA2G_EVAL_A.md",
+      "sha256": "A25CAB74CAA849F732BE99E0D3B3159ACBE0AD7725B6E4189249C35E12966CB8",
+      "registered": "2026-09-29 before any run",
+      "type": "ANALYSIS on existing logs, zero simulation, TRAIN only"
+    },
+    "question": "How large is the model error of the Part A v2 GENERAL predictor (Treiber IDM + MOBIL + merge rule, one nominal parameter set, no vType) against campaign SUMO truth when started from the TRUE logged zone state, and at which horizon do untracked arrivals start to dominate?",
+    "closest_prior_and_difference": {
+      "novelty_check": "python tools/experiment_history.py closest run at close-out (lexical retrieval only; coverage cutoff 2026-09-07)",
+      "related_records": [
+        "WD-01 native Part A chunk-2 look (output/wd01/REGISTRATION_NATIVE_PARTA_CHUNK2.md): v0 exact-replica Part A, per-world 30/60 s windows, different predictor and horizon set",
+        "OE-08: decision-level analysis of saved predictions, different frame (entry screening, not model-error characterization)"
+      ],
+      "unanswered_difference": "No prior record quantifies the GENERAL rule-based v2 predictor's error from true initial states at H in {10,30,60,120} s with const-speed and v1-p3o comparators, the missing-arrivals curve, and n_free_road_assumed stats."
+    },
+    "data": {
+      "truth": "runs/campaign_stage1_chunk2|chunk3/<world>__native/run/physics_steps.jsonl (TRAIN worlds only; assert_train_only passed; CAL/VALIDATION/HOLDOUT never opened; opened files listed in summary.json)",
+      "worlds": "25 of 98 TRAIN worlds (world_step=4, chunks 2+3), 450 windows",
+      "params": "param_set_id 6359f545b530132852eba7f1770218154dba0d4f2025ae74e6a0bd33dcaa64b9"
+    },
+    "budget_and_charges": {
+      "registered_budget": "one eval_a pass over the registered world subset; wall clock 5967 s (recorded in summary.json); no SUMO simulation charged to this analysis (replay of saved logs + model rollouts)",
+      "allocations": [
+        {
+          "id": "eval_a",
+          "status": "completed",
+          "note": "single pass, 2026-09-29, eval_run.out: 25/25 worlds x 210 rows, DONE wall 5967s; not re-run at close-out"
+        },
+        {
+          "id": "close_out_aggregation",
+          "status": "completed",
+          "note": "zero-simulation re-aggregation of saved raw_rows.jsonl by committed aggregate_eval_a.py"
+        }
+      ]
+    },
+    "physical_results": {
+      "verified_against": "output/wd01/partA_v2g/results/eval_a/tables.json",
+      "units": "delay/TTC/hard errors are per-window aggregates in vehicle-seconds/pair-seconds/vehicle-seconds (pred - truth); s_RMSE in m on the shared downstream-d axis; v_RMSE in m/s",
+      "headline": {
+        "v2g_s_rmse_mean_m": {"H10": 28.2, "H30": 119.2, "H60": 151.3, "H120": 183.6},
+        "v2g_delay_err_mean_s": {"H10": 48.9, "H30": 217.9, "H60": 396.6, "H120": 49.8},
+        "v2g_delay_err_mae_s": {"H10": 48.9, "H30": 217.9, "H60": 396.6, "H120": 368.0},
+        "v2g_disc_lc_pred_vs_true": {"H10": [68614, 243], "H120": [486428, 949]},
+        "const_speed_s_rmse_mean_m": {"H10": 16.1, "H60": 136.4, "H120": 156.1},
+        "v1_p3o_replica_delay_err_mean_s": {"H10": 12.3, "H60": -69.1, "H120": -600.2},
+        "untracked_delay_share": {"H10": 0.207, "H60": 0.323, "H120": 0.479}
+      },
+      "h120_sign_cancellation": "H120 mean +49.8 vs MAE 368.0: 172/400 windows negative; penetration>=0.2 means -42.8/-50.6 vs <=0.1 positive; H60 all 450 positive (mean=MAE 396.6); n 400 vs 450 (50 windows lack 120 s coverage). Cancellation, not improvement.",
+      "sweep_descriptive_only": "T/a sweep at H60: s_RMSE 142-159 m insensitive; signed delay error -65.6 (a1.5) to +712.6 (T2.0,a0.7); no parameter selected (registration rule)"
+    },
+    "data_quality_note": "raw_rows.jsonl has 6402 lines: 5826 main rows + 576 sweep-pass const-speed duplicates (verified value-identical, dropped by aggregate_eval_a.py with an assertion). summary.json's const_speed|H60 (n 1026, s_RMSE 129.0, delay_err 123.4) is contaminated by them; corrected values n 450, s_RMSE 136.4, delay_err mean +93.3 / MAE 162.4 stand per the committed script.",
+    "integrity_limitations": [
+      "TRUTH CAVEAT: the <world>__native truth branches are NOT fleet-native; CAVs ran random per-CAV damping/native switching schedules (authoritative actions in switch_schedule.json / suffix_commands.jsonl). The v2g engine modelled every vehicle with generic rules (no is_cav flags -> CAV command path never engaged). CAV-behaviour mismatch confounds error attribution.",
+      "Collisions, TTC<3 and hard-brake errors are model-side; the model never teleports (gap<0 counted as collision).",
+      "Missing-arrivals curve shows untracked vehicles hold 48% of truth delay at H120: tracked-scope Part A degrades beyond H=60."
+    ],
+    "what_must_not_be_inferred": [
+      "That the v2g human-model error equals the numbers above (CAV mismatch inflates them).",
+      "Any parameter choice from the descriptive T/a sweep.",
+      "Any wall/control efficacy claim: this analysis characterizes a predictor only."
+    ],
+    "answers_question": "partially (magnitude yes; attribution blocked by the CAV-behaviour mismatch until the chunk-4 __native_base re-run)",
+    "paths": {
+      "report": "output/wd01/REPORT_PA2G_EVAL_A.md",
+      "aggregation_script": "output/wd01/partA_v2g/aggregate_eval_a.py",
+      "raw_rows": "output/wd01/partA_v2g/results/eval_a/raw_rows.jsonl",
+      "summary": "output/wd01/partA_v2g/results/eval_a/summary.json",
+      "tables": "output/wd01/partA_v2g/results/eval_a/tables.json",
+      "run_log": "output/wd01/partA_v2g/eval_run.out"
+    },
+    "hashes": {
+      "raw_rows_jsonl": "F06FBEDE9B5BEF4CDFC3B3B15505D4B022300BADCEED71EDDD5714D26A476EA2",
+      "summary_json": "A997C4BBC49B686855BC1248AA2C0503DCAFC59BAD3CE856F55A4C15DF7C5338",
+      "tables_json": "416B5C75883896C2225AC9DD60E8BE44E45BF111021A2D0024977101078634A7",
+      "contract_v2_1": "30CCA29367D0D4C56DB90860F48838E68B784A934C279B05A708F74AB1421672"
+    },
+    "ledger_updated": "NO (draft only; integrating agent appends to protocols/experiment_history.json)",
+    "open_questions_updated": "NO (shared records untouched by this task)",
+    "route_updated": "NO (shared records untouched by this task)",
+    "next_action": "Register and run the same analysis on chunk-4 __native_base truth (true fleet-native); it supersedes this analysis's headline numbers."
+  }
+]

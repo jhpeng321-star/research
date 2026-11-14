@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/github_ready",
+ "name": "github_ready",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\github_ready",
+ "drive": "gdrive:research-archive/repo-evidence/output/github_ready/github_ready.tar.zst",
+ "bytes": 59732,
+ "files": 4,
+ "archive_bytes": 24440,
+ "archive_md5": "19fe38d1624feaa5af7a01a6cb11bda5",
+ "member_manifest": "manifests/members/output_github_ready.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 17.3,
+ "timestamp": "2026-10-10T01:34:39"
+}

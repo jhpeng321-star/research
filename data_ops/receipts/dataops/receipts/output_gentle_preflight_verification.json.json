@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/gentle_preflight_verification.json",
+ "name": "gentle_preflight_verification.json",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\gentle_preflight_verification.json",
+ "drive": "gdrive:research-archive/repo-evidence/output/gentle_preflight_verification.json.tar.zst",
+ "bytes": 847,
+ "files": 1,
+ "archive_bytes": 538,
+ "archive_md5": "4d98b2db34ea8f4d73f2d8f28c482c28",
+ "member_manifest": "manifests/members/output_gentle_preflight_verification.json.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 17.6,
+ "timestamp": "2026-10-10T01:29:18"
+}

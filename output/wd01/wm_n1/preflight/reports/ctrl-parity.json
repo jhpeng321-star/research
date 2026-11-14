@@ -1,0 +1,32 @@
+{
+ "schema": "wm_n1_preflight_gate/1",
+ "gate": "ctrl-parity",
+ "title": "G2 ctrl-parity (P1 replays recorded CAV motion, native/damping/PI/wall)",
+ "passed": true,
+ "verdict": "PASS",
+ "detail": "all strategies within tolerance on >= 2 windows",
+ "entry_points": [
+  "ctrl.parity.strategy_parity_report"
+ ],
+ "checks": {
+  "tolerance": 0.001,
+  "strategies": [
+   "damping",
+   "native",
+   "pi",
+   "wall-v2.1",
+   "wall-v2.2"
+  ],
+  "new_rule": true,
+  "native_max_error": 0.0,
+  "native_n_windows": 3,
+  "damping_max_error": 7.152557373046875e-07,
+  "damping_n_windows": 2,
+  "pi_max_error": 0.0,
+  "pi_n_windows": 2,
+  "wall-v2.1_max_error": 0.0,
+  "wall-v2.1_n_windows": 2
+ },
+ "error": null,
+ "generated_utc": "2026-10-02T04:49:19Z"
+}

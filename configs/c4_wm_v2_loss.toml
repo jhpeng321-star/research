@@ -11,7 +11,7 @@
 #      recorded on-road presence, so the aggregate targets are the FULL road (arrivals counted).
 # Inherits everything else from c4_wm.toml (from scratch, data mix, lane rule, batch 16).
 #
-# BUDGET (~6 h on the GPU host, RTX 4080 SUPER-class vGPU, CPU-bound loop). Measured c4_wm step on the GPU host
+# BUDGET (~6 h on gpuW, RTX 4080 SUPER-class vGPU, CPU-bound loop). Measured c4_wm gpuW step
 # times at batch 16: 1.7 / 5 / 12 s at 20 / 60 / 120-step unrolls (0.085 / 0.083 / 0.100 s per
 # simulated step; the per-step cost grows slowly with the unroll). 240-step estimate WITHOUT the
 # new terms: ~0.105 s x 240 = ~25 s. New-term overhead (WMLOSS_NOTES.md): entrant slots grow with
@@ -21,7 +21,7 @@
 #   10 s: 1200 x 2.0 s = 2450 s | 30 s: 900 x 6.25 s = 5625 s | 60 s: 400 x 15.6 s = 6240 s
 #   120 s: 140 x 36 s = 5040 s   => 19355 s = 5.4 h training + validation (val_every 200,
 #   8 batches; 60 s + 120 s horizons in the 120 s stage) ~0.4 h => ~5.8 h <= max_hours 6.5.
-# If the first 120 s steps on the GPU host exceed ~40 s, cut stage_steps[3] (the 10/30/60 s stages keep
+# If the first 120 s steps on gpuW exceed ~40 s, cut stage_steps[3] (the 10/30/60 s stages keep
 # the C4 imagination horizon covered).
 schema_version = 2
 name = "WM-S-C4-V2LOSS"
@@ -34,7 +34,7 @@ entry_pad_auto = true  # pad = 1.5 x observed rate x unroll horizon + 16 (<= ent
 entry_pad_max = 256    # = c4_policy imagination cap
 
 [loss.aggregate]
-weight = 20.0          # B: overall weight (CPU smoke, untrained model, 10 s unroll: aggregate = 7.8 % of the loss value; check loss_share on the GPU host)
+weight = 20.0          # B: overall weight (CPU smoke, untrained model, 10 s unroll: aggregate = 7.8 % of the loss value; check loss_share on gpuW)
 field_weight = 1.0     # RSU cell fields (density / mean speed / queue)
 reward_weight = 1.0    # delay (road + RSU zone) + throughput past MERGE_S1
 flow_weight = 0.5      # cell-boundary flux consistency (macroscopic conservation)

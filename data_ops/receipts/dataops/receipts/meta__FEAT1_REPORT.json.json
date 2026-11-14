@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "meta__FEAT1_REPORT.json",
+ "name": "FEAT1_REPORT.json",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "wmn1_feat report",
+ "local": "D:\\rd-staging\\wmn1_feat\\FEAT1_REPORT.json",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/wmn1_feat_meta/FEAT1_REPORT.json.tar.zst",
+ "bytes": 14698,
+ "files": 1,
+ "archive_bytes": 3791,
+ "archive_md5": "c1e33c06f032b4d9ff90111cdc96d7d4",
+ "member_manifest": "manifests/members/meta__FEAT1_REPORT.json.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 35.8,
+ "timestamp": "2026-10-09T22:57:48"
+}

@@ -1,4 +1,4 @@
-# WM-S-C4 v6 CONTINUATION (2026-10-15 23:10). The first v6_full run on the GPU host ran ~2.7x slower than v5 (10 s
+# WM-S-C4 v6 CONTINUATION (2026-10-15 23:10). The first v6_full run on gpuW ran ~2.7x slower than v5 (10 s
 # stage 7.8 s/step vs 2.8; GPU 9 % busy): model.lane_conflict_resolve (V6INTEG) is a per-batch x per-slot Python
 # loop with CUDA syncs every physics step (src/wms/physics/lane_conflict.py). Projected end ~19:00 Fri, and
 # max_hours would have cut it inside the 60 s stage. This continuation restarts from that run's END-OF-10 s-STAGE
@@ -14,7 +14,7 @@ lane_conflict_resolve = false
 
 [curriculum]
 unroll_s = [30.0, 60.0, 120.0]
-stage_steps = [600, 450, 200]   # 2026-10-16 01:05 restart after the GPU host went down: shortened again
+stage_steps = [600, 450, 200]   # 2026-10-16 01:05 restart after gpuW went down: shortened again
 truncation_steps_per_stage = [60, 120, 120]
 max_hours = 8.0
 

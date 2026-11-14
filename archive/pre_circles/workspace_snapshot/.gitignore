@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+.venv-*/
+.mlvenv/
+.rllibvenv/
+.rllib310venv/
+
+# Training / eval artifacts
+runs/
+*.pt
+*.pth
+
+# Local metric dumps (write under results/ instead)
+results/
+pure_hdv_*.json
+rule_based_*.json
+
+# Transient execution and render products
+*.log
+*.done
+tmp/
+paper/**/*.aux
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.out
+paper/**/*.synctex.gz
+paper/**/*.pdf
+paper/**/*.zip
+output/
+pptx_cf/*.pptx
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

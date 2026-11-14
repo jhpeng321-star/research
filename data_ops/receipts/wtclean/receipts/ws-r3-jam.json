@@ -1,0 +1,85 @@
+{
+  "name": "ws-r3-jam",
+  "path": "E:\\rd-wt\\ws-r3-jam",
+  "class": "worktree",
+  "manual": true,
+  "branch": "wms/r3-jam",
+  "headBefore": "28498c7c41b5828d481378a2e1f3ac2c878ce5b0",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-r3-jam",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-r3-jam.tar.txt",
+  "uploadCount": 163,
+  "uploadBytes": 23115642,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-r3-jam.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 d59044f87ab89d334e75c3db25f35de0 local d59044f87ab89d334e75c3db25f35de0; size 8971216/8971216; manifest md5 match size match; members=163 (tar -t 163, sha256 163); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-r3-jam.tar.check.log"
+  },
+  "junctions": [
+    "_out/r3_packv3_subset/alias/pack_v3"
+  ],
+  "skippedSensitiveCount": 1,
+  "skippedSensitiveSample": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T20:29:58.170464+08:00",
+  "method": "tar.zst",
+  "readOnlyPack": true,
+  "tool": "pack_wt_ro.py (pack_wt.py without commit/update-ref)",
+  "roots": null,
+  "packStarted": "2026-10-10T20:27:38.593010+08:00",
+  "trackedDirtySensitiveSkipped": [],
+  "trackedDirtyPaths": [],
+  "headSha": "28498c7c41b5828d481378a2e1f3ac2c878ce5b0",
+  "headReachableFromRef": true,
+  "extraMembers": [],
+  "skippedSensitive": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-r3-jam/ws-r3-jam.tar.zst",
+    "name": "ws-r3-jam.tar.zst",
+    "size": 8971216,
+    "md5": "d59044f87ab89d334e75c3db25f35de0",
+    "sha256": "0061f74d620d9e32fb8f86c93b115ff5335d92b8b9abd422c60e3b5f810bf2c3",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-r3-jam/ws-r3-jam.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-r3-jam.manifest.json",
+    "manifest_size": 28541,
+    "manifest_md5": "0ed30b297c5ae90c11f696f7133a276d",
+    "member_count": 163,
+    "member_bytes": 23115642,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 6.0,
+    "verify_seconds": 0.5,
+    "upload_seconds": 121.8,
+    "upload_MBps": 0.07,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 163,
+  "memberBytes": 23115642,
+  "junctionsFound": [
+    "_out/r3_packv3_subset/alias/pack_v3"
+  ]
+}

@@ -61,7 +61,7 @@ def test_seed_guard_admits_block_only_with_registered_loadings():
 def test_wall_law_is_the_pinned_v21_closure_file():
     data = (ROOT / "traffic_shepherd" / "wall_group.py").read_bytes().replace(b"\r\n", b"\n")
     assert hashlib.sha256(data).hexdigest() == \
-        "09ba6cbcf1c0b21f8449c96b44d52541fe6a7b16fe704c38081412059f0a11bf"  # export copy: governance comments removed
+        "6e0a0805a63da905f7d7a1b38dad70526da3540d09bd0721411f0b3449c04bfa"
     from traffic_shepherd.wall_group import WALL_LAW_VERSION
     assert WALL_LAW_VERSION == W.WALL_LAW == "wall-v2.1-closure"
 

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes>
+  <vType id="normal_car" carFollowModel="Krauss" tau="1.1" sigma="0.4" speedFactor="1.0"
+         accel="2.6" decel="4.5" minGap="2.5" lcCooperative="0.6" impatience="0.3"/>
+  <route id="main" edges="1191554636 1487606179 1487606178"/>
+  <flow id="pl" type="normal_car" route="main" begin="0" end="20" vehsPerHour="3600"
+        departLane="best" departSpeed="max"/>
+</routes>

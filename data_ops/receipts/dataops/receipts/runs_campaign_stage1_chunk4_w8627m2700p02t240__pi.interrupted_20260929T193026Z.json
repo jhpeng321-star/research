@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_stage1_chunk4/w8627m2700p02t240__pi.interrupted_20260929T193026Z",
+ "name": "w8627m2700p02t240__pi.interrupted_20260929T193026Z",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_stage1_chunk4\\w8627m2700p02t240__pi.interrupted_20260929T193026Z",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk4/w8627m2700p02t240__pi.interrupted_20260929T193026Z/w8627m2700p02t240__pi.interrupted_20260929T193026Z.tar.zst",
+ "bytes": 177357,
+ "files": 3,
+ "archive_bytes": 16514,
+ "archive_md5": "ae7a5bb006b30982a6d0e4d24c648462",
+ "member_manifest": "manifests/members/runs_campaign_stage1_chunk4_w8627m2700p02t240__pi.interrupted_20260929T193026Z.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 46.8,
+ "timestamp": "2026-10-10T03:55:50"
+}

@@ -1,0 +1,143 @@
+{"top_sha256": "6c7edebfc766364600fd82b64bdf39e2091f87ba0725f82c937bd1930272528a", "doc_sha256": "3c8e999cf0e7da8af16c6e4fe34bbb0940b5312216ac113ffb578fac32312baf", "n": 12, "by_form": {"gap": 4, "pulse": 2, "rolling": 3, "taper": 2, "zone": 1}, "n_extended": 10}
+{"receipt_sha256": "2721166956089781c59ae6d413866e7ca3f155064ecc0b63f4b6a1bd2f145626", "panel": "02e20925b23cb1ad8d0c91d2d536a6750d9a1e93960e937180e46b50e25879d4", "ref": ["4c11584f1dc2ee30ebfb137a5d31876986f64e936bc0965336b93d4412a50561"], "n_reports": 24}
+{"comparator": "5e0169e9ce289b74c2173de84ad395d0b784e90815c39c98fd4ec78100f77722", "A82_CANDS_D2800_p20.json": "ec3281b82a3dc42499ef083eb0c14181e238c1c918cf22c7828beab48f9e050f"}
+{
+ "stage": "v",
+ "panel_sha256": "02e20925b23cb1ad8d0c91d2d536a6750d9a1e93960e937180e46b50e25879d4",
+ "comparator": "d9042cc5a05e",
+ "n_waves": 12,
+ "waves": [
+  [
+   "A82V_rand_6a11cb403e6f0faf",
+   24,
+   "A75_PLAN",
+   "a82v_6a11cb403e6f0faf_0000",
+   997200,
+   997223,
+   "d9042cc5"
+  ],
+  [
+   "A82V_rand_f72593f0e6e3e311",
+   24,
+   "A75_PLAN",
+   "a82v_f72593f0e6e3e311_0000",
+   997200,
+   997223,
+   "d9042cc5"
+  ],
+  [
+   "A82V_rand_82a4308c3e0b2b65",
+   24,
+   "A75_PLAN",
+   "a82v_82a4308c3e0b2b65_0000",
+   997200,
+   997223,
+   "d9042cc5"
+  ],
+  [
+   "A82V_rand_76b5661b445bcd69",
+   24,
+   "A75_PLAN",
+   "a82v_76b5661b445bcd69_0000",
+   997200,
+   997223,
+   "d9042cc5"
+  ],
+  [
+   "A82V_rand_fadd645320a3aebe",
+   24,
+   "A75_PLAN",
+   "a82v_fadd645320a3aebe_0000",
+   997200,
+   997223,
+   "d9042cc5"
+  ],
+  [
+   "A82V_rand_e1ade9ac5b155453",
+   24,
+   "A75_PLAN",
+   "a82v_e1ade9ac5b155453_0000",
+   997200,
+   997223,
+   "d9042cc5"
+  ],
+  [
+   "A82V_rand_60ef3f36fdfc249c",
+   24,
+   "A75_PLAN",
+   "a82v_60ef3f36fdfc249c_0000",
+   997200,
+   997223,
+   "d9042cc5"
+  ],
+  [
+   "A82V_rand_c8becd9b7490f459",
+   24,
+   "A75_PLAN",
+   "a82v_c8becd9b7490f459_0000",
+   997200,
+   997223,
+   "d9042cc5"
+  ],
+  [
+   "A82V_rand_3c45c8fb6d576517",
+   24,
+   "A75_PLAN",
+   "a82v_3c45c8fb6d576517_0000",
+   997200,
+   997223,
+   "d9042cc5"
+  ],
+  [
+   "A82V_rand_1f22c89c780288e5",
+   24,
+   "A75_PLAN",
+   "a82v_1f22c89c780288e5_0000",
+   997200,
+   997223,
+   "d9042cc5"
+  ],
+  [
+   "A82V_rand_79602208a21cd777",
+   24,
+   "A75_PLAN",
+   "a82v_79602208a21cd777_0000",
+   997200,
+   997223,
+   "d9042cc5"
+  ],
+  [
+   "A82V_rand_720fb454cd63f069",
+   24,
+   "A75_PLAN",
+   "a82v_720fb454cd63f069_0000",
+   997200,
+   997223,
+   "d9042cc5"
+  ]
+ ],
+ "sim_s": 345600,
+ "mech": {
+  "n_waves": 12,
+  "sim_s": 28800
+ },
+ "reference": {
+  "wave": "A76V_COMP",
+  "n": 24,
+  "receipts": [
+   "4c11584f1dc2ee30ebfb137a5d31876986f64e936bc0965336b93d4412a50561"
+  ],
+  "reports_ok": true
+ },
+ "charged": 0,
+ "cap": 345600,
+ "a75_sha256": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae"
+}
+{
+ "charged": 0,
+ "cap": 345600,
+ "mech": false,
+ "admission": false,
+ "waves": 12,
+ "episodes": "0/288"
+}

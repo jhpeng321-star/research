@@ -30,7 +30,7 @@ residual_soft_bound_mps2 = 4.0 # Keep R3's smooth, gradient-carrying bound; neve
 
 [model.gate]
 kind = "saturating" # New learned ceiling motivated by LANECAL's gate-growth finding (LANECAL, Round 4 plan).
-g_max_init = 0.30 # Initialize the learned ceiling at the agreed value (Round 4 plan).
+g_max_init = 0.30 # Initialize the learned ceiling at the owner-agreed value (Round 4 plan).
 tau_steps_init = 50.0 # Initialize the learned time constant to 25 s at 0.5 s/step (Round 4 plan).
 
 [loss]
@@ -70,7 +70,7 @@ select_by_long_horizon = true # Preserve R3 best-long-horizon checkpoint selecti
 val_batches = 8 # Match C1FAST/R3 actual receipt (R3 receipt).
 
 [runtime]
-device = "cuda" # Intended GPU recipe only; no GPU launch is part of this implementation task.
+device = "cuda" # Intended gpuA recipe only; no GPU launch is part of this implementation task.
 threads = 2 # Match R3 receipt (R3 receipt).
 num_workers = 0 # Required clean trainer contract; also the R3 actual value.
 seed = 101 # Match C1/R3 reproducibility setting (R3 receipt).

@@ -1,0 +1,986 @@
+{
+ "seed": 20261115,
+ "generator": "a86s5.LaneFilter.random = strategy_search.random_strategy patched by a75ss.install(S5 cfg) + S5 exclude_lane_sets (redraw loop unrolled, rejects recorded)",
+ "cfg_sha256": "3adc266397fad96a11430e4251f6155eaf4a8ad90b47ffe7b0ba50b1e9b9c215",
+ "code": {
+  "a75ss.py": "cae54dc11be5f5220f19eb7399efac2699c7cdf363a90b7fa202766d5b906bc0",
+  "a86s5.py": "71dda3e8436d1202ef54235f1c02db0cd38e485329cf17a036cd36bd491e152e",
+  "strategy_search.py": "02e119c11a056c13bc54309c5f71e0ca8dd73aeb3c49c5a901e008fda36f54fc",
+  "A86S5_SEARCH_CFG.json": "3adc266397fad96a11430e4251f6155eaf4a8ad90b47ffe7b0ba50b1e9b9c215",
+  "regime_STATES.json": "74aef8f8047a073e16097aa1e104fbf72ab32ca1dd16c7a53f4ad58c70a154e3",
+  "STRATEGY_SEARCH_D2800_p60.json": "30f10455703519de3f9b998883ec79a761fe4e7cd8ff06bcb299cc321aa850a9",
+  "STREAM_DRAWS.json": "d5455bb0178f59c8ee4175ac4039bba509a9f3af5c1387f0462d0479507de4b5"
+ },
+ "n_draws": 69,
+ "s5_gen0_reproduced": {
+  "n": 72,
+  "key_list_sha256": "275c80a9e53ffe65126f25aa69246bcc6ef9f5302413081b00c6c76800bda364",
+  "rejected_random": 12
+ },
+ "n_s5_keys_excluded": 167,
+ "n_a93_keys_excluded": 40,
+ "draws": [
+  {
+   "draw": 1,
+   "name": "rand_8b349e4e21de2104",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "8b349e4e21de2104",
+   "uncond_name": "rand_8b349e4e21de2104",
+   "form": "pulse",
+   "niche": "pulse:L012",
+   "status": "pass",
+   "pass_rank": 1
+  },
+  {
+   "draw": 2,
+   "name": "rand_6d8c62990b7e5746",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "248e417088ca5bca",
+   "uncond_name": "rand_248e417088ca5bca",
+   "form": "zone",
+   "niche": "zone:L01",
+   "status": "pass",
+   "pass_rank": 2
+  },
+  {
+   "draw": 3,
+   "name": "rand_362b1c090017333d",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "362b1c090017333d",
+   "uncond_name": "rand_362b1c090017333d",
+   "form": "pulse",
+   "niche": "pulse:L012",
+   "status": "pass",
+   "pass_rank": 3
+  },
+  {
+   "draw": 4,
+   "name": "rand_426b1e24398af1e1",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "426b1e24398af1e1",
+   "uncond_name": "rand_426b1e24398af1e1",
+   "form": "gap",
+   "niche": "gap:L01",
+   "status": "pass",
+   "pass_rank": 4
+  },
+  {
+   "draw": 5,
+   "name": "rand_6a0fa7359de324a0",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 6,
+   "name": "rand_05bafb0cc8cf9a1e",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "ce70dd9cd94958ee",
+   "uncond_name": "rand_ce70dd9cd94958ee",
+   "form": "rolling",
+   "niche": "rolling:L012",
+   "status": "pass",
+   "pass_rank": 5
+  },
+  {
+   "draw": 7,
+   "name": "rand_d0cd0854b6d480dc",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "76356c2101305101",
+   "uncond_name": "rand_76356c2101305101",
+   "form": "taper",
+   "niche": "taper:L012",
+   "status": "pass",
+   "pass_rank": 6
+  },
+  {
+   "draw": 8,
+   "name": "rand_6fcc79151f336ee3",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "6fcc79151f336ee3",
+   "uncond_name": "rand_6fcc79151f336ee3",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 7
+  },
+  {
+   "draw": 9,
+   "name": "rand_aa089de181d7575e",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "aa089de181d7575e",
+   "uncond_name": "rand_aa089de181d7575e",
+   "form": "taper",
+   "niche": "taper:L012",
+   "status": "pass",
+   "pass_rank": 8
+  },
+  {
+   "draw": 10,
+   "name": "rand_5eed2f91a929939a",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "5eed2f91a929939a",
+   "uncond_name": "rand_5eed2f91a929939a",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 9
+  },
+  {
+   "draw": 11,
+   "name": "rand_6716617be978f426",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "55a62d9652f4bf15",
+   "uncond_name": "rand_55a62d9652f4bf15",
+   "form": "pulse",
+   "niche": "pulse:L012",
+   "status": "pass",
+   "pass_rank": 10
+  },
+  {
+   "draw": 12,
+   "name": "rand_a2a8c07f8001b658",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "10fef05aff5844cc",
+   "uncond_name": "rand_10fef05aff5844cc",
+   "form": "gap",
+   "niche": "gap:L01",
+   "status": "pass",
+   "pass_rank": 11
+  },
+  {
+   "draw": 13,
+   "name": "rand_2d89591c984cfd37",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "2d89591c984cfd37",
+   "uncond_name": "rand_2d89591c984cfd37",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 12
+  },
+  {
+   "draw": 14,
+   "name": "rand_0db02e78514eed61",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "0db02e78514eed61",
+   "uncond_name": "rand_0db02e78514eed61",
+   "form": "pulse",
+   "niche": "pulse:L012",
+   "status": "pass",
+   "pass_rank": 13
+  },
+  {
+   "draw": 15,
+   "name": "rand_2b15b95cf4906aba",
+   "lanes": [
+    1
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 16,
+   "name": "rand_7fc41682205c6940",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "7fc41682205c6940",
+   "uncond_name": "rand_7fc41682205c6940",
+   "form": "rolling",
+   "niche": "rolling:L012",
+   "status": "pass",
+   "pass_rank": 14
+  },
+  {
+   "draw": 17,
+   "name": "rand_5a56d427ed17858a",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "bb679295a33cb50b",
+   "uncond_name": "rand_bb679295a33cb50b",
+   "form": "pulse",
+   "niche": "pulse:L01",
+   "status": "pass",
+   "pass_rank": 15
+  },
+  {
+   "draw": 18,
+   "name": "rand_8f94716e5e731edb",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "80694514f5996183",
+   "uncond_name": "rand_80694514f5996183",
+   "form": "pulse",
+   "niche": "pulse:L02",
+   "status": "pass",
+   "pass_rank": 16
+  },
+  {
+   "draw": 19,
+   "name": "rand_72e1d3467c551705",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "e711ecb761e15469",
+   "uncond_name": "rand_e711ecb761e15469",
+   "form": "rolling",
+   "niche": "rolling:L012",
+   "status": "pass",
+   "pass_rank": 17
+  },
+  {
+   "draw": 20,
+   "name": "rand_a7696635085eefda",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "a7696635085eefda",
+   "uncond_name": "rand_a7696635085eefda",
+   "form": "taper",
+   "niche": "taper:L02",
+   "status": "pass",
+   "pass_rank": 18
+  },
+  {
+   "draw": 21,
+   "name": "rand_1c5d1f580e57ce0a",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "35701c6c651b6de0",
+   "uncond_name": "rand_35701c6c651b6de0",
+   "form": "zone",
+   "niche": "zone:L012",
+   "status": "pass",
+   "pass_rank": 19
+  },
+  {
+   "draw": 22,
+   "name": "rand_4620e67c85f4b0f1",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "4620e67c85f4b0f1",
+   "uncond_name": "rand_4620e67c85f4b0f1",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 20
+  },
+  {
+   "draw": 23,
+   "name": "rand_7cc8822357e3d659",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "86076079147e9799",
+   "uncond_name": "rand_86076079147e9799",
+   "form": "zone",
+   "niche": "zone:L02",
+   "status": "pass",
+   "pass_rank": 21
+  },
+  {
+   "draw": 24,
+   "name": "rand_bcf5dbb83f8c027d",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 25,
+   "name": "rand_5d173c6fcf318e39",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "5d173c6fcf318e39",
+   "uncond_name": "rand_5d173c6fcf318e39",
+   "form": "pulse",
+   "niche": "pulse:L012",
+   "status": "pass",
+   "pass_rank": 22
+  },
+  {
+   "draw": 26,
+   "name": "rand_b56337c0ef09d091",
+   "lanes": [
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 27,
+   "name": "rand_e46caf221e9be7ba",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "e46caf221e9be7ba",
+   "uncond_name": "rand_e46caf221e9be7ba",
+   "form": "rolling",
+   "niche": "rolling:L01",
+   "status": "pass",
+   "pass_rank": 23
+  },
+  {
+   "draw": 28,
+   "name": "rand_84e2e43bcc1ab64b",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "bbb21eaf950a8f5b",
+   "uncond_name": "rand_bbb21eaf950a8f5b",
+   "form": "taper",
+   "niche": "taper:L02",
+   "status": "pass",
+   "pass_rank": 24
+  },
+  {
+   "draw": 29,
+   "name": "rand_c018f67535359ceb",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "1c8ec3e6ce33f4e4",
+   "uncond_name": "rand_1c8ec3e6ce33f4e4",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 25
+  },
+  {
+   "draw": 30,
+   "name": "rand_711d31bc19c727fc",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "711d31bc19c727fc",
+   "uncond_name": "rand_711d31bc19c727fc",
+   "form": "taper",
+   "niche": "taper:L012",
+   "status": "pass",
+   "pass_rank": 26
+  },
+  {
+   "draw": 31,
+   "name": "rand_c9a14802607aa642",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "c9a14802607aa642",
+   "uncond_name": "rand_c9a14802607aa642",
+   "form": "gap",
+   "niche": "gap:L01",
+   "status": "pass",
+   "pass_rank": 27
+  },
+  {
+   "draw": 32,
+   "name": "rand_99189b7560870324",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 33,
+   "name": "rand_c73500f86504bbba",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "7b47f5c7335fac87",
+   "uncond_name": "rand_7b47f5c7335fac87",
+   "form": "pulse",
+   "niche": "pulse:L02",
+   "status": "pass",
+   "pass_rank": 28
+  },
+  {
+   "draw": 34,
+   "name": "rand_328db41802196c07",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "328db41802196c07",
+   "uncond_name": "rand_328db41802196c07",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 29
+  },
+  {
+   "draw": 35,
+   "name": "rand_623d61dec04ead15",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "623d61dec04ead15",
+   "uncond_name": "rand_623d61dec04ead15",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 30
+  },
+  {
+   "draw": 36,
+   "name": "rand_a983d42084eaf0d7",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "cd93b4fdd10b8f72",
+   "uncond_name": "rand_cd93b4fdd10b8f72",
+   "form": "pulse",
+   "niche": "pulse:L012",
+   "status": "pass",
+   "pass_rank": 31
+  },
+  {
+   "draw": 37,
+   "name": "rand_22d620ab7dabdb1b",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "8159475008730707",
+   "uncond_name": "rand_8159475008730707",
+   "form": "pulse",
+   "niche": "pulse:L012",
+   "status": "pass",
+   "pass_rank": 32
+  },
+  {
+   "draw": 38,
+   "name": "rand_1d3b6660a829e94f",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "d0cc45703e3a1f61",
+   "uncond_name": "rand_d0cc45703e3a1f61",
+   "form": "pulse",
+   "niche": "pulse:L02",
+   "status": "pass",
+   "pass_rank": 33
+  },
+  {
+   "draw": 39,
+   "name": "rand_930566a6df5e0297",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 40,
+   "name": "rand_b21e51d8708930a7",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "b21e51d8708930a7",
+   "uncond_name": "rand_b21e51d8708930a7",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 34
+  },
+  {
+   "draw": 41,
+   "name": "rand_1a1384d93c4844b5",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "1a1384d93c4844b5",
+   "uncond_name": "rand_1a1384d93c4844b5",
+   "form": "taper",
+   "niche": "taper:L012",
+   "status": "pass",
+   "pass_rank": 35
+  },
+  {
+   "draw": 42,
+   "name": "rand_81fbdc5199830a06",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "81fbdc5199830a06",
+   "uncond_name": "rand_81fbdc5199830a06",
+   "form": "zone",
+   "niche": "zone:L01",
+   "status": "pass",
+   "pass_rank": 36
+  },
+  {
+   "draw": 43,
+   "name": "rand_bf7d3e50b6a92305",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "a336295a7de0864d",
+   "uncond_name": "rand_a336295a7de0864d",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 37
+  },
+  {
+   "draw": 44,
+   "name": "rand_8cf42398be8068cf",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "8cf42398be8068cf",
+   "uncond_name": "rand_8cf42398be8068cf",
+   "form": "pulse",
+   "niche": "pulse:L012",
+   "status": "pass",
+   "pass_rank": 38
+  },
+  {
+   "draw": 45,
+   "name": "rand_692ff6ced023f317",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "8eed4d81cf5c865f",
+   "uncond_name": "rand_8eed4d81cf5c865f",
+   "form": "rolling",
+   "niche": "rolling:L02",
+   "status": "pass",
+   "pass_rank": 39
+  },
+  {
+   "draw": 46,
+   "name": "rand_abd8a98fd3987ed8",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "abd8a98fd3987ed8",
+   "uncond_name": "rand_abd8a98fd3987ed8",
+   "form": "rolling",
+   "niche": "rolling:L02",
+   "status": "pass",
+   "pass_rank": 40
+  },
+  {
+   "draw": 47,
+   "name": "rand_c63c570e5d1dbaea",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "c63c570e5d1dbaea",
+   "uncond_name": "rand_c63c570e5d1dbaea",
+   "form": "taper",
+   "niche": "taper:L02",
+   "status": "pass",
+   "pass_rank": 41
+  },
+  {
+   "draw": 48,
+   "name": "rand_132126b16f132f3f",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "132126b16f132f3f",
+   "uncond_name": "rand_132126b16f132f3f",
+   "form": "pulse",
+   "niche": "pulse:L01",
+   "status": "pass",
+   "pass_rank": 42
+  },
+  {
+   "draw": 49,
+   "name": "rand_2715303ea56c05ad",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "a37cd45ff6329fb1",
+   "uncond_name": "rand_a37cd45ff6329fb1",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 43
+  },
+  {
+   "draw": 50,
+   "name": "rand_45aaa1112bcc55fa",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "d8b26911d402c617",
+   "uncond_name": "rand_d8b26911d402c617",
+   "form": "pulse",
+   "niche": "pulse:L012",
+   "status": "pass",
+   "pass_rank": 44
+  },
+  {
+   "draw": 51,
+   "name": "rand_a68e577578412fc3",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "a68e577578412fc3",
+   "uncond_name": "rand_a68e577578412fc3",
+   "form": "zone",
+   "niche": "zone:L02",
+   "status": "pass",
+   "pass_rank": 45
+  },
+  {
+   "draw": 52,
+   "name": "rand_3b688c3242e6652b",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "3b688c3242e6652b",
+   "uncond_name": "rand_3b688c3242e6652b",
+   "form": "pulse",
+   "niche": "pulse:L01",
+   "status": "pass",
+   "pass_rank": 46
+  },
+  {
+   "draw": 53,
+   "name": "rand_5fdbd52bbdd85d3f",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "5fdbd52bbdd85d3f",
+   "uncond_name": "rand_5fdbd52bbdd85d3f",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 47
+  },
+  {
+   "draw": 54,
+   "name": "rand_0a47bcf093cd46c2",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "0a47bcf093cd46c2",
+   "uncond_name": "rand_0a47bcf093cd46c2",
+   "form": "pulse",
+   "niche": "pulse:L012",
+   "status": "pass",
+   "pass_rank": 48
+  },
+  {
+   "draw": 55,
+   "name": "rand_344eb844e8dca4cf",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "344eb844e8dca4cf",
+   "uncond_name": "rand_344eb844e8dca4cf",
+   "form": "taper",
+   "niche": "taper:L02",
+   "status": "pass",
+   "pass_rank": 49
+  },
+  {
+   "draw": 56,
+   "name": "rand_8100f6619b026e49",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "be07b929c1f67c1d",
+   "uncond_name": "rand_be07b929c1f67c1d",
+   "form": "taper",
+   "niche": "taper:L012",
+   "status": "pass",
+   "pass_rank": 50
+  },
+  {
+   "draw": 57,
+   "name": "rand_4c4029748b82621d",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 58,
+   "name": "rand_6a7e406f229efe5e",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "e932e3c4069cd686",
+   "uncond_name": "rand_e932e3c4069cd686",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 51
+  },
+  {
+   "draw": 59,
+   "name": "rand_f84d6fcd394c580a",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 60,
+   "name": "rand_548e7c57bf5277a7",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "87d995de0eb89fab",
+   "uncond_name": "rand_87d995de0eb89fab",
+   "form": "zone",
+   "niche": "zone:L02",
+   "status": "pass",
+   "pass_rank": 52
+  },
+  {
+   "draw": 61,
+   "name": "rand_803bfa8dee6724f8",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "e92e4ffe17e81cdb",
+   "uncond_name": "rand_e92e4ffe17e81cdb",
+   "form": "pulse",
+   "niche": "pulse:L02",
+   "status": "pass",
+   "pass_rank": 53
+  },
+  {
+   "draw": 62,
+   "name": "rand_589e7c0e86e1db20",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "05ff81b458adb0f2",
+   "uncond_name": "rand_05ff81b458adb0f2",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 54
+  },
+  {
+   "draw": 63,
+   "name": "rand_f2cb8b1551114601",
+   "lanes": [
+    1,
+    2
+   ],
+   "status": "rejected",
+   "reason": "excluded_lane_set"
+  },
+  {
+   "draw": 64,
+   "name": "rand_da007593d3118ea2",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "e768b30f00276b66",
+   "uncond_name": "rand_e768b30f00276b66",
+   "form": "gap",
+   "niche": "gap:L01",
+   "status": "pass",
+   "pass_rank": 55
+  },
+  {
+   "draw": 65,
+   "name": "rand_9163d183a08d58fd",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "ae2ee86adeff0d20",
+   "uncond_name": "rand_ae2ee86adeff0d20",
+   "form": "taper",
+   "niche": "taper:L012",
+   "status": "pass",
+   "pass_rank": 56
+  },
+  {
+   "draw": 66,
+   "name": "rand_d5377deb5555725d",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "d5377deb5555725d",
+   "uncond_name": "rand_d5377deb5555725d",
+   "form": "taper",
+   "niche": "taper:L02",
+   "status": "pass",
+   "pass_rank": 57
+  },
+  {
+   "draw": 67,
+   "name": "rand_879444ab07d917c6",
+   "lanes": [
+    0,
+    1,
+    2
+   ],
+   "key": "879444ab07d917c6",
+   "uncond_name": "rand_879444ab07d917c6",
+   "form": "gap",
+   "niche": "gap:L012",
+   "status": "pass",
+   "pass_rank": 58
+  },
+  {
+   "draw": 68,
+   "name": "rand_e991fbb35c2df460",
+   "lanes": [
+    0,
+    2
+   ],
+   "key": "e991fbb35c2df460",
+   "uncond_name": "rand_e991fbb35c2df460",
+   "form": "pulse",
+   "niche": "pulse:L02",
+   "status": "pass",
+   "pass_rank": 59
+  },
+  {
+   "draw": 69,
+   "name": "rand_87fa6fbc56b050d8",
+   "lanes": [
+    0,
+    1
+   ],
+   "key": "4ce57b4d3616c361",
+   "uncond_name": "rand_4ce57b4d3616c361",
+   "form": "gap",
+   "niche": "gap:L01",
+   "status": "pass",
+   "pass_rank": 60
+  }
+ ]
+}

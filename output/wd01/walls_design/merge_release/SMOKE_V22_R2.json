@@ -1,0 +1,167 @@
+{
+ "schema": "wm59_walls_v22_smoke_r2_fixture/1",
+ "status": "FROZEN 2026-10-01 - owner decision relayed by main ('fix the test, approve J4b'): wall law v2.2 unchanged (e7fd3536); fixture-only amendment, POST-HOC and DISCLOSED (adopted after the R1 failure on a registered safety abort).",
+ "title": "DECLARED MECHANICS RE-SMOKE FIXTURE R2 - wall law v2.2 'merge-release'",
+ "supersedes_context": {
+  "r1_fixture": "output/wd01/walls_design/merge_release/SMOKE_V22.json (UNCHANGED, stays as declared; R1 is not edited)",
+  "r1_failure": "run 1 (w8694m2600p40t240__w-lo-early) aborted in hold (non_member_rear_end_risk:ramp.29, lead s_road 2552.2 = 92.0 m before the merge start) and the R1 MC3 'any abort fails' + stop-on-fail rule ended the fixture before merge_release; runs 2 and 3 were never launched",
+  "diagnosis": "output/wd01/walls_design/merge_release/SMOKE_V22_R1_DIAGNOSIS.md",
+  "change": "WM-recommended rule: a registered v2.2 safety abort is RECORDED, not fatal; the re-smoke re-declares the same 3 x 300 sim-s budget on a NEW write-once runs root"
+ },
+ "law": {
+  "version": "wall-v2.2-merge-release",
+  "registration": "output/wd01/walls_design/merge_release/REGISTRATION_WALL_V22.md",
+  "design": "output/wd01/walls_design/merge_release/DESIGN_V22_MERGE_RELEASE.md",
+  "merge_release_point_s": 2644.2,
+  "dmin_formula": "D_min = X + v_wall*(t_assemble + H_min) = 0 + v_wall*(10 + 60) = 70*v_wall m"
+ },
+ "deployment": {
+  "target_repo": "E:/research-dense (READ-ONLY for the proposer; the reconstructor applies the patches)",
+  "patches": [
+   "output/wd01/walls_design/merge_release/patches/common.py.diff",
+   "output/wd01/walls_design/merge_release/patches/wall_request.py.diff",
+   "output/wd01/walls_design/merge_release/patches/wall_driver.py.diff",
+   "output/wd01/walls_design/merge_release/patches/wall_group.py.diff",
+   "output/wd01/walls_design/merge_release/patches/wall_driver_v22_logging.diff"
+  ],
+  "patch_targets": {
+   "common.py": "E:/research-dense/output/campaign_walls_v1/common.py",
+   "wall_request.py": "E:/research-dense/output/campaign_walls_v1/wall_request.py",
+   "wall_driver.py": "E:/research-dense/output/campaign_walls_v1/wall_driver.py",
+   "wall_group.py": "E:/research-dense/traffic_shepherd/wall_group.py"
+  },
+  "logging_patch": {
+   "file": "output/wd01/walls_design/merge_release/patches/wall_driver_v22_logging.diff",
+   "order": "apply AFTER patches/wall_driver.py.diff (same target file)",
+   "behaviour": "logging-only (behaviour-neutral): hold_cap.a_priori_effective_hold_s is computed AT ASSEMBLY (min(H, (2644.2 - lead_s_road_at_assembly_m)/wall_speed_mps)), not from the release-tick lead position; adds hold_cap.lead_s_road_at_assembly_m; no control-path change",
+   "shas": "PATCH_SHAS.json 'logging_patch' section (base = the v2.2 law wall_driver 5f98188571baffb900a7cee4f9afec8b9575e6623f07b54ff959170d76306c5d, patched = ef01bfcf652eeee5439a705119acb7e6e75c4414d3ab0aa0748b0f11ca6590e3, round-trip verified)"
+  },
+  "unchanged": {
+   "sensing.py": "no functional change (frames already carry lane/edge identity + lane-local position); sha recorded in PATCH_SHAS.json"
+  },
+  "preconditions": [
+   "the four law patches apply to the live files at their recorded PRE (v2.1) shas in PATCH_SHAS.json; OBSERVED 2026-10-01: the live E:/research-dense/output/campaign_walls_v1/wall_driver.py has diverged since smoke run 1 (now ca47821937a4d52d621260c9f0253e5586c555042830d199964fe0df1c551e6b, not the recorded pre 6810330d4e4650a8903b197baf163c0df446646664726d74c5355e65ca9a908f) - the reconstructor restores/verifies the recorded base state on the approved machine BEFORE patching (never the proposer)",
+   "finalize the J4B v2.2 registration at output/campaign_walls_v1/results_plan/WALLS_PILOT_REGISTRATION_V22.md (write-once; content = REGISTRATION_WALL_V22.md + the J4B draft's launch blocks) - the J4 registration file is frozen and is NOT touched",
+   "runs root runs/campaign_walls_v22_smoke_r2 must NOT exist (write-once re-smoke; never data; the R1 root runs/campaign_walls_v22_smoke stays frozen, untouched)",
+   "no other campaign running in the window (same discipline as the J4 smoke)"
+  ]
+ },
+ "budget": {
+  "runs": 3,
+  "simulated_seconds_per_run": 300,
+  "simulated_seconds_total": 900,
+  "cap": "same owner-approved 3 x 300 sim-s envelope as R1 (a re-smoke, not an extension)"
+ },
+ "selection": {
+  "rule": "a-priori from the J4 analysis GEOMETRY ONLY (request/assembly/hold records of TRAIN worlds; NO outcome field was opened): TRAIN split, registered hold draw 240 s (so the merge-start cap, not the draw, ends the hold), assembled in J4 (assembled_at_s present), (a) UPSTREAM RULE lead_s_road_request <= 2644.2 - D_min - 300 m with D_min = 70*v_wall (the proposer gate admits the request with >= 300 m spare), and (b) predicted merge-start arrival (assembled_at_s - t0) + (2644.2 - lead_s_road_assembled)/v_wall <= 200 s (fits the 300 sim-s horizon with >= 100 s slack); rank the survivors by distance_to_merge_request DESCENDING (requests far upstream first), tie-break run name ascending; take the first three with DISTINCT worlds",
+  "source": "output/wd01/walls_design/merge_release/j4_merge_analysis.json rows (TRAIN only)",
+  "rule_provenance": "constraints (a)+(b) generalize the R1 selection rule; (a) is the added far-upstream margin from the R1 diagnosis, ranked as the brief directs",
+  "survivors": 13,
+  "worlds": [
+   {
+    "world": "w8661m2600p10t240",
+    "split": "TRAIN",
+    "penetration": 0.1,
+    "arm": "W-mid-early",
+    "run": "w8661m2600p10t240__w-mid-early",
+    "t0_s": 240.0,
+    "registered_hold_s": 240.0,
+    "j4_geometry": {
+     "wall_speed_mps": 22.519169,
+     "request_s": 300.0,
+     "assembled_at_s": 314.0,
+     "assembled_rel_t0_s": 74.0,
+     "lead_s_road_request_m": 42.11,
+     "lead_distance_to_merge_at_request_m": 2602.09,
+     "dmin_m": 1576.34,
+     "dmin_margin_m": 1025.75,
+     "upstream_threshold_m": 767.86,
+     "upstream_pass_by_m": 725.75,
+     "lead_s_road_assembled_m": 358.05,
+     "predicted_capped_hold_s": 101.52,
+     "predicted_merge_arrival_rel_t0_s": 175.52,
+     "horizon_slack_s": 124.48
+    }
+   },
+   {
+    "world": "w8697m2700p40t240",
+    "split": "TRAIN",
+    "penetration": 0.4,
+    "arm": "W-mid-early",
+    "run": "w8697m2700p40t240__w-mid-early",
+    "t0_s": 240.0,
+    "registered_hold_s": 240.0,
+    "j4_geometry": {
+     "wall_speed_mps": 14.155562,
+     "request_s": 240.0,
+     "assembled_at_s": 241.0,
+     "assembled_rel_t0_s": 1.0,
+     "lead_s_road_request_m": 103.31,
+     "lead_distance_to_merge_at_request_m": 2540.89,
+     "dmin_m": 990.89,
+     "dmin_margin_m": 1550.0,
+     "upstream_threshold_m": 1353.31,
+     "upstream_pass_by_m": 1250.0,
+     "lead_s_road_assembled_m": 118.12,
+     "predicted_capped_hold_s": 178.45,
+     "predicted_merge_arrival_rel_t0_s": 179.45,
+     "horizon_slack_s": 120.55
+    }
+   },
+   {
+    "world": "w8700m2600p40t420",
+    "split": "TRAIN",
+    "penetration": 0.4,
+    "arm": "W-mid-late",
+    "run": "w8700m2600p40t420__w-mid-late",
+    "t0_s": 420.0,
+    "registered_hold_s": 240.0,
+    "j4_geometry": {
+     "wall_speed_mps": 21.329299,
+     "request_s": 480.0,
+     "assembled_at_s": 489.0,
+     "assembled_rel_t0_s": 69.0,
+     "lead_s_road_request_m": 175.92,
+     "lead_distance_to_merge_at_request_m": 2468.28,
+     "dmin_m": 1493.05,
+     "dmin_margin_m": 975.23,
+     "upstream_threshold_m": 851.15,
+     "upstream_pass_by_m": 675.23,
+     "lead_s_road_assembled_m": 370.17,
+     "predicted_capped_hold_s": 106.62,
+     "predicted_merge_arrival_rel_t0_s": 175.62,
+     "horizon_slack_s": 124.38
+    }
+   }
+  ]
+ },
+ "commands": [
+  "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe output/campaign_walls_v1/run_wall_branch.py _exec_wall_branch --run w8661m2600p10t240__w-mid-early --plan output/campaign_walls_v1/results_plan/WORLD_PLAN.json --runs-root runs/campaign_walls_v22_smoke_r2 --registration output/campaign_walls_v1/results_plan/WALLS_PILOT_REGISTRATION_V22.md --bases-root E:/research-dense/runs/campaign_stage1_chunk4 --horizon-ticks 300",
+  "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe output/campaign_walls_v1/run_wall_branch.py _exec_wall_branch --run w8697m2700p40t240__w-mid-early --plan output/campaign_walls_v1/results_plan/WORLD_PLAN.json --runs-root runs/campaign_walls_v22_smoke_r2 --registration output/campaign_walls_v1/results_plan/WALLS_PILOT_REGISTRATION_V22.md --bases-root E:/research-dense/runs/campaign_stage1_chunk4 --horizon-ticks 300",
+  "C:/Users/jpeng/miniconda3/envs/rl_driving/python.exe output/campaign_walls_v1/run_wall_branch.py _exec_wall_branch --run w8700m2600p40t420__w-mid-late --plan output/campaign_walls_v1/results_plan/WORLD_PLAN.json --runs-root runs/campaign_walls_v22_smoke_r2 --registration output/campaign_walls_v1/results_plan/WALLS_PILOT_REGISTRATION_V22.md --bases-root E:/research-dense/runs/campaign_stage1_chunk4 --horizon-ticks 300"
+ ],
+ "command_notes": "cwd = E:/research-dense; one command per run, run SEQUENTIALLY (laptop smoke); --horizon-ticks 300 caps each branch at 300 sim-s; NO --hold-override-s (the registered 240 s draws stay as drawn so the merge-start cap is what ends the hold); the child refuses an existing run dir (write-once). ALL THREE runs run even if an earlier run 'fails' a per-run check (NO stop-on-fail in R2).",
+ "frozen_v22_abort_reasons": [
+  "member_left_network",
+  "member_frame_missing",
+  "member_position_unavailable",
+  "member_span_exceeded",
+  "non_member_rear_end_risk",
+  "assembly_timeout",
+  "lane_coverage_violation",
+  "assembly_past_release"
+ ],
+ "abort_rule": "A wall_event safety_abort whose reason (stripped of any ':<vehicle>' suffix) is in frozen_v22_abort_reasons and is NOT member_left_network is a REGISTERED SAFETY ABORT: it is recorded (diagnosis table in the verdict) and fails NOTHING. member_left_network is NOT tolerated: it fails its run (RC2). An abort with a reason OUTSIDE the frozen list also fails its run (unregistered law behaviour).",
+ "checks": {
+  "RC1_law_version_v22": "PER RUN: every wall_events.jsonl row carrying law_version, plus branch_record.json law_version and RUN_RECEIPT.json law_version, equals 'wall-v2.2-merge-release' (FAIL otherwise)",
+  "RC2_no_member_left_network": "PER RUN: no wall_event safety_abort with reason member_left_network anywhere (FAIL otherwise); other registered safety aborts are recorded per abort_rule and do NOT fail",
+  "RC3_hold_cap_row_and_receipt": "PER RUN: wall_events.jsonl has exactly ONE hold_cap row (so the wall assembled and finished) with requested_hold_s == 240.0 and cap_point_s == 2644.2; RUN_RECEIPT.json exists with wall_summary present, exit_status == 'complete', load_state_calls == 1, horizon_mode == 'smoke_cap', physics_rows_written == 600 (FAIL if the row or any receipt field is missing)",
+  "RC4_no_terminal_event_past_merge_start": "PER RUN: with lead = branch_record.lead_s_road_at_release_m and v = branch_record.wall_speed_mps: if outcome == 'merge_released' then exactly ONE wall_event merge_release with release_point_s == 2644.2 and 2644.2 - 1e-6 <= lead < 2644.2 + v + 1e-6 (release at the point, at most one control tick of travel past it); for ANY OTHER terminal outcome (assembled_released / aborted_in_hold / aborted_in_assembly) lead, when not null, must satisfy lead <= 2644.2 + 1e-6. FAIL if a release or abort happens with the lead PAST the merge start beyond the release window (the cap fired late or not at all)",
+  "RC5_merge_release_observed": "ACROSS RUNS: at least ONE run has branch_record.outcome == 'merge_released' with its hold_cap row capped_at_merge == true and branch_record.merge_release_s set; in that run no wall_member_lanes row BEFORE the release tick shows a member on edge 1487606179 or 1487606178 (no member reaches the merge edge while held)",
+  "RC4b_no_member_past_merge_start_in_wall": "PER RUN: no wall_member_lanes row while the wall is active (from assembly to the release/abort tick, exclusive) shows any member on edge 1487606179 (merge) or 1487606178 (exit) or with s_road > 2644.2 (FAIL otherwise)",
+  "RC6_no_collision_no_teleport": "PER RUN: RUN_RECEIPT.json reports collisions == 0 and teleports == 0 (integrity counts only; FAIL otherwise)"
+ },
+ "pass_rule": "ALL THREE runs execute (no stop-on-fail). PASS requires: RC1, RC2, RC3, RC4, RC4b, RC6 for EACH run AND RC5 across the runs. A registered safety abort (abort_rule) never fails. A per-run FAIL is reported per run and does not stop the remaining runs. Smoke runs are NEVER data and never read as outcomes; any further re-smoke uses a NEW runs root and is registered as such.",
+ "disclosure": "POST-HOC amendment: R1 (SMOKE_V22.json) failed on a registered safety abort (non_member_rear_end_risk:ramp.29). The owner ruled the frozen law stays and only the smoke pass rule changes: registered safety aborts do not fail; failure only on member_left_network, a member past the merge start while in the wall, a missing hold_cap/receipt, or a collision/teleport; all 3 runs execute; >=1 merge_release required. R1 artifacts are kept unchanged.",
+ "owner_decision": "2026-10-01 'fix the test, approve J4b' (via main discussion)"
+}

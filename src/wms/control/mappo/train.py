@@ -60,7 +60,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--init-accel-max", type=float, default=None, metavar="MPS2",
                         help="with --init-from: explicitly RE-DECODE the loaded actor with this accel cap "
                              "(e.g. 2.6; the checkpoint's own bound otherwise wins). Same weights, new action "
-                             "mapping -- recorded in init_from")
+                             "mapping -- recorded in init_from (owner 2026-10-13: MAPPO fine-tune at 2.6)")
     return parser.parse_args(argv)
 
 

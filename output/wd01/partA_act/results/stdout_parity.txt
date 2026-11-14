@@ -1,0 +1,13 @@
+=== A2 command parity: engine-in-the-loop emulator vs logged commands (teacher-forced) ===
+declared deterministic subset: every 8th sorted TRAIN world -> 7 worlds x 7 arms
+
+--- per arm: matched/rows (rate); skipped rows for CAVs already exited: liveness gate ---
+     native: 4201/4219 (0.995734)  skipped_dead 48  mismatches 18
+         pi: 4219/4225 (0.998580)  skipped_dead 53  mismatches 6
+     fixed1: 4220/4231 (0.997400)  skipped_dead 40  mismatches 11
+     fixed2: 4211/4218 (0.998340)  skipped_dead 53  mismatches 7
+ switching1: 4201/4209 (0.998099)  skipped_dead 61  mismatches 8
+ switching2: 4174/4211 (0.991213)  skipped_dead 51  mismatches 37
+ switching3: 2310/2312 (0.999135)  skipped_dead 14  mismatches 2
+
+wrote D:\rd-wt\wd01m\output\wd01\partA_act\results\command_parity_act.json  (571s)

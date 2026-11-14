@@ -1,0 +1,347 @@
+{
+ "schema": "coopmwm.a81.seed_audit.v1",
+ "amendment": "81",
+ "block": [
+  990100,
+  990499
+ ],
+ "used": [
+  990100,
+  990483
+ ],
+ "reserved_unused": [
+  990484,
+  990499
+ ],
+ "forbidden_checked": [
+  [
+   964000,
+   964199
+  ],
+  [
+   962000,
+   962999
+  ],
+  [
+   977000,
+   977999
+  ],
+  [
+   989600,
+   989699
+  ]
+ ],
+ "note": "registry absence is not proof of freshness; this records what was checked (2026-11-13), zero simulation",
+ "checks": [
+  {
+   "source": "runs/active/C4-V7FT-20261017/REGISTRATION.md (4.19 MB, 2026-11-13 15:54)",
+   "method": "every 6-digit standalone token and every a-b / a..b / a-bb range (span <= 20,000) parsed as an interval",
+   "hits": 0
+  },
+  {
+   "source": "protocols/experiment_history.json",
+   "method": "same",
+   "hits": 0
+  },
+  {
+   "source": "E:/research-dense text files (*.md *.py *.sh *.txt *.yaml *.toml) excluding sealed/holdout/heldout/cal_split/chunk5/j4b/inc1/truth paths",
+   "method": "grep 990000-990499 tokens",
+   "hits_in_block": 0,
+   "nearby": "990000 only as unit-test fixtures (test_replay_start_cpu panel 990000+i synthetic, test_learned_trigger guard bad-seed, test_v2v smoke charge id); block starts at 990100 to avoid them"
+  },
+  {
+   "source": "E:/research-dense runs/ protocols/ docs/ output/ experiments/ *.json *.jsonl *.csv (same exclusions)",
+   "method": "grep 990100-990499 tokens",
+   "hits": 0
+  },
+  {
+   "source": "git: 556 unique tree objects of all c4/* branch tips (refs/heads + remotes)",
+   "method": "git grep 9901xx-9904xx in *.md *.py *.sh",
+   "hits": 0,
+   "positive_control": "same git grep with 9963xx (A70 block) finds ops/a70*, a71, a73, a75 files: method detects registered blocks"
+  },
+  {
+   "source": "Box 3 (124.220.72.157) /root/*: 475 panel/trainblock json files (worlds seeds + evaluation ranges), every nm_eval_runner.py range table, every *.py/*.sh/*.md",
+   "method": "interval overlap with 990100-990499",
+   "panel_overlap": [],
+   "runner_overlap": [],
+   "code_hits": [],
+   "registered_runner_ranges": [
+    [
+     990900,
+     990999
+    ],
+    [
+     991600,
+     991699
+    ],
+    [
+     991700,
+     991799
+    ],
+    [
+     991800,
+     991899
+    ],
+    [
+     992000,
+     992099
+    ],
+    [
+     992400,
+     992499
+    ],
+    [
+     992500,
+     992599
+    ],
+    [
+     992800,
+     992899
+    ],
+    [
+     993000,
+     993299
+    ],
+    [
+     993800,
+     993899
+    ],
+    [
+     994100,
+     994199
+    ],
+    [
+     994500,
+     994599
+    ],
+    [
+     995400,
+     995499
+    ],
+    [
+     996200,
+     996299
+    ],
+    [
+     996300,
+     996399
+    ],
+    [
+     996800,
+     996899
+    ],
+    [
+     997100,
+     997199
+    ],
+    [
+     997200,
+     997299
+    ],
+    [
+     997300,
+     997399
+    ],
+    [
+     997400,
+     997499
+    ],
+    [
+     998000,
+     998099
+    ],
+    [
+     998100,
+     998199
+    ],
+    [
+     998200,
+     998299
+    ],
+    [
+     998300,
+     998399
+    ],
+    [
+     998600,
+     998699
+    ],
+    [
+     999300,
+     999399
+    ],
+    [
+     999500,
+     999699
+    ],
+    [
+     999800,
+     999899
+    ]
+   ],
+   "panel_seed_spans": [
+    [
+     989600,
+     989623,
+     24
+    ],
+    [
+     989600,
+     989695,
+     96
+    ],
+    [
+     990900,
+     990995,
+     96
+    ],
+    [
+     991600,
+     991639,
+     40
+    ],
+    [
+     991700,
+     991723,
+     24
+    ],
+    [
+     991800,
+     991823,
+     24
+    ],
+    [
+     992000,
+     992023,
+     24
+    ],
+    [
+     992400,
+     992407,
+     8
+    ],
+    [
+     992500,
+     992523,
+     24
+    ],
+    [
+     992800,
+     992823,
+     24
+    ],
+    [
+     993000,
+     993095,
+     96
+    ],
+    [
+     993100,
+     993291,
+     192
+    ],
+    [
+     993800,
+     993823,
+     24
+    ],
+    [
+     994100,
+     994123,
+     24
+    ],
+    [
+     994500,
+     994523,
+     24
+    ],
+    [
+     995400,
+     995423,
+     24
+    ],
+    [
+     996200,
+     996295,
+     96
+    ],
+    [
+     996300,
+     996395,
+     96
+    ],
+    [
+     996800,
+     996895,
+     96
+    ],
+    [
+     997100,
+     997103,
+     4
+    ],
+    [
+     997200,
+     997223,
+     24
+    ],
+    [
+     997300,
+     997395,
+     96
+    ],
+    [
+     997400,
+     997403,
+     4
+    ],
+    [
+     998000,
+     998095,
+     96
+    ],
+    [
+     998100,
+     998195,
+     96
+    ],
+    [
+     998200,
+     998295,
+     96
+    ],
+    [
+     998300,
+     998395,
+     96
+    ],
+    [
+     998600,
+     998695,
+     96
+    ],
+    [
+     999300,
+     999323,
+     24
+    ],
+    [
+     999500,
+     999691,
+     192
+    ],
+    [
+     999800,
+     999823,
+     24
+    ]
+   ]
+  },
+  {
+   "source": "nm_finaleval TRAIN_RANGE (989200, 989599) and runner EVAL_HELDOUT_RANGES",
+   "method": "overlap",
+   "hits": 0
+  }
+ ]
+}

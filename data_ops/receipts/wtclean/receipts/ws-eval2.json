@@ -1,0 +1,74 @@
+{
+  "name": "ws-eval2",
+  "path": "E:\\rd-wt\\ws-eval2",
+  "class": "worktree",
+  "manual": false,
+  "branch": "wms/eval2",
+  "headBefore": "344c48f491fa6097067abb2ec928c532e01651f0",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-eval2",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-eval2.tar.txt",
+  "uploadCount": 356,
+  "uploadBytes": 3622269460,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-eval2.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 08fa6cd62f65f05791b0fbd40214a06c local 08fa6cd62f65f05791b0fbd40214a06c; size 276108521/276108521; manifest md5 match size match; members=356 (tar -t 356, sha256 356); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-eval2.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 1,
+  "skippedSensitiveSample": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T08:03:31.437549+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "344c48f491fa6097067abb2ec928c532e01651f0",
+  "skippedSensitive": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-eval2/ws-eval2.tar.zst",
+    "name": "ws-eval2.tar.zst",
+    "size": 276108521,
+    "md5": "08fa6cd62f65f05791b0fbd40214a06c",
+    "sha256": "329db08759f732b73295236c5a35fdc0b3fd1a5a94293b640e875e6780eb5615",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-eval2/ws-eval2.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-eval2.manifest.json",
+    "manifest_size": 54303,
+    "manifest_md5": "28f038688a77c87e699e8811f4e7abf9",
+    "member_count": 356,
+    "member_bytes": 3622269460,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 69.0,
+    "verify_seconds": 19.9,
+    "upload_seconds": 211.2,
+    "upload_MBps": 1.31,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 356,
+  "memberBytes": 3622269460,
+  "junctionsFound": []
+}

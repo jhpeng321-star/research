@@ -1,0 +1,23 @@
+{
+ "_note": "TEMPLATE, not a registration. MAIN fills every <...> after the seed audit; box_driver.py refuses a block without setting + panel_sha256. This build chose no world seed.",
+ "amendment": "<id>",
+ "label": "CV1",
+ "job_prefix": "cv1",
+ "phase": "claimval_cv1",
+ "cap_sim_s": "<int: registered cap for this root>",
+ "host_base": "/root/cv1",
+ "bank_dir": "cv_banks",
+ "result_label": "claim validation 20261113_0231; reference U0 = frozen base MAPPO; never pooled",
+ "authority": "<MAIN registration text>",
+ "blocks": {
+  "e1v_seed11": {"setting": "<cv1v11_D2800_p60>", "ranges_attr": "CV1_RANGES", "panel_sha256": "<sha>", "world_seeds": null},
+  "e1v_seed23": {"setting": "<cv1v23_D2800_p60>", "ranges_attr": "CV1_RANGES", "panel_sha256": "<sha>", "world_seeds": null},
+  "e1v_seed42": {"setting": "<cv1v42_D2800_p60>", "ranges_attr": "CV1_RANGES", "panel_sha256": "<sha>", "world_seeds": null},
+  "e1v_seed67": {"setting": "<cv1v67_D2800_p60>", "ranges_attr": "CV1_RANGES", "panel_sha256": "<sha>", "world_seeds": null},
+  "e1v_seed89": {"setting": "<cv1v89_D2800_p60>", "ranges_attr": "CV1_RANGES", "panel_sha256": "<sha>", "world_seeds": null},
+  "e1v_seed103": {"setting": "<cv1v103_D2800_p60>", "ranges_attr": "CV1_RANGES", "panel_sha256": "<sha>", "world_seeds": null},
+  "e1c": {"setting": "<cv1c_D2800_p60>", "ranges_attr": "CV1_RANGES", "panel_sha256": "<sha>", "world_seeds": null},
+  "e2m": {"setting": "<cv1m_D2800_p60>", "ranges_attr": "CV1_RANGES", "panel_sha256": "<sha>", "world_seeds": null},
+  "e2r": {"setting": "<cv1r_D2800_p60>", "ranges_attr": "CV1_RANGES", "panel_sha256": "<sha>", "world_seeds": null}
+ }
+}

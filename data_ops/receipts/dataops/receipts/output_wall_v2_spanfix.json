@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/wall_v2_spanfix",
+ "name": "wall_v2_spanfix",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\wall_v2_spanfix",
+ "drive": "gdrive:research-archive/repo-evidence/output/wall_v2_spanfix/wall_v2_spanfix.tar.zst",
+ "bytes": 37474,
+ "files": 2,
+ "archive_bytes": 11812,
+ "archive_md5": "f6345e5318f3cc19ecaae851f9735a0c",
+ "member_manifest": "manifests/members/output_wall_v2_spanfix.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 47.8,
+ "timestamp": "2026-10-10T01:32:02"
+}

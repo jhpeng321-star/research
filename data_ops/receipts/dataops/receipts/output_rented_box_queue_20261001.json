@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/rented_box_queue_20261001",
+ "name": "rented_box_queue_20261001",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\rented_box_queue_20261001",
+ "drive": "gdrive:research-archive/repo-evidence/output/rented_box_queue_20261001/rented_box_queue_20261001.tar.zst",
+ "bytes": 309600,
+ "files": 41,
+ "archive_bytes": 39353,
+ "archive_md5": "3a3151d505ea5483d0f1cddcc9b6ee87",
+ "member_manifest": "manifests/members/output_rented_box_queue_20261001.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.0,
+ "timestamp": "2026-10-10T01:43:43"
+}

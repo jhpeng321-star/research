@@ -1,4 +1,4 @@
-# C4 v5: cloud Ubuntu 22.04 / 48-core box operations
+# C4 v5: rented Ubuntu 22.04 / 48-core box operations
 
 All commands below run on the indicated Linux host. The launchers are Bash,
 use `set -euo pipefail`, and need no laptop connection after `nohup setsid`.
@@ -15,7 +15,7 @@ No population is silently dropped. The GENRAND adapter forwards it through
 The paired phase uses an empty plain-seed argument: the 480 random episodes
 have already been collected separately.
 
-From that integrated checkout, on the relay (the GPU host), or a Linux integrator host
+From that integrated checkout, on the relay (gpuW), or a Linux integrator host
 with its own relay access:
 
 ```bash
@@ -26,11 +26,11 @@ mkdir -p scripts/boxops/dist
 python3 -B scripts/boxops/ops.py bundle "$PWD" "scripts/boxops/dist/$ARCHIVE_ID.tar.gz"
 
 # Omit SSH/rsync only if you generated the archive directly in the relay directory.
-ssh -p 22 user@relay.example.com 'mkdir -p /workspace/c4/relay'
-rsync -a --partial -e 'ssh -p 22' \
+ssh -p 32979 root@connect.westc.seetacloud.com 'mkdir -p /root/autodl-tmp/c4/relay'
+rsync -a --partial -e 'ssh -p 32979' \
   "scripts/boxops/dist/$ARCHIVE_ID.tar.gz" \
   "scripts/boxops/dist/$ARCHIVE_ID.tar.gz.sha256" \
-  user@relay.example.com:/workspace/c4/relay/
+  root@connect.westc.seetacloud.com:/root/autodl-tmp/c4/relay/
 ```
 
 `bundle` uses `git archive HEAD` with a permitted tracked-runtime file list.
@@ -43,7 +43,7 @@ files below from the same commit.
 
 ## 2. Fresh box: bootstrap relay access (one interactive session)
 
-Paste these commands in the cloud box's provider console. This bootstrap must
+Paste these commands in the rented box's provider console. This bootstrap must
 precede `setup_box.sh`: a genuinely fresh box may lack rsync. Use `sudo` only
 when logged in as a non-root user; passwordless sudo is required by setup.
 
@@ -130,7 +130,7 @@ force. For another box choose disjoint **registered** ranges, or explicitly
 document intentional repeats in separate RUN_IDs.
 
 Local output: `~/c4/data_v5/$RUN_ID`; relay output:
-`/workspace/c4/data_v5/$RUN_ID/`. Every run contains `CODE_ID.txt`
+`/root/autodl-tmp/c4/data_v5/$RUN_ID/`. Every run contains `CODE_ID.txt`
 (git commit, flags, each start/end UTC and exit status), immutable
 `RUN_SPEC.json`, root `COLLECT_SUMMARY.json`, phase summaries, and `logs/`.
 Successful phases have `*.DONE`; conversions have `*.CONVERTED` (destination
@@ -150,8 +150,8 @@ resume instead of mixing datasets. A failed upload reruns only transfer work.
 Place the approved starting checkpoint on the relay (integrator session):
 
 ```bash
-rsync -a --partial -e 'ssh -p 22' /path/to/approved/policy.pt \
-  user@relay.example.com:/workspace/c4/relay/mappo-init.pt
+rsync -a --partial -e 'ssh -p 32979' /path/to/approved/policy.pt \
+  root@connect.westc.seetacloud.com:/root/autodl-tmp/c4/relay/mappo-init.pt
 ```
 
 On the box:
@@ -160,8 +160,8 @@ On the box:
 cd ~/c4/repo
 mkdir -p ~/c4/inputs
 rsync -a --partial --timeout=120 \
-  -e "ssh -p 22 -i $HOME/.ssh/relay_key -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
-  user@relay.example.com:/workspace/c4/relay/mappo-init.pt ~/c4/inputs/
+  -e "ssh -p 32979 -i $HOME/.ssh/relay_key -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  root@connect.westc.seetacloud.com:/root/autodl-tmp/c4/relay/mappo-init.pt ~/c4/inputs/
 export RUN_ID=v5-mappo-box01-20261014
 export POPULATION=textbook
 export INIT_FROM=$HOME/c4/inputs/mappo-init.pt
@@ -222,8 +222,8 @@ and copy the checkpointed run back from the relay before launching:
 ```bash
 mkdir -p "$HOME/c4/mappo_v5/$RUN_ID"
 rsync -a --partial --timeout=120 \
-  -e "ssh -p 22 -i $HOME/.ssh/relay_key -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
-  "user@relay.example.com:/workspace/c4/data_v5/$RUN_ID/mappo/" \
+  -e "ssh -p 32979 -i $HOME/.ssh/relay_key -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+  "root@connect.westc.seetacloud.com:/root/autodl-tmp/c4/data_v5/$RUN_ID/mappo/" \
   "$HOME/c4/mappo_v5/$RUN_ID/"
 # Restore mappo-init.pt at the same INIT_FROM path; clear old notices as above.
 ```

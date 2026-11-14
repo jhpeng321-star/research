@@ -1,0 +1,41 @@
+{
+ "amendment": "17a",
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend17.json",
+  "registration_sha256": "e5f1521f50bda5504951e1f97b0d927cacd1171963f6491c4458d24943457057"
+ },
+ "authority": [
+  "N5 REVIEW_N6_5 BLOCK (amendment 17): traffic equivalence of the S-MAPPOWZL training env and the plant not shown; MAIN approved both minimal fixes as an addendum"
+ ],
+ "budget": "1,680 sim-s inside 1,600,000: outlook 1,491,600 + 1,680 = 1,493,280",
+ "fix_a": {
+  "command": "env-equivalence",
+  "output": "sealed ENV_EQUIV.json (EQUIVALENT | DIFFERS + every differing key)",
+  "sim_s": 0,
+  "what": "both paths run in fresh interpreters up to the SUMO start (traci.start intercepted, never called): normalised SUMO command line, scenario files (requests.rou.xml, scenario.sumocfg; scene dir and host paths normalised to file hashes), CavSumoEnv kwargs and config, env class hierarchy and loaded traffic_shepherd module shas",
+  "world": "TRAIN 989598 D3200_p60"
+ },
+ "fix_b": {
+  "arm": "U0 (bound frozen d9042cc5 + zero residual; native lanes)",
+  "canary": "one plant job first",
+  "command": "prerun-envparity",
+  "on_differ": "report the first divergence; MAPPO_LANE contrasts labelled \"different simulator path\" or rerun in the plant (MAIN decides); never patched silently",
+  "output": "sealed ENVPARITY_U0.json",
+  "pass_rule": "every vehicle s/v/lane every second (ground-truth logs) and J identical",
+  "paths": [
+   "plant (the U0 eval episode)",
+   "S-MAPPOWZL training env (lane_writer lcexec, PolicyExecutor, deterministic)"
+  ],
+  "phase": "v2v_final_envparity",
+  "sim_s": 1680,
+  "window": "300 s warm-up + 120 s",
+  "worlds": [
+   989598,
+   989599
+  ]
+ },
+ "registered_utc": "2026-11-07T04:38:17.082730+00:00",
+ "registration_sha256": "e21540a1e3b9f7d40af959abbd0855722e103e90c26636c52fa1c537e2caefc3",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: no MAPPO_LANE result exists"
+}

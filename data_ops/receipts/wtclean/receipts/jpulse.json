@@ -1,0 +1,56 @@
+﻿{
+    "name":  "jpulse",
+    "path":  "E:\\rd-wt\\jpulse",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "HEAD",
+    "headBefore":  "7350ee15d73fb48c139e6bcb5cf5c674a2dbf3b9",
+    "headType":  "detached",
+    "dirtyBefore":  32,
+    "committed":  true,
+    "commitSha":  "b3db49d872bcefc6b42fed358a84cb7febca02be",
+    "preserveRef":  "refs/heads/wip-preserve/jpulse",
+    "dest":  "gdrive:research-archive/worktrees/jpulse",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\jpulse.txt",
+    "uploadCount":  209,
+    "uploadBytes":  19436880,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\jpulse.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 05:53:52 NOTICE: Google drive root \u0027research-archive/worktrees/jpulse\u0027: 0 differences found | 2026/10/10 05:53:52 NOTICE: Google drive root \u0027research-archive/worktrees/jpulse\u0027: 209 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\jpulse.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  18,
+    "skippedSensitiveSample":  [
+                                   "output/campaign_stage1_v3/chunk5_launch.py",
+                                   "output/campaign_stage1_v3/chunk5_registration.py",
+                                   "output/campaign_stage1_v3/grade_chunk5.py",
+                                   "output/campaign_stage1_v3/plan_chunk5.py",
+                                   "output/campaign_stage1_v3/results_audit_chunk5/C5_SEED_AUDIT.json",
+                                   "output/campaign_stage1_v3/results_plan_chunk5/BUDGET.json",
+                                   "output/campaign_stage1_v3/results_plan_chunk5/REGISTRATION_CHUNK5_TEST.md",
+                                   "output/campaign_stage1_v3/results_plan_chunk5/WORLD_PLAN.json",
+                                   "output/campaign_stage1_v3/results_plan_chunk5/world_runs.csv",
+                                   "output/campaign_stage1_v3/seeds_chunk5.py",
+                                   "output/campaign_stage1_v3/tests/test_chunk5_grade.py",
+                                   "output/campaign_stage1_v3/tests/test_chunk5_launch.py",
+                                   "output/campaign_stage1_v3/tests/test_chunk5_plan.py",
+                                   "output/campaign_stage1_v3/tests/test_chunk5_seeds.py",
+                                   "protocols/chunk5_test_seal.json",
+                                   "protocols/holdout_exclusions.json",
+                                   "tools/holdout_guard.py",
+                                   "traffic_shepherd/planner/holdout.py"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T05:49:54.0226998+08:00"
+}

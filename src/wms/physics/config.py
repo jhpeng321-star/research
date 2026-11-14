@@ -57,11 +57,11 @@ class PhysicsConfig:
     cooperative mainline yielding; it defaults to off, in which case the legacy
     MOBIL-merge baseline is reproduced exactly.
 
-    ``lane_rule`` selects the lane-change policy:
+    ``lane_rule`` selects the lane-change policy (owner decision 2026-10-12):
     ``mobil`` (default, unchanged legacy behaviour) or ``forced_merge_only``,
     which drops every discretionary MOBIL change and keeps only the mandatory
     ramp merge (lane 2 -> 1 inside the merge zone, gap safety + urgency intact),
-    or ``learned_discretionary``: the physics still proposes
+    or ``learned_discretionary`` (owner 2026-10-12, late): the physics still proposes
     only the forced merge, but every SAFE adjacent discretionary change gets a neutral
     prior logit (below 'stay') that the learned lane correction may raise above 'stay'
     - lane changes are learned, not MOBIL; unsafe changes stay masked.

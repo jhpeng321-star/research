@@ -1,0 +1,13 @@
+# ROUND-5 FIX 2 (WM-S-R5-F2): r5_base + "learn from long-horizon consequences".
+# Per-stage truncation so the 60/120 s stages back-propagate through much more of the
+# rollout (R4-DIAG-ERR: gradient never reached further back than 10 s), plus per-step
+# activation checkpointing inside each chunk so GPU memory stays bounded.
+schema_version = 2
+name = "WM-S-R5-F2"
+extends = "r5_base.toml"
+
+[curriculum]
+truncation_steps_per_stage = [20, 60, 120, 240] # 10/30/60/120 s stages (steps at 0.5 s).
+
+[model]
+checkpoint_step = true # activation checkpointing per chunk step (memory bound).

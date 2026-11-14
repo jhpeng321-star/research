@@ -1,0 +1,43 @@
+{
+  "schema": "coopmwm.s_launch.resume.v1",
+  "timestamp": "2026-11-05T01:38:01+08:00",
+  "remote_check_unix": 1793813881.9667041,
+  "status": "BLOCKED_BEFORE_INTEGRATION",
+  "s0": "PASS_REUSED_AND_READ_ONLY_RECHECKED",
+  "remote_host": "VM-0-15-ubuntu",
+  "new_sim_s": 0,
+  "research_cap_sim_s": 3500000,
+  "parity_charged_within_research_cap_sim_s": 960,
+  "research_remaining_sim_s": 3499040,
+  "smoke_remaining_sim_s": 20000,
+  "remote_hashes": {
+    "S0_READY.json": "9781e6b4372e833b603de42cee68bd41e6ff61d91f15df7db553ea5aa5505420",
+    "PARITY_PASS.json": "924be730fd0453dfda0b65598cbac5ef080db356a75ce35a9241ab25be39ab74",
+    "STAGING_MANIFEST_S0.json": "ac87a129e7bcfbab622c63cfdbb1c383894b5f6d751c23b1f6d558a66aabd289",
+    "libmkl_intel_shim.so": "505bcbd243e89cd49b451ae5fe6e7d3e0d5a8a62f43a36943a7809e601a71f79",
+    "env.sh": "764d8073d49d88f5945b9dc83b0523200c02ea6684fff1007726cfc4eb9fbf20",
+    "pip_freeze": "7c1858dba9279feb798ab7d790db7dda44ac987580a1726c1e75613efcfe8a8e"
+  },
+  "disk_free_bytes": 162010009600,
+  "remote_research_processes": [],
+  "clean1_root_exists": false,
+  "integration_worktree_exists": false,
+  "training_launched": false,
+  "local_t2c_fix_worker_pid": 25084,
+  "local_t2c_head_at_resume": "b660e8ab9721331739c508cc8afa5302194eefd6",
+  "local_t2c_dirty_files_preserved": [
+    "T2C_READY.json (deleted by fix worker)",
+    "tools/coopmwm/rerun_cpus.py",
+    "tools/coopmwm/rerun_cpus_compat.py",
+    "tools/coopmwm/rerun_tracks_runtime.py"
+  ],
+  "blockers": [
+    "T2C_ACCEPTED.json absent; explicit Step 0 gate",
+    "Pending T2C research quote 177447120 exceeds 3499040 remaining allowance",
+    "Pending T2C smoke quote 654360 exceeds 20000 allowance",
+    "Production backend absent; sibling integration and real SUMO qualification required",
+    "Pending runtime host contract still cpuS; must register and qualify cpuV"
+  ],
+  "next_action": "Wait for active T2C fix/review without duplicate dispatch; integrate only after T2C_ACCEPTED.json exists; qualify a cap-compliant production runtime before live physics",
+  "hard_launch_deadline": "2026-11-05T09:00:00+08:00"
+}

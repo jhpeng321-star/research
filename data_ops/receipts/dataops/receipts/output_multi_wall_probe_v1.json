@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/multi_wall_probe_v1",
+ "name": "multi_wall_probe_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\multi_wall_probe_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/multi_wall_probe_v1/multi_wall_probe_v1.tar.zst",
+ "bytes": 18193660,
+ "files": 75,
+ "archive_bytes": 2120338,
+ "archive_md5": "e8f6d0bc2ecc97ac883faeb9da293927",
+ "member_manifest": "manifests/members/output_multi_wall_probe_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 48.9,
+ "timestamp": "2026-10-10T01:49:56"
+}

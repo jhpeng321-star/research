@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/WM-N1-SCORE-A9-20261005",
+ "name": "WM-N1-SCORE-A9-20261005",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\WM-N1-SCORE-A9-20261005",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-SCORE-A9-20261005/WM-N1-SCORE-A9-20261005.tar.zst",
+ "bytes": 485261,
+ "files": 13,
+ "archive_bytes": 138433,
+ "archive_md5": "4e6a0f5b1c3fb6a62965d78e46f8ce29",
+ "member_manifest": "manifests/members/runs_active_WM-N1-SCORE-A9-20261005.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 64.6,
+ "timestamp": "2026-10-10T03:56:50"
+}

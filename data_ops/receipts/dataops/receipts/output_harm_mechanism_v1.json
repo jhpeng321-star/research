@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/harm_mechanism_v1",
+ "name": "harm_mechanism_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\harm_mechanism_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/harm_mechanism_v1/harm_mechanism_v1.tar.zst",
+ "bytes": 8642098,
+ "files": 25,
+ "archive_bytes": 758762,
+ "archive_md5": "5201737244295c67f990aaa0ea7f84ba",
+ "member_manifest": "manifests/members/output_harm_mechanism_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.0,
+ "timestamp": "2026-10-10T01:49:37"
+}

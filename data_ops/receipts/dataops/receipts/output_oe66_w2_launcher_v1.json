@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe66_w2_launcher_v1",
+ "name": "oe66_w2_launcher_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe66_w2_launcher_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe66_w2_launcher_v1/oe66_w2_launcher_v1.tar.zst",
+ "bytes": 84500,
+ "files": 15,
+ "archive_bytes": 25545,
+ "archive_md5": "822f96d78eaf95e6514a8ff46a38e0c5",
+ "member_manifest": "manifests/members/output_oe66_w2_launcher_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 21.3,
+ "timestamp": "2026-10-10T01:36:45"
+}

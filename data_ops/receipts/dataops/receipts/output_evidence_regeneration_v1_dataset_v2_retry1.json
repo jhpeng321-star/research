@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/evidence_regeneration_v1/dataset_v2_retry1",
+ "name": "dataset_v2_retry1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\evidence_regeneration_v1\\dataset_v2_retry1",
+ "drive": "gdrive:research-archive/repo-evidence/output/evidence_regeneration_v1/dataset_v2_retry1/dataset_v2_retry1.tar.zst",
+ "bytes": 1926803085,
+ "files": 24,
+ "archive_bytes": 65191994,
+ "archive_md5": "dc5cbd43a34de4430c3e05c03a3c668d",
+ "member_manifest": "manifests/members/output_evidence_regeneration_v1_dataset_v2_retry1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 513.2,
+ "timestamp": "2026-10-09T23:53:30"
+}

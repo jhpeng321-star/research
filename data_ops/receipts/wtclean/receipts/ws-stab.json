@@ -1,0 +1,39 @@
+﻿{
+    "name":  "ws-stab",
+    "path":  "E:\\rd-wt\\ws-stab",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "wms/stab",
+    "headBefore":  "6f9baafe7c6a6847142e8e64007494513dd7188c",
+    "headType":  null,
+    "dirtyBefore":  0,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/ws-stab",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-stab.txt",
+    "uploadCount":  90,
+    "uploadBytes":  1048193,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-stab.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 01:10:48 NOTICE: Google drive root \u0027research-archive/worktrees/ws-stab\u0027: 0 differences found | 2026/10/10 01:10:48 NOTICE: Google drive root \u0027research-archive/worktrees/ws-stab\u0027: 90 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-stab.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  1,
+    "skippedSensitiveSample":  [
+                                   "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T01:05:55.7792431+08:00"
+}

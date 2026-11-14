@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/plexp1b_analysis_v1",
+ "name": "plexp1b_analysis_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\plexp1b_analysis_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/plexp1b_analysis_v1/plexp1b_analysis_v1.tar.zst",
+ "bytes": 209026,
+ "files": 9,
+ "archive_bytes": 30282,
+ "archive_md5": "e0b3be9b2ceffa7f5fddaaed7922a146",
+ "member_manifest": "manifests/members/output_plexp1b_analysis_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.2,
+ "timestamp": "2026-10-10T01:42:36"
+}

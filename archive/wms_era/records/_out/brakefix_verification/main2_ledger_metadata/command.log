@@ -1,0 +1,45 @@
+..F........F........                                                     [100%]
+================================== FAILURES ===================================
+_______________________ test_all_referenced_paths_exist _______________________
+
+    def test_all_referenced_paths_exist():
+        d = _load()
+        tool = _tool()
+    
+        def present(p):
+            return Path(tool.resolve(p)).exists() or tool.recorded_deletion(p)
+    
+        missing = []
+        for e in d['entries']:
+            for p in e.get('paths', []) or []:
+                if not present(p.split(' (')[0]):
+                    missing.append((e['id'], p))
+            st = e.get('structured') or {}
+            for p in st.get('artifacts', []) or []:
+                if not present(p):
+                    missing.append((e['id'], p))
+            ns = st.get('numbers_source')
+            if ns and not present(ns):
+                missing.append((e['id'], ns))
+>       assert not missing, missing[:10]
+E       AssertionError: [('CUR-02', 'output/adoption_cleanup/full_direct_replay.json'), ('CUR-02', 'output/adoption_cleanup/workflow_prefix_ve...ut/escalation_test_build/BUILD_REPORT.md'), ('CUR-03', 'output/escalation_test_build/observer_verification.json'), ...]
+E       assert not [('CUR-02', 'output/adoption_cleanup/full_direct_replay.json'), ('CUR-02', 'output/adoption_cleanup/workflow_prefix_ve...ut/escalation_test_build/BUILD_REPORT.md'), ('CUR-03', 'output/escalation_test_build/observer_verification.json'), ...]
+
+tests\test_experiment_history_ledger.py:73: AssertionError
+____________________ test_validator_reports_no_hard_errors ____________________
+
+    def test_validator_reports_no_hard_errors():
+        tool = _tool()
+        errors, warnings, _, unknowns, _, _ = tool.validate(_load())
+>       assert errors == [], errors[:10]
+E       AssertionError: ['missing path (CUR-02/entries.paths): output/adoption_cleanup/full_direct_replay.json', 'missing path (CUR-02/entries.../BUILD_REPORT.md', 'missing path (CUR-03/entries.paths): output/escalation_test_build/observer_verification.json', ...]
+E       assert ['missing pat...on.json', ...] == []
+E         
+E         Left contains 1560 more items, first extra item: 'missing path (CUR-02/entries.paths): output/adoption_cleanup/full_direct_replay.json'
+E         Use -v to get more diff
+
+tests\test_experiment_history_ledger.py:183: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_experiment_history_ledger.py::test_all_referenced_paths_exist
+FAILED tests/test_experiment_history_ledger.py::test_validator_reports_no_hard_errors
+2 failed, 18 passed, 7 deselected in 1.94s

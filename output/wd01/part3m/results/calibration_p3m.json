@@ -1,0 +1,67 @@
+{
+ "s_out": {
+  "delay_phys": {
+   "30": 2.5198,
+   "60": 2.2974
+  },
+  "ttc3": {
+   "30": 7.6387,
+   "60": 14.5876
+  }
+ },
+ "coverage": {
+  "delay_phys@H30": {
+   "raw_coverage": 0.3929,
+   "s_out": 2.5198,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8214,
+   "crps_raw_mean": 33.279,
+   "crps_widened_mean": 32.024,
+   "mean_shift_max": 0.0
+  },
+  "delay_phys@H60": {
+   "raw_coverage": 0.3929,
+   "s_out": 2.2974,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8214,
+   "crps_raw_mean": 76.013,
+   "crps_widened_mean": 76.036,
+   "mean_shift_max": 0.0
+  },
+  "ttc3@H30": {
+   "raw_coverage": 0.5357,
+   "s_out": 7.6387,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8214,
+   "crps_raw_mean": 2.74,
+   "crps_widened_mean": 6.138,
+   "mean_shift_max": 0.0
+  },
+  "ttc3@H60": {
+   "raw_coverage": 0.1786,
+   "s_out": 14.5876,
+   "target": 0.8,
+   "coverage_mean_centred": 0.8214,
+   "crps_raw_mean": 5.806,
+   "crps_widened_mean": 16.06,
+   "mean_shift_max": 0.0
+  }
+ },
+ "crps": {},
+ "meta": {
+  "part": "3m",
+  "task": "C",
+  "calibration_roots": [
+   "cv20_7002m2000",
+   "cv20_7003m2000",
+   "cv20_7004m2000",
+   "cv20_7007m2700"
+  ],
+  "windows": 28,
+  "members": 5,
+  "holdout_accessed": false,
+  "simulation": false,
+  "validation_used": false,
+  "note": "mechanism A = mean-centred widening (mean exactly invariant), the part 3l convention; s_out = smallest grid factor reaching 80 % coverage on the calibration windows; FROZEN before the validation run"
+ }
+}

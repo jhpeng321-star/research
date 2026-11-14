@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "c__WM_short_20261005.pptx",
+ "name": "WM_short_20261005.pptx",
+ "kind": "file",
+ "class": "ARCHIVE",
+ "producer": "C: world-model results slide",
+ "local": "C:\\Users\\jpeng\\OneDrive\\Desktop\\WM_short_20261005.pptx",
+ "drive": "gdrive:research-archive/repo-evidence/c-drive/WM_short_20261005.pptx.tar.zst",
+ "bytes": 42964,
+ "files": 1,
+ "archive_bytes": 34694,
+ "archive_md5": "99a5ac01a01ccf60c9a51739aaf9a51f",
+ "member_manifest": "manifests/members/c__WM_short_20261005.pptx.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 41.0,
+ "timestamp": "2026-10-10T01:32:53"
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "WD-01-PB-V04A",
+    "name": "Part B value model v0.4a on TRUE policy references (no walls): build, fit, contrast acceptance",
+    "controller": "partB_v0 gbm (variant auto) per tau, policy-conditioned, deployable_strict HEADLINE / deployable_detector SENSITIVITY; per-CAV action tokens (CAV_RAW 20); wall tokens empty",
+    "question": "Can a deployable policy-conditioned value model V(s,tau,pi) predict remaining delay with calibrated uncertainty under true fleet policies (native, damping, PI) and switching/fixed mixes, and give skilful policy contrasts dV = V(a) - V(native) on held-out worlds with true references (Q2, untestable in v0.2-v0.3.2)?",
+    "scenario": "Saved-state continuation labels from chunk-4 base/native_base/native/pi/fixed/switching arms, chunk-2/3 J3 truearms native/pi and bases; chunks 1-3 + fix27 switching arms AUXILIARY training only; TRAIN/CAL by each chunk WORLD_PLAN split, HOLDOUT never opened",
+    "budget_registered": "ZERO SUMO/TraCI; CPU <=4 workers low priority; est. build 2 h, two refits 1 h, ablation+report 1 h",
+    "budget_actual": "ZERO SUMO held. Build 1376 sources + parity + backup 6886/6886 (previous session, commits 956e335/264d971); 3 fits + strict_noaux ablation (attempt-1 launches died at start with MemoryError, receipts kept; attempt-2 verified); plumbing dry-run re-run 2359 s; ONE CAL read 1221.3 s; per-dir pytest ~35 min total. Executor change: Sonnet stopped by owner decision mid dry-run (no CAL read), GLM Flash resumed in wd01v04c from 15def5f.",
+    "results": "ONE CAL read (lock CAL_READ_ONCE_v04a.json written before the first CAL row). VERDICT per registration s.6: FAIL for strict (HEADLINE), detector (SENSITIVITY) and strict_noaux (ablation). Strict A2-gating PASS (MAE+CRPS beat ridge at tau 30/60/120; also PASS at 300, FAIL at 570 reported) and every tau beats climatology CRPS, but A1 fails (overall 10-90 coverage 0.880 > 0.85 band edge; detector coverage 0.805 in band -> A1 PASS there) and A3 fails for both gating contrasts: sign accuracy on |dY|>TRAIN-median pairs PASSES everywhere (damping-native 0.867-1.000, pi-native 0.909-1.000 at tau 60/120/300) but the dV CRPS does not beat BOTH the zero-contrast and TRAIN-cell-mean baselines at any gating tau (0/3). Removing auxiliary rows changes almost nothing (coverage 0.879, still 0/3 A3): the failure is not an auxiliary-data artefact. TRAIN-OOB versions agree (all FAIL). %-of-mean scale (Appendix A of REPORT_V04A.md): strict MAE 13.7-18.6% of the TRAIN mean target across taus. vs v0.3.2_strict: CRPS improves at every tau on the larger TRUE-policy CAL set (e.g. tau 30: 169.9 vs 198.3) and A2-gating holds, but the old 'native' was a switching mix (WM-72), so the contrast blocks are not comparable pairwise.",
+    "criteria_verdict": "FAIL (ACCEPT requires A1 AND A2-gating AND A3 on both gating contrasts; A1 fails for strict/ablation on coverage and A3(ii) fails for all three variants at 0/3 gating taus)",
+    "limitations": "Ideal-sensing premise (lane bins from the true state; reconstruction gap measured separately in Part A). Chunk-2/3 CAL previously read once each (v0.3.2, RESCORE1) and chunk-4 CAL is also C4L1's Part A look set: this run is the disclosed third read of chunk-2/3 CAL, second of chunk-4. Single-realisation truth per world (no replicate expectation). Contrast CRPS evaluated on 23/27 CAL pairs per tau (9-23 worlds): sign CIs are wide. The conformal band is too wide on CAL for strict (0.880); PI/damping true gaps are small relative to world noise, so a zero contrast is a hard baseline. No walls (deferred to v0.4b).",
+    "artifacts": [
+      "output/wd01/REPORT_V04A.md (verdict table s.6 + appendices A-E)",
+      "output/wd01/CHANGES_V04A.md",
+      "output/wd01/REGISTRATION_PARTB_V04A.md (LF sha256 38a6fa406ca9d598fdaae986263f4fa81ee15dfa8c632414cc5f28dbe5bdee00)",
+      "output/wd01/LEDGER_DRAFT_PB_V04A_ALLOCATION.json (commit 34bd8f2)",
+      "E:/research-dense/output/partB_results/v0.4a_strict (eval_v04a.json, eval_report.md, verify OK 7/7)",
+      "E:/research-dense/output/partB_results/v0.4a_detector (verify OK 7/7)",
+      "E:/research-dense/output/partB_results/v0.4a_strict_noaux (verify OK 6/6)",
+      "E:/research-dense/output/partB_results/CAL_READ_ONCE_v04a.json",
+      "output/wd01/partB_v0data/v04a_results/dryrun_resume/ (DRY_RUN_REPORT.md + dry_*.json)",
+      "output/wd01/partB_v0data/v04a_results/train_target_means_v04a.json",
+      "output/wd01/partB_v0data/v04a_results/cal_read.{log,err,ram.log}, dryrun_resume.{log,err,ram.log}",
+      "E:/research-dense/output/wd01_partB_v0data_v04a (read-only data root, MANIFEST 3c414eec...)"
+    ],
+    "status": "completed"
+  }
+]

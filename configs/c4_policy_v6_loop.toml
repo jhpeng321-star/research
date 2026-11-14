@@ -1,4 +1,4 @@
-# C4 DREAMER LOOP POLICY (2026-10-16).
+# C4 DREAMER LOOP POLICY (2026-10-16, owner: the policy must dream FROM the states it actually visits in SUMO).
 # = c4_policy_v6_full.toml, but the imagination start windows ALSO come from the policy's own SUMO episodes:
 #   wm_config -> the loop's WM refresh config (its c4_sources include v6_policy = WMS_DATA_V6_POLICY, set by
 #   scripts/c4/dreamer_loop.py to the converted dir of the current iteration), and about half of the starts

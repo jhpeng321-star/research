@@ -1,0 +1,169 @@
+770a1cc9848d4a4091b84542fb5342919f4fe277cf8f319250e8bea7bb19cdf8  /root/a94queue.sh
+008e6983ff26c3c1ea7c316b6e70b6de0c4d092c6a199d03813be0f5182d1ae4  /root/a94/run_a94.sh
+91df1f9b03cf21f9efb6b22283b6a15a25236380dd8b2cefd8ca3bc01bd70dce  /root/a94/env_a94.sh
+47fb9f76117c3862ac0f173a64891599f84d6b9a16c8b5a04ed8a33ebd2397f5  /root/a94/src/pytools/tools/coopmwm/nm_eval_runner.py
+d04b72c9c4c131f17a11295e9d5d4b16a696d727973dad706c334412caeff50f  /root/a94/src/ops/a94/A94_BANK_SEARCHED_BUILD.json
+40b16ed95add6fcd63385dabcbf7e8a03fe8dbf20d0418e58e5aa8feee30ee04  /root/a94/src/ops/a94/A94_BANK_SEARCHED_D2800_p60.json
+0e6c35b41f359f0afec0a1e3e9e365ad3b9821e64d3fb50e8b30ce6576e5206e  /root/a94/src/ops/a94/build_bank_a94.py
+ea35b96a687c393a3b39c6711490484f2a77926e3759abe9f33dd91779c62255  /root/a94/src/ops/a94/patch_tables_a94.py
+cec7acd7f39ed0a4f3b7f89b7538ed766782f0b1cace90b4bf8477dd88968830  /root/a94/src/ops/a94/SEED_AUDIT_A94.json
+2026-11-14 02:08:37 chain panel start pid 889067 workers  free 31G bank unset single unset panel unset
+2026-11-14 02:08:39 panel 720d19e1df5d95c1b769170b62e234c1498c1c616fafa209c1880b5a474095ac  A94_PANEL_C.json panel_sha256 d85999ddaaf3eb583775d66dbabca168b4432966bc01e7193dfc79f244f7946c
+2026-11-14 02:08:39 PANEL_OK charged 0
+2026-11-14 02:17:07 chain bank-searched start pid 895825 workers  free 30G bank unset hand unset panel unset
+2026-11-14 02:17:07 sha256 A94_BANK_SEARCHED_D2800_p60.json 40b16ed95add6fcd63385dabcbf7e8a03fe8dbf20d0418e58e5aa8feee30ee04;
+2026-11-14 02:17:07 BANK_OK
+{
+ "amendment": "95",
+ "arm": "BANK_SEARCHED",
+ "cell": "D2800_p60",
+ "dropped_duplicates": [],
+ "executor_priority": [
+  {
+   "core": "HoldFormCore",
+   "extended": true,
+   "family": "mut_deba0680d3096904",
+   "key": "deba0680d3096904",
+   "lb95": 1551.588004528352,
+   "n_roles": 2,
+   "zone": [
+    1296.0,
+    2096.0
+   ]
+  },
+  {
+   "core": "HoldFormCore",
+   "extended": true,
+   "family": "rand_8b08c77a63f7d622",
+   "key": "8b08c77a63f7d622",
+   "lb95": 913.7683433657043,
+   "n_roles": 4,
+   "zone": [
+    896.0,
+    2296.0
+   ]
+  },
+  {
+   "core": "HoldFormCore",
+   "extended": true,
+   "family": "mut_576d526ec064db9c",
+   "key": "576d526ec064db9c",
+   "lb95": 462.95574873450704,
+   "n_roles": 2,
+   "zone": [
+    896.0,
+    2096.0
+   ]
+  },
+  {
+   "core": "LcStrategyCore",
+   "extended": false,
+   "family": "mut_28cad0ce56064e11",
+   "key": "28cad0ce56064e11",
+   "lb95": 433.14617788335335,
+   "n_roles": 2,
+   "zone": [
+    896.0,
+    1696.0
+   ]
+  },
+  {
+   "core": "LcStrategyCore",
+   "extended": false,
+   "family": "mut_069966492c9abdcc",
+   "key": "069966492c9abdcc",
+   "lb95": 401.5813374377569,
+   "n_roles": 2,
+   "zone": [
+    896.0,
+    1696.0
+   ]
+  },
+  {
+   "core": "HoldFormCore",
+   "extended": true,
+   "family": "mut_97dda2be6b45ccf0",
+   "key": "97dda2be6b45ccf0",
+   "lb95": 216.55692564279525,
+   "n_roles": 3,
+   "zone": [
+    1296.0,
+    1696.0
+   ]
+  }
+ ],
+ "inputs": {
+  "S4": {
+   "families": [
+    "mut_deba0680d3096904",
+    "mut_576d526ec064db9c",
+    "mut_28cad0ce56064e11"
+   ],
+   "path": "/root/a85adm/root/a80_banks/A80_BANK_D2800_p60.json",
+   "sha256": "a428cd1d320196578d55c84eea4b9b391f5e5c03928692a90dff0ac96667d7a8"
+  },
+  "S5": {
+   "families": [
+    "rand_8b08c77a63f7d622",
+    "mut_069966492c9abdcc",
+    "mut_97dda2be6b45ccf0"
+   ],
+   "path": "/root/a86adm/root/a80_banks/A80_BANK_D2800_p60.json",
+   "sha256": "577a0564944b2062e441d7ee603e7fe8090bede52a5dd6e8774d41ed9cb2d8b6"
+  }
+ },
+ "keys": [
+  "8b08c77a63f7d622",
+  "069966492c9abdcc",
+  "97dda2be6b45ccf0",
+  "deba0680d3096904",
+  "576d526ec064db9c",
+  "28cad0ce56064e11"
+ ],
+ "output": {
+  "file": "A94_BANK_SEARCHED_D2800_p60.json",
+  "sha256": "40b16ed95add6fcd63385dabcbf7e8a03fe8dbf20d0418e58e5aa8feee30ee04"
+ },
+ "plan_ids": [
+  "rand_8b08c77a63f7d622",
+  "mut_069966492c9abdcc",
+  "mut_97dda2be6b45ccf0",
+  "mut_deba0680d3096904",
+  "mut_576d526ec064db9c",
+  "mut_28cad0ce56064e11"
+ ],
+ "rule": "rows of the S5 (577a0564) and S4 (a428cd1d) admission bank files merged unchanged, identical strategy keys deduplicated (first kept)",
+ "schema": "coopmwm.a94.bank_build.v2",
+ "unchanged_copy_proof": {
+  "mut_069966492c9abdcc": {
+   "row_equal": true,
+   "source": "S5",
+   "template_equal": true
+  },
+  "mut_28cad0ce56064e11": {
+   "row_equal": true,
+   "source": "S4",
+   "template_equal": true
+  },
+  "mut_576d526ec064db9c": {
+   "row_equal": true,
+   "source": "S4",
+   "template_equal": true
+  },
+  "mut_97dda2be6b45ccf0": {
+   "row_equal": true,
+   "source": "S5",
+   "template_equal": true
+  },
+  "mut_deba0680d3096904": {
+   "row_equal": true,
+   "source": "S4",
+   "template_equal": true
+  },
+  "rand_8b08c77a63f7d622": {
+   "row_equal": true,
+   "source": "S5",
+   "template_equal": true
+  }
+ }
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "archived_policy_runner_fixture_v1",
+  "reason": "Three original tests derive the shared input root from their file ancestry. Copy exact small input assets locally because the runner also writes output files under that root; do not redirect such writes into shared assets.",
+  "original_test": "archive/pre_circles/code/tests/test_policy_runner.py",
+  "original_test_unchanged": true,
+  "files": [
+    {
+      "source": "D:\\research\\highway_merge_shepherd\\osm.light.sumocfg",
+      "local_path": "archive/pre_circles/configs/regression_shared_assets/highway_merge_shepherd/osm.light.sumocfg",
+      "bytes": 966,
+      "sha256": "5e3a2b0758aedbc56e32d5967419ccfda99059f0f21103bedeb689edfdf2d0d3"
+    },
+    {
+      "source": "D:\\research\\highway_merge_shepherd\\osm.view.xml",
+      "local_path": "archive/pre_circles/configs/regression_shared_assets/highway_merge_shepherd/osm.view.xml",
+      "bytes": 93,
+      "sha256": "51d96963d903cbf3bf0d9e7718593c5dc76e5abc023a9821c101c9b4cc214734"
+    },
+    {
+      "source": "D:\\research\\highway_merge_shepherd\\output.light.add.xml",
+      "local_path": "archive/pre_circles/configs/regression_shared_assets/highway_merge_shepherd/output.light.add.xml",
+      "bytes": 274,
+      "sha256": "6ea78dedf76c4aa46517c069349342ae2fa2b1ec9dca59e40335acc63ca87c23"
+    },
+    {
+      "source": "D:\\research\\highway_merge_shepherd\\osm.demand.light.rou.xml",
+      "local_path": "archive/pre_circles/configs/regression_shared_assets/highway_merge_shepherd/osm.demand.light.rou.xml",
+      "bytes": 1054,
+      "sha256": "76150f1b6dfc450db4657517dce20218d8591325650fe459b6cbfb9bcfd400a1"
+    },
+    {
+      "source": "D:\\research\\highway_merge_shepherd\\osm.net.xml.gz",
+      "local_path": "archive/pre_circles/configs/regression_shared_assets/highway_merge_shepherd/osm.net.xml.gz",
+      "bytes": 2666,
+      "sha256": "49b5d32b7c010321146076bead14c19d3491eb9abaf412e3e6305bc6d283232b"
+    }
+  ],
+  "shared_assets_modified": false,
+  "outputs_are_reproducible_regression_artifacts": true
+}

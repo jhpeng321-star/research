@@ -1,0 +1,298 @@
+"""Roll a world-model checkpoint forward from an evaluation state.
+
+``WmsPredictor.predict_states`` is the one entry point every scorer uses: given a state
+record, the CAV/arm description, a horizon and a seed, it returns predicted frames
+(``[{"time_s", "vehicles": [...]}, ...]``) at the model's 0.5 s physics interval.
+
+CAVs are teacher-forced from the recorded arm (their motion is exogenous); only HDVs are
+predicted.  Entries (vehicles appearing after t0) are OFF by default.  The closed-loop CAV
+mode of the historical harness is not part of this predictor.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Mapping
+
+import numpy as np
+import torch
+
+from .backend import WmsBackend, load_backend
+from .entries_input import entry_process_queue, entry_process_v1, entry_process_v2
+from .errors import PredictorError
+from .history_inputs import HistoryInputs
+from .normalize import DT_S
+from .rollout_inputs import (DEFAULT_LENGTH_M, WallMemberInsert, action_timeline_inputs,
+                             recorded_teacher, t0_vehicles, wall_member_teacher)
+from wms.physics.batched import road_end_exit_bound
+
+CAV_MODES = ("teacher",)
+FORBIDDEN_ROLLOUT_MODE = "driver_params"
+
+
+@dataclass(frozen=True)
+class RolloutFlags:
+    """Rollout switches that are not part of the checkpoint (all default OFF).
+
+    The ``diag_*`` switches are round-5 post-run attribution diagnostics: they
+    neutralise one learned component at a time at inference time and are never
+    active in training or scoring by default.
+    """
+
+    entries: bool = False
+    entries_v2: bool = False
+    #: V9ENTRY (default off): entries v2 seeded with the recorded SUMO entrance backlog and demand
+    #: (``wms.eval.entry_queue``; sumo_like_v2 insertion, HDV entrants).  Needs entries_v2.
+    entry_queue_state: bool = False
+    #: WALLFIX (default off): insert wall members that enter after t0 as exogenous
+    #: teacher-forced CAV slots at their recorded first appearance.  The recorded member
+    #: paths must be present in ``state['wall_member_paths']`` (a rebuilt wall export).
+    wall_members: bool = False
+    diag_lane_gate_shared: bool = False
+    diag_lane_cap_off: bool = False
+    diag_encoder_population: bool = False
+    diag_recorded_lanes: bool = False
+    #: V10BRKPROBE braking diagnostics (inference only, default off/bit-identical):
+    #: zero the temporal acceleration output, hard-bound the combined residual, or
+    #: low-pass the temporal output with this time constant (seconds).
+    diag_zero_temporal: bool = False
+    diag_residual_bound_mps2: float | None = None
+    diag_temporal_tau_s: float | None = None
+    #: LANEFIX: seed of the lane draws when the model samples its lane decisions
+    #: (``lane_decision='sample'``; ignored for argmax models) - every state is scored with
+    #: the same, reproducible draws.
+    lane_seed: int = 0
+
+    def __post_init__(self) -> None:
+        if self.entries_v2 and not self.entries:
+            raise ValueError("entries_v2 requires entries=True")
+        if self.entry_queue_state and not self.entries_v2:
+            raise ValueError("entry_queue_state requires entries=True and entries_v2=True")
+        for name in ("diag_residual_bound_mps2", "diag_temporal_tau_s"):
+            value = getattr(self, name)
+            if value is not None and not (isinstance(value, (int, float))
+                                          and value > 0 and np.isfinite(value)):
+                raise ValueError(f"{name} must be a finite positive number or None")
+
+
+def _pad_slots(initial: dict, n_pad: int) -> dict:
+    """Append ``n_pad`` absent entrant slots to the t0 state tensors."""
+    def pad(name, value, dtype):
+        extra = torch.full((1, n_pad), value, dtype=dtype)
+        return torch.cat((initial[name], extra), dim=1)
+
+    out = {
+        "s_m": pad("s_m", 0.0, torch.float32),
+        "v_mps": pad("v_mps", 0.0, torch.float32),
+        "a_mps2": pad("a_mps2", 0.0, torch.float32),
+        "lane": pad("lane", 0, torch.long),
+        "length_m": pad("length_m", DEFAULT_LENGTH_M, torch.float32),
+        "present": pad("present", False, torch.bool),
+        "is_cav": pad("is_cav", False, torch.bool),
+    }
+    if "exit_s_m" in initial:
+        out["exit_s_m"] = pad("exit_s_m", float(initial["exit_s_m"][0, 0]), torch.float32)
+    return out
+
+
+class WmsPredictor:
+    """Predict next states of a loaded ``wm_s`` network with CAVs teacher-forced."""
+
+    def __init__(self, backend: WmsBackend, flags: RolloutFlags = RolloutFlags()) -> None:
+        if str(backend.config.get("rollout_mode", "residual")) == FORBIDDEN_ROLLOUT_MODE:
+            raise PredictorError(
+                "driver_params rollout scoring is refused (WM_CHANGE_LOG #15)")
+        self.backend = backend
+        self.flags = flags
+        self.model = backend.model
+        self._history = HistoryInputs(backend)
+        self.entries_summary: Mapping[str, Any] | None = None
+        self.entry_queue_info: Mapping[str, Any] | None = None
+        self._learned_entry_model = None
+        self._apply_diag_flags(flags)
+
+    def _learned_entry(self):
+        """Fitted V10INSERT model when ``physics.entry_learned`` is on (loaded once)."""
+        if not bool(getattr(getattr(self.model, "physics", None), "entry_learned", False)):
+            return None
+        if self._learned_entry_model is None:
+            from wms.model.entry_learned import load_learned_entry
+
+            self._learned_entry_model = load_learned_entry()
+        return self._learned_entry_model
+
+    def _apply_diag_flags(self, flags: RolloutFlags) -> None:
+        """Round-5 attribution switches: runtime model attributes, default no-op."""
+        if flags.diag_lane_gate_shared:
+            self.model.lane_gate_kind = "shared"
+        if flags.diag_lane_cap_off:
+            self.model.lane_logit_cap = None
+        if flags.diag_encoder_population:
+            self.model.diag_encoder_population = True
+        if flags.diag_zero_temporal:
+            self.model.diag_zero_temporal = True
+        if flags.diag_residual_bound_mps2 is not None:
+            self.model.diag_residual_bound_mps2 = float(flags.diag_residual_bound_mps2)
+        if flags.diag_temporal_tau_s is not None:
+            self.model.diag_temporal_tau_s = float(flags.diag_temporal_tau_s)
+
+    @classmethod
+    def from_checkpoint(cls, path: str | Path, flags: RolloutFlags = RolloutFlags(), *,
+                        device: str = "cpu",
+                        physics: Mapping[str, Any] | None = None,
+                        model_config: Mapping[str, Any] | None = None) -> "WmsPredictor":
+        return cls(load_backend(path, device=device, physics=physics,
+                                model_config=model_config), flags)
+
+    # ------------------------------------------------------------------ rollout
+    def predict_states(self, state: dict, plan_or_controllers: Mapping[str, Any] | None,
+                       horizon_s: float, seed: int) -> list[dict]:
+        controllers = dict(plan_or_controllers or {})
+        mode = str(controllers.get("cav_mode", "teacher"))
+        if mode not in CAV_MODES:
+            raise PredictorError(f"unsupported CAV evaluation mode: {mode}")
+        arm = str(controllers.get("arm", "native"))
+        tools = self.backend.tools
+        reset = getattr(self.model, "reset_diag_state", None)
+        if reset is not None:
+            reset()
+        t0_s, ids, kin, is_cav = t0_vehicles(state)
+        driver_history, driver_history_mask = self._history.build(state, ids)
+        n_steps = max(1, int(round(float(horizon_s) / DT_S)))
+        proc, n_pad = None, 0
+        if self.flags.entries:
+            learned = self._learned_entry()
+            if learned is not None and not self.flags.entries_v2:
+                raise PredictorError("physics.entry_learned requires entries_v2=True")
+            if self.flags.entry_queue_state:
+                proc, n_pad, self.entry_queue_info = entry_process_queue(
+                    state, t0_s, horizon_s, seed, kin, tools, learned_entry=learned)
+            elif self.flags.entries_v2:
+                proc, n_pad = entry_process_v2(state, t0_s, horizon_s, seed, kin, tools,
+                                               learned_entry=learned)
+            else:
+                proc, n_pad = entry_process_v1(state, t0_s, horizon_s, seed, len(ids), tools)
+        entries_on = proc is not None
+        initial = {
+            "s_m": torch.as_tensor(kin[None, :, 0]),
+            "v_mps": torch.as_tensor(kin[None, :, 4]),
+            "a_mps2": torch.zeros((1, len(ids))),
+            "lane": torch.as_tensor(kin[None, :, 1:4].argmax(-1)),
+            "length_m": torch.as_tensor(kin[None, :, 6]),
+            "present": torch.ones((1, len(ids)), dtype=torch.bool),
+            "is_cav": torch.as_tensor(is_cav[None]),
+        }
+        # Plain-bug fix: the model's exit gate needs the road end, otherwise a predicted
+        # vehicle that passes 553.33 m stays present for the whole horizon.
+        exit_s = road_end_exit_bound(getattr(self.model, "physics", None))
+        if exit_s is not None:
+            initial["exit_s_m"] = torch.full((1, len(ids)), float(exit_s))
+        teacher, present_seq, junction_seq = recorded_teacher(
+            state, t0_s, ids, kin, n_steps, arm, tools)
+        wall = (wall_member_teacher(state, t0_s, ids, n_steps)
+                if self.flags.wall_members else [])
+        wall_ids: list[str] = []
+        if wall:
+            if teacher is None:
+                raise PredictorError("wall members need the state's recorded arm")
+            if entries_on:
+                raise PredictorError("wall_members cannot be combined with entries")
+            wall_ids = [str(member["id"]) for member in wall]
+            n_pad = len(wall)
+            initial = _pad_slots(initial, n_pad)
+            initial["is_cav"][:, len(ids):] = True
+            extra_teacher = torch.as_tensor(
+                np.stack([member["teacher"] for member in wall], axis=1)[None],
+                dtype=teacher.dtype)
+            teacher = torch.cat((teacher, extra_teacher), dim=2)
+            extra_present = torch.as_tensor(
+                np.stack([member["present"] for member in wall], axis=1)[None],
+                dtype=torch.bool)
+            present_seq = (torch.cat((present_seq, extra_present), dim=2)
+                           if present_seq is not None else extra_present)
+            extra_junction = torch.zeros((1, n_steps + 1, n_pad), dtype=torch.bool)
+            junction_seq = (torch.cat((junction_seq, extra_junction), dim=2)
+                            if junction_seq is not None else extra_junction)
+            proc = WallMemberInsert(wall, start=len(ids))
+            entries_on = True
+        action_timeline = action_timeline_inputs(state, controllers, ids, n_pad, tools)
+        if entries_on and not wall_ids:
+            initial = _pad_slots(initial, n_pad)
+            pad_shape = (1, n_steps + 1, n_pad)
+            if present_seq is not None:
+                present_seq = torch.cat(
+                    (present_seq, torch.ones(*pad_shape, dtype=torch.bool)), dim=2)
+            if teacher is not None:
+                teacher = torch.cat((teacher, torch.zeros(1, n_steps + 1, n_pad, 4)), dim=2)
+            if junction_seq is not None:
+                # Padding slots are never junction transits; pad the mask to the slot count.
+                junction_seq = torch.cat(
+                    (junction_seq, torch.zeros(*pad_shape, dtype=torch.bool)), dim=2)
+        if entries_on and n_pad:
+            if driver_history is not None:
+                # Entrants carry no observed history: the encoder falls back to the
+                # physics defaults for them (mask False).
+                driver_history = torch.cat((driver_history, torch.zeros(
+                    1, n_pad, driver_history.shape[2], driver_history.shape[3],
+                    dtype=driver_history.dtype)), dim=1)
+                driver_history_mask = torch.cat((driver_history_mask, torch.zeros(
+                    1, n_pad, driver_history_mask.shape[2], dtype=torch.bool)), dim=1)
+        lane_kwargs = ({"lane_seed": int(self.flags.lane_seed)}
+                       if getattr(self.model, "_samples_lanes", False) else {})
+        with torch.no_grad():
+            lane_teacher = None
+            if self.flags.diag_recorded_lanes:
+                if teacher is None:
+                    raise PredictorError(
+                        "diag_recorded_lanes requires the state's recorded arm")
+                lane_teacher = teacher[..., 1].long()
+            if teacher is None:
+                roll = self.model.rollout(
+                    initial, n_steps=n_steps, k0=0,
+                    cav_controller=(self.model.hold_teacher
+                                    if (bool(is_cav.any()) or entries_on) else None),
+                    present_seq=present_seq, entries=proc,
+                    driver_history=driver_history, driver_history_mask=driver_history_mask,
+                    action_timeline=action_timeline, controller_id=None,
+                    projection=self.backend.projection, lane_teacher=lane_teacher,
+                    **lane_kwargs)
+            else:
+                roll = self.model.rollout(
+                    initial, n_steps=n_steps, k0=0, cav_teacher=teacher,
+                    present_seq=present_seq, junction_seq=junction_seq,
+                    cav_controller=self.model.hold_teacher if entries_on else None,
+                    entries=proc, driver_history=driver_history,
+                    driver_history_mask=driver_history_mask, controller_id=None,
+                    action_timeline=action_timeline, projection=self.backend.projection,
+                    lane_teacher=lane_teacher, **lane_kwargs)
+        if proc is not None:
+            self.entries_summary = proc.summary()
+        return _frames_from_rollout(roll, t0_s, ids, kin, is_cav, n_pad, n_steps,
+                                    wall_ids)
+
+
+def _frames_from_rollout(roll: Mapping[str, Any], t0_s: float, ids: list[str],
+                         kin: np.ndarray, is_cav: np.ndarray, n_pad: int,
+                         n_steps: int, wall_ids: list[str] | None = None) -> list[dict]:
+    positions = roll["positions"][0].numpy()
+    speeds = roll["speeds"][0].numpy()
+    lanes = roll["lanes"][0].numpy()
+    masks = roll["masks"][0].numpy()
+    n_slots = len(ids) + n_pad
+    wall_ids = list(wall_ids or [])
+    slot_vid = (list(ids) + wall_ids
+                + [f"__entry_{i}" for i in range(max(n_pad - len(wall_ids), 0))])
+    final_cav = roll["state"]["is_cav"][0].numpy()
+    cav_slot = [bool(is_cav[k]) if k < len(ids) else bool(final_cav[k]) for k in range(n_slots)]
+    frames = [{"time_s": t0_s, "vehicles": [
+        {"id": slot_vid[k], "s": float(kin[k, 0]), "lane": int(kin[k, 1:4].argmax(-1)),
+         "v": float(kin[k, 4]), "present": True, "is_cav": bool(is_cav[k])}
+        for k in range(len(ids))]}]
+    for index in range(n_steps):
+        vehicles = [{"id": slot_vid[k], "s": float(positions[index, k]),
+                     "lane": int(lanes[index, k]), "v": float(speeds[index, k]),
+                     "present": True, "is_cav": cav_slot[k]}
+                    for k in range(n_slots) if bool(masks[index, k])]
+        frames.append({"time_s": t0_s + (index + 1) * DT_S, "vehicles": vehicles})
+    return frames

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/wall_v2_corpus_replay_v1",
+ "name": "wall_v2_corpus_replay_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\wall_v2_corpus_replay_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/wall_v2_corpus_replay_v1/wall_v2_corpus_replay_v1.tar.zst",
+ "bytes": 78980,
+ "files": 3,
+ "archive_bytes": 13040,
+ "archive_md5": "a739ad1567809eea8b4383c21f56a938",
+ "member_manifest": "manifests/members/output_wall_v2_corpus_replay_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 47.4,
+ "timestamp": "2026-10-10T01:35:51"
+}

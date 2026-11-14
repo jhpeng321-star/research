@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe47_b_timing_mechanism_v1",
+ "name": "oe47_b_timing_mechanism_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe47_b_timing_mechanism_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe47_b_timing_mechanism_v1/oe47_b_timing_mechanism_v1.tar.zst",
+ "bytes": 179393,
+ "files": 5,
+ "archive_bytes": 27446,
+ "archive_md5": "b3062e89b4eb4352d1b7ad077faac6c9",
+ "member_manifest": "manifests/members/output_oe47_b_timing_mechanism_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 9.7,
+ "timestamp": "2026-10-10T01:42:23"
+}

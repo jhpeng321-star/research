@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""C4 Dreamer-loop orchestrator.
+"""C4 Dreamer-loop orchestrator (owner 2026-10-16: "this is the intended way of training").
 
 Iteration k (state persisted in ``<loop_root>/state.json`` after every transition, so a crash or a
 restart resumes at the right step; every action is appended to ``<loop_root>/loop_log.jsonl``):
 
   snapshot        copy the policy's newest complete checkpoint into ``iter_<k>/policy_snapshot.pt``
-  collect_launch  allocate the next seeds of the registered C4_V6_LONGPAIR training block
+  collect_launch  allocate the next seeds of the owner-approved C4_V6_LONGPAIR training block
                   (965184-965999 only), push the snapshot to the CPU box, start the SUMO collection
                   detached (``traffic_shepherd.c4.collect``)
   collect_wait    poll it (resumable collect: a failed attempt is relaunched into the same directory)
@@ -23,7 +23,7 @@ restart resumes at the right step; every action is appended to ``<loop_root>/loo
 
 The policy keeps training on the old WM during every step but policy_stop/policy_start.
 
-Usage (on the GPU host, from a deployed code root; stdlib only):
+Usage (on gpuW, from a deployed code root; stdlib only):
   python scripts/c4/dreamer_loop.py run --config CFG [--init-wm CKPT --init-wm-val-log LOG
                                          --init-policy-run-dir DIR --adopt-policy-pid PID]
   python scripts/c4/dreamer_loop.py status  --config CFG [--live]
@@ -51,8 +51,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-#: Registered policy-rollout seeds (unused part of the C4_V6_LONGPAIR training block).
-SEED_BLOCK = (965184, 969999)  # C4_V6_LONGPAIR rest (965184-965999) + C4_LOOP_TRAIN (966000-969999), contiguous; both registered
+#: Owner-approved policy-rollout seeds (unused part of the C4_V6_LONGPAIR training block).
+SEED_BLOCK = (965184, 969999)  # C4_V6_LONGPAIR rest (965184-965999) + C4_LOOP_TRAIN (966000-969999), contiguous; both owner-approved
 #: C4 v5 evaluation seeds: never used for training.
 EVAL_SEEDS = (964000, 964199)
 FORBIDDEN = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1")
@@ -1130,7 +1130,7 @@ class Loop:
 
 # --------------------------------------------------------------------------- pipelined mode
 class PipeLoop(Loop):
-    """Continuous Dreamer loop: three lanes advanced by one polling tick.
+    """Continuous Dreamer loop (owner 2026-10-16): three lanes advanced by one polling tick.
 
     * collectors - every host in ``collect.hosts`` runs SUMO batches of ``collect.batch_size`` episodes
       back to back, each with the newest settled policy checkpoint and its own disjoint seed range;

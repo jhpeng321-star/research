@@ -1,0 +1,48 @@
+# ROUND-3 recipe on the ORIGINAL packs only (no switching pack): the base of r3.toml.
+# Preset R3_FULL of _out/train_r3_chain.sh with all env defaults, minus the switching/direct-output
+# mix (r3.toml adds [data.switching]). Used where that pack is not available (local CPU smoke,
+# golden checks). C1FAST schedule and optimiser, pack_v3 windows via the lpwo_v3 lists, braking
+# losses, merge_cal on; no residual cap, no projection, no traffic/stability/conservation losses,
+# jam oversampling off. Data names are logical (see configs/data_registry.toml).
+schema_version = 2
+name = "WM-S-R3-PACKS"
+extends = "c1fast.toml"
+
+[data]
+start_shift_prob = 0.75
+
+[data.sidecars]
+outcomes = "sidecars_packv3_v2/outcomes"
+
+[data.sidecars.identities]
+pack_v3 = "sidecars_packv3_v2/identities"
+dspeed = "identities_dspeed"
+damping = "identities_damping"
+
+[data.windows]
+train = "lpwo_v3/windows_train_noPI_noWall.json"
+val = "lpwo_v3/windows_val_noPI_noWall.json"
+exclude = ["lpwo_v3/excluded_runs_PI_wall_v3.json"]
+
+[model]
+merge_cal = true
+physics_params = "merge_params"
+sumo_fidelity = true
+n_controllers = 7
+
+[loss]
+loss_share_logging = true
+
+[loss.braking]
+asym_speed_alpha = 2.0
+decel_weight = 5.0
+decel_threshold_mps2 = 3.0
+propagation_weight = 1.0
+prop_window_s = 3.0
+
+[curriculum]
+max_hours = 10.0
+
+[runtime]
+num_workers = 0
+omp = 2

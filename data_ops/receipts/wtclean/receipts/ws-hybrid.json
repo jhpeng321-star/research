@@ -1,0 +1,74 @@
+{
+  "name": "ws-hybrid",
+  "path": "E:\\rd-wt\\ws-hybrid",
+  "class": "worktree",
+  "manual": false,
+  "branch": "wms/hybrid",
+  "headBefore": "6ebcf952d97362fdc2d1644a51edf5aa65563367",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-hybrid",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-hybrid.tar.txt",
+  "uploadCount": 176,
+  "uploadBytes": 60171969,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-hybrid.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 f63442b0de1be93a45fc71ac31b3d42f local f63442b0de1be93a45fc71ac31b3d42f; size 42680996/42680996; manifest md5 match size match; members=176 (tar -t 176, sha256 176); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-hybrid.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 1,
+  "skippedSensitiveSample": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T07:08:50.890110+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "6ebcf952d97362fdc2d1644a51edf5aa65563367",
+  "skippedSensitive": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-hybrid/ws-hybrid.tar.zst",
+    "name": "ws-hybrid.tar.zst",
+    "size": 42680996,
+    "md5": "f63442b0de1be93a45fc71ac31b3d42f",
+    "sha256": "10b99799111596319886722e8fa49910eede497e8512121e96622b4b20717d23",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-hybrid/ws-hybrid.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-hybrid.manifest.json",
+    "manifest_size": 29659,
+    "manifest_md5": "f18c15f12a0dda189921a5f02afc9869",
+    "member_count": 176,
+    "member_bytes": 60171969,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 8.3,
+    "verify_seconds": 1.1,
+    "upload_seconds": 34.1,
+    "upload_MBps": 1.25,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 176,
+  "memberBytes": 60171969,
+  "junctionsFound": []
+}

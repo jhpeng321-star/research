@@ -1,0 +1,52 @@
+# V10LOOP iteration-0 world model (2026-10-19; PREPARED, NOT LAUNCHED - owner approval required).
+# Bootstraps the closed v10 loop from runs/active/C4-V7FT-20261017/v5m_ref on NATIVE/RANDOM TRAIN
+# data only (no policy episodes yet).  The policy episodes of iteration 1+ are added by the
+# orchestrator through WMS_DATA_V6_POLICY + configs/c4_wm_v5m_refresh.toml.
+#
+# `data.c4_sources` REPLACES the parent list (wms.config.schema.deep_merge replaces lists), so the
+# inherited `v6_policy` source is absent here on purpose.  Mix ratios follow the v5m refresh:
+# native 0.65 / genrand_plain 0.30 / paired branch 0.05.
+#
+# Parallel branches add the lane_learnable key (c4/v10unblock) and the horizon curriculum +
+# mixed prioritised replay keys (c4/v10horizon).  The orchestrator passes them verbatim with
+# `--set`; this file deliberately does not guess their spelling.
+schema_version = 2
+name = "WM-S-C4-V10LOOP-ITER0"
+extends = "c4_wm_v5m_refresh.toml"
+
+[model]
+init_from = "ckpt_v5"   # launch: --set model.init_from=<abs path of runs/active/C4-V7FT-20261017/v5m_ref/wm_s_best_ap.pt>
+
+[[data.c4_sources]]
+name = "native_v5"
+path = "v5_native"          # WMS_DATA_V5_NATIVE
+mix_ratio = 0.65
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain"      # WMS_DATA_GENRAND_PLAIN
+mix_ratio = 0.30
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_branch"
+path = "genrand_branch"     # WMS_DATA_GENRAND_BRANCH
+mix_ratio = 0.05
+window_stride_s = 10.0
+use_val = true
+paired = true
+
+[curriculum]
+unroll_s = [60.0, 120.0]
+stage_steps = [60, 40]
+truncation_steps_per_stage = [120, 120]
+max_hours = 2.0
+
+[optim]
+lr_per_stage = [1.0e-4, 5.0e-5]
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10loop_iter0"

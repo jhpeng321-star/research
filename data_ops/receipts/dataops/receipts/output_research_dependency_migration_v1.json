@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/research_dependency_migration_v1",
+ "name": "research_dependency_migration_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\research_dependency_migration_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/research_dependency_migration_v1/research_dependency_migration_v1.tar.zst",
+ "bytes": 236169,
+ "files": 14,
+ "archive_bytes": 30711,
+ "archive_md5": "541f7775844365da7d48fb615b565ccf",
+ "member_manifest": "manifests/members/output_research_dependency_migration_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 49.3,
+ "timestamp": "2026-10-10T01:42:49"
+}

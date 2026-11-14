@@ -1,0 +1,58 @@
+﻿{
+    "name":  "ws-p2data",
+    "path":  "E:\\rd-wt\\ws-p2data",
+    "class":  "worktree",
+    "manual":  true,
+    "branch":  "wms/p2data",
+    "headBefore":  "182fa119712c84657a4a41b618f7a52e717a8768",
+    "headType":  "branch",
+    "dirtyBefore":  1,
+    "committed":  true,
+    "commitSha":  "79c4ad571e490453e4103dfc6f539226b2989c30",
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/ws-p2data",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-p2data.txt",
+    "uploadCount":  642,
+    "uploadBytes":  11557207,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-p2data.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 03:48:49 NOTICE: Google drive root \u0027research-archive/worktrees/ws-p2data\u0027: 0 differences found | 2026/10/10 03:48:49 NOTICE: Google drive root \u0027research-archive/worktrees/ws-p2data\u0027: 642 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-p2data.check.log"
+              },
+    "junctions":  [
+                      "_ext$n",
+                      "_ext\\damping_data",
+                      "_ext\\dspeed_data",
+                      "_ext\\identities",
+                      "_ext\\identities_dspeed",
+                      "_ext\\labels_cov",
+                      "_ext\\pack_v3"
+                  ],
+    "skippedSensitiveCount":  14,
+    "skippedSensitiveSample":  [
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/CAL_SPLIT_A4.json",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/combine/tests/test_cal_split_guard.py",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/evalh/cal_split.py",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/evalh/tests/test_cal_split.py",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/evalh/tests/test_run_eval_cal_half.py",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/INC1_EVAL.md",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/inventory/holdout_names.json",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/REGISTRATION_CHUNK5_TEST.md",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/REGISTRATION_CHUNK5_TEST_DRAFT.md",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/REGISTRATION_WM_N1_INC1.md",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/REGISTRATION_WM_N1_INC1_ADDENDUM_1.md",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/REGISTRATION_WM_N1_INC1_ADDENDUM_2.md",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/REGISTRATION_WM_N1_INC1_ADDENDUM_3.md",
+                                   "_out/t5_bench/tarx/output/wd01/wm_n1/train/tests/test_idea_a_cal_split.py"
+                               ],
+    "skippedJunctionCount":  500,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T03:35:41.8103307+08:00"
+}

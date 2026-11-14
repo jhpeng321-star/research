@@ -1,0 +1,151 @@
+{
+ "experiment_id": "WD-01",
+ "part": "2A-addendum",
+ "status": "complete",
+ "generated_utc": "2026-09-25T17:51:03.947727+00:00",
+ "zero_simulation": true,
+ "pinned": {
+  "vehicle_dynamics_pt": "D:\\research-dense\\output\\worldmodel_v3_vehicle\\vehicle_dynamics.pt",
+  "sha256_start": "ded83907b8d218574d3f5359c332408f17167da055574afbe29eaecb59d4a8f5",
+  "sha256_end": "ded83907b8d218574d3f5359c332408f17167da055574afbe29eaecb59d4a8f5",
+  "start_equals_end": true
+ },
+ "addendum_registration": {
+  "file": "REGISTRATION_ADDENDUM.md",
+  "sha256": "52e95ac3ba391a016155344d7deab43165830856c6e213b4f21ca0edb680259a",
+  "registered_utc": "2026-09-25T17:26:28.877879+00:00",
+  "frozen_before_scoring": true
+ },
+ "fix": {
+  "defect": "part1 t2_run.raw_passthrough sorted by current d and tested d[i] <= d[lead] along that order: false by construction, RAW overlaps identically 0",
+  "corrected": "pairs adjacent in the d-order at t within a lane group whose order is inverted at t+1; follower flagged; per 1000 vehicle-steps",
+  "unit_test": "tests/test_raw_overlap_fix.py: 5 passed (old counter returns 0 on inverted pair incl. fed the inverted t+1 order; corrected counter flags it; equality counts; adjacency-only; lane-group independence; randomized reference cross-check)"
+ },
+ "corrected_overlap_and_C2": {
+  "RAW@H30": {
+   "part1_overlap_events": 0,
+   "part1_overlap_per_1000": 0.0,
+   "corrected_overlap_events": 4026,
+   "corrected_overlap_per_1000": 9.024882,
+   "capviol_steps": 0,
+   "max_speed_mps": 33.378,
+   "C2_corrected_pass": false
+  },
+  "RAW@H60": {
+   "part1_overlap_events": 0,
+   "part1_overlap_per_1000": 0.0,
+   "corrected_overlap_events": 8369,
+   "corrected_overlap_per_1000": 9.380184,
+   "capviol_steps": 0,
+   "max_speed_mps": 34.4537,
+   "C2_corrected_pass": false
+  },
+  "RAW@H90": {
+   "part1_overlap_events": 0,
+   "part1_overlap_per_1000": 0.0,
+   "corrected_overlap_events": 13177,
+   "corrected_overlap_per_1000": 9.846073,
+   "capviol_steps": 0,
+   "max_speed_mps": 34.9953,
+   "C2_corrected_pass": false
+  },
+  "RAW@H120": {
+   "part1_overlap_events": 0,
+   "part1_overlap_per_1000": 0.0,
+   "corrected_overlap_events": 16292,
+   "corrected_overlap_per_1000": 9.13024,
+   "capviol_steps": 0,
+   "max_speed_mps": 35.2718,
+   "C2_corrected_pass": false
+  },
+  "CONSTRAINED@H30": {
+   "part1_overlap_events": 7031,
+   "part1_overlap_per_1000": 15.761040125532391,
+   "corrected_overlap_events": 7031,
+   "corrected_overlap_per_1000": 15.76104,
+   "capviol_steps": 0,
+   "max_speed_mps": 33.378,
+   "C2_corrected_pass": false
+  },
+  "CONSTRAINED@H60": {
+   "part1_overlap_events": 10876,
+   "part1_overlap_per_1000": 12.190091907644026,
+   "corrected_overlap_events": 10876,
+   "corrected_overlap_per_1000": 12.190092,
+   "capviol_steps": 0,
+   "max_speed_mps": 34.4537,
+   "C2_corrected_pass": false
+  },
+  "CONSTRAINED@H90": {
+   "part1_overlap_events": 13997,
+   "part1_overlap_per_1000": 10.458791003511918,
+   "corrected_overlap_events": 13997,
+   "corrected_overlap_per_1000": 10.458791,
+   "capviol_steps": 0,
+   "max_speed_mps": 34.9953,
+   "C2_corrected_pass": false
+  },
+  "CONSTRAINED@H120": {
+   "part1_overlap_events": 15356,
+   "part1_overlap_per_1000": 8.605693790629903,
+   "corrected_overlap_events": 15356,
+   "corrected_overlap_per_1000": 8.605694,
+   "capviol_steps": 0,
+   "max_speed_mps": 35.5385,
+   "C2_corrected_pass": false
+  }
+ },
+ "headline": {
+  "corrected_RAW_C2": "FAIL at every H (overlap 9.0-9.9 per 1000 vs registered <= 1; capviol 0)",
+  "constrained_C2": "unchanged from part-1 (FAIL at every H; counts identical to stored)",
+  "part1_recommendation": "unchanged in direction: no registered horizon passes; C1 was already binding, and RAW C2-pass rationale is superseded"
+ },
+ "deviation_check": {
+  "reproduced_exactly": [
+   "vehicle_steps",
+   "comparable_vehicle_steps",
+   "capviol_steps",
+   "negspeed_steps",
+   "max_speed_mps",
+   "CONSTRAINED overlap_events",
+   "RAW defective-geo reproduction (0)"
+  ],
+  "explained_deviation_1": "part-1 RAW overlap column = defective counter output (superseded by corrected count)",
+  "explained_deviation_2": "part-1 pooled C1 event universes into dicts keyed by vehicle id, so stored ttc/brake totals are distinct-vehicle counts, not vehicle-seconds (reported in results/deviation_check.json; part-1 C1 verdicts stand as registered)"
+ },
+ "window_diagnostics": {
+  "status": "complete; DIAGNOSTICS ONLY (no pass/fail)",
+  "basis": "frozen t0 vehicle set both sides; truth leaders from full truth snapshot; predicted leaders from rollout states; 1 s step; 147 evals per (variant, H)",
+  "headline": "window-level boolean flags recall 0.89-0.99, precision 0.89-1.00 in both variants at every H (danger-window occurrence is predictable even though co-timed seconds are not); exposure over-predicted with positive bias growing with H; CONSTRAINED integrator adds +9.0 to +17.9 s hard-brake bias (reset cost); min-TTC Pearson 0.88 at H30 falling to ~0.6-0.7 at H120",
+  "summary_file": "results/diag_summary.json",
+  "per_eval_file": "results/diag_per_eval.csv"
+ },
+ "run": {
+  "commands": [
+   "pytest tests/ -q (2.0 s, 5 passed)",
+   "WD_DEVICE=cpu python addendum_run.py (155.5 s; first run 170.3 s with identical verdicts)"
+  ],
+  "device": "cpu",
+  "python": "3.10.20",
+  "torch": "2.12.1+cpu",
+  "numpy": "2.2.6",
+  "model_forward_vehicle_steps": 3568800,
+  "throughput_vehicle_steps_per_s": 158896.6
+ },
+ "artifacts": {
+  "REGISTRATION_ADDENDUM.md": "52e95ac3ba391a016155344d7deab43165830856c6e213b4f21ca0edb680259a",
+  "wd2lib.py": "fba65deb9b25d63c280892a8b3e2c653a247143e2dcfb60612f693792e875bae",
+  "addendum_run.py": "a8b2addea3c641f80b082ec294d0b810ef889213779ddc7cc58ff9629ce4838d",
+  "tests/conftest.py": "8659c4f6af34a32f61ecc29774fd873cf628e7e0828ce9ff04773418357a6cc6",
+  "tests/test_raw_overlap_fix.py": "0d710520bb93cf42aae1b2aa0a0ed4c177f58f972c8c5f434fdaac33b1c26927",
+  "results/registration_addendum_record.json": "f5cded0824153a39bd06c9db898c585a803e8f2ce93518de3ee0a8a981191541",
+  "results/overlap_addendum.json": "f7c2f82ef3ec7bb69c4e7a83ef635e2b4335d9dbfa336f8450f8769b3968c8bd",
+  "results/overlap_addendum.csv": "9fec219cfc16f8e168be33efb737e71ce8df9543e1b8933df53a6a634c2ae7c4",
+  "results/deviation_check.json": "c8a5143ceda3b81d02b56f2cb46fa1413f74f23ccb694c6be4b02a3b1511b4f2",
+  "results/diag_summary.json": "ee7695ae31461efee4773245e3ca46c1b6171fb8ce5a47e39a9200d79cf214c6",
+  "results/diag_per_eval.csv": "e3454047e90f33d82f95fb419e3852add7e58f168f37a754fc75311d37c623a4",
+  "results/addendum_run_meta.json": "e38dc874c2c78e445c3dee015c1565b4db52267fb7228ec400cefded33c0d0c0",
+  "REPORT_PART2A.md": "5bdcaa951afcc063d7e299e46245ac7a695e28ebe194dddd7688d30ba71858fb"
+ },
+ "report": "REPORT_PART2A.md"
+}

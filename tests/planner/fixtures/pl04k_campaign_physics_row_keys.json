@@ -1,0 +1,17 @@
+{
+  "_note": "KEY STRUCTURE ONLY of the first line of a campaign physics_steps.jsonl (TRAIN run w8483m2700p02t240__native, read-only); every value replaced by a same-typed placeholder. cav_actions inner keys are from the in-repo pilot_r3_excerpt fixture.",
+  "row": {
+    "time_s": 0.5,
+    "live_ids": ["v0", "v1"],
+    "departed_ids": ["v1"],
+    "arrived_ids": [],
+    "colliding_ids": [],
+    "cav_ids": ["v0"],
+    "speed_modes": {"v0": 31},
+    "cav_actions": {"v0": {"owner": "native", "action": "native", "commanded_speed_mps": null, "controller_state_digest": null, "wall_id": null, "wall_membership": null, "wall_phase": null}},
+    "boundary_crossings": {"mainline_entry": 1},
+    "vehicles": {"v0": {"road_id": "e", "lane_id": "e_0", "lane_position_m": 1.0, "speed_mps": 1.0, "acceleration_mps2": 0.0, "type_id": "normal_car", "speed_mode": 31, "lane_changed": false}},
+    "starting_teleports": [],
+    "ending_teleports": []
+  }
+}

@@ -1,8 +1,8 @@
 """DATAHYG: no designed controllers in the WM-S training windows (``data.controller_hygiene``).
 
-Design rule: the world model learns action effects only from native driving, undirected random
+Owner rule: the world model learns action effects only from native driving, undirected random
 direct-output commands and the learned policy's own rollouts.  Two TRAIN sources violated it
-(audit runs/scratch/actiondata, DATAHYG_NOTES.md):
+(audit E:/agent-work/tmp/actiondata, DATAHYG_NOTES.md):
 
 1. the switching pack's ``direct-mix`` arm switches every CAV among {native, CIRCLES damping,
    direct} (damping = 19.4 % of CAV time);

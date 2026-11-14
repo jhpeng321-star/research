@@ -1,6 +1,6 @@
 {
   "schema": "c4_bundle_manifest/1",
-  "note": "Declarative content of the C4 transfer bundle (built by scripts/c4/pack_bundle.py). Paths under data_root are relative to the data cache (default data_cache); '@name/...' paths resolve under external_roots (inputs outside data_cache). Data lands at <C4_HOME>/rd/data_cache/<dest> so configs/data_registry.toml resolves unchanged. Hard filter: any path containing a restricted token (holdout, heldout, cal, calibration, cal_split, sealed, chunk5, j4b, inc1) is dropped and the build aborts if one survives in a tar. Reconciled 2026-10-12 against configs/c4_wm.toml + configs/c4_policy.toml (OPS_NOTES section 11).",
+  "note": "Declarative content of the C4 transfer bundle (built by scripts/c4/pack_bundle.py). Paths under data_root are relative to the data cache (default E:/research-dense/data_cache); '@name/...' paths resolve under external_roots (inputs outside data_cache). Data lands at <C4_HOME>/rd/data_cache/<dest> so configs/data_registry.toml resolves unchanged. Hard filter: any path containing a restricted token (holdout, heldout, cal, calibration, cal_split, sealed, chunk5, j4b, inc1) is dropped and the build aborts if one survives in a tar. Reconciled 2026-10-12 against configs/c4_wm.toml + configs/c4_policy.toml (OPS_NOTES section 11).",
   "default_policies": [
     "native",
     "trajectory"
@@ -126,18 +126,18 @@
   "checkpoints": [
     {
       "name": "ckpt_r5b",
-      "src": "runs/active/WM-S-R5B-20261012/box/gpu/r5b_main_a1/wm_s_best.pt",
+      "src": "E:/research-dense/runs/active/WM-S-R5B-20261012/box/gpuA/r5b_main_a1/wm_s_best.pt",
       "dest": "data_cache/ckpt_r5b/wm_s_best.pt",
       "expect_sha256_prefix": "6f000331"
     },
     {
       "name": "ckpt_r5b_physics",
-      "src": "runs/active/WM-S-R5B-20261012/box/gpu/r5b_main_a1/physics.json",
+      "src": "E:/research-dense/runs/active/WM-S-R5B-20261012/box/gpuA/r5b_main_a1/physics.json",
       "dest": "data_cache/ckpt_r5b/physics.json"
     },
     {
       "name": "ckpt_r5b_receipt",
-      "src": "runs/active/WM-S-R5B-20261012/box/gpu/r5b_main_a1/TRAIN_RECEIPT.json",
+      "src": "E:/research-dense/runs/active/WM-S-R5B-20261012/box/gpuA/r5b_main_a1/TRAIN_RECEIPT.json",
       "dest": "data_cache/ckpt_r5b/TRAIN_RECEIPT.json",
       "optional": true
     },
@@ -162,6 +162,6 @@
     }
   },
   "external_roots": {
-    "runs_active": "runs/active"
+    "runs_active": "E:/research-dense/runs/active"
   }
 }

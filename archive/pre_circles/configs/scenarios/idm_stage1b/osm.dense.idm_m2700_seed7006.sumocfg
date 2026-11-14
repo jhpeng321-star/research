@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sumoConfiguration>
+  <input>
+    <net-file value="D:/research/highway_merge_shepherd_long/osm.net.xml.gz"/>
+    <route-files value="idm_m2700_seed7006.rou.xml"/>
+  </input>
+  <processing>
+    <ignore-route-errors value="true"/>
+    <collision.action value="warn"/>
+    <time-to-teleport value="-1"/>
+  </processing>
+  <report><no-step-log value="true"/></report>
+</sumoConfiguration>

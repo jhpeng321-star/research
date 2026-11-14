@@ -1,0 +1,10 @@
+{
+  "scorer": "src/wms wms.eval.score.score_states",
+  "set": "wall_same h60 quick-20",
+  "n_states": 20,
+  "c1_median_hdv_abs_ds_60m": 11.957571983337402,
+  "expected_m": 11.9576,
+  "absolute_tolerance_m": 0.001,
+  "pass": true,
+  "errors": []
+}

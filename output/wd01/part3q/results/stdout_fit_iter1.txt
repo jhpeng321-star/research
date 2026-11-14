@@ -1,0 +1,48 @@
+priority below-normal: False
+=== WD-01 part 3q TASK B: merge-lever refit, iteration 1 (declared: {'base_from': 'p3o_iter2_member0', 'early_d': -15.44, 'lines': (('merge_cooldown_ticks', (4, 8, 16)), ('merge_early_prob', (0.3, 0.15)), ('merge_accept_prob', (0.4, 0.7)), ('lc_scale_disc', (0.0014, 0.0018)), ('p_coop_scale', (0.25,))), 'base_equiv': {'merge_cooldown_ticks': 0, 'merge_early_prob': 0.55, 'merge_accept_prob': 0.55, 'lc_scale_disc': 0.0016, 'p_coop_scale': 0.0}, 'member_bases': 'p3o_iter2_members_1_4', 'member_draw_fields': ('merge_cooldown_ticks', 'merge_accept_prob', 'merge_early_prob')}) ===
+ZERO simulation; fit windows = k-fold TRAIN folds ('f1', 'f2', 'f3', 'f4') (13 roots x 7 t0); fold f0 never enters the fit; validation never touched; holdout blocked.
+device=cpu torch_threads=2
+base: lc 0.002 disc 0.0016 mprob 0.55 cd 0 early_d 0.0 early_p None tau 2.4 b 1.0 force 60.0 blend 0.0 pcoop 0.0 dawdle 1.0
+[   0.0s] computing truth targets for 91 fit windows ...
+TRAIN truth LC by type per fit window (pooled means): lcM30 3.03 lcD30 7.90 | lcM60 6.54 lcD60 16.25
+WARNING: fit_lines_p3q_iter1.json unreadable (Expecting value: line 1 column 1 (char 0)) -- starting the line tables fresh (a truncated file, e.g. from an ENOSPC mid-write, must not block the resume)
+[  30.9s] rolling the BASE config on 91 fit windows ...
+BASE joint=4.0435 (s1 0.5552 s2 3.4883; lcM30 0.304 lcD30 0.632 delay 0.498)
+[ 369.2s] LINE merge_cooldown_ticks=4: rolling 91 fit windows ...
+[ 587.3s] LINE merge_cooldown_ticks=4: joint=4.2234 (s1 0.4943 s2 3.7291; lcM30 0.293 lcD30 0.593 delay 0.471)
+[ 587.3s] LINE merge_cooldown_ticks=8: rolling 91 fit windows ...
+[ 796.9s] LINE merge_cooldown_ticks=8: joint=4.5242 (s1 0.4509 s2 4.0734; lcM30 0.246 lcD30 0.586 delay 0.474)
+[ 796.9s] LINE merge_cooldown_ticks=16: rolling 91 fit windows ...
+[1008.3s] LINE merge_cooldown_ticks=16: joint=4.4304 (s1 0.4270 s2 4.0034; lcM30 0.217 lcD30 0.582 delay 0.487)
+[1008.3s] LINE merge_early_prob=0.3: rolling 91 fit windows ...
+[1219.7s] LINE merge_early_prob=0.3: joint=4.0391 (s1 0.5562 s2 3.4829; lcM30 0.305 lcD30 0.632 delay 0.499)
+[1219.7s] LINE merge_early_prob=0.15: rolling 91 fit windows ...
+[1441.1s] LINE merge_early_prob=0.15: joint=4.0386 (s1 0.5555 s2 3.4831; lcM30 0.305 lcD30 0.632 delay 0.499)
+[1441.1s] LINE merge_accept_prob=0.4: rolling 91 fit windows ...
+[1660.6s] LINE merge_accept_prob=0.4: joint=4.0872 (s1 0.4960 s2 3.5913; lcM30 0.291 lcD30 0.608 delay 0.492)
+[1660.6s] LINE merge_accept_prob=0.7: rolling 91 fit windows ...
+[1878.2s] LINE merge_accept_prob=0.7: joint=4.1050 (s1 0.5946 s2 3.5104; lcM30 0.318 lcD30 0.630 delay 0.511)
+[1878.2s] LINE lc_scale_disc=0.0014: rolling 91 fit windows ...
+[2080.5s] LINE lc_scale_disc=0.0014: joint=3.6414 (s1 0.5516 s2 3.0897; lcM30 0.312 lcD30 0.453 delay 0.493)
+[2080.5s] LINE lc_scale_disc=0.0018: rolling 91 fit windows ...
+[2272.4s] LINE lc_scale_disc=0.0018: joint=4.3676 (s1 0.5521 s2 3.8155; lcM30 0.308 lcD30 0.746 delay 0.497)
+[2272.4s] LINE p_coop_scale=0.25: rolling 91 fit windows ...
+[2465.5s] LINE p_coop_scale=0.25: joint=4.7159 (s1 0.6287 s2 4.0871; lcM30 0.317 lcD30 0.637 delay 0.481)
+
+== line tables (fit windows; includes the copied base-equivalent entries) ==
+  merge_cooldown_ticks   0.0:4.0435*  4.0:4.2234  8.0:4.5242  16.0:4.4304  -> winner 0.0
+  merge_early_prob       0.15:4.0386  0.3:4.0391  0.55:4.0435*  -> winner 0.15
+  merge_accept_prob      0.4:4.0872  0.55:4.0435*  0.7:4.1050  -> winner 0.55
+  lc_scale_disc          0.0014:3.6414  0.0016:4.0435*  0.0018:4.3676  -> winner 0.0014
+  p_coop_scale           0.0:4.0435*  0.25:4.7159  -> winner 0.0
+[2465.5s] AFTER: rolling the combined candidate on 91 fit windows ...
+
+AFTER (combined {'merge_cooldown_ticks': 0.0, 'merge_early_prob': 0.15, 'merge_accept_prob': 0.55, 'lc_scale_disc': 0.0014, 'p_coop_scale': 0.0}): joint=3.6241 (s1 0.5512 s2 3.0729) detail2={'mr': 0.7930127208328562, 'delay': 0.4904350139459557, 'ttc3': 0.4344796107123561, 'lcM30': 0.3125254790560912, 'lcD30': 0.4534485313886163, 'lcM60': 0.2970074185781333, 'lcD60': 0.88103584875289}
+BEFORE (base): joint=4.0435
+[2654.5s] member 1: base (p3o_iter2 #1) + draws {'merge_cooldown_ticks': 4.0, 'merge_accept_prob': 0.7, 'merge_early_prob': 0.3} -> lc 0.002 disc 0.002 mprob 0.7 cd 4 early_d -15.44 early_p 0.3 tau 1.9 b 5.0 force 60.0 blend 0.0 pcoop 0.25 dawdle 1.0
+[2654.5s] member 2: base (p3o_iter2 #2) + draws {'merge_cooldown_ticks': 0.0, 'merge_accept_prob': 0.7, 'merge_early_prob': 0.55} -> lc 0.002 disc 0.0016 mprob 0.7 cd 0 early_d -15.44 early_p 0.55 tau 2.4 b 3.0 force 60.0 blend 0.0 pcoop 0.25 dawdle 1.5
+[2654.5s] member 3: base (p3o_iter2 #3) + draws {'merge_cooldown_ticks': 0.0, 'merge_accept_prob': 0.55, 'merge_early_prob': 0.3} -> lc 0.002 disc 0.0016 mprob 0.55 cd 0 early_d -15.44 early_p 0.3 tau 2.4 b 5.0 force 60.0 blend 0.0 pcoop 0.25 dawdle 1.25
+[2654.5s] member 4: base (p3o_iter2 #4) + draws {'merge_cooldown_ticks': 0.0, 'merge_accept_prob': 0.55, 'merge_early_prob': 0.3} -> lc 0.002 disc 0.0016 mprob 0.55 cd 0 early_d -15.44 early_p 0.3 tau 2.4 b 4.0 force 60.0 blend 0.0 pcoop 0.0 dawdle 1.25
+[2654.5s] wrote D:\rd-wt\wd01q\output\wd01\part3q\results\fit_p3q_iter1.json
+
+DONE part 3q fit iteration 1.

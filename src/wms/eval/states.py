@@ -284,7 +284,7 @@ def build_state(window: Mapping, packs: Mapping[str, Pack],
 
     ``min_vehicles`` fails closed on a degenerate snapshot: the pack_v3 ``base``
     / ``native_base`` arms were featurised from origin 0 and carry the known
-    t0-label misalignment (decision (b)), so their snapshot holds almost
+    t0-label misalignment (owner decision (b)), so their snapshot holds almost
     no vehicles.  Such a window is dropped rather than silently scored at the
     wrong time.
 

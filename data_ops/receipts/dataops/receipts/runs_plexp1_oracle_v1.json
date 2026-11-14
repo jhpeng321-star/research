@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/plexp1_oracle_v1",
+ "name": "plexp1_oracle_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\plexp1_oracle_v1",
+ "drive": "gdrive:research-archive/repo-evidence/runs/plexp1_oracle_v1/plexp1_oracle_v1.tar.zst",
+ "bytes": 441048769,
+ "files": 548,
+ "archive_bytes": 61040050,
+ "archive_md5": "d3d7a73c62ca408c4cd3447c48293524",
+ "member_manifest": "manifests/members/runs_plexp1_oracle_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 89.8,
+ "timestamp": "2026-10-10T04:23:42"
+}

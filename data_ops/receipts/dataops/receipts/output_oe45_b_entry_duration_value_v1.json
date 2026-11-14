@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe45_b_entry_duration_value_v1",
+ "name": "oe45_b_entry_duration_value_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe45_b_entry_duration_value_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe45_b_entry_duration_value_v1/oe45_b_entry_duration_value_v1.tar.zst",
+ "bytes": 220993,
+ "files": 5,
+ "archive_bytes": 42536,
+ "archive_md5": "2f50d0d4ceb79f2a57e2f6054397c5d2",
+ "member_manifest": "manifests/members/output_oe45_b_entry_duration_value_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 61.0,
+ "timestamp": "2026-10-10T01:42:46"
+}

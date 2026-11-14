@@ -1,0 +1,153 @@
+{
+  "schema": "wm59_copy_manifest/1",
+  "created_utc": "2026-09-29T07:04:57Z",
+  "source_root": "E:/rd-wt/wm64/output/campaign_walls_v1 (untracked WALL-1/WALL-2 pilot code; read-only source, never modified)",
+  "target_root": "E:/rd-wt/wd01z/output/campaign_walls_v1 (tracked in git on zcode/wd01z via git add -f; output/ is gitignored)",
+  "spec": "E:/research-dense/output/campaign_walls_v1/PLAN_DRAFT.md (row WALL-2 and sections 1.2/1.3/1.4)",
+  "audit": "WALL2_AUDIT.md (same directory)",
+  "skipped": [
+    "__pycache__/ and .ruff_cache/ (build artifacts)",
+    "results_plan/ (GENERATED live campaign artifacts in the source: WORLD_PLAN.json built against the real chunk-2/3 E:/ sources with real base-state digests, plus its draft registration; regenerate in the target via plan_walls_pilot.main + walls_pilot_registration draft/finalize; committing them would pin another package's code digest)"
+  ],
+  "notes": [
+    "test_import_safety.py is NEW in the target (audit: import-time SUMO-safety guard).",
+    "smoke_walls.py gained --dry-run (render_sumo_command + dry_run_smoke) in the target; tests/test_smoke_walls.py and tests/test_run_wall_branch.py gained the dry-run / CLI-wiring tests.",
+    "wm64's campaign_stage1_v3 and campaign_pilot_v1 (WM-64-era, copy_dir-capable) were copied CODE-ONLY into E:/rd-wt/wd01z/output/ as UNTRACKED import dependencies; they are not part of this commit.",
+    "modified_in_target=true files carry the FINAL target sha256 in target_sha256 (source_sha256 = state as copied)."
+  ],
+  "files": [
+    {
+      "path": "common.py",
+      "status": "copied",
+      "source_sha256": "91817d9b6720d4698698cd7c37c5676cd3ff7c5ba50826d2e86f62acf7c4c4a5",
+      "target_sha256": "91817d9b6720d4698698cd7c37c5676cd3ff7c5ba50826d2e86f62acf7c4c4a5",
+      "modified_in_target": false
+    },
+    {
+      "path": "plan_walls_pilot.py",
+      "status": "copied",
+      "source_sha256": "bcf253980a0cc9b58ff080c0a22ba031b4e23ad77bd54aeca192b911854d2ae7",
+      "target_sha256": "bcf253980a0cc9b58ff080c0a22ba031b4e23ad77bd54aeca192b911854d2ae7",
+      "modified_in_target": false
+    },
+    {
+      "path": "walls_pilot_registration.py",
+      "status": "copied",
+      "source_sha256": "1f759aa572921827c95e805309d678005e547781ca9a5856cdb9a5ae902d9e41",
+      "target_sha256": "1f759aa572921827c95e805309d678005e547781ca9a5856cdb9a5ae902d9e41",
+      "modified_in_target": false
+    },
+    {
+      "path": "smoke_walls.py",
+      "status": "copied",
+      "source_sha256": "aa39e5674a5d2f5b43a9a406f8c1cd776cdac6693b46d048dfed2c62f35db43c",
+      "target_sha256": "b42fe9b3d7c30dffc4ecc55900ac4b87e6c00446dc03f5d24f07810d22de9f10",
+      "modified_in_target": true
+    },
+    {
+      "path": "wall_driver.py",
+      "status": "copied",
+      "source_sha256": "ff92f386e78d9921f7ddb07c2202d84335a79cab61c6cd19c5af7cfdfb272aa8",
+      "target_sha256": "ff92f386e78d9921f7ddb07c2202d84335a79cab61c6cd19c5af7cfdfb272aa8",
+      "modified_in_target": false
+    },
+    {
+      "path": "wall_request.py",
+      "status": "copied",
+      "source_sha256": "611f045c68e00157dab5171a778d6ccb970588ec8a348c57aa2bb15b8679ea5a",
+      "target_sha256": "611f045c68e00157dab5171a778d6ccb970588ec8a348c57aa2bb15b8679ea5a",
+      "modified_in_target": false
+    },
+    {
+      "path": "run_wall_branch.py",
+      "status": "copied",
+      "source_sha256": "9f0209b1b40d010584b09a9e1c8909f8354592ae20e149e01c1f6fc56ae0ff62",
+      "target_sha256": "9f0209b1b40d010584b09a9e1c8909f8354592ae20e149e01c1f6fc56ae0ff62",
+      "modified_in_target": false
+    },
+    {
+      "path": "launch_walls.py",
+      "status": "copied",
+      "source_sha256": "0ab796508a7e2c2e0db8ba5b60b5320be210aaabb0afbca786bff122aea424d7",
+      "target_sha256": "0ab796508a7e2c2e0db8ba5b60b5320be210aaabb0afbca786bff122aea424d7",
+      "modified_in_target": false
+    },
+    {
+      "path": "ruff.toml",
+      "status": "copied",
+      "source_sha256": "0fa6e075329ea001639ca2b7e9bc0024ad83b429cba43c4f0bfc92a66d92ddc6",
+      "target_sha256": "0fa6e075329ea001639ca2b7e9bc0024ad83b429cba43c4f0bfc92a66d92ddc6",
+      "modified_in_target": false
+    },
+    {
+      "path": "tests/conftest.py",
+      "status": "copied",
+      "source_sha256": "f00411e7502b0076db38a778e657527cd4cbbf63e5f73c11e2f2887a167e31ee",
+      "target_sha256": "f00411e7502b0076db38a778e657527cd4cbbf63e5f73c11e2f2887a167e31ee",
+      "modified_in_target": false
+    },
+    {
+      "path": "tests/wall_fakes.py",
+      "status": "copied",
+      "source_sha256": "a874e9e00eeff4391e917edbb70e28ad10c8d8668ecba04a10c7bdab2108ee57",
+      "target_sha256": "a874e9e00eeff4391e917edbb70e28ad10c8d8668ecba04a10c7bdab2108ee57",
+      "modified_in_target": false
+    },
+    {
+      "path": "tests/test_launch_walls.py",
+      "status": "copied",
+      "source_sha256": "1ce78e3453b1b361b0fd66ee211060feaf38f6319912207d721061ab4410dcfc",
+      "target_sha256": "1ce78e3453b1b361b0fd66ee211060feaf38f6319912207d721061ab4410dcfc",
+      "modified_in_target": false
+    },
+    {
+      "path": "tests/test_plan_walls_pilot.py",
+      "status": "copied",
+      "source_sha256": "aeeec4ddc40e3b70a046f11e95b098b936d32d92a3bcc91c43b7f17a2d048bad",
+      "target_sha256": "aeeec4ddc40e3b70a046f11e95b098b936d32d92a3bcc91c43b7f17a2d048bad",
+      "modified_in_target": false
+    },
+    {
+      "path": "tests/test_run_wall_branch.py",
+      "status": "copied",
+      "source_sha256": "f55388ab12205428404659714b1109832ed48ea3bd6f1526024fd8a634cac5f1",
+      "target_sha256": "b6bb5dbe3ffe889a99808a73210d34b2cd54a45d2926ee65a9a9ad31df4a9b76",
+      "modified_in_target": true
+    },
+    {
+      "path": "tests/test_smoke_walls.py",
+      "status": "copied",
+      "source_sha256": "2d9bbf8bb84f28dd968e460c4793b5a01f22cbf660ce7ce71ba5e1e5e70ec101",
+      "target_sha256": "fd209120bbe4b1e0101823a9696d522802cc954148709a686e08a40969e41ee5",
+      "modified_in_target": true
+    },
+    {
+      "path": "tests/test_wall_driver.py",
+      "status": "copied",
+      "source_sha256": "4b8e76d13f3eb33e7630587897f23566d0e89dc34e137c94e461ff97d2b32141",
+      "target_sha256": "4b8e76d13f3eb33e7630587897f23566d0e89dc34e137c94e461ff97d2b32141",
+      "modified_in_target": false
+    },
+    {
+      "path": "tests/test_wall_request.py",
+      "status": "copied",
+      "source_sha256": "29400f0c18b66f19157c9779c129376ef682821269fc7a8170d4a04d7f1ad447",
+      "target_sha256": "29400f0c18b66f19157c9779c129376ef682821269fc7a8170d4a04d7f1ad447",
+      "modified_in_target": false
+    },
+    {
+      "path": "tests/test_walls_pilot_registration.py",
+      "status": "copied",
+      "source_sha256": "98a93fb71413c8736f00d2861882a0bce5c6d8ae4c24f3afa4dbace67e5b9119",
+      "target_sha256": "98a93fb71413c8736f00d2861882a0bce5c6d8ae4c24f3afa4dbace67e5b9119",
+      "modified_in_target": false
+    },
+    {
+      "path": "tests/test_import_safety.py",
+      "status": "new_in_target (WALL-2 audit addition)",
+      "source_sha256": null,
+      "target_sha256": "b962c4949504c25d67ccad9f2b8f2fc7bd5bcd7eee73e1235364a8d7e8bb6ded",
+      "modified_in_target": true
+    }
+  ]
+}

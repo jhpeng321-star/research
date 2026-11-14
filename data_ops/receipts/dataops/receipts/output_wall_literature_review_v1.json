@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/wall_literature_review_v1",
+ "name": "wall_literature_review_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\wall_literature_review_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/wall_literature_review_v1/wall_literature_review_v1.tar.zst",
+ "bytes": 12278,
+ "files": 1,
+ "archive_bytes": 6123,
+ "archive_md5": "7074026842fdb1bd2f32fc360c4f611f",
+ "member_manifest": "manifests/members/output_wall_literature_review_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 44.7,
+ "timestamp": "2026-10-10T01:30:05"
+}

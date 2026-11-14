@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/collapse_prevention_audit_v1",
+ "name": "collapse_prevention_audit_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\collapse_prevention_audit_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/collapse_prevention_audit_v1/collapse_prevention_audit_v1.tar.zst",
+ "bytes": 458441426,
+ "files": 261,
+ "archive_bytes": 67524766,
+ "archive_md5": "118d7ed2a7b0b40afbca3cc6e5736418",
+ "member_manifest": "manifests/members/output_collapse_prevention_audit_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 299.9,
+ "timestamp": "2026-10-10T02:54:45"
+}

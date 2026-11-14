@@ -1,0 +1,32 @@
+........................................................................ [ 41%]
+........................................................................ [ 83%]
+.............................                                            [100%]
+============================== warnings summary ===============================
+output/wd01/partB_v0/tests/test_b3a.py::test_eval_report_sections_6_7_and_3_decimals
+  C:\Users\jpeng\miniconda3\envs\rl_driving\lib\site-packages\torch\profiler\profiler.py:272: UserWarning: Warning: Profiler clears events at the end of each cycle.Only events from the current cycle will be reported.To keep events across cycles, set acc_events=True.
+    _warn_once(
+
+output/wd01/partB_v0/tests/test_cli_net.py: 14 warnings
+output/wd01/partB_v0/tests/test_features_deployable.py: 1 warning
+output/wd01/partB_v0/tests/test_tau_conditioning.py: 300 warnings
+output/wd01/partB_v0/tests/test_train_net.py: 45 warnings
+  C:\Users\jpeng\miniconda3\envs\rl_driving\lib\site-packages\torch\nn\functional.py:6718: UserWarning: There is a performance drop because we have not yet implemented the batching rule for aten::_scaled_dot_product_flash_attention_for_cpu. Please file us an issue on GitHub so that we can prioritize its implementation. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\aten\src\ATen\functorch\BatchedFallback.cpp:83.)
+    attn_output = scaled_dot_product_attention(
+
+output/wd01/partB_v0/tests/test_features_deployable.py::test_baselines_skip_tiny_slices
+  E:\rd-wt\wd01v04c\output\wd01\partB_v0\gbm.py:1458: RuntimeWarning: Mean of empty slice
+    row[f"mae_{k}"] = _r3(np.nanmean(mae[k][m])) \
+
+output/wd01/partB_v0/tests/test_features_deployable.py::test_baselines_skip_tiny_slices
+  E:\rd-wt\wd01v04c\output\wd01\partB_v0\gbm.py:1461: RuntimeWarning: Mean of empty slice
+    _r3(np.nanmean(crps_rows[k][m])) \
+
+output/wd01/partB_v0/tests/test_train_net.py::test_ablation_runs_variants_and_chooses_by_oob
+output/wd01/partB_v0/tests/test_train_net.py::test_ablation_runs_variants_and_chooses_by_oob
+output/wd01/partB_v0/tests/test_train_net.py::test_ablation_runs_variants_and_chooses_by_oob
+output/wd01/partB_v0/tests/test_train_net.py::test_ablation_runs_variants_and_chooses_by_oob
+  E:\rd-wt\wd01v04c\output\wd01\partB_v0\train_net.py:1081: RuntimeWarning: Mean of empty slice
+    mean_best = float(np.nanmean(vals)) if vals else float("nan")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+173 passed, 367 warnings in 1174.88s (0:19:34)

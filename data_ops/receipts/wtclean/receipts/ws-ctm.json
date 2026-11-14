@@ -1,0 +1,41 @@
+﻿{
+    "name":  "ws-ctm",
+    "path":  "E:\\rd-wt\\ws-ctm",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "wms/ctm",
+    "headBefore":  "e4ae61d59ac176b57904712c1ad7469a7d6115b5",
+    "headType":  null,
+    "dirtyBefore":  0,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/ws-ctm",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-ctm.txt",
+    "uploadCount":  244,
+    "uploadBytes":  17654901,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-ctm.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 05:33:48 NOTICE: Google drive root \u0027research-archive/worktrees/ws-ctm\u0027: 0 differences found | 2026/10/10 05:33:48 NOTICE: Google drive root \u0027research-archive/worktrees/ws-ctm\u0027: 244 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-ctm.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  3,
+    "skippedSensitiveSample":  [
+                                   "tests/planner/__pycache__/test_holdout_guard.cpython-310-pytest-9.1.1.pyc",
+                                   "tests/planner/__pycache__/test_holdout_guard_seal.cpython-310-pytest-9.1.1.pyc",
+                                   "traffic_shepherd/planner/__pycache__/holdout.cpython-310.pyc"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T05:27:36.1169269+08:00"
+}

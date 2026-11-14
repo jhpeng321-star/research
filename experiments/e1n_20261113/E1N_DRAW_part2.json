@@ -1,0 +1,143 @@
+{
+ "schema": "e1n.part.v1",
+ "part": 2,
+ "drawn": [
+  {
+   "draw_order": 0,
+   "key": "3bfdc9c1bbcf312a",
+   "name": "rand_3bfdc9c1bbcf312a",
+   "strategy": {
+    "name": "rand_3bfdc9c1bbcf312a",
+    "trigger": "wall",
+    "zone": "merge",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 14.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 0,
+      "lc_target": null
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.5,
+      "hold_s": 90,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 6.0
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140
+   }
+  },
+  {
+   "draw_order": 1,
+   "key": "7ccd1d37d1400971",
+   "name": "rand_7ccd1d37d1400971",
+   "strategy": {
+    "name": "rand_7ccd1d37d1400971",
+    "trigger": "lanes",
+    "zone": "full",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 22.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 60,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 1,
+      "v_w": 12.0,
+      "dmax": 1.5,
+      "hold_s": 10,
+      "onset_s": 0,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": -20.0,
+      "gap_dx_hi": 60.0,
+      "gap_drop_m": 300.0,
+      "gap_arm_s": 120,
+      "gap_events": 3
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 180,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 6.0
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140
+   }
+  },
+  {
+   "draw_order": 2,
+   "key": "df9e58d7ff25565f",
+   "name": "mut_df9e58d7ff25565f",
+   "strategy": {
+    "name": "mut_df9e58d7ff25565f",
+    "trigger": "lanes",
+    "zone": "full",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 20,
+      "lc_target": null,
+      "dv_rel": 2.0,
+      "pulse_on_s": 5,
+      "pulse_off_s": 5
+     },
+     {
+      "lane": 1,
+      "rank": 1,
+      "v_w": 14.0,
+      "dmax": 1.5,
+      "hold_s": 15,
+      "onset_s": 0,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 20.0,
+      "dmax": 1.5,
+      "hold_s": 180,
+      "onset_s": 0,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   }
+  }
+ ]
+}

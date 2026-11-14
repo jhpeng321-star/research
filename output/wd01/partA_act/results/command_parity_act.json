@@ -1,0 +1,124 @@
+{
+ "experiment": "WD-01 partA_act command parity",
+ "worlds": [
+  "w8411m2700p02t240",
+  "w8419m2600p02t240",
+  "w8431m2700p05t360",
+  "w8443m2600p10t480",
+  "w8456m2700p20t480",
+  "w8468m2600p40t240",
+  "w8476m2600p40t480"
+ ],
+ "per_arm": {
+  "native": {
+   "rows": 4219,
+   "matched": 4201,
+   "rate": 0.9957335861578573,
+   "skipped_dead": 48,
+   "mismatch_examples": [
+    "w8456m2700p20t480__native mainline.241@505.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 4.0625567585581175",
+    "w8456m2700p20t480__native mainline.241@506.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 5.199000933614598",
+    "w8456m2700p20t480__native mainline.272@509.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 28.222899350417993",
+    "w8468m2600p40t240__native ramp.21@250.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 10.689984264043414",
+    "w8476m2600p40t480__native ramp.62@486.0: log 20.4424 (owner damping, fb None) vs emu 20.76590394129753",
+    "w8476m2600p40t480__native ramp.62@487.0: log 20.4424 (owner damping, fb None) vs emu 20.525312922061044",
+    "w8476m2600p40t480__native mainline.181@490.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.3629567979528991",
+    "w8476m2600p40t480__native mainline.181@491.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.5784117411714061",
+    "w8476m2600p40t480__native mainline.181@492.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.6339543572082309",
+    "w8476m2600p40t480__native mainline.181@493.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.601347332504462"
+   ]
+  },
+  "pi": {
+   "rows": 4225,
+   "matched": 4219,
+   "rate": 0.9985798816568048,
+   "skipped_dead": 53,
+   "mismatch_examples": [
+    "w8456m2700p20t480__pi mainline.258@488.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 28.37632366970056",
+    "w8468m2600p40t240__pi ramp.21@250.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 11.152741410929984",
+    "w8468m2600p40t240__pi mainline.91@257.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 14.125264563701437",
+    "w8476m2600p40t480__pi mainline.183@507.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.0",
+    "w8476m2600p40t480__pi mainline.183@508.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.0",
+    "w8476m2600p40t480__pi mainline.183@509.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.0927011253629383"
+   ]
+  },
+  "fixed1": {
+   "rows": 4231,
+   "matched": 4220,
+   "rate": 0.9974001418104467,
+   "skipped_dead": 40,
+   "mismatch_examples": [
+    "w8456m2700p20t480__fixed1 mainline.241@502.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.09674579986490467",
+    "w8456m2700p20t480__fixed1 mainline.241@503.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.0",
+    "w8456m2700p20t480__fixed1 mainline.241@504.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.0",
+    "w8456m2700p20t480__fixed1 mainline.241@505.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.04367605878727748",
+    "w8456m2700p20t480__fixed1 mainline.241@506.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.0",
+    "w8456m2700p20t480__fixed1 mainline.241@507.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.0",
+    "w8456m2700p20t480__fixed1 mainline.241@508.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.0",
+    "w8456m2700p20t480__fixed1 mainline.241@509.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.0",
+    "w8456m2700p20t480__fixed1 mainline.272@509.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 28.56885667377962",
+    "w8476m2600p40t480__fixed1 ramp.62@486.0: log 20.4424 (owner damping, fb None) vs emu 20.76588996400833"
+   ]
+  },
+  "fixed2": {
+   "rows": 4218,
+   "matched": 4211,
+   "rate": 0.9983404457088667,
+   "skipped_dead": 53,
+   "mismatch_examples": [
+    "w8468m2600p40t240__fixed2 ramp.21@250.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 10.68961427512007",
+    "w8476m2600p40t480__fixed2 ramp.62@486.0: log 20.4424 (owner damping, fb None) vs emu 20.76590382208824",
+    "w8476m2600p40t480__fixed2 ramp.62@487.0: log 20.4424 (owner damping, fb None) vs emu 20.5253128624564",
+    "w8476m2600p40t480__fixed2 ramp.58@501.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.9395531346426593",
+    "w8476m2600p40t480__fixed2 ramp.58@502.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 1.6075027667206783",
+    "w8476m2600p40t480__fixed2 ramp.58@503.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 1.958733300582117",
+    "w8476m2600p40t480__fixed2 mainline.176@508.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 13.276573844728322"
+   ]
+  },
+  "switching1": {
+   "rows": 4209,
+   "matched": 4201,
+   "rate": 0.9980993110002376,
+   "skipped_dead": 61,
+   "mismatch_examples": [
+    "w8456m2700p20t480__switching1 mainline.258@488.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 28.37631285523447",
+    "w8476m2600p40t480__switching1 ramp.56@482.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 7.7528945258224375",
+    "w8476m2600p40t480__switching1 ramp.52@483.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 8.798451249679623",
+    "w8476m2600p40t480__switching1 ramp.62@486.0: log 20.4424 (owner damping, fb None) vs emu 20.76590382208824",
+    "w8476m2600p40t480__switching1 ramp.62@487.0: log 20.4424 (owner damping, fb None) vs emu 20.525325766861993",
+    "w8476m2600p40t480__switching1 mainline.183@505.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.92178779334802",
+    "w8476m2600p40t480__switching1 mainline.183@506.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 1.4353656346943626",
+    "w8476m2600p40t480__switching1 mainline.183@507.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 1.9370789528873702"
+   ]
+  },
+  "switching2": {
+   "rows": 4211,
+   "matched": 4174,
+   "rate": 0.9912134884825458,
+   "skipped_dead": 51,
+   "mismatch_examples": [
+    "w8476m2600p40t480__switching2 mainline.181@485.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.3886837439909534",
+    "w8476m2600p40t480__switching2 mainline.181@486.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.4287023671703387",
+    "w8476m2600p40t480__switching2 ramp.62@486.0: log 20.4424 (owner damping, fb None) vs emu 21.9424",
+    "w8476m2600p40t480__switching2 mainline.181@487.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.49164562646461274",
+    "w8476m2600p40t480__switching2 ramp.62@487.0: log 20.4424 (owner damping, fb None) vs emu 21.570599249661523",
+    "w8476m2600p40t480__switching2 mainline.181@488.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.651389452474517",
+    "w8476m2600p40t480__switching2 ramp.62@488.0: log 20.4424 (owner damping, fb None) vs emu 21.368057218950074",
+    "w8476m2600p40t480__switching2 mainline.181@489.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 0.9212279939575081",
+    "w8476m2600p40t480__switching2 ramp.62@489.0: log 20.4424 (owner damping, fb None) vs emu 21.258181930004152",
+    "w8476m2600p40t480__switching2 mainline.181@490.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 1.140715578827954"
+   ]
+  },
+  "switching3": {
+   "rows": 2312,
+   "matched": 2310,
+   "rate": 0.9991349480968859,
+   "skipped_dead": 14,
+   "mismatch_examples": [
+    "w8443m2600p10t480__switching3 mainline.244@492.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 8.907279150218269",
+    "w8456m2700p20t480__switching3 mainline.258@488.0: log None (owner native, fb missing_or_uncovered_leader) vs emu 28.32609096178261"
+   ]
+  }
+ },
+ "match_tol_mps": 0.01
+}

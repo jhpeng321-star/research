@@ -1,0 +1,114 @@
+{
+ "stream_sha256": "bfb1f576378f5e87aceaa52f615f60544d65142a91e2eea230814ae2a41d21e6",
+ "a80_s2b_sha256": "48c5c448c2a85d4e2020def54cb17259979c89f2e0cc341829d6e99de0d0e289",
+ "rows": [
+  {
+   "family": "wall_g_solo2",
+   "reason": null,
+   "form": "other",
+   "uncovered": []
+  },
+  {
+   "family": "wall_g_duo12",
+   "reason": null,
+   "form": "other",
+   "uncovered": []
+  },
+  {
+   "family": "wall_g_solo2_gate0",
+   "reason": "start_gate = empty100 (the registered search is unconditional)",
+   "form": null,
+   "uncovered": null
+  },
+  {
+   "family": "wall_m_solo2",
+   "reason": null,
+   "form": "other",
+   "uncovered": []
+  },
+  {
+   "family": "wall_g_solo1",
+   "reason": null,
+   "form": "other",
+   "uncovered": []
+  },
+  {
+   "family": "wall_g_duo12_gate0",
+   "reason": "start_gate = empty100 (the registered search is unconditional)",
+   "form": null,
+   "uncovered": null
+  },
+  {
+   "family": "wall_g_alt21",
+   "reason": "phases = [[0], [1]] (the registered search is unconditional)",
+   "form": null,
+   "uncovered": null
+  },
+  {
+   "family": "wall_g_alt21_gate0",
+   "reason": "start_gate = empty100 (the registered search is unconditional)",
+   "form": null,
+   "uncovered": null
+  },
+  {
+   "family": "wall_g_relay21",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": []
+  },
+  {
+   "family": "wall_g_relay12",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": []
+  },
+  {
+   "family": "g2_stagger40",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": []
+  },
+  {
+   "family": "wall_g_duo12_stagger40",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": []
+  },
+  {
+   "family": "g2_gap1",
+   "reason": null,
+   "form": "rolling",
+   "uncovered": []
+  },
+  {
+   "family": "g2_gap1_gate0",
+   "reason": "start_gate = empty100 (the registered search is unconditional)",
+   "form": null,
+   "uncovered": null
+  },
+  {
+   "family": "g2_lc01",
+   "reason": "a lane-change role (the registered search is hold-only)",
+   "form": null,
+   "uncovered": null
+  },
+  {
+   "family": "lc01_g22",
+   "reason": "a lane-change role (the registered search is hold-only)",
+   "form": null,
+   "uncovered": null
+  },
+  {
+   "family": "g2_gapopen12",
+   "reason": "a lane-change role (the registered search is hold-only)",
+   "form": null,
+   "uncovered": null
+  },
+  {
+   "family": "duo12_v20",
+   "reason": null,
+   "form": "other",
+   "uncovered": []
+  }
+ ]
+}

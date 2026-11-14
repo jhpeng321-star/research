@@ -1,0 +1,61 @@
+{
+ "states": "E:/research-dense/data_cache/wallc1_states_h60/wall_same.json",
+ "limit": null,
+ "models": {
+  "R_c4_wm_main_best": {
+   "checkpoint": "E:/research-dense/runs/active/WM-S-C4-20261013/fetched/gpuW/c4_wm_main/wm_s_best.pt",
+   "sha256": "1dca281840873929eb4aa634f77fd26256c6a4d3319b2562af91687a1274ebc5",
+   "lane_model": "residual",
+   "windows": 67,
+   "hdv_decisions": 680987,
+   "wanted_step_rate": 0.0002643222264154822,
+   "categories": {
+    "merge": {
+     "recorded": 160,
+     "recorded_physics_masked": 145,
+     "exact_tp_recall": 3,
+     "tol_recall": 11,
+     "wanted_episodes": 65,
+     "exact_tp_precision": 3,
+     "tol_precision": 13,
+     "exact_recall": 0.01875,
+     "exact_precision": 0.046153846153846156,
+     "tol2s_recall": 0.06875,
+     "tol2s_precision": 0.2,
+     "auc": 0.6966554583442152
+    },
+    "overtake": {
+     "recorded": 621,
+     "recorded_physics_masked": 397,
+     "exact_tp_recall": 0,
+     "tol_recall": 0,
+     "exact_recall": 0.0,
+     "exact_precision": null,
+     "tol2s_recall": 0.0,
+     "tol2s_precision": null,
+     "auc": 0.7477910491800135
+    },
+    "return": {
+     "recorded": 171,
+     "recorded_physics_masked": 30,
+     "exact_tp_recall": 0,
+     "tol_recall": 0,
+     "exact_recall": 0.0,
+     "exact_precision": null,
+     "tol2s_recall": 0.0,
+     "tol2s_precision": null,
+     "auc": 0.8392680676289425
+    }
+   },
+   "all": {
+    "recorded": 952,
+    "wanted_episodes": 65,
+    "exact_recall": 0.0031512605042016808,
+    "exact_precision": 0.046153846153846156,
+    "tol2s_recall": 0.011554621848739496,
+    "tol2s_precision": 0.2,
+    "recorded_physics_masked": 572
+   }
+  }
+ }
+}

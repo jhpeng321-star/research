@@ -1,0 +1,8 @@
+# S-COOPW on gpuB (48 GB): c4_policy14_coop.toml + the 60 s horizon stage (COOPW.md "Horizon").
+# Each step-up stays gated by [horizon] gate_file (tools/coopw/horizon_gate.py, fail closed).
+extends = "c4_policy14_coop.toml"
+
+[horizon]
+horizons_s = [10, 30, 60]
+curriculum_updates = [0, 150, 300]
+entry_pad_max = [32, 83, 149]

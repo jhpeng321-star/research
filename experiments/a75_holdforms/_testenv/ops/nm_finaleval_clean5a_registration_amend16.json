@@ -1,0 +1,24 @@
+{
+ "amendment": 16,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend15.json",
+  "registration_sha256": "7ec65e68e52b5f6229b33eb4e357d4b69a64803a921dfd31202ac865ca98b05a"
+ },
+ "authority": [
+  "MAIN 2026-11-07: live run clean5b-F8P, head c4/clean5b-proc bcfb9ded, root /home/ubuntu/coopmwm20261107_clean5bf8p, CONFIG 2a379ab8; recheck plant identity and parity on bcfb9ded + overlay 4397d777"
+ ],
+ "deploy": "u12 SRC = bcfb9ded + overlay 4397d777; root /home/ubuntu/coopmwm20261107_clean5bf8p (CONFIG 2a379ab8); u12 export cpuZ:/home/ubuntu/clean5b_setup/CLEAN5BF8P_U12_EXPORT.json",
+ "plant_identity": {
+  "diff": "12aee752..bcfb9ded: launch_training (opt-in fresh child process per arm update; training orchestration only), clean4_restart (approved budget 4,000,000), clean5b_restart, its test; no plant file",
+  "head": "bcfb9ded",
+  "verdict": "IDENTICAL to 12aee752 for NATIVE/U0/RULE/RULE_FAIR"
+ },
+ "registered_utc": "2026-11-07T03:38:05.748419+00:00",
+ "registration_sha256": "1daa5fdddef264338d4a06f42f58d71e686cec1d720d5e70337f126965071977",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: zero-SUMO check; no eval output exists",
+ "training_parity": {
+  "result": "166 passed (parity incl. LCEXEC, hold pins, fairness slate; runner; lc_runtime byte identity; eval == training per-vehicle table)",
+  "tree": "bcfb9ded + overlay 4397d777"
+ }
+}

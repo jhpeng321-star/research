@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/escalation_test_build",
+ "name": "escalation_test_build",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\escalation_test_build",
+ "drive": "gdrive:research-archive/repo-evidence/output/escalation_test_build/escalation_test_build.tar.zst",
+ "bytes": 5121,
+ "files": 5,
+ "archive_bytes": 2524,
+ "archive_md5": "d97413c880a911e4e0d693fe0829130d",
+ "member_manifest": "manifests/members/output_escalation_test_build.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 38.2,
+ "timestamp": "2026-10-10T01:29:46"
+}

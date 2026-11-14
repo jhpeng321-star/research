@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/research-dense/data_registry.schema.json",
+  "title": "Research data registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "datasets"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "description": {"type": "string"},
+    "datasets": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["drive_path", "size_bytes", "md5_manifest", "local_path"],
+        "properties": {
+          "drive_path": {"type": "string", "pattern": "^gdrive:research-archive/[^\\s]+$"},
+          "size_bytes": {"type": "integer", "minimum": 0},
+          "md5_manifest": {
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": {"pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\:*?\"<>|]+$"},
+            "additionalProperties": {"type": "string", "pattern": "^[a-fA-F0-9]{32}$"}
+          },
+          "local_path": {"type": "string", "pattern": "^data_cache/[A-Za-z0-9._/-]+$"},
+          "format": {"type": "string"},
+          "unpacked_bytes": {"type": "integer", "minimum": 0},
+          "unpacked_files": {"type": "integer", "minimum": 0},
+          "original_path": {"oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]},
+          "class": {"type": "string"},
+          "kind": {"type": "string"},
+          "receipt": {"type": "object"},
+          "covered_by": {"type": "array", "items": {"type": "string"}},
+          "restricted_member_names": {"type": "integer", "minimum": 0},
+          "parts": {"type": "array"},
+          "unpack": {"type": "string"},
+          "note": {"type": "string"},
+          "branch": {"type": "string"}
+        }
+      }
+    }
+  }
+}

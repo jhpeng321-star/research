@@ -1,0 +1,426 @@
+{
+  "schema": "wm_n1_gpu_code_file_manifest/1",
+  "source_head": "8bf2f47",
+  "source_head_status": "accepted recovery source basis; replace with final integrated HEAD at shipping",
+  "file_count": 104,
+  "files": [
+    {
+      "path": "baselines/circles/model.onnx",
+      "role": "opaque_sha_pinned_circles_model"
+    },
+    {
+      "path": "output/wd01/forbid_d_hook.py",
+      "role": "deferred_corpus_path_guard"
+    },
+    {
+      "path": "output/wd01/partA_ctrl/emulators.py",
+      "role": "verified_controller_mirror"
+    },
+    {
+      "path": "output/wd01/partA_ctrl/onnx2torch.py",
+      "role": "local_onnx_torch_executor"
+    },
+    {
+      "path": "output/wd01/partA_v2g/__init__.py",
+      "role": "nominal_engine_package"
+    },
+    {
+      "path": "output/wd01/partA_v2g/engine.py",
+      "role": "nominal_engine"
+    },
+    {
+      "path": "output/wd01/partA_v2g/params_nominal.json",
+      "role": "nominal_engine_parameters"
+    },
+    {
+      "path": "output/wd01/wdpaths.py",
+      "role": "source_path_helper"
+    },
+    {
+      "path": "output/wd01/wm_n1/arrival/__init__.py",
+      "role": "python_package:arrival"
+    },
+    {
+      "path": "output/wd01/wm_n1/arrival/head.py",
+      "role": "python_package:arrival"
+    },
+    {
+      "path": "output/wd01/wm_n1/arrival/sampler.py",
+      "role": "python_package:arrival"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/__init__.py",
+      "role": "python_package:bundle"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/__main__.py",
+      "role": "python_package:bundle"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/approval.py",
+      "role": "python_package:bundle"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/box_configs/2box/c_m1only/boxA.json",
+      "role": "m1_box_config"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/box_configs/2box/c_m1only/boxB.json",
+      "role": "inert_box_b_config_blocked"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/box_configs/2box/c_m1only/index.json",
+      "role": "m1_box_plan_index"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/cli.py",
+      "role": "python_package:bundle"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/e2e.py",
+      "role": "python_package:bundle"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/envcheck.py",
+      "role": "python_package:bundle"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/multibox.py",
+      "role": "python_package:bundle"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/queue.py",
+      "role": "python_package:bundle"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/requirements-wmn1.txt",
+      "role": "environment_requirements"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/timing.py",
+      "role": "python_package:bundle"
+    },
+    {
+      "path": "output/wd01/wm_n1/bundle/winning_config.py",
+      "role": "python_package:bundle"
+    },
+    {
+      "path": "output/wd01/wm_n1/CAL_SPLIT_A4.json",
+      "role": "opaque_frozen_identity_hash_only"
+    },
+    {
+      "path": "output/wd01/wm_n1/corpus/__init__.py",
+      "role": "python_package:corpus"
+    },
+    {
+      "path": "output/wd01/wm_n1/corpus/__main__.py",
+      "role": "python_package:corpus"
+    },
+    {
+      "path": "output/wd01/wm_n1/corpus/_util.py",
+      "role": "python_package:corpus"
+    },
+    {
+      "path": "output/wd01/wm_n1/corpus/cli.py",
+      "role": "python_package:corpus"
+    },
+    {
+      "path": "output/wd01/wm_n1/corpus/featurize_all.py",
+      "role": "python_package:corpus"
+    },
+    {
+      "path": "output/wd01/wm_n1/corpus/idea_a.py",
+      "role": "python_package:corpus"
+    },
+    {
+      "path": "output/wd01/wm_n1/corpus/j4_wall_fix.py",
+      "role": "python_package:corpus"
+    },
+    {
+      "path": "output/wd01/wm_n1/corpus/manifest.py",
+      "role": "python_package:corpus"
+    },
+    {
+      "path": "output/wd01/wm_n1/corpus/memory.py",
+      "role": "python_package:corpus"
+    },
+    {
+      "path": "output/wd01/wm_n1/corpus/pack.py",
+      "role": "python_package:corpus"
+    },
+    {
+      "path": "output/wd01/wm_n1/corpus/source.py",
+      "role": "python_package:corpus"
+    },
+    {
+      "path": "output/wd01/wm_n1/corpus/verify.py",
+      "role": "python_package:corpus"
+    },
+    {
+      "path": "output/wd01/wm_n1/corr/__init__.py",
+      "role": "python_package:corr"
+    },
+    {
+      "path": "output/wd01/wm_n1/corr/evaluation.py",
+      "role": "python_package:corr"
+    },
+    {
+      "path": "output/wd01/wm_n1/corr/head.py",
+      "role": "python_package:corr"
+    },
+    {
+      "path": "output/wd01/wm_n1/corr/ood.py",
+      "role": "python_package:corr"
+    },
+    {
+      "path": "output/wd01/wm_n1/corr/state_token.py",
+      "role": "python_package:corr"
+    },
+    {
+      "path": "output/wd01/wm_n1/corr/summary.py",
+      "role": "python_package:corr"
+    },
+    {
+      "path": "output/wd01/wm_n1/ctrl/__init__.py",
+      "role": "python_package:ctrl"
+    },
+    {
+      "path": "output/wd01/wm_n1/ctrl/_bridge.py",
+      "role": "python_package:ctrl"
+    },
+    {
+      "path": "output/wd01/wm_n1/ctrl/config.py",
+      "role": "python_package:ctrl"
+    },
+    {
+      "path": "output/wd01/wm_n1/ctrl/mover.py",
+      "role": "python_package:ctrl"
+    },
+    {
+      "path": "output/wd01/wm_n1/ctrl/parity.py",
+      "role": "python_package:ctrl"
+    },
+    {
+      "path": "output/wd01/wm_n1/ctrl/wall_hook.py",
+      "role": "python_package:ctrl"
+    },
+    {
+      "path": "output/wd01/wm_n1/ctrl/wall_v22.py",
+      "role": "python_package:ctrl"
+    },
+    {
+      "path": "output/wd01/wm_n1/evalh/__init__.py",
+      "role": "python_package:evalh"
+    },
+    {
+      "path": "output/wd01/wm_n1/evalh/cal_split.py",
+      "role": "python_package:evalh"
+    },
+    {
+      "path": "output/wd01/wm_n1/evalh/climatology.py",
+      "role": "python_package:evalh"
+    },
+    {
+      "path": "output/wd01/wm_n1/evalh/idea_a.py",
+      "role": "python_package:evalh"
+    },
+    {
+      "path": "output/wd01/wm_n1/evalh/metrics.py",
+      "role": "python_package:evalh"
+    },
+    {
+      "path": "output/wd01/wm_n1/evalh/predictors.py",
+      "role": "python_package:evalh"
+    },
+    {
+      "path": "output/wd01/wm_n1/evalh/protocol.py",
+      "role": "python_package:evalh"
+    },
+    {
+      "path": "output/wd01/wm_n1/evalh/run_eval.py",
+      "role": "python_package:evalh"
+    },
+    {
+      "path": "output/wd01/wm_n1/evalh/seals.py",
+      "role": "python_package:evalh"
+    },
+    {
+      "path": "output/wd01/wm_n1/evalh/sources.py",
+      "role": "python_package:evalh"
+    },
+    {
+      "path": "output/wd01/wm_n1/evalh/timing_gate.py",
+      "role": "python_package:evalh"
+    },
+    {
+      "path": "output/wd01/wm_n1/features/__init__.py",
+      "role": "python_package:features"
+    },
+    {
+      "path": "output/wd01/wm_n1/features/__main__.py",
+      "role": "python_package:features"
+    },
+    {
+      "path": "output/wd01/wm_n1/features/actions_adapter.py",
+      "role": "python_package:features"
+    },
+    {
+      "path": "output/wd01/wm_n1/features/cli.py",
+      "role": "python_package:features"
+    },
+    {
+      "path": "output/wd01/wm_n1/features/constants.py",
+      "role": "python_package:features"
+    },
+    {
+      "path": "output/wd01/wm_n1/features/counters.py",
+      "role": "python_package:features"
+    },
+    {
+      "path": "output/wd01/wm_n1/features/featurizer.py",
+      "role": "python_package:features"
+    },
+    {
+      "path": "output/wd01/wm_n1/features/geometry.py",
+      "role": "python_package:features"
+    },
+    {
+      "path": "output/wd01/wm_n1/features/idea_a.py",
+      "role": "python_package:features"
+    },
+    {
+      "path": "output/wd01/wm_n1/features/outcomes.py",
+      "role": "python_package:features"
+    },
+    {
+      "path": "output/wd01/wm_n1/features/splits.py",
+      "role": "python_package:features"
+    },
+    {
+      "path": "output/wd01/wm_n1/features/writer.py",
+      "role": "python_package:features"
+    },
+    {
+      "path": "output/wd01/wm_n1/hdv/__init__.py",
+      "role": "python_package:hdv"
+    },
+    {
+      "path": "output/wd01/wm_n1/hdv/config.py",
+      "role": "python_package:hdv"
+    },
+    {
+      "path": "output/wd01/wm_n1/hdv/input_schema.py",
+      "role": "python_package:hdv"
+    },
+    {
+      "path": "output/wd01/wm_n1/hdv/net.py",
+      "role": "python_package:hdv"
+    },
+    {
+      "path": "output/wd01/wm_n1/model/__init__.py",
+      "role": "python_package:model"
+    },
+    {
+      "path": "output/wd01/wm_n1/model/constants.py",
+      "role": "python_package:model"
+    },
+    {
+      "path": "output/wd01/wm_n1/model/ensemble.py",
+      "role": "python_package:model"
+    },
+    {
+      "path": "output/wd01/wm_n1/model/losses.py",
+      "role": "python_package:model"
+    },
+    {
+      "path": "output/wd01/wm_n1/model/net.py",
+      "role": "python_package:model"
+    },
+    {
+      "path": "output/wd01/wm_n1/model/outcome_norm.py",
+      "role": "python_package:model"
+    },
+    {
+      "path": "output/wd01/wm_n1/model/rollout.py",
+      "role": "python_package:model"
+    },
+    {
+      "path": "output/wd01/wm_n1/REGISTRATION_WM_N1_AMENDMENT_1.md",
+      "role": "frozen_registration"
+    },
+    {
+      "path": "output/wd01/wm_n1/REGISTRATION_WM_N1_AMENDMENT_2_J4_DISCLOSURE.md",
+      "role": "frozen_registration"
+    },
+    {
+      "path": "output/wd01/wm_n1/REGISTRATION_WM_N1_AMENDMENT_3_IDEA_A.md",
+      "role": "frozen_registration"
+    },
+    {
+      "path": "output/wd01/wm_n1/REGISTRATION_WM_N1_AMENDMENT_4_M1_TUNING.md",
+      "role": "frozen_registration"
+    },
+    {
+      "path": "output/wd01/wm_n1/REGISTRATION_WM_N1_AMENDMENT_5_KMAX_RULE.md",
+      "role": "frozen_registration"
+    },
+    {
+      "path": "output/wd01/wm_n1/REGISTRATION_WM_N1_AMENDMENT_6_STATE_TOKEN.md",
+      "role": "frozen_registration"
+    },
+    {
+      "path": "output/wd01/wm_n1/REGISTRATION_WM_N1.md",
+      "role": "frozen_registration"
+    },
+    {
+      "path": "output/wd01/wm_n1/train/__init__.py",
+      "role": "python_package:train"
+    },
+    {
+      "path": "output/wd01/wm_n1/train/__main__.py",
+      "role": "python_package:train"
+    },
+    {
+      "path": "output/wd01/wm_n1/train/cli.py",
+      "role": "python_package:train"
+    },
+    {
+      "path": "output/wd01/wm_n1/train/config.py",
+      "role": "python_package:train"
+    },
+    {
+      "path": "output/wd01/wm_n1/train/contrast_support.py",
+      "role": "python_package:train"
+    },
+    {
+      "path": "output/wd01/wm_n1/train/dataset.py",
+      "role": "python_package:train"
+    },
+    {
+      "path": "output/wd01/wm_n1/train/g4_real.py",
+      "role": "python_package:train"
+    },
+    {
+      "path": "output/wd01/wm_n1/train/g4_standins.py",
+      "role": "python_package:train"
+    },
+    {
+      "path": "output/wd01/wm_n1/train/idea_a.py",
+      "role": "python_package:train"
+    },
+    {
+      "path": "output/wd01/wm_n1/train/identity_sidecar.py",
+      "role": "python_package:train"
+    },
+    {
+      "path": "output/wd01/wm_n1/train/label_isolation.py",
+      "role": "python_package:train"
+    },
+    {
+      "path": "output/wd01/wm_n1/train/trainer.py",
+      "role": "python_package:train"
+    }
+  ],
+  "raw_byte_sha256_status": "deferred: root computes from final integrated source HEAD at shipping",
+  "scope": "source and exact opaque model payload archive only; exact filenames; no recursive pathspec"
+}

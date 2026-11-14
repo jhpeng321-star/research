@@ -1,0 +1,85 @@
+{
+  "state": {
+    "ids": [
+      "cav0",
+      "cav1",
+      "hdv0",
+      "hdv1"
+    ],
+    "lane_phys": [
+      1,
+      0,
+      1,
+      2
+    ],
+    "s_down_m": [
+      -120.0,
+      -80.0,
+      -60.0,
+      40.0
+    ],
+    "v_mps": [
+      20.0,
+      19.0,
+      21.0,
+      18.0
+    ],
+    "a_mps2": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "length_m": [
+      5.0,
+      5.0,
+      5.0,
+      5.0
+    ],
+    "is_cav": [
+      true,
+      true,
+      false,
+      false
+    ],
+    "t0_s": 540.0,
+    "entrance_counters": null,
+    "obstacles": []
+  },
+  "candidate_plans": [
+    {
+      "actions": {}
+    },
+    {
+      "actions": {
+        "cav0": [
+          {
+            "time_s": 0.0,
+            "action": "damping"
+          },
+          {
+            "time_s": 60.0,
+            "action": "native"
+          }
+        ],
+        "cav1": "damping"
+      }
+    },
+    {
+      "actions": {},
+      "wall": {
+        "wall_id": 1,
+        "speed_mps": 6.5,
+        "hold_s": 120.0,
+        "members": [
+          "cav0",
+          "cav1"
+        ]
+      }
+    }
+  ],
+  "horizon_s": 300,
+  "members": null,
+  "n_samples": 1,
+  "seed": 0
+}

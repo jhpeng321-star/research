@@ -1,0 +1,600 @@
+{
+ "schema": "e1b.pick.v1",
+ "rule": "E1B bottom-12 pick (rule-based, made once; zero SUMO, zero WM; no SUMO outcome of any plan is read).\n\nPool  = the E1R pool (607 screened S2b plans - 12 pinned WM top plans - comparators; 595, key-sorted).\nRule  = keep plans with WM screen feasible > 0 (the real TOP writer's `activated` filter), sort by WM screen\n        gain_vs_base ascending (lowest predicted gain first), ties by key; take the first 12.\nOutput in the E1R draw schema so write_top_e1r.py / analyse_e1r.py are reused unchanged.\nusage: python -I pick_e1b.py SEARCH_JSON E1R_POOL_JSON E1R_DRAW_JSON OUTDIR\n",
+ "pool_n": 595,
+ "eligible_n": 545,
+ "pool_sha256_canonical": "31ebf2c958fe22f77e396422d55c4aa8f21cfd9ff9824862e83cf7e72eea227f",
+ "drawn": [
+  {
+   "draw_order": 0,
+   "key": "9b321377522938f5",
+   "name": "rand_9b321377522938f5",
+   "strategy": {
+    "name": "rand_9b321377522938f5",
+    "trigger": "wall",
+    "zone": "mid",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.5,
+      "hold_s": 15,
+      "onset_s": 60,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": -20.0,
+      "gap_dx_hi": 60.0,
+      "gap_drop_m": 300.0,
+      "gap_arm_s": 30,
+      "gap_events": 3
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 0.0,
+      "dmax": 1.5,
+      "hold_s": 180,
+      "onset_s": 40,
+      "lc_target": null,
+      "dv_rel": 6.0
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140
+   },
+   "wm_screen_gain_vs_base": -4738.54,
+   "wm_screen_feasible": 0.8888888888888888,
+   "also_in_e1r_random_draw": false
+  },
+  {
+   "draw_order": 1,
+   "key": "2e98e0e0c6361420",
+   "name": "rand_2e98e0e0c6361420",
+   "strategy": {
+    "name": "rand_2e98e0e0c6361420",
+    "trigger": "wall",
+    "zone": "full",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 0.0,
+      "dmax": 1.5,
+      "hold_s": 180,
+      "onset_s": 40,
+      "lc_target": null,
+      "dv_rel": 2.0
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.5,
+      "hold_s": 60,
+      "onset_s": 20,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140
+   },
+   "wm_screen_gain_vs_base": -3496.87,
+   "wm_screen_feasible": 1.0,
+   "also_in_e1r_random_draw": false
+  },
+  {
+   "draw_order": 2,
+   "key": "ab688eba4e673ced",
+   "name": "rand_ab688eba4e673ced",
+   "strategy": {
+    "name": "rand_ab688eba4e673ced",
+    "trigger": "wall",
+    "zone": "near",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.0,
+      "hold_s": 30,
+      "onset_s": 0,
+      "lc_target": null,
+      "taper_in_s": 20,
+      "taper_out_s": 10
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 30,
+      "onset_s": 20,
+      "lc_target": null,
+      "dv_rel": 2.0
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 0.0,
+      "dmax": 1.0,
+      "hold_s": 120,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 8.0
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140
+   },
+   "wm_screen_gain_vs_base": -2769.01,
+   "wm_screen_feasible": 0.7777777777777778,
+   "also_in_e1r_random_draw": false
+  },
+  {
+   "draw_order": 3,
+   "key": "9d01b370269a8cfe",
+   "name": "rand_9d01b370269a8cfe",
+   "strategy": {
+    "name": "rand_9d01b370269a8cfe",
+    "trigger": "lanes",
+    "zone": "far",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 0,
+      "rank": 1,
+      "v_w": 0.0,
+      "dmax": 1.5,
+      "hold_s": 90,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 8.0,
+      "taper_in_s": 5,
+      "taper_out_s": 10
+     },
+     {
+      "lane": 1,
+      "rank": 1,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 20,
+      "onset_s": 20,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": 0.0,
+      "gap_dx_hi": 20.0,
+      "gap_drop_m": 300.0,
+      "gap_arm_s": 120,
+      "gap_release": "clear",
+      "dv_rel": 8.0,
+      "taper_in_s": 10,
+      "taper_out_s": 5
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 20,
+      "onset_s": 20,
+      "lc_target": null,
+      "dv_rel": 4.0
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 90
+   },
+   "wm_screen_gain_vs_base": -1072.78,
+   "wm_screen_feasible": 0.2777777777777778,
+   "also_in_e1r_random_draw": false
+  },
+  {
+   "draw_order": 4,
+   "key": "3240a8021298acba",
+   "name": "rand_3240a8021298acba",
+   "strategy": {
+    "name": "rand_3240a8021298acba",
+    "trigger": "wall",
+    "zone": "near",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 0.0,
+      "dmax": 1.0,
+      "hold_s": 30,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 2.0
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.0,
+      "hold_s": 20,
+      "onset_s": 60,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": 0.0,
+      "gap_dx_hi": 20.0,
+      "gap_arm_s": 60,
+      "gap_events": 3,
+      "pulse_on_s": 10,
+      "pulse_off_s": 10
+     },
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.0,
+      "hold_s": 60,
+      "onset_s": 60,
+      "lc_target": null,
+      "pulse_on_s": 5,
+      "pulse_off_s": 20
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 90
+   },
+   "wm_screen_gain_vs_base": -821.19,
+   "wm_screen_feasible": 0.7777777777777778,
+   "also_in_e1r_random_draw": false
+  },
+  {
+   "draw_order": 5,
+   "key": "1da991e9fcec69a2",
+   "name": "rand_1da991e9fcec69a2",
+   "strategy": {
+    "name": "rand_1da991e9fcec69a2",
+    "trigger": "lanes",
+    "zone": "mid",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 22.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 20,
+      "lc_target": null,
+      "pulse_on_s": 20,
+      "pulse_off_s": 20
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 0.0,
+      "dmax": 1.5,
+      "hold_s": 120,
+      "onset_s": 20,
+      "lc_target": null,
+      "dv_rel": 6.0
+     },
+     {
+      "lane": 2,
+      "rank": 1,
+      "v_w": 24.0,
+      "dmax": 1.5,
+      "hold_s": 20,
+      "onset_s": 40,
+      "lc_target": null
+     },
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 120,
+      "onset_s": 60,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   },
+   "wm_screen_gain_vs_base": -699.05,
+   "wm_screen_feasible": 0.5555555555555556,
+   "also_in_e1r_random_draw": false
+  },
+  {
+   "draw_order": 6,
+   "key": "69a449bdba35e8de",
+   "name": "rand_69a449bdba35e8de",
+   "strategy": {
+    "name": "rand_69a449bdba35e8de",
+    "trigger": "wall",
+    "zone": "full",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 90,
+      "onset_s": 60,
+      "lc_target": null,
+      "dv_rel": 2.0,
+      "pulse_on_s": 20,
+      "pulse_off_s": 5
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 30,
+      "onset_s": 40,
+      "lc_target": null,
+      "dv_rel": 2.0
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 90
+   },
+   "wm_screen_gain_vs_base": -512.94,
+   "wm_screen_feasible": 1.0,
+   "also_in_e1r_random_draw": false
+  },
+  {
+   "draw_order": 7,
+   "key": "f776f29ea67ed8d1",
+   "name": "rand_f776f29ea67ed8d1",
+   "strategy": {
+    "name": "rand_f776f29ea67ed8d1",
+    "trigger": "wall",
+    "zone": "full",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 20,
+      "onset_s": 20,
+      "lc_target": null
+     },
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 20,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": 0.0,
+      "gap_dx_hi": 60.0,
+      "gap_drop_m": 600.0,
+      "gap_arm_s": 120,
+      "gap_release": "clear",
+      "gap_events": 3
+     },
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 0,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140
+   },
+   "wm_screen_gain_vs_base": -507.29,
+   "wm_screen_feasible": 1.0,
+   "also_in_e1r_random_draw": false
+  },
+  {
+   "draw_order": 8,
+   "key": "46942373e59ee2cb",
+   "name": "rand_46942373e59ee2cb",
+   "strategy": {
+    "name": "rand_46942373e59ee2cb",
+    "trigger": "wall",
+    "zone": "mid",
+    "spread_m": 300.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.0,
+      "hold_s": 30,
+      "onset_s": 0,
+      "lc_target": null
+     },
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.0,
+      "hold_s": 45,
+      "onset_s": 40,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 90
+   },
+   "wm_screen_gain_vs_base": -506.63,
+   "wm_screen_feasible": 0.8888888888888888,
+   "also_in_e1r_random_draw": false
+  },
+  {
+   "draw_order": 9,
+   "key": "8bd9949e51cb8f87",
+   "name": "rand_8bd9949e51cb8f87",
+   "strategy": {
+    "name": "rand_8bd9949e51cb8f87",
+    "trigger": "wall",
+    "zone": "full",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.0,
+      "hold_s": 10,
+      "onset_s": 20,
+      "lc_target": null,
+      "dv_rel": 8.0
+     },
+     {
+      "lane": 2,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.0,
+      "hold_s": 60,
+      "onset_s": 40,
+      "lc_target": null,
+      "taper_in_s": 20,
+      "taper_out_s": 5
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.0,
+      "hold_s": 120,
+      "onset_s": 20,
+      "lc_target": null,
+      "dv_rel": 8.0
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 140
+   },
+   "wm_screen_gain_vs_base": -458.55,
+   "wm_screen_feasible": 1.0,
+   "also_in_e1r_random_draw": false
+  },
+  {
+   "draw_order": 10,
+   "key": "8fce578c18bff9c6",
+   "name": "rand_8fce578c18bff9c6",
+   "strategy": {
+    "name": "rand_8fce578c18bff9c6",
+    "trigger": "wall",
+    "zone": "far",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.0,
+      "hold_s": 5,
+      "onset_s": 20,
+      "lc_target": null,
+      "start": "gap",
+      "gap_dx_lo": -20.0,
+      "gap_dx_hi": 20.0,
+      "gap_arm_s": 60,
+      "gap_release": "clear",
+      "gap_events": 3
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 12.0,
+      "dmax": 1.5,
+      "hold_s": 45,
+      "onset_s": 0,
+      "lc_target": null,
+      "taper_out_s": 20
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 60
+   },
+   "wm_screen_gain_vs_base": -457.95,
+   "wm_screen_feasible": 0.8888888888888888,
+   "also_in_e1r_random_draw": false
+  },
+  {
+   "draw_order": 11,
+   "key": "d2c74b5134221939",
+   "name": "rand_d2c74b5134221939",
+   "strategy": {
+    "name": "rand_d2c74b5134221939",
+    "trigger": "wall",
+    "zone": "mid",
+    "spread_m": 200.0,
+    "slots": 1,
+    "roles": [
+     {
+      "lane": 1,
+      "rank": 0,
+      "v_w": 16.0,
+      "dmax": 1.5,
+      "hold_s": 10,
+      "onset_s": 40,
+      "lc_target": null
+     },
+     {
+      "lane": 0,
+      "rank": 0,
+      "v_w": 18.0,
+      "dmax": 1.0,
+      "hold_s": 30,
+      "onset_s": 20,
+      "lc_target": null
+     }
+    ],
+    "gate": null,
+    "start_gate": null,
+    "phases": null,
+    "cooldown_s": 200
+   },
+   "wm_screen_gain_vs_base": -453.99,
+   "wm_screen_feasible": 0.8888888888888888,
+   "also_in_e1r_random_draw": false
+  }
+ ]
+}

@@ -1,4 +1,4 @@
-"""Per-CAV lane decisions of the learned policy.
+"""Per-CAV lane decisions of the learned policy (owner 2026-10-12 late).
 
 The policy outputs, per CAV and per 1 s decision, a categorical lane choice
 ``stay / left / right`` (``LANE_STAY / LANE_LEFT / LANE_RIGHT``).  WM lane 0 is the

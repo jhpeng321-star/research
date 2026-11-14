@@ -8,10 +8,10 @@ fi
 BOXOPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO=${REPO:-$HOME/c4/repo}
 VENV=${VENV:-$HOME/c4env}
-RELAY_HOST=${RELAY_HOST:-user@relay.example.com}
-RELAY_PORT=${RELAY_PORT:-22}
-RELAY_DIR=${RELAY_DIR:-/workspace/c4/relay}
-RELAY_DATA=${RELAY_DATA:-/workspace/c4/data_v5}
+RELAY_HOST=${RELAY_HOST:-root@connect.westc.seetacloud.com}
+RELAY_PORT=${RELAY_PORT:-32979}
+RELAY_DIR=${RELAY_DIR:-/root/autodl-tmp/c4/relay}
+RELAY_DATA=${RELAY_DATA:-/root/autodl-tmp/c4/data_v5}
 RELAY_KEY=${RELAY_KEY:-$HOME/.ssh/relay_key}
 TRANSFER_RETRIES=${TRANSFER_RETRIES:-8}
 RETRY_DELAY=${RETRY_DELAY:-15}

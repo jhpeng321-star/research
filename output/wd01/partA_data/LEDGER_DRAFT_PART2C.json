@@ -1,0 +1,63 @@
+{
+ "experiment_id": "WD-01",
+ "part": "2C-partA-native-data",
+ "status": "complete",
+ "generated_utc": "2026-09-25T18:42:07.709961+00:00",
+ "zero_simulation": true,
+ "pinned": {
+  "vehicle_dynamics_pt": "D:\\research-dense\\output\\worldmodel_v3_vehicle\\vehicle_dynamics.pt",
+  "sha256_start": "ded83907b8d218574d3f5359c332408f17167da055574afbe29eaecb59d4a8f5",
+  "sha256_end": "ded83907b8d218574d3f5359c332408f17167da055574afbe29eaecb59d4a8f5",
+  "start_equals_end": true
+ },
+ "dataset": {
+  "schema": "wd01_partA_native_data/1",
+  "window_s": [
+   60.0,
+   600.0
+  ],
+  "dt_s": 0.5,
+  "n_runs": 88,
+  "n_roots": 26,
+  "n_train_roots": 21,
+  "n_holdout_roots": 5,
+  "split_conflicts": 0,
+  "vehicle_steps": 2473422,
+  "distinct_vehicles": 11604,
+  "lane_changes": 4974,
+  "accel_merges_2to1": 1500,
+  "births_mainline": 4375,
+  "births_ramp": 6129,
+  "exits_arrived": 8976,
+  "junction_step_frac": 0.00576,
+  "hard_brake_per_1000": 6.53,
+  "ttc_lt3_per_1000": 9.283,
+  "ttc_lt1p5_per_1000": 1.191,
+  "cav_step_frac": 0.2059,
+  "vtype": "supervision-only label, excluded from input features (tested)",
+  "is_cav": "telemetry cav_report ids; poll-interval caveat documented in DATA_CARD"
+ },
+ "sanity": {
+  "physical_resid_median_m": 0.02,
+  "physical_resid_gt_1p5m_rate": "0.32-0.45% (< 0.5%)",
+  "junction_bridge_abs_max_m": 8.1,
+  "dropped_vehicle_steps": 0
+ },
+ "tests": "13 passed (pytest tests/ -q)",
+ "artifacts": {
+  "pdl.py": "01ee2a43f28971039b8c7169e166ec8bb5419847b593eddd5e697dc914d86e83",
+  "loader.py": "530989efafbf7f0b66ed6264ddc5ddf21a8a4c8b62575ca595f4299da85abe3e",
+  "build.py": "3eeb0197d0d0a266978a770f4aed8a02e138035a3ad97096ed95a39b7d1a8828",
+  "make_report.py": "a870cb7c20c0d336503f00113e1ef5af916c9eed8c8f09daeffb3a1826c7f659",
+  "tests/conftest.py": "8659c4f6af34a32f61ecc29774fd873cf628e7e0828ce9ff04773418357a6cc6",
+  "tests/test_topology_mapping.py": "64201f320c8ede21e337f337969eaf1d6d398f25b21159f2853843250bb0e5ac",
+  "tests/test_loader_synthetic.py": "8498ede76900944d9ecaabd97d5e8d9e01dc71bb2715cfa46839db48ecce081a",
+  "tests/test_dataset_real.py": "fa55a7ced90bad01830c403bcef5ca826c5f3343fbba2af1320b08ed545053e3",
+  "MANIFEST.json": "2439004d528a860c701bfb147afcda99ab3f864a29e6187be721db81cc82dd27",
+  "DATA_CARD.md": "0a8bd188024112906f36d919c595aa8789080029fb2893d6afc0a255f80ff410",
+  "results/data_card.json": "d5940aa0258bb7701f6c49715fb84f4931e3081a336cad2742b2ae2c259210fd",
+  "results/per_root_counts.csv": "ddcb8b3dc8f280380658afbadadd655ffaad705848efbc9acb2ec7f436a212e0",
+  "results/dedup_table.json": "eb489f421e2639553894c940ee926a8d83127bc79e76f24d322a5fe2f716fa49"
+ },
+ "report": "REPORT_PART2C.md"
+}

@@ -1,0 +1,131 @@
+{
+ "clean5c": {
+  "templates": [
+   {
+    "cell": "D2800_p60",
+    "family": "a89l2_d86b1d6ac653e8ad",
+    "offer_condition": {
+     "cooldown_s": 30,
+     "gate": null,
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.5,
+       "hold_s": 20,
+       "lc_target_sumo": null,
+       "onset_s": 20,
+       "rank": 0,
+       "sumo_lane": 2,
+       "v_w": 16.0
+      }
+     ],
+     "situation": {
+      "unconditional": true
+     },
+     "slots": 1,
+     "spread_m": 200.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "far"
+    },
+    "template": {
+     "source": {
+      "strategy_key": "0bbb70f7956dae14"
+     }
+    }
+   },
+   {
+    "cell": "D2800_p60",
+    "family": "mut_1fca373046a3c66e",
+    "offer_condition": {
+     "cooldown_s": 140,
+     "gate": null,
+     "phases": null,
+     "roles": [
+      {
+       "dmax": 1.0,
+       "dv_rel": 2.0,
+       "hold_s": 120,
+       "lc_target_sumo": null,
+       "onset_s": 0,
+       "rank": 0,
+       "sumo_lane": 2,
+       "taper_in_s": 20,
+       "taper_out_s": 10,
+       "v_w": 16.0
+      },
+      {
+       "dmax": 1.5,
+       "dv_rel": 8.0,
+       "hold_s": 30,
+       "lc_target_sumo": null,
+       "onset_s": 60,
+       "rank": 0,
+       "sumo_lane": 1,
+       "v_w": 16.0
+      },
+      {
+       "dmax": 1.5,
+       "dv_rel": 6.0,
+       "hold_s": 20,
+       "lc_target_sumo": null,
+       "onset_s": 20,
+       "rank": 1,
+       "sumo_lane": 2,
+       "v_w": 16.0
+      },
+      {
+       "dmax": 1.0,
+       "hold_s": 180,
+       "lc_target_sumo": null,
+       "onset_s": 20,
+       "rank": 0,
+       "sumo_lane": 0,
+       "v_w": 22.0
+      }
+     ],
+     "situation": {
+      "unconditional": true
+     },
+     "slots": 1,
+     "spread_m": 300.0,
+     "start_gate": null,
+     "trigger": "lanes",
+     "zone": "far"
+    },
+    "template": {
+     "source": {
+      "strategy_key": "1fca373046a3c66e"
+     }
+    }
+   }
+  ]
+ },
+ "rows": [
+  {
+   "family": "a89l2_d86b1d6ac653e8ad",
+   "lb95_veh_s": 2917.048072693633,
+   "plan_source": "wm_search",
+   "regime": "D2800_p60",
+   "row_class": "unconditional",
+   "situational": {
+    "unconditional": true
+   },
+   "strategy_key": "0bbb70f7956dae14",
+   "template_sha256": null
+  },
+  {
+   "family": "mut_1fca373046a3c66e",
+   "lb95_veh_s": 0.0,
+   "plan_source": "wm_search",
+   "regime": "D2800_p60",
+   "row_class": "unconditional",
+   "situational": {
+    "unconditional": true
+   },
+   "strategy_key": "1fca373046a3c66e",
+   "template_sha256": null
+  }
+ ],
+ "schema": "coopmwm.a75_holdforms.v1.bank"
+}

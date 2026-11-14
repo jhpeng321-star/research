@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/experiment_retrospective",
+ "name": "experiment_retrospective",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\experiment_retrospective",
+ "drive": "gdrive:research-archive/repo-evidence/output/experiment_retrospective/experiment_retrospective.tar.zst",
+ "bytes": 38308,
+ "files": 1,
+ "archive_bytes": 16112,
+ "archive_md5": "a1302b6962fb64df607bff0fec5e6048",
+ "member_manifest": "manifests/members/output_experiment_retrospective.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 46.2,
+ "timestamp": "2026-10-10T01:32:10"
+}

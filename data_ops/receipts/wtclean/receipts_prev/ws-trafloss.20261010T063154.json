@@ -1,0 +1,39 @@
+﻿{
+    "name":  "ws-trafloss",
+    "path":  "E:\\rd-wt\\ws-trafloss",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "wms/trafloss",
+    "headBefore":  "e09b3659f8be0dac3d507691571adc77bcf261ba",
+    "headType":  null,
+    "dirtyBefore":  0,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/ws-trafloss",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-trafloss.txt",
+    "uploadCount":  109,
+    "uploadBytes":  7315958,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-trafloss.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  1,
+                  "result":  "2026/10/10 03:16:05 NOTICE: Google drive root \u0027research-archive/worktrees/ws-trafloss\u0027: 8 differences found | 2026/10/10 03:16:05 NOTICE: Google drive root \u0027research-archive/worktrees/ws-trafloss\u0027: 101 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-trafloss.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  1,
+    "skippedSensitiveSample":  [
+                                   "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "check_failed",
+    "error":  "rclone check exit 1 : 2026/10/10 03:16:05 NOTICE: Google drive root \u0027research-archive/worktrees/ws-trafloss\u0027: 8 differences found | 2026/10/10 03:16:05 NOTICE: Google drive root \u0027research-archive/worktrees/ws-trafloss\u0027: 101 matching files",
+    "timestamp":  "2026-10-10T03:08:53.8662449+08:00"
+}

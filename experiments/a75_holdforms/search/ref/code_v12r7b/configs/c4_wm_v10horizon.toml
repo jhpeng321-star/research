@@ -1,0 +1,55 @@
+# V10HORIZON (2026-10-19): WRITE, but not launched here (the coordinator starts gpuR runs).
+# = the V9ENTRY/V8FT short recipe with two long-horizon-learning additions, both default OFF:
+#
+#   1) curriculum.plateau_advance: each horizon (10 -> 30 -> 60 -> 120 s) trains until its OWN
+#      validation mean-position stops improving (patience/min_delta) instead of a fixed budget.
+#      stage_steps stay as the CAP; val_every sets the observation cadence.  Needs a validation
+#      dataset (every c4_source keeps use_val = true).
+#   2) data.replay: prioritised mixed replay over the assembled mix.  The source ratios
+#      (loop v6_policy + native + genrand) are unchanged; merge-zone windows, CAV-follower
+#      windows and (probe_windows > 0) high-error windows are drawn more often.
+#
+# Physics/losses are inherited unchanged from c4_wm_v8ft_short4.toml.  init_from the v5m
+# checkpoint at launch: --set model.init_from=<abs path of wm_s_best_ap.pt>.
+schema_version = 2
+name = "WM-S-C4-V10HORIZON"
+extends = "c4_wm_v8ft_short4.toml"
+
+[model]
+init_from = "ckpt_v5m"   # launch: --set model.init_from=<abs path of the v5m checkpoint>
+# V10HORIZON memory: re-materialise per-step / residual activations in backward instead of
+# storing the whole horizon.  Truncated BPTT bounds the graph to truncation_steps_per_stage.
+checkpoint_step = true
+checkpoint_residual = true
+
+[curriculum]
+unroll_s = [10.0, 30.0, 60.0, 120.0]
+stage_steps = [400, 400, 300, 200]           # caps; a plateau advances earlier
+truncation_steps = 20
+truncation_steps_per_stage = [20, 40, 60, 80]
+plateau_advance = true
+plateau_patience = 3
+plateau_min_delta = 0.01
+plateau_min_steps = 3
+plateau_max_steps = 0
+
+[optim]
+lr_per_stage = [1.0e-4, 1.0e-4, 5.0e-5, 5.0e-5]
+# Per-horizon batch sizes (10/30/60/120 s); ~constant activation memory across stages.
+batch_size_per_stage = [8, 6, 4, 2]
+
+[selection]
+val_every = 20
+
+[data.replay]
+enabled = true
+merge_oversample = 4.0
+cav_follower_oversample = 3.0
+error_max_boost = 8.0
+error_alpha = 1.0
+error_decay = 0.9
+probe_windows = 64
+refresh_every = 0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v10horizon"

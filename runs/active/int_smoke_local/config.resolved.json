@@ -1,0 +1,164 @@
+{
+  "config": {
+    "curriculum": {
+      "epochs_per_stage": 1,
+      "max_hours": 1.0,
+      "stage_steps": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "steps_per_epoch": 2000,
+      "truncation_steps": 20,
+      "unroll_s": [
+        10.0,
+        30.0,
+        60.0,
+        120.0
+      ]
+    },
+    "data": {
+      "cav_drive": "teacher",
+      "entries_v2": false,
+      "entry_pad": 8,
+      "history_s": null,
+      "history_stride_s": 1.0,
+      "jam": {
+        "cache_dir": null,
+        "oversample": 1.0,
+        "speed_mps": 5.0
+      },
+      "packs": {
+        "damping": "pack_damping",
+        "dspeed": "pack_dspeed",
+        "pack_v3": "pack_v3"
+      },
+      "sidecars": {
+        "driver_sidecar": null,
+        "identities": {
+          "damping": "identities_damping",
+          "dspeed": "identities_dspeed",
+          "pack_v3": "sidecars_packv3_v2/identities"
+        },
+        "outcomes": "sidecars_packv3_v2/outcomes",
+        "overlays": {
+          "damping": "overlay_damping",
+          "dspeed": "overlay_dspeed"
+        }
+      },
+      "start_shift_prob": 0.75,
+      "state_noise_std_m": 0.0,
+      "state_noise_std_mps": 0.0,
+      "switching": {
+        "driver_params": null,
+        "event_oversample": 2.0,
+        "heldout_family_policy": "drop",
+        "heldout_max_drop_frac": 0.85,
+        "identities": null,
+        "mix_ratio": 0.5,
+        "pack": null,
+        "timeline_index": null,
+        "val_frac": 0.1,
+        "val_seed": 0,
+        "window_fraction": 0.0,
+        "windows_train": null,
+        "windows_val": null,
+        "zero_shot_heldout": null
+      },
+      "windows": {
+        "exclude": [
+          "lpwo_v3/excluded_runs_PI_wall_v3.json"
+        ],
+        "leave_pi_wall_out": false,
+        "train": "lpwo_v3/windows_train_noPI_noWall.json",
+        "val": "lpwo_v3/windows_val_noPI_noWall.json",
+        "val_holdout_frac": 0.0,
+        "val_holdout_seed": 0
+      }
+    },
+    "loss": {
+      "braking": {
+        "asym_speed_alpha": 2.0,
+        "decel_threshold_mps2": 3.0,
+        "decel_weight": 5.0,
+        "prop_max_gap_m": null,
+        "prop_window_s": 3.0,
+        "propagation_weight": 1.0
+      },
+      "conservation_enabled": false,
+      "conservation_weight": 0.0,
+      "lane_rate": {
+        "target": 0.0123,
+        "weight": 0.0
+      },
+      "lane_weight": 1.0,
+      "loss_share_logging": true,
+      "position_huber_delta_m": 5.0,
+      "position_weight": 1.0,
+      "residual": {
+        "hybrid_magnitude_weight": null,
+        "residual_mag_weight": 0.0
+      },
+      "speed_huber_delta_mps": 1.0,
+      "speed_weight": 1.0,
+      "stability_margin": 1.0,
+      "stability_probes": 1,
+      "stability_weight": 0.0,
+      "step_weight_decay": 0.01,
+      "traffic": {
+        "bin_s": 30.0,
+        "enabled": false,
+        "free_speed_mps": 13.89,
+        "ramp_end_s": 120.0,
+        "ramp_start_s": 30.0,
+        "weight": 0.1
+      }
+    },
+    "model": {
+      "allow_rejected_hard_cap": false,
+      "checkpoint_residual": false,
+      "controller_embed_dim": 16,
+      "geometry_only": false,
+      "history_features": 6,
+      "kind": "structured",
+      "lane_head": "off",
+      "lane_logit_cap": null,
+      "merge_cal": true,
+      "n_controllers": 7,
+      "physics_params": "merge_params",
+      "projection": {
+        "enabled": false,
+        "min_gap_m": 2.0
+      },
+      "residual_cap_mps2": null,
+      "residual_cap_neg_mps2": null,
+      "residual_soft_bound_mps2": null,
+      "residual_soft_bound_neg_mps2": null,
+      "rollout_mode": "residual",
+      "sumo_fidelity": true
+    },
+    "name": "WM-S-SMOKE-LOCAL",
+    "optim": {
+      "batch_size": 2,
+      "grad_clip": 1.0,
+      "lr": 0.001,
+      "weight_decay": 0.0
+    },
+    "runtime": {
+      "device": "cpu",
+      "num_workers": 0,
+      "omp": 2,
+      "out_dir": "runs/active/int_smoke_local",
+      "seed": 101,
+      "threads": 2
+    },
+    "schema_version": 2,
+    "selection": {
+      "select_by_long_horizon": false,
+      "val_batches": 8,
+      "val_every": 200
+    }
+  },
+  "fingerprint": "1757f49d6f7450c3b70286cec7a78f5fb34828af4567467c73667a77a64ccfdb"
+}

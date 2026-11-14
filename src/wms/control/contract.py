@@ -32,7 +32,7 @@ ACCEL_MIN_MPS2 = -3.0       # CAV actuation bounds (traffic_shepherd/config.py:4
 #: keep it as their default ceiling; callers bounding a POLICY's commands pass the policy's bound.
 ACCEL_MAX_MPS2 = 1.5
 LEGACY_ACCEL_MAX_MPS2 = ACCEL_MAX_MPS2
-#: Default cap of freshly constructed C4 actors: the ``normal_car`` driver
+#: Default cap of freshly constructed C4 actors (owner 2026-10-13): the ``normal_car`` driver
 #: accel of scenarios/idm/driver_routes.rou.xml (aggressive 3.0, cautious 2.0).  Trainers select it
 #: explicitly via config (``[policy] accel_max_mps2``).
 POLICY_ACCEL_MAX_MPS2 = 2.6
@@ -63,8 +63,8 @@ OWN_FEATURES = (
 )
 F_OWN = len(OWN_FEATURES)
 
-#: Per-report features of another CAV, relative to the ego CAV.  The last two
-#: are the reporting CAV's last commanded acceleration and lane intent (-1 left, 0 stay,
+#: Per-report features of another CAV, relative to the ego CAV.  The last two (owner 2026-10-12
+#: late) are the reporting CAV's last commanded acceleration and lane intent (-1 left, 0 stay,
 #: +1 right) from its previous decision, so CAVs can react to each other's plans.
 REPORT_FEATURES = (
     "ds_m", "dv_mps", "dlane", "lane_0", "lane_1", "lane_2", "v_mps",
@@ -76,7 +76,7 @@ LEGACY_F_REPORT = 11
 F_REPORT = len(REPORT_FEATURES)
 GROUP_SIGNAL_DIM = 8        # learned RSU broadcast vector
 
-# ---------------------------------------------------------------- RSU own sensors
+# ---------------------------------------------------------------- RSU own sensors (owner 2026-10-12)
 # The RSU directly observes every vehicle in these WM-frame zones (in addition to CAV reports).
 # Its group signal is computed from CAV reports AND this RSU field; the same field feeds MAPPO.
 RSU_MAINLINE_S_M = (-800.0, 225.44)   # lanes 0 and 1: 800 m upstream .. ~150 m downstream of the merge end

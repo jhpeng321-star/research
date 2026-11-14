@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/harm_causality_v1",
+ "name": "harm_causality_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\harm_causality_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/harm_causality_v1/harm_causality_v1.tar.zst",
+ "bytes": 5185070,
+ "files": 27,
+ "archive_bytes": 618409,
+ "archive_md5": "442cb730bfd6a2e575d15bb5f90d9e93",
+ "member_manifest": "manifests/members/output_harm_causality_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.4,
+ "timestamp": "2026-10-10T01:48:28"
+}

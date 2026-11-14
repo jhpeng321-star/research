@@ -1,0 +1,47 @@
+{
+ "amendment": 8,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend7.json",
+  "registration_sha256": "1a1ad3599958393596c8a37b0c349f9f62931f9d45296571c20ae7511e60a31a"
+ },
+ "authority": [
+  "MAIN 2026-11-07 ~01:2x: one arm per worker process (fresh process or per-arm pool) with a regression test; a one-episode check of the NATIVE->U0->RULE worker sequence on a TRAIN world (<= 1,200 sim-s) before re-running 3c; pre-run sub-cap 432,000 -> 480,000 inside v2v_final 1,600,000"
+ ],
+ "defect": {
+  "cause": "Runtime.run used one process pool for a mixed 3c chunk (24 NATIVE + 8 U0); a worker that ran NATIVE (env imported) then ran U0 and g5_runtime.install refused",
+  "charged": 38400,
+  "opened": false,
+  "published": 0,
+  "time": "2026-11-07 01:09"
+ },
+ "fix": {
+  "runtime": "Runtime.run: one fresh spawn pool per arm (Python 3.10 has no max_tasks_per_child); results in item order",
+  "test": "real-process regression test with a probe runner that raises like the G5 binding (old single pool raises, per-arm pools pass)"
+ },
+ "prerun_cap": {
+  "file": "PRERUN_CAP.json",
+  "new": 480000,
+  "outlook": "3a 345,600 + failed 38,400 + 3c 86,400 = 470,400 <= 480,000",
+  "previous": 432000
+ },
+ "registered_utc": "2026-11-06T17:21:14.939174+00:00",
+ "registration_sha256": "3c0e468a0e86e4659cfbfb7a1f6028ffc51e1547941e976c7979b371a11e55e1",
+ "replay": {
+  "jobs": "nm3c_native_0000-0023, nm3c_u0_0000-0007",
+  "rule": "the interrupted failed chunk (RESERVED, no WAVE, nothing published or opened) may be re-run ONCE under a sealed REPLAY_AUTHORIZED file citing MAIN; ledger ids <job>#r1; never twice"
+ },
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "seqcheck": {
+  "arms": [
+   "NATIVE",
+   "U0",
+   "RULE"
+  ],
+  "pass_rule": "each log passes the field-by-field check and the three arms ran in three distinct processes",
+  "phase": "v2v_final_seqcheck",
+  "sim_s": 1080,
+  "workers": 1,
+  "world": "TRAIN 989598"
+ },
+ "status": "pre-results: 3a pre-run waves sealed (NATIVE/U0/RULE 96/96), nothing opened; 3c 0/72"
+}

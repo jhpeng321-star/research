@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/TEST_STATUS_KNOWN_FAILURES.md",
+ "name": "TEST_STATUS_KNOWN_FAILURES.md",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\TEST_STATUS_KNOWN_FAILURES.md",
+ "drive": "gdrive:research-archive/repo-evidence/output/TEST_STATUS_KNOWN_FAILURES.md.tar.zst",
+ "bytes": 1993,
+ "files": 1,
+ "archive_bytes": 1171,
+ "archive_md5": "ad99c5d2d7a25bb6f11231f470e08fc6",
+ "member_manifest": "manifests/members/output_TEST_STATUS_KNOWN_FAILURES.md.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 18.3,
+ "timestamp": "2026-10-10T01:29:32"
+}

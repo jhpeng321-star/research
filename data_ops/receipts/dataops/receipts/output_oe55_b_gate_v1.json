@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe55_b_gate_v1",
+ "name": "oe55_b_gate_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe55_b_gate_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe55_b_gate_v1/oe55_b_gate_v1.tar.zst",
+ "bytes": 58468,
+ "files": 5,
+ "archive_bytes": 18700,
+ "archive_md5": "63525063b5c899004c407d55d5c49c13",
+ "member_manifest": "manifests/members/output_oe55_b_gate_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 15.9,
+ "timestamp": "2026-10-10T01:34:36"
+}

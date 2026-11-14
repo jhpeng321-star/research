@@ -1,0 +1,24 @@
+# WM-S-C4 v4 continuation (2026-10-14): finish v4 from its 30 s-stage checkpoint (see [curriculum] note).
+schema_version = 2
+name = "WM-S-C4-V4-CONT"
+extends = "c4_wm_v4.toml"
+
+[model]
+init_from = "ckpt_v4"   # launch: --set model.init_from=<absolute path to v4's wm_s_stage30.pt>
+
+[curriculum]
+# v4 completed its 30 s stage (wm_s_stage30.pt); its 60 s validation then stalled >1 h because the
+# evaluator ran all ~8,300 validation windows -> continue from stage30 with the 60 s + 120 s stages.
+unroll_s = [60.0, 120.0]
+stage_steps = [400, 160]
+truncation_steps_per_stage = [120, 120]
+max_hours = 5.0
+
+[optim]
+lr_per_stage = [1.0e-4, 1.0e-4]
+
+[selection]
+val_max_windows = 512   # fixed evenly spaced subset (32 batches) per evaluation
+
+[runtime]
+out_dir = "runs/active/c4_wm_v4_cont"

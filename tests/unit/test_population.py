@@ -1,4 +1,4 @@
-"""HDV driver population switch: legacy3 (default) vs textbook."""
+"""HDV driver population switch (owner 2026-10-14): legacy3 (default) vs textbook."""
 from __future__ import annotations
 
 import csv
@@ -74,7 +74,7 @@ def test_textbook_parameter_distributions():
                "min_gap_m": 2.0}
     for name, median in medians.items():
         assert abs(q(name, 0.5) - median) < 0.03 * median, name
-    # 10-90 % ranges of the lognormal parameters
+    # 10-90 % ranges of the lognormal parameters (owner spec, +-0.1)
     for name, (q10, q90) in {"tau_s": (0.9, 1.6), "accel_mps2": (0.8, 1.8),
                              "decel_mps2": (1.5, 2.8)}.items():
         assert abs(q(name, 0.1) - q10) < 0.1 and abs(q(name, 0.9) - q90) < 0.15, name

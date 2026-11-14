@@ -1,0 +1,52 @@
+{
+ "schema": "wms_eval_shift_scores/1",
+ "generated_utc": "2026-10-08T00:12:36Z",
+ "shift": {
+  "seconds": 5.0,
+  "steps": 10,
+  "history_steps": 10,
+  "horizon_s": 120.0,
+  "entries": false,
+  "arms": "native,pi",
+  "workers": 4,
+  "bootstrap": 1000,
+  "seed": 0
+ },
+ "states_dir": "_out/c1_states_v2shift",
+ "models": {
+  "c1_struct": {
+   "spec": "wms",
+   "source": "E:\\rd-wt\\ws-evalshift\\_out\\shift_scores\\_run_main\\states__wms__u_same.json",
+   "checkpoint": "E:\\rd-wt\\ws-evalshift\\_out\\shift_ckpt\\struct\\wm_s.pt",
+   "sha256": "87ed02e0707e5e4eefdd2dbb0fd282f834c1288776f7f395b41ab4d13826aaef"
+  },
+  "blackbox_traj": {
+   "spec": "blackbox_traj",
+   "source": "E:\\rd-wt\\ws-evalshift\\_out\\shift_scores\\_run_main\\states__blackbox_traj__u_same.json",
+   "checkpoint": "E:\\rd-wt\\ws-evalshift\\_out\\shift_ckpt\\bb_traj\\wm_s.pt",
+   "sha256": "afaaa32cb15079014d1a9e08f78b26e74fd341298d1aa0292a24009d9f783742"
+  },
+  "blackbox_id": {
+   "spec": "blackbox_id",
+   "source": "E:\\rd-wt\\ws-evalshift\\_out\\shift_scores\\_run_main\\states__blackbox_id__u_same.json",
+   "checkpoint": "E:\\rd-wt\\ws-evalshift\\_out\\shift_ckpt\\bb_id\\wm_s.pt",
+   "sha256": "e12c81c008e3bb29e366db5597061754e0fa56092dbe5a995a9baa1fbfcce61d"
+  },
+  "keep_speed": {
+   "spec": "keep_speed",
+   "source": "E:\\rd-wt\\ws-evalshift\\_out\\shift_scores\\_run_main\\states__keep_speed__u_same.json",
+   "checkpoint": null
+  },
+  "pure_physics": {
+   "spec": "pure_physics",
+   "source": "E:\\rd-wt\\ws-evalshift\\_out\\shift_scores\\_run_main\\states__pure_physics__u_same.json",
+   "checkpoint": null
+  },
+  "oldhist": {
+   "spec": "wms",
+   "source": "E:\\rd-wt\\ws-evalshift\\_out\\shift_scores\\_run_oldhist\\states__wms__u_same.json",
+   "checkpoint": "E:\\rd-wt\\ws-evalshift\\_out\\shift_ckpt\\oldhist\\wm_s.pt",
+   "sha256": "6966c98577b0e576750f1ff8f3e383893efcc022be5696039e6d16d21d736410"
+  }
+ }
+}

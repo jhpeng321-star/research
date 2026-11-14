@@ -1,0 +1,352 @@
+{
+  "schema": "escalation_test_plan/1",
+  "date": "2026-09-06",
+  "objective": "Determine when CAV-report-based RSU coordination offers incremental benefit over a fixed external damping controller, at any traffic state.",
+  "scope": {
+    "controller": "frozen direct-output CIRCLES",
+    "congestion_required": false,
+    "damping_must_outperform_idm": false,
+    "penetrations": [
+      0.05,
+      0.1,
+      0.2,
+      0.3
+    ],
+    "maximum_active_walls": 1,
+    "simultaneous_multiwall": "optional separate future treatment",
+    "runtime_input": "received timestamped CAV self states and onboard detections only"
+  },
+  "characterization": {
+    "seeds": [
+      4107,
+      4108
+    ],
+    "seed_role": "exposed",
+    "mainline_vph": [
+      2000,
+      2700
+    ],
+    "ramp_vph": 400,
+    "horizon_s": 2400,
+    "pilot_penetrations": [
+      0.2
+    ],
+    "extension_penetrations": [
+      0.05,
+      0.1,
+      0.3
+    ],
+    "pilot_jobs": 8,
+    "pilot_max_simulated_seconds": 19200,
+    "extension_jobs": 24,
+    "extension_max_simulated_seconds": 57600,
+    "automatic_execution": false,
+    "automatic_retries": 0,
+    "automatic_extension": false,
+    "note": "Small development panels, not statistical acceptance. Seed IDs are already exposed and never become prospective. All loads use the same seeds; demand is not measured density."
+  },
+  "geometry_capture": {
+    "required_lanes": [
+      "1191554636_0",
+      "1191554636_1"
+    ],
+    "recruitment_band_m": [
+      200,
+      1900
+    ],
+    "max_report_age_s": 1,
+    "history_s": 20,
+    "predeclared_times_s": [
+      300,
+      600,
+      900,
+      1200,
+      1500
+    ],
+    "maximum_enumerated_groups": 256,
+    "initial_span_test_values_m": [
+      10,
+      25,
+      49,
+      50,
+      51,
+      75,
+      100,
+      150
+    ],
+    "provisional_formed_span_m": 50,
+    "initial_span_is_not_a_physical_feasibility_label": true,
+    "scope": "Read-only geometry capture; band and 50m formed definition are hypotheses for the wall study, not accepted defaults."
+  },
+  "benefit_definition": {
+    "congestion_required": false,
+    "form": "at least one preregistered primary physical improvement, subject to all declared cost guardrails",
+    "cost_units": {
+      "braking_seconds_per_request": "vehicle-seconds below -3 m/s2 per requested vehicle",
+      "effort_per_request": "integral squared acceleration per requested vehicle",
+      "system_seconds_per_request": "request-to-arrival seconds including source waiting",
+      "ttc_seconds_per_request": "TTC<3 vehicle-seconds per requested vehicle",
+      "source_wait_seconds_per_request": "source-wait seconds per requested vehicle"
+    },
+    "numerical_margins_status": "must be specified with units and rationale before opening wall outcomes; no accepted defaults",
+    "failed_attempts": "retained in paired benefit evaluation and also receive separate formation labels"
+  },
+  "stages": [
+    {
+      "id": "S00",
+      "title": "Controller identity, command ownership and replay",
+      "depends_on": [],
+      "execution": "automated_tests",
+      "tests": [
+        "Exact frozen model and raw SI singleton inference.",
+        "Correct absolute command, physics clock, native fallback, HDV isolation and return to identical damping.",
+        "Real branch prefix/replay and zero-effect sham before interpreting wall outcomes."
+      ],
+      "automated_tests": [
+        "tests/test_circles_controller.py",
+        "tests/test_command_ownership.py",
+        "tests/test_active_workflow.py"
+      ],
+      "deliverable": "Test log plus bounded physical replay/sham evidence for the eventual wall runner.",
+      "advance_rule": "Implementation and comparison identities pass. Damping need not beat IDM."
+    },
+    {
+      "id": "S01",
+      "title": "CAV acquisition, report receipt and missingness",
+      "depends_on": [
+        "S00"
+      ],
+      "execution": "automated_tests_then_sensor_validation",
+      "tests": [
+        "Sensor range/lane boundaries, nearest-visible detection, occlusion, noise and missed detections.",
+        "Timestamp, receipt, stale/late/duplicate packets, unknown space and missing lanes.",
+        "Hidden simulation changes cannot change identical report-based features or gates.",
+        "Reporting CAV counts and overlapping sensor coverage never become a true traffic census."
+      ],
+      "automated_tests": [
+        "tests/test_active_sensing.py",
+        "tests/test_rsu_reporting.py",
+        "tests/test_escalation_observations.py"
+      ],
+      "deliverable": "Frozen sensor/communication contract and report provenance.",
+      "advance_rule": "Every online field is acquirable and unknown information leads to explicit abstention. Ideal-sensor tests do not claim real-sensor robustness."
+    },
+    {
+      "id": "S02",
+      "title": "Characterize fixed damping and capture opportunities across traffic states",
+      "depends_on": [
+        "S00",
+        "S01"
+      ],
+      "execution": "registered_panel_runner",
+      "tests": [
+        "Same exposed seeds at both initial loads, paired native and damping, unchanged controller.",
+        "Record full requested service, source waiting, unfinished trips, braking, effort, TTC, collisions and teleports.",
+        "Record measured lane density, speed distribution and stopped counts in a separate offline channel.",
+        "Keep free-flow, oscillating and congested states; no congestion trigger or efficacy pass condition."
+      ],
+      "automated_tests": [
+        "tests/test_escalation_study.py",
+        "tests/test_escalation_evidence.py"
+      ],
+      "deliverable": "Bounded paired characterization and timestamped CAV reports reusable by geometry and wall selection.",
+      "advance_rule": "Complete interpretable data and correct implementation. A weak or strong damping result both advance. Do not retrain or manufacture poor performance."
+    },
+    {
+      "id": "S03",
+      "title": "Initial separation, convergence and physical feasibility",
+      "depends_on": [
+        "S02"
+      ],
+      "execution": "report_capture_ready_physical_formation_runner_required",
+      "tests": [
+        "Candidate separation 10,25,49,50,51,75,100,150 m; declared final compactness provisionally 50 m.",
+        "Cross-lane speed mismatch 0,1,2,4 m/s; safe front/rear room and upstream runway.",
+        "Distinguish already-compact speed settling from convergence of spatially dispersed members.",
+        "Measure actual readiness, initial/max/final span, speed convergence, compact HOLD, abort and refusal.",
+        "Test cut-ins, member lane change/loss, missing reports, deadline and release-boundary exhaustion."
+      ],
+      "automated_tests": [
+        "tests/test_active_wall.py",
+        "tests/test_escalation_observations.py",
+        "tests/test_escalation_evidence.py"
+      ],
+      "deliverable": "Observed geometry-to-delivery map; independent formation labels from measured trajectories.",
+      "advance_rule": "A reproducible formation mechanism exists in declared scope. A hardcoded 50 m rejection is not an empirical physical boundary. Synthetic trajectories are not SUMO evidence."
+    },
+    {
+      "id": "S04",
+      "title": "Wall authority, HOLD and release",
+      "depends_on": [
+        "S03"
+      ],
+      "execution": "physical_wall_runner_and_registered_profile_required",
+      "tests": [
+        "Freeze one report-based target rule, authority limits, assembly, HOLD, taper and hard abort before outcomes.",
+        "Compare few declared one-factor variants only when diagnosing a specific failure; no full Cartesian search.",
+        "Maintain declared lane coverage and compactness, observe actual acceleration rather than command alone.",
+        "Normal taper, hard abort, follower compression and delayed postrelease harm.",
+        "Use sham and assembly-only ablations when attribution is ambiguous, reusing exact compatible evidence."
+      ],
+      "automated_tests": [
+        "tests/test_active_wall.py",
+        "tests/test_command_ownership.py",
+        "tests/test_escalation_evidence.py"
+      ],
+      "deliverable": "One frozen wall profile and a verified integrated damping/wall runner.",
+      "advance_rule": "Treatment delivery and safety/service are measured. No claim that a short smooth command proves safe traffic outcomes."
+    },
+    {
+      "id": "S05",
+      "title": "Incremental physical benefit in any traffic state",
+      "depends_on": [
+        "S04"
+      ],
+      "execution": "paired_effect_evaluator_ready_physical_pairs_required",
+      "tests": [
+        "Match continued damping and attempted wall for the same seed, proposal, starting state and exogenous future.",
+        "Evaluate assembly plus HOLD, release and delayed effects at a common service horizon.",
+        "Use explicit primary improvement margins and guardrails for all other costs; no required congestion state.",
+        "Include failed assembly, harmful, neutral and helpful attempts; report intent-to-treat and delivery separately.",
+        "Preserve native IDM as a context reference, without requiring damping to dominate it."
+      ],
+      "automated_tests": [
+        "tests/test_escalation_evidence.py"
+      ],
+      "deliverable": "Verified paired physical effects and a wall-benefit decision, conditional on the declared scope.",
+      "advance_rule": "Useful repeatable incremental benefit exists under preregistered margins. If all admissible cases help equally, retain a simple rule; do not manufacture negative labels to justify learning."
+    },
+    {
+      "id": "S06",
+      "title": "Penetration, formation availability and observation availability",
+      "depends_on": [
+        "S05"
+      ],
+      "execution": "bounded_penetration_extension_plus_wall_pairs_required",
+      "tests": [
+        "5%,10%,20%,30%, nested CAV identities and identical exogenous requests.",
+        "Report all decision opportunities, suitable membership, sufficient information, approvals, attempts, formation success and completed effects.",
+        "Separate insufficient members, unsafe geometry, insufficient information and insufficient expected benefit.",
+        "Do not impose a low-penetration failure or use true penetration as an online feature."
+      ],
+      "automated_tests": [
+        "tests/test_active_scenarios.py",
+        "tests/test_escalation_observations.py"
+      ],
+      "deliverable": "Availability/effect results by penetration and measured traffic-state strata with honest denominators.",
+      "advance_rule": "Coverage of the declared scope and refusal mechanisms is documented; no requirement that every low-penetration case fails."
+    },
+    {
+      "id": "S07",
+      "title": "Dataset integrity and observation sufficiency",
+      "depends_on": [
+        "S05",
+        "S06"
+      ],
+      "execution": "offline_evaluators_ready_paired_dataset_required",
+      "tests": [
+        "Same proposal, predecision evidence and matched outcome horizon for each label.",
+        "CAV self/local reports and histories only; no global health, true density, hidden driver types, future outcomes or episode IDs as model features.",
+        "Seed-level training, calibration and prospective split plus archived exposure audit.",
+        "Current observations versus history, coverage and age features; simple report-based rules as first baseline.",
+        "Keep formation failures and declined opportunities distinct; no future selection or complete-case outcome filtering."
+      ],
+      "automated_tests": [
+        "tests/test_escalation_evidence.py",
+        "tests/test_escalation_observations.py"
+      ],
+      "deliverable": "Versioned paired dataset, feature acquisition map, split registry and sufficiency report.",
+      "advance_rule": "Label integrity and out-of-seed information value are established; an offline oracle is diagnosis only, never a runtime feature."
+    },
+    {
+      "id": "S08",
+      "title": "Feasibility gate reliability",
+      "depends_on": [
+        "S07"
+      ],
+      "execution": "metrics_ready_rule_or_model_fit_requires_data",
+      "tests": [
+        "Predicted deliverability versus measured safe formation and declared HOLD delivery.",
+        "False approval, false rejection and missing-information abstention by penetration, separation and report quality.",
+        "Transparent geometry/kinematic rule first; learn only if it adds held-out value.",
+        "Calibrate any predicted probabilities using separate calibration episodes."
+      ],
+      "automated_tests": [
+        "tests/test_escalation_evidence.py",
+        "tests/test_active_wall.py"
+      ],
+      "deliverable": "Frozen feasibility rule/model and its operating-point error rates.",
+      "advance_rule": "Reliability meets preregistered requirements with uncertainty. Predicting a programmed threshold is not proof of physical feasibility."
+    },
+    {
+      "id": "S09",
+      "title": "Incremental benefit gate and operating threshold",
+      "depends_on": [
+        "S07",
+        "S08"
+      ],
+      "execution": "metrics_ready_model_fit_requires_data",
+      "tests": [
+        "Rule baseline versus small learned predictor using the same acquired evidence and wall proposal.",
+        "False escalations, missed beneficial opportunities, abstention, Brier/reliability and policy value.",
+        "Benefit in uncongested as well as congested states; density alone never requires an intervention.",
+        "Fix physical benefit margins and decision threshold on development/calibration only."
+      ],
+      "automated_tests": [
+        "tests/test_escalation_evidence.py"
+      ],
+      "deliverable": "Frozen benefit predictor or sufficient analytical rule plus calibration record.",
+      "advance_rule": "Out-of-seed decision value supports the gate; training accuracy alone cannot advance the paper claim."
+    },
+    {
+      "id": "S10",
+      "title": "Both gates and repeated decisions in the full controller",
+      "depends_on": [
+        "S08",
+        "S09"
+      ],
+      "execution": "composition_tests_ready_integrated_policy_runner_required",
+      "tests": [
+        "Both approvals bind the same proposal and current report snapshot; either rejection returns damping.",
+        "One active wall, cooldown, fresh reauthorization, no duplicate command ownership or rapid toggling.",
+        "Loss of observation/member, hard abort and identical damping re-engagement.",
+        "Repeated opportunities, no benefit budget hidden by cherry-picking decisions."
+      ],
+      "automated_tests": [
+        "tests/test_active_wall.py",
+        "tests/test_command_ownership.py",
+        "tests/test_escalation_evidence.py"
+      ],
+      "deliverable": "Integrated online decision/release lifecycle with complete refusal and intervention logs.",
+      "advance_rule": "Physical closed-loop integrity passes before prospective efficacy evaluation."
+    },
+    {
+      "id": "S11",
+      "title": "Prospective system efficacy and robustness",
+      "depends_on": [
+        "S10"
+      ],
+      "execution": "sealed_until_frozen_policy_exposure_audit_and_budget",
+      "tests": [
+        "Untouched audited seeds across 5-30% penetration and declared demand/traffic states.",
+        "Compare damping, report-rule escalation, feasibility-only escalation under a declared budget, and two-gate escalation.",
+        "Whole requested service, safety/smoothness outcomes, delayed harm, intervention count and seed-cluster uncertainty.",
+        "Reporting thinning with controllable membership held fixed; control thinning with observation access held fixed as a labeled diagnostic.",
+        "Registered delays, loss, sensor noise/occlusion and flow/IDM perturbations; measure performance and abstention, not invariance to genuine information loss."
+      ],
+      "automated_tests": [
+        "tests/test_escalation_evidence.py",
+        "tests/test_escalation_observations.py"
+      ],
+      "deliverable": "Final paper figures and auditable prospective physical policy comparisons.",
+      "advance_rule": "Report measured effects and limitations without retuning on prospective outcomes. No universal congestion-prevention claim."
+    }
+  ],
+  "optional_multiwall_tests": [
+    "Disjoint members/reserves and one writer per CAV",
+    "Inter-wall spacing, catch-up, storage and combined authority",
+    "Coordinated release and independent abort",
+    "Incremental benefit conditioned on another wall already being active"
+  ],
+  "test_creation_is_not_physical_validation": true
+}

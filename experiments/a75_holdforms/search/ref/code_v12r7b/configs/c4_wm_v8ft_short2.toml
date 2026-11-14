@@ -1,0 +1,16 @@
+# V8FT2 pre-check: c4_wm_v8ft_short.toml (stage_steps [80, 60]) + the V8FT2 lane-end physics
+# (see c4_wm_v8ft2.toml for the semantics and the training-vs-inference decision).
+# Launch: --set model.init_from=<abs path of the v5m checkpoint>.
+schema_version = 2
+name = "WM-S-C4-V8FT-SHORT2"
+extends = "c4_wm_v8ft_short.toml"
+
+[physics.overrides]
+forced_window_mode = "hazard"
+forced_window_min_hazard = 0.02
+mainline_merge_yield_scope = "zone"
+merge_end_wait_s0_follow_m = 1.0
+merge_end_wait_t_follow_s = 0.6
+
+[runtime]
+out_dir = "runs/active/c4_wm_v8ft_short2"

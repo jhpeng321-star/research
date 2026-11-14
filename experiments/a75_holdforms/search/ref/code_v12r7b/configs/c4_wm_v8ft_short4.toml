@@ -1,0 +1,25 @@
+# V8FT pre-check 4 (owner 2026-10-18): pre-check 1 recipe (c4_wm_v8ft_short2: merge_end_wait / mainline yield OFF in
+# training, ON at inference; forced-window hazard 0.02; zone yield + follower 1.0/0.6 at inference) PLUS the v8wm3
+# waiting-time impatience in training and inference. Isolates "impatience in training" from pre-check 3's
+# "merge-zone rules ON in training". merge_timing weight 6, gradient-share probe off.
+schema_version = 2
+name = "WM-S-C4-V8FT-SHORT4"
+extends = "c4_wm_v8ft_short2.toml"
+
+[physics.overrides]
+merge_impatience = true
+merge_impatience_distance_m = 25.0
+merge_impatience_speed_mps = 1.0
+merge_impatience_hazard_tau_s = 25.0
+merge_impatience_gap_tau_s = 25.0
+merge_impatience_s0_min_m = 0.5
+merge_impatience_t_min_s = 0.1
+
+[loss]
+loss_share_logging = false
+
+[loss.merge_timing]
+weight = 6.0
+
+[runtime]
+out_dir = "runs/active/c4_wm_v8ft_short4"

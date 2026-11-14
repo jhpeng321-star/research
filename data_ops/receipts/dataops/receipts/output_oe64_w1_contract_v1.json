@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe64_w1_contract_v1",
+ "name": "oe64_w1_contract_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe64_w1_contract_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe64_w1_contract_v1/oe64_w1_contract_v1.tar.zst",
+ "bytes": 52078,
+ "files": 3,
+ "archive_bytes": 17212,
+ "archive_md5": "c517e1fdf12e7b9c70ff756c5060124f",
+ "member_manifest": "manifests/members/output_oe64_w1_contract_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 60.7,
+ "timestamp": "2026-10-10T01:33:48"
+}

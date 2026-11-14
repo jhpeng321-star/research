@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """Pull logs / summaries / checkpoints of a C4 run back from a box, verifying sha256 (run on the laptop).
 
-    python scripts/c4/fetch_results.py --host gpu-host --run wm_main_20261013T0900Z
-    python scripts/c4/fetch_results.py --host gpu-host --run wm_main_... --include-large "out/wm_s_best.pt"
+    python scripts/c4/fetch_results.py --host gpuA --run wm_main_20261013T0900Z
+    python scripts/c4/fetch_results.py --host gpuA --run wm_main_... --include-large "out/wm_s_best.pt"
     python scripts/c4/fetch_results.py --host cpuA --run eval_... --max-small-mb 2 --list-only
 
-* Remote run directory = $C4_HOME/runs/<run> (C4_HOME default /workspace/c4; --remote-home to change).
+* Remote run directory = $C4_HOME/runs/<run> (C4_HOME default /root/autodl-tmp/c4; --remote-home to change).
 * SMALL files (<= --max-small-mb, default 5; no *.pt/*.pth/*.npy/*.bin/*.tar) go to
   runs/active/WM-S-C4-20261013/fetched/<host>/<run>/ (inside the repo's evidence area).
 * LARGE files are fetched only when named with --include-large (glob, repeatable); they go to
@@ -97,9 +97,9 @@ def sha256_local(path: Path) -> str:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--host", help="ssh alias (e.g. gpu-host or a CPU host)")
+    ap.add_argument("--host", help="ssh alias (gpuA, a CPU host alias)")
     ap.add_argument("--run", required=True, help="run id under <remote-home>/runs")
-    ap.add_argument("--remote-home", default="/workspace/c4")
+    ap.add_argument("--remote-home", default="/root/autodl-tmp/c4")
     ap.add_argument("--max-small-mb", type=float, default=5.0)
     ap.add_argument("--include-large", action="append", default=[], metavar="GLOB",
                     help="glob relative to the run dir of large files to fetch (e.g. 'out/wm_s_best.pt')")

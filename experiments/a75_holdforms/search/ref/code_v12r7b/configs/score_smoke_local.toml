@@ -1,0 +1,17 @@
+# `wms score`: the local smoke checkpoint against the previous best (C1FAST) on the 20-state quick
+# subset of wall_same (earliest state of each of the first 20 worlds), 60 s rollouts, CAVs
+# teacher-forced. Mechanics check only: the smoke checkpoint has 8 optimizer steps.
+schema_version = 2
+name = "WM-S-SCORE-SMOKE-LOCAL"
+sets = ["wall_same"]
+horizons_s = [10.0, 30.0, 60.0]
+previous_best = "ckpt_c1fast"
+workers = 1
+out_dir = "runs/active/int_score_smoke_local"
+
+[models]
+smoke_local = "ckpt_smoke_local"
+
+[set_specs.wall_same]
+states = "eval_states_wall_same"
+subset = "first_per_world:20"

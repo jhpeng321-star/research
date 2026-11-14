@@ -1,0 +1,96 @@
+{
+  "entrant_terms": {
+    "entrants": {
+      "last": 9,
+      "sum": 31
+    }
+  },
+  "mean_step_seconds": 17.035540949998904,
+  "over_6gb": true,
+  "peak_rss_mb": 7647.1,
+  "rc": 0,
+  "step_seconds": [
+    18.35237049999887,
+    15.718711399998938
+  ],
+  "terms": {
+    "entrants": {
+      "finite": true,
+      "first": 22,
+      "last": 9
+    },
+    "epoch": {
+      "finite": true,
+      "first": 1,
+      "last": 1
+    },
+    "gate_g0": {
+      "finite": true,
+      "first": 0.0,
+      "last": 0.0
+    },
+    "gate_g_last": {
+      "finite": true,
+      "first": 0.12759162485599518,
+      "last": 0.12751798331737518
+    },
+    "lane": {
+      "finite": true,
+      "first": 0.14162206649780273,
+      "last": 0.1649562269449234
+    },
+    "loss": {
+      "finite": true,
+      "first": 14.065196990966797,
+      "last": 16.04641342163086
+    },
+    "position": {
+      "finite": true,
+      "first": 13.182060241699219,
+      "last": 15.070295333862305
+    },
+    "seconds": {
+      "finite": true,
+      "first": 18.35237049999887,
+      "last": 15.718711399998938
+    },
+    "speed": {
+      "finite": true,
+      "first": 0.7415143847465515,
+      "last": 0.8111607432365417
+    },
+    "stage_s": {
+      "finite": true,
+      "first": 10.0,
+      "last": 10.0
+    },
+    "step": {
+      "finite": true,
+      "first": 1,
+      "last": 2
+    },
+    "traffic": {
+      "finite": true,
+      "first": 0.0,
+      "last": 0.0
+    },
+    "unroll_steps": {
+      "finite": true,
+      "first": 20,
+      "last": 20
+    },
+    "valid_hdv_slots_t0": {
+      "finite": true,
+      "first": 400,
+      "last": 273
+    },
+    "valid_targets": {
+      "finite": true,
+      "first": 7809,
+      "last": 5256
+    }
+  },
+  "updates": 2,
+  "valid_targets_last": 5256,
+  "wall_seconds": 52.21
+}

@@ -10,7 +10,7 @@
 # Rules these helpers enforce: new output directory per run (never overwritten), nohup + setsid +
 # pid file, STATE file (running|done|failed:RC), RUN_SUMMARY_C4.json, no retry loops.
 
-C4_HOME=${C4_HOME:-/workspace/c4}
+C4_HOME=${C4_HOME:-/root/autodl-tmp/c4}
 C4_REPO=${C4_REPO:-$C4_HOME/rd}
 C4_RUNS=${C4_RUNS:-$C4_HOME/runs}
 C4_SCRIPTS=${C4_SCRIPTS:-$C4_REPO/scripts/c4}
@@ -35,7 +35,7 @@ fi
 # ---- interpreter -----------------------------------------------------------------------
 c4_find_python() {
   local cand
-  for cand in "${PY:-}" /workspace/gpu1/env/rd_gpu/bin/python /root/miniconda3/bin/python python3 python; do
+  for cand in "${PY:-}" /root/autodl-tmp/gpu1/env/rd_gpu/bin/python /root/miniconda3/bin/python python3 python; do
     [[ -n "$cand" ]] || continue
     if command -v "$cand" >/dev/null 2>&1; then command -v "$cand"; return 0; fi
   done
@@ -91,11 +91,11 @@ c4_require_repo() {
 }
 
 # The switching pack's zero-shot guard (registry dataset zero_shot_heldout) is REQUIRED by configs/c4_wm.toml
-# (data.switching).  Its name contains a restricted token, so the bundle never ships it; place the
+# (data.switching).  Its name contains a restricted token, so the bundle never ships it; the owner places the
 # one file on the box by hand (or sets WMS_DATA_ZERO_SHOT_HELDOUT).  Fail closed with a clear message.
 c4_require_zero_shot_guard() {
   local p=${WMS_DATA_ZERO_SHOT_HELDOUT:-$C4_REPO/data_cache/wmn1_switching_train/ZERO_SHOT_HELDOUT.json}
-  [[ -f "$p" ]] || c4_die "zero-shot guard file missing: $p. configs/c4_wm.toml (data.switching) needs it and the bundle does not ship it (restricted-token name). Place it by hand (scp of the single original file) or train without the switching direct-mix source. See OPS_NOTES.md section 11."
+  [[ -f "$p" ]] || c4_die "zero-shot guard file missing: $p. configs/c4_wm.toml (data.switching) needs it and the bundle does not ship it (restricted-token name). Owner decision pending: place it by hand (scp of the single original file) or train without the switching direct-mix source. See OPS_NOTES.md section 11."
 }
 
 # ---- resource guards ----------------------------------------------------------------------------

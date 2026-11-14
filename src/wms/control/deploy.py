@@ -10,7 +10,7 @@ Controllers:
   (identical to ``python -m traffic_shepherd.c4.collect --policy <name>``).
 * ``policy`` - ``wms.control.policy.load_policy_fn(ckpt)`` every 1 s (``collect --policy <ckpt>`` path):
   per-CAV direct accelerations AND lane commands (``CavSumoEnv.step(accel, lanes=...)``).
-* ``policy_check`` - design 2.6 Option B with DIRECT-OUTPUT candidates only (no
+* ``policy_check`` - design 2.6 Option B with DIRECT-OUTPUT candidates only (owner 2026-10-12 late; no
   designed controller is a check candidate or executed in this mode): every ``decision_period_s`` the RSU
   imagines each candidate ``{policy, policy_group_0, policy_group_1, policy_sample_0, policy_sample_1,
   hold_speed}`` in the frozen WM-S ensemble (:class:`wms.control.rsu_check.RsuChecker`, paired driver
@@ -53,7 +53,7 @@ _RESTRICTED = re.compile(r"sealed|holdout|heldout|cal_split|chunk5|j4b|inc1", re
 BASELINES = ("native", "damping", "pi", "wall")
 CONTROLLERS = (*BASELINES, "policy", "policy_check")
 ALIASES = {"c4_policy": "policy", "c4_policy_rsu_check": "policy_check"}
-#: Check candidates: direct-output only, all executed through the policy path.
+#: Check candidates (owner 2026-10-12 late): direct-output only, all executed through the policy path.
 CANDIDATES = ("policy", "policy_group_0", "policy_group_1", "policy_sample_0", "policy_sample_1",
               "hold_speed")
 

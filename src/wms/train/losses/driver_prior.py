@@ -1,6 +1,6 @@
 """INFRAV5 optional driver-estimate prior: a population anchor for the driver encoder.
 
-The v4 diagnosis (runs/scratch/v4speed, MORNING_WM_DIAG_NOTES.md) found the encoded
+The v4 diagnosis (E:/agent-work/tmp/v4speed, MORNING_WM_DIAG_NOTES.md) found the encoded
 settings drifting conservative (a ~1.8 vs SUMO ~2.5, T ~1.4 vs ~1.17, b ~3.3 vs ~4.2).  This
 term pulls only the BATCH MEAN of the encoded settings (over valid, observed t0 HDV slots)
 toward population targets; deviations of individual drivers from the batch mean are not

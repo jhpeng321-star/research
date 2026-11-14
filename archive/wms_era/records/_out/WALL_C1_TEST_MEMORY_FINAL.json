@@ -1,0 +1,25 @@
+{
+  "schema": "lpwo_cpu_memory/1",
+  "command": [
+    "C:\\Users\\jpeng\\miniconda3\\envs\\rl_driving\\python.exe",
+    "-B",
+    "-m",
+    "pytest",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=E:/rd-wt/ws-wallc1/_out/wallc1_final_tmp",
+    "E:/rd-wt/ws-wallc1/output/wd01/wm_n1/lpwo/tests"
+  ],
+  "status": "passed",
+  "returncode": 0,
+  "limit_bytes": 5500000000,
+  "sampling_interval_s": 0.05,
+  "peak_rss_by_pid_bytes": {
+    "20952": 213884928,
+    "30780": 8822784
+  },
+  "max_sampled_process_rss_bytes": 213884928,
+  "elapsed_s": 98.65600000001723,
+  "caveat": "sampled RSS, not an instantaneous operating-system memory quota"
+}

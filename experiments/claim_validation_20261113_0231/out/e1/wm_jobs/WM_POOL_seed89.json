@@ -1,0 +1,7030 @@
+{
+ "cell": "D2800_p60",
+ "pool": [
+  {
+   "desc_hash": "4a3c4c0ac1d93b9d9e2b417e7f9926c4b6d6ed70afddd51db83a7d29f46ab70f",
+   "key": "0897b767165e47dc",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_0897b767165e47dc",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "e745e81b26d9f867aaf1da0bac65161de25ba38428bf798df53146795c6c8dfd",
+   "key": "a0f2716f1890d3ca",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_a0f2716f1890d3ca",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "7701c84e3fa1cb353674143f6cdfc895be3a3ce95cea0dcfd4ecd1e6a047907f",
+   "key": "583f68990673a9ef",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_583f68990673a9ef",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "f2cf7a52e2695607aa39df06dee420ca34024c35df9c7717957a05d48deafbeb",
+   "key": "158a2d6d18bc463f",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_158a2d6d18bc463f",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "8ae483883a2e2b3e0e29b08921c5f0715685dcef3d2556ac28ac9376917c65e8",
+   "key": "24ffa4e2972b1ac5",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_24ffa4e2972b1ac5",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "a6d29d1675673e2c32917c393f62202b068b6f4c1276c726faf12d4808b98cff",
+   "key": "78a2cfb704c34fe2",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_78a2cfb704c34fe2",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "b736447238f2a9f06757b6a667f4c17eccbf696d96f2cb5ca7b4941b17548281",
+   "key": "e7c1ff8ee68c5639",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_e7c1ff8ee68c5639",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "9e99cc70db6dfc83df9f8dc9eb19173e79279b5769c920df075b556044f9e096",
+   "key": "0ec7e45f64b5a3e2",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_0ec7e45f64b5a3e2",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "36290cb7ca81c6f6ebbcc39b066c209f369a207f53a69240164a0c68324d25db",
+   "key": "afe0914bb0581397",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 110,
+    "gate": null,
+    "name": "e1s89_afe0914bb0581397",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "226050dfa55e79017f858d2c12351ed735aaac0bfde5d6debddb21fb82385fc7",
+   "key": "c992bde1f56fc495",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_c992bde1f56fc495",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "9e517e0f38643908cd3e56874bd022386031f6d6ef0abcbab421812c2cf6d9bd",
+   "key": "d4c8bcd72b4225a8",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_d4c8bcd72b4225a8",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "f8f692e6c0e2d78cc58742575e2b2f6d8511bcb05077a24b6ff7a2de283f5607",
+   "key": "a7e2bd910fc888ba",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_a7e2bd910fc888ba",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "a36034ed31cc91f6ab103ded64147c0f109ef73834802e39f1f87675963780b5",
+   "key": "43ebf838f0c60b23",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_43ebf838f0c60b23",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "509e5582fa5308ad4b75e663cbd5656faa20600e5743fabd7e2a056f112bd501",
+   "key": "792e8668369ee9ee",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_792e8668369ee9ee",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "ec9e98258ab8f18cc9b5fe3c9a1fa4f603d7c52a3500154512959119e05075b4",
+   "key": "bb51cb98983ce71e",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_bb51cb98983ce71e",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "a2665f42c9edb4cfea321072d05fd925b32e67b1b1ba132bd0960a6e707473fe",
+   "key": "5af9ad33204be2f5",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_5af9ad33204be2f5",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "985e08722aee3aeeeea12c72482fb545aacc4de1813713e4a852e41f763c5716",
+   "key": "eaae3d458699eb30",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_eaae3d458699eb30",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "f3f30dae1be2c58d4aedbc12c5c08932dbd9fead3ab1dc2c03fa0e8e6faf1619",
+   "key": "86acbabd4a634f48",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_86acbabd4a634f48",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "8aeffab79c569fac8d4a143593ad116efd483b1fa20a9940dde4183f8fb2d51f",
+   "key": "ca132169613216ae",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_ca132169613216ae",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "40a55bfb3276bd817ea536b976b5c607b7bca4556922a76adcaca57be18a0bd1",
+   "key": "ccf71b236a411e57",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_ccf71b236a411e57",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "29cd8b7f027236e2f891cd38fcff8ed7fd3c71b1da73a4fe5869bc1125f9e0f3",
+   "key": "4a15e9854db493de",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_4a15e9854db493de",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "e8c8de669c53de35b9c6128ae62906465bc1593167a6c3723b1b55d573ff92a3",
+   "key": "75b0ea4ec6a3ef97",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_75b0ea4ec6a3ef97",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "49b685aa5d2ebcbab9b4b91d5cac2aa8527e8973edef8e722fb146f308475e8f",
+   "key": "731a5b13c434976c",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_731a5b13c434976c",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "07a6850c8172f1aba9918a76a475181d71ffa2c89d70c121232bef0c189c36da",
+   "key": "1586795c118379e0",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_1586795c118379e0",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "f7554569df98d36520fcccf522a18586aa278090fe271e3f346c08cf5f171465",
+   "key": "a49aa017249b9348",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_a49aa017249b9348",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "80446bc75879f36e895bf344f3759aef97917addc2d1fe96f68254b7613ab179",
+   "key": "e386d93a50a44d12",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_e386d93a50a44d12",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "e1c49a90047b3e0de0ab9b924273f9d3057674950c89a575eb940e7af21aaf7b",
+   "key": "9d091f1e739daf2e",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_9d091f1e739daf2e",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "97abe792f84854576bdb979c1171c0c2d642762c2fa881ab30c21fe9d52d47af",
+   "key": "345957dba03c89d7",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_345957dba03c89d7",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "d536b7660e79985aecdf83046db92ed670b7cf43b532268ce684437dcda6380a",
+   "key": "881f39e81f160663",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_881f39e81f160663",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "1adcd4296a2f7ce638e0a6b0e7fd59e82021eb47b76897505b57dbb4059cfd7a",
+   "key": "466a6a004f799511",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_466a6a004f799511",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "c6b1f4681a1865673e1174bdc242e19082f9a6fee50c49e1bbe1c4ae7eb0c551",
+   "key": "78e2b5b5050af3fe",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_78e2b5b5050af3fe",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "ef61812498301ade06761660f1963af00538c5bef579d76678823afaf9a07613",
+   "key": "0304337979beb001",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_0304337979beb001",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "a940b729c6c164654ff01f0a8bc059e5bf0f3195d7eed8f835a4a9152b4c5dbf",
+   "key": "e23a4fc61a6cf6b9",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_e23a4fc61a6cf6b9",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "adf5f1da83e88e3481efa2bcd7aab8a2706f841071e6012d9f55d4127dda16a3",
+   "key": "59815c1e4937e874",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_59815c1e4937e874",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "e934725a32e381783ace898fc14fc7c0ad4ae698d8152fce198541ba15818b48",
+   "key": "d09e3df56beae41f",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_d09e3df56beae41f",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "9339b50ad99bc20cef73672320c4610dda630e29fa53014d840ff41e3f256004",
+   "key": "3f1374c85d1c57a1",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_3f1374c85d1c57a1",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "b11d5e2d6de1d2d68e02ee712ed68d385ee6fb2a4f8a8e5220392e01978e6703",
+   "key": "5bb1fce47f148574",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 120,
+    "gate": null,
+    "name": "e1s89_5bb1fce47f148574",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "3f18bccd001885dca67706f67c2916d39114db2f9aa1d65bca3c372efdeb9911",
+   "key": "dab46fa4466dac7b",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_dab46fa4466dac7b",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "3254abdbe81a90fe5b2dd9dab3f9af56f80b802b02bc0cbbe5b4c1ba97011a85",
+   "key": "da4f7fc9a4755aac",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_da4f7fc9a4755aac",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "0c8c0fe894d52fb5d1c7c36814a4fe1b219de25421f5a06018aa1eb02f9c404c",
+   "key": "d5342fd6172be309",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_d5342fd6172be309",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "1884ce518d7a8b965c300cf9a8e4cceea09231cbe284e2c988034fdd5731ba29",
+   "key": "8321e675af9a180a",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_8321e675af9a180a",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "8ef89a1323efffcf11eecc1db999c4bb49fe50641aebbbc1fd612a4cf4c9df99",
+   "key": "81331af60dfde245",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_81331af60dfde245",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "36e52dc75da8c44b66beae7a7719ec4b73930b533ecf8c5aa27e4357305fc994",
+   "key": "6d7f90a793fea839",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_6d7f90a793fea839",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "b7046fced8fc8256293e2451e2e28e5880ceabe64b024b01eeb04529d451d597",
+   "key": "733b9df3ac18d4bd",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_733b9df3ac18d4bd",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "c79cebb8368c208cf3b370500bbb3318a732a74a7b38e0a607c3f71997bc8c7e",
+   "key": "a053a28e9e1132f9",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_a053a28e9e1132f9",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "b6db97c6e9fe05d72dc4ad37c747f8b4f9306fbb2a90c7202d821f2d4ec2391b",
+   "key": "a891b632fa128e09",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_a891b632fa128e09",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "3fc21fb513f2ac0c1aa37c3b4940a4623acdf485e275824b95aebd8a21ccdbdd",
+   "key": "2cd30061f6bddab8",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_2cd30061f6bddab8",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "602c654c54ca58d40236e6d94fffa094a288045cbbf2bffc1dab2b73caad5852",
+   "key": "99b5adbf5c6c51d2",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_99b5adbf5c6c51d2",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "b9181c654ac1c8dac34b207be05b6e99c6cf8a34a1f69f83cd9d64ec39eb260d",
+   "key": "48ee96a20adf225a",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_48ee96a20adf225a",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "8921b61207aa6d949080dfb66bb015605c21a5f86de60cbb0fa46234482672c9",
+   "key": "7f64a6ebb47b577d",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_7f64a6ebb47b577d",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "c561c460375e28b5b7443a292e266d3b912f0b925d723bbbe309d58cb781a371",
+   "key": "5938352f6bd485eb",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_5938352f6bd485eb",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "726dec4d436ad3b8136b4a75d263c381501ebbd5d81f689c289d3a578f1b7b42",
+   "key": "d38d6a632265b213",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_d38d6a632265b213",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "d452c22c3b0d0eebccee2262f5d892ad72d74e6ec4671b3b77e132d1b2e6e907",
+   "key": "26ee49a59307da87",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_26ee49a59307da87",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "9aa37c98a7ba6835755031bbe5d428b83d8dda2f3e69c16e8b9892e416773990",
+   "key": "bf9deff8c23d0508",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_bf9deff8c23d0508",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "07d23ab506fbd6d46812fba61a15fd0b8ad16754a69d31b04fd45e859f2b21cf",
+   "key": "2bf533dd062b696a",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 120,
+    "gate": null,
+    "name": "e1s89_2bf533dd062b696a",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "fd3e4207f7c1426859dd6507956625f9c6ec71ddd646b1ebddae4b4369c917b6",
+   "key": "f4a882e75d38ae8b",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_f4a882e75d38ae8b",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "0b4029a3b6a65a74a8539896e14ab5a55185936a0a318fe77fa3a8ee60f6a6ec",
+   "key": "d89e345eafa85dbe",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_d89e345eafa85dbe",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "fdd4aaa1938442e65a2227f70a153a9f7da7714ddd2052ce2d9934918c12e4ac",
+   "key": "cbe4f71301b6b9d4",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_cbe4f71301b6b9d4",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "4cefefbcab3ecf9d3ee765cf6d31c11078ec3b780af656512c19f19c1d8271d1",
+   "key": "c57b4857dd70cc58",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_c57b4857dd70cc58",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "4881c32bdd6d22d1024900ed5f4572a1ca3a103426a369729e16c411f79ddcdb",
+   "key": "5a890423d198b0dc",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_5a890423d198b0dc",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "31607e318791550e3402584df96d8f0fc9ce093f196456d7cf415c6e3afd6c93",
+   "key": "b0d2ae24739de48e",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_b0d2ae24739de48e",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "7c79252cc383c59b1b9beda06148eb8fd50595fd6315cebe4c3ddb06047f8ef8",
+   "key": "f27d303702f9cf86",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_f27d303702f9cf86",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "47d7912cedb065fb5594403fb9dc1f5f416be1673a6989409f46a88fd575842c",
+   "key": "208f5ffbc055b20a",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_208f5ffbc055b20a",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "f3080295a44506b9239305b43ab1b2d0281f626526737f863d1259e0b9ff1b72",
+   "key": "a0e88d9cf687e336",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_a0e88d9cf687e336",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "e813bda385a86dd72156a1d9f5a0e35f5e7ed018da66d97add3b21c1b5c1c936",
+   "key": "4276f77edb4f6afa",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_4276f77edb4f6afa",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "22c8a5333b465dd877f1ef7616809c52e198d43a88ea63ca7b69aa1b2c85504f",
+   "key": "cfe48f7489fc0ddd",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_cfe48f7489fc0ddd",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "4f96c72171857f0cb7fa075798e914dd150f289af50a51c681b392c1634852d6",
+   "key": "1d1c142af904ccc4",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_1d1c142af904ccc4",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "3e463a68cee8a313238ea710ef4193600347556687a4b0042660fee9f4ce41e0",
+   "key": "93f84d0c79a08cff",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_93f84d0c79a08cff",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "a79a6a49ff467736b7a544be2753dff18afb5014457d939c55e7338b52dbfdcd",
+   "key": "ec35ed9a203e688b",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_ec35ed9a203e688b",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "8b02a44eb1db0afe11e66cf6f51756f9ef235e1e2c70886b5832179b86446a11",
+   "key": "c5292902d9e7595d",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_c5292902d9e7595d",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "ed3dc5f6b73920b0d5a6f7e4a88023f3315894bdb8ede254ccc23a41417906cf",
+   "key": "c80f7ecd88a8991b",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_c80f7ecd88a8991b",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "1cec09b0e1ea6cc5c08c08425bfe1617b0cf35b517efe64e5995d4f76d9a875a",
+   "key": "49aa7267da0e4dff",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_49aa7267da0e4dff",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "c846107d9848f992f18dff3b60f7ed0396cce8ea532de088241650080407dc8d",
+   "key": "7e37354ed4f62fd5",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_7e37354ed4f62fd5",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "26459060b4cd54e22631b2733bf2c9f744687edd6eff2d283982f3bdcd5ad35d",
+   "key": "60a80a9fe34a31fb",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_60a80a9fe34a31fb",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "74e5e1bc29105f36ecb32a28e64631dd993317aab8b133825429f8342de2665b",
+   "key": "215dfc671cef488b",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_215dfc671cef488b",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "61970efae563bce073310d5926a74d11271543687b04535f919f72fd2d51bcb7",
+   "key": "a6abc4a7ca8f05da",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_a6abc4a7ca8f05da",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "e841e06a5f086986ad31fe746e21af35689269b9281b35f62dfbf0a22d34e9b0",
+   "key": "ba953125e5e1e0e6",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_ba953125e5e1e0e6",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "6d44275bdaf0b541aaf9e297ab73bb2ca21dcc50fdf4dfa5fb136f3805a600f2",
+   "key": "5976fa4f97a64aa4",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_5976fa4f97a64aa4",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "16754da00e83a8fceb4b59dd3e06646d29863990bc24d053b41be2b60cead4a8",
+   "key": "3d354fc111fb6f0b",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_3d354fc111fb6f0b",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "21d827057659fe73f6e277dc4355c80b16c49c85de78bfe8c9e62f85f81160f5",
+   "key": "d34608a8792755c0",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_d34608a8792755c0",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "6d5bc0f52b2be84f1653cf376efcff3bc4646d0783e4a2cd47fd133e9c4a9ccd",
+   "key": "fe6229dfc2b00d53",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_fe6229dfc2b00d53",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "9b9e9319fc7e5479c02641060267cbd84ee5adbb8b55b76435ed3106712b5bb6",
+   "key": "3eadaeb7f6df3db4",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_3eadaeb7f6df3db4",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "78a5b19a5edfe8b64fb14bfd0b522423a3ba42d93a9f92b95abbe5a644066cc1",
+   "key": "1c78e683ed7ebe84",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_1c78e683ed7ebe84",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "347c5026ff98ee46de252b0f585031c53f313d69427ee54e4d3bd93c6197c36d",
+   "key": "24b2c1fd4fcc8738",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_24b2c1fd4fcc8738",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "fbde14406c80a7f2fda327cfeb73fa573d4d2d64c545fa2a84a651c842a8d9cb",
+   "key": "7ebb3a95e6810a7a",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_7ebb3a95e6810a7a",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "73a92e27f4054635c9eb954c12bac51c85f998459e02f90afc17ba07bc385171",
+   "key": "d693ba11623a39f4",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_d693ba11623a39f4",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "9cc82aa6e2ddf588b939a4d36f035b7a909142324417fd202f45a37ea563ec61",
+   "key": "1a02c86a0319a3ef",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 120,
+    "gate": null,
+    "name": "e1s89_1a02c86a0319a3ef",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "36b6251922c17c821cbff70e215127a43023f012ecd06d1d5a93f973b458da47",
+   "key": "9f75a019ddae3d73",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_9f75a019ddae3d73",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "0f36cdbc99e69f45e1648e0e6d556c13cac8d5f8f968ac7793080f13aec74734",
+   "key": "6867ce8acb4e1c27",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_6867ce8acb4e1c27",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "36bc7426fee880298aa6e6912af0248fa8205e34716da632983c40cb9a6e8138",
+   "key": "bc0bfd34178225d1",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_bc0bfd34178225d1",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "84a20b673328e6678c532126c36b99f282e8d4acc4a5058b6291581a141b0d33",
+   "key": "5ef1387a0c4825c2",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_5ef1387a0c4825c2",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "dca1ac3e3dd36aecd4d83d69ccf1ab289071260404ded250aa478e1adf67d3c8",
+   "key": "e9b7f3973ded8f45",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_e9b7f3973ded8f45",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "69359d23877737501e0100b2ce2f432eead73d074ea3a62d6f9d1d692e9b2fb2",
+   "key": "54b29a6f0198edee",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_54b29a6f0198edee",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "1b388fc71e6083d2b50fb244c45a705fbbe38fbabf050b7dfd31820b02cb8783",
+   "key": "8a9a477c022f6133",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_8a9a477c022f6133",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "5c3e965e56157bcfef32e18df4c0bfda67100c8791db51c4ced8f6b83c791751",
+   "key": "e06e09cdbe8db52d",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_e06e09cdbe8db52d",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "972966fe6b6cdbdad6a0e13d67778f1d95a1806b710f1cd9c37623e8df7cdf46",
+   "key": "3f2f5234fd6fc438",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_3f2f5234fd6fc438",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "3f98f94a1fee356e6b80b6b19589e1e9110455964bb764944c1713b2432b9039",
+   "key": "20082703bf3a2222",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 120,
+    "gate": null,
+    "name": "e1s89_20082703bf3a2222",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "9c16d14916c5d00074d054b79bcec3c275afa468ab1125c1804fef9caedfb39d",
+   "key": "7b4449738b63fc67",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_7b4449738b63fc67",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "4f0ef41bbd3ca1123c919a98c0579576cdeb957cf23263b3265efe0677c7e7b5",
+   "key": "f64712e077cd8a38",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_f64712e077cd8a38",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "32d933094af56a6ef55c8600b057ae7b14eefc6804e77858da99e2fa74dd19a4",
+   "key": "83052dc367ce8ce4",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_83052dc367ce8ce4",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "c8216b224d8b1173ead36c91691342341ed5415ef24f612ed93dc18b9a592313",
+   "key": "337c295aeed73a95",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_337c295aeed73a95",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "850c6eff021992be64ff46861fca24e48c7a0d31e53d2ea89085d12ce8055a83",
+   "key": "7736f2131c1cba06",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_7736f2131c1cba06",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "eca20b04b714c0eda4c43e946a06c35a2e4d15c4e1635152b4bdceff8cef6201",
+   "key": "0c80b1db86b5febb",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 120,
+    "gate": null,
+    "name": "e1s89_0c80b1db86b5febb",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "c6f3ac718ecaa819aeb3d1ba356f17c6e13e8da87bda3df3a9d41af380a91b4c",
+   "key": "6ddc45cfd00a34bd",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_6ddc45cfd00a34bd",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "07e229005c4cd52d7175bac9d08b2685773f74af95c9e8d5916de71ef32e5d14",
+   "key": "3b7e0808cbf6d9cd",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 120,
+    "gate": null,
+    "name": "e1s89_3b7e0808cbf6d9cd",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "0a1c3b7d046f29e5f6de09b37a27a6c186465d1bd8693f591b231fbcf55ac759",
+   "key": "bf37588398e84502",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_bf37588398e84502",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "573d14bcea2aed872a6da486b51a4542c3741b59cd1eba22e03ba036f6ea0b0b",
+   "key": "4184884e05225697",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_4184884e05225697",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "f66d120ac82cb51b1a3ec9d5642a581dfc7981336b2979c63f6278faedd89c18",
+   "key": "6e4f56071dacd094",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_6e4f56071dacd094",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "448447f7d7155885bd89a43b720dbf247d0155007910ad4bbd4b4a59ad79a2db",
+   "key": "f3360fe7624fb886",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_f3360fe7624fb886",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "70c082bbac0878d4b2e83dfc5d57e528bf38e6cf6200d7e67e6910184d6f64a0",
+   "key": "670dbf429ab8d270",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_670dbf429ab8d270",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "50a7ba41dcda2a006513e90c84426bc3d48f0b5a9c20049308e816595db6bda6",
+   "key": "61cc1b2394433f90",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_61cc1b2394433f90",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "b91ebb576ef4232aec5edaf4cba1602e4d59699c4fa4ee289b562237ca03e836",
+   "key": "8119836ad6daa681",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_8119836ad6daa681",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "4dfcaa9f4e47389b50eefd508bab7461c0cba6f0842351bbb58f6aea08af1133",
+   "key": "5d835fd791eadd84",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_5d835fd791eadd84",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "wall",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "c8029265e8c634ee16071c76f0b7060ded2b52adb0eb4f6680325237c47727f2",
+   "key": "047dc02d98af9da9",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_047dc02d98af9da9",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "c1932b9e1d886782875ed8a37ae0d22f8b908f68c290924ea2e9dfcd3a5b1bcb",
+   "key": "b8670fc64ac77758",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_b8670fc64ac77758",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "afa69f8ef8e150651bc9cbf871478f0bfefeeae30307de27e78d52ed74128d3f",
+   "key": "84d120ab9e71c4b5",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 140,
+    "gate": null,
+    "name": "e1s89_84d120ab9e71c4b5",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "2bb724164c8dc2a0c2724edae0dc3e732bdd3b172d858f09d3b1777d99830c0d",
+   "key": "5b2a987d15d3db45",
+   "size": 3,
+   "strategy": {
+    "cooldown_s": 120,
+    "gate": null,
+    "name": "e1s89_5b2a987d15d3db45",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 19.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "far"
+   }
+  },
+  {
+   "desc_hash": "3c3ae5d57d3bfb5cdb3dd49d0709d13267b1a6e095dc2406c202ae549d2d2427",
+   "key": "4a903a79b2494a12",
+   "size": 4,
+   "strategy": {
+    "cooldown_s": 200,
+    "gate": null,
+    "name": "e1s89_4a903a79b2494a12",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 180,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 18.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  },
+  {
+   "desc_hash": "c5e56c25bd504079c263db549b71ea6554a7f987bea8d88013ba046330ec1acb",
+   "key": "465a94573f38f5a6",
+   "size": 5,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_465a94573f38f5a6",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 22.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 90,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 21.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 300.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "full"
+   }
+  },
+  {
+   "desc_hash": "1efc2fcd4e1cc0967976143debcde108fe69978d062bd7f92721dcdf35fb1fdb",
+   "key": "8928a07a655bc539",
+   "size": 6,
+   "strategy": {
+    "cooldown_s": 180,
+    "gate": null,
+    "name": "e1s89_8928a07a655bc539",
+    "phases": null,
+    "roles": [
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 120,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 0,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 2,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 21.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 120,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 0,
+      "v_w": 18.0
+     },
+     {
+      "dmax": 1.5,
+      "hold_s": 180,
+      "lane": 0,
+      "lc_target": null,
+      "onset_s": 0,
+      "rank": 1,
+      "v_w": 20.0
+     },
+     {
+      "dmax": 1.0,
+      "hold_s": 90,
+      "lane": 1,
+      "lc_target": null,
+      "onset_s": 20,
+      "rank": 1,
+      "v_w": 22.0
+     }
+    ],
+    "slots": 1,
+    "spread_m": 200.0,
+    "start_gate": null,
+    "trigger": "lanes",
+    "zone": "near"
+   }
+  }
+ ],
+ "pool_doc_sha256": "a95931a555d2e7dd1b3eb6dc5e2714bfc4b7664e87aeb104dc4d47b0d4bd98ab",
+ "run_id": "20261113_0231",
+ "schema": "claim_validation.e1.wm_pool.v1",
+ "search_seed": 89,
+ "wm_checkpoint_sha256": "6da9d3337aad78799c2e6ac97c87e79b927346011f55861e98887bb89728c063"
+}

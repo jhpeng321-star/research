@@ -1,0 +1,346 @@
+# A86 S5 diff vs A85 S4 (prep agent; zero SUMO)
+
+## ship/a85s4.py (7ca82976) -> ship/a86s5.py
+--- ship/a85s4.py	2026-11-13 21:15:40.375494400 +0800
++++ ship/a86s5.py	2026-11-13 22:30:12.437291200 +0800
+@@ -1,4 +1,27 @@
+-"""A85 S4 'look elsewhere' WM plan search (prep 2026-11-13). Zero SUMO, never trains.
++"""A86 S5 closing-lane WM plan search with structural niching (prep 2026-11-13). Zero SUMO, never trains.
++
++A86-S5 = a85s4.py (A85 S4, sha 7ca82976) + structural NICHING, switched by the cfg key ``niching`` (absent = exactly
++a85s4). Code lines that differ from a85s4.py are marked ``# A86-S5``. Per-plan scoring is untouched (same SS.evaluate /
++SS.summarize / score formula, states, horizon, K, WM). Niche of a plan = (form family, sorted role-lane tuple), both
++from the plan's structure only (no outcome):
++  form family = A80 FORM_RULE (a80_s2b.form_family, copied verbatim below): gap > pulse > taper > zone > rolling >
++  short > other (first match).
++``niching`` = {"definition": "a80_form_family x role_lane_set", "parents": bool, "finalists": bool, "top_cap": int}:
++  parents    each generation's parent lists (the global elite list and each archive's top list) are taken from the
++             NICHE ROUND-ROBIN order of the same ranked list: best plan of each niche first (niches ordered by their
++             best plan), then each niche's second best, ...; activated plans stay ahead of non-activated ones when
++             rank_activated_first is set (round-robin inside each activation tier). The counts are unchanged.
++  finalists  the same round-robin order for the score finalists and the per-archive finalists (counts unchanged).
++  top_cap    after the unchanged a75ss.main writer: its global top file is renamed
++             TOP_OFFER_CONDITIONS_GLOBAL_UNCAPPED_<cell>.json and a second file
++             TOP_OFFER_CONDITIONS_NICHECAP<k>_FOR_SUMO_<cell>.json is written with the same row format: the same
++             eligible final plans (not comparator, not banned, activated; final order), taken niche-best round-robin
++             (then second best, ...), at most top_cap per niche, up to --top-bank rows. NICHE_TOP_<cell>.json lists
++             both selections with niche labels.
++Driver: python -m a86s5 (same arguments as a75ss).
++
++---- a85s4 docstring (unchanged) ----
++A85 S4 'look elsewhere' WM plan search (prep 2026-11-13). Zero SUMO, never trains.
+ 
+ S4 = the A75 S2b search (a75ss cae54dc1 over strategy_search 02e119c1, both imported UNCHANGED from this directory /
+ the code tree) with ONE extra rule, read from the cfg key ``exclude_lane_sets`` (S4: [[1, 2]]):
+@@ -23,7 +46,9 @@
+ """
+ from __future__ import annotations
+ 
++import argparse                                                                    # A86-S5
+ import hashlib
++import json                                                                        # A86-S5
+ from pathlib import Path
+ import random
+ 
+@@ -86,6 +111,82 @@
+                     rejected_mutation=self.rejected['mutation'], generated_per_generation=list(self.generated))
+ 
+ 
++# ------------------------------------------------------------------------------------------ A86-S5 niching
++NICHE_SCHEMA = 'a86.s5.niche.v1'                                                   # A86-S5
++NICHE_DEFINITION = 'a80_form_family x role_lane_set'                               # A86-S5
++FORMS = ('gap', 'pulse', 'taper', 'zone', 'rolling', 'short', 'other')             # A86-S5 (a80_s2b.FORMS)
++
++
++def form_family(spec):                                                             # A86-S5 verbatim a80_s2b 48c5c448
++    """FORM_RULE."""
++    roles = spec['roles']
++    if any(r.get('start') == 'gap' for r in roles):
++        return 'gap'
++    if any('pulse_on_s' in r for r in roles):
++        return 'pulse'
++    if any('taper_in_s' in r or 'taper_out_s' in r for r in roles):
++        return 'taper'
++    if spec['zone'] in ('mid', 'merge', 'custom'):
++        return 'zone'
++    if len(roles) >= 2 and len({int(r['onset_s']) for r in roles}) >= 2:
++        return 'rolling'
++    if max(int(r['hold_s']) for r in roles) <= 45:
++        return 'short'
++    return 'other'
++
++
++def niche(s):                                                                      # A86-S5
++    """(form family, sorted role lanes) of a strategy dict: structure only."""
++    return (form_family(s), tuple(sorted(lane_set(s))))
++
++
++def niche_label(s):                                                                # A86-S5
++    f, ls = niche(s)
++    return f + ':L' + ''.join(str(x) for x in ls)
++
++
++def niching_cfg(cfg):                                                              # A86-S5
++    """cfg['niching'] -> dict(parents, finalists, top_cap) or None (absent/empty = a85s4 behaviour)."""
++    n = (cfg or {}).get('niching') or None
++    if not n:
++        return None
++    if n.get('definition') != NICHE_DEFINITION:
++        raise ValueError(f'niching.definition must be {NICHE_DEFINITION!r}')
++    bad = set(n) - {'definition', 'parents', 'finalists', 'top_cap'}
++    if bad:
++        raise ValueError(f'unknown niching keys {sorted(bad)}')
++    return dict(parents=bool(n.get('parents')), finalists=bool(n.get('finalists')), top_cap=int(n.get('top_cap') or 0))
++
++
++def niche_order(rows, tier=lambda r: 0, cap=None):                                 # A86-S5
++    """Round-robin order of an already ranked list of result rows (r['strategy']): inside each consecutive block of
++    equal tier (activation tier), the best row of each niche (niches in order of their best row), then each niche's
++    2nd best, ...; cap = max rows per niche (None = keep all). Pure and deterministic (no RNG); the input order is the
++    only tie-break."""
++    out, i = [], 0
++    while i < len(rows):
++        j = i
++        while j < len(rows) and tier(rows[j]) == tier(rows[i]):
++            j += 1
++        buckets = {}
++        for r in rows[i:j]:
++            buckets.setdefault(niche(r['strategy']), []).append(r)
++        lim = max(len(b) for b in buckets.values()) if cap is None else int(cap)
++        for depth in range(lim):
++            for b in buckets.values():
++                if depth < len(b):
++                    out.append(b[depth])
++        i = j
++    return out
++
++
++def capped_top(final, k, cap):                                                     # A86-S5
++    """(niche-capped top k, unchanged global top k) from the final list (final order; eligibility = the filter of
++    the a75ss.main TOP writer: not comparator, not banned, activated)."""
++    elig = [r for r in final if not r['comparator'] and not r['banned'] and A.activated(r)]
++    return niche_order(elig, cap=cap)[:int(k)], elig[:int(k)]
++
++
+ def initial_population(rng, states, cfg, flt, extra=()):
+     """Screen-state draw + generation 0, exactly as a75ss.search_cell (cfg already merged with SS.DEFAULTS and the
+     SS globals set). Returns (screen, pop, rc)."""
+@@ -125,6 +226,8 @@
+     SS.SEARCH_GRID = cfg.get('search_grid')
+     act_first = bool(A._A.get('rank_activated_first'))
+     flt = LaneFilter(excluded_sets(cfg))                                               # A85-S4
++    nch = niching_cfg(cfg)                                                             # A86-S5
++    nlog = dict(gen0_niches=None, parent_niches=[], finalist_niches=None)              # A86-S5
+ 
+     def act(r):
+         return int(A.activated(r)) if act_first else 0
+@@ -135,6 +238,9 @@
+     dense, hold_only = bool(cfg['dense']), bool(cfg['hold_only'])
+     screen, pop, rc = initial_population(rng, states, cfg, flt, extra)                 # A85-S4 (same draws)
+     flt.generated.append(len(pop))                                                     # A85-S4
++    if nch:                                                                            # A86-S5
++        labels = [niche_label(s) for s in pop]                                         # A86-S5
++        nlog['gen0_niches'] = {x: labels.count(x) for x in sorted(set(labels))}        # A86-S5
+     evaluated, total = {}, 0
+     archives = {a: {} for a in SS.ARCHIVES}
+     comp_keys = {SS.strategy_key(c) for c in SS.COMPARATORS}
+@@ -160,18 +266,27 @@
+         if log:
+             log(dict(evaluated=len(evaluated), rollouts=total, **{f'archive_{a}': len(v) for a, v in archives.items()}))
+ 
+-    def top(arch, a, n):
+-        return sorted(arch.values(), key=SS.rank_key(a))[:n]
++    def top(arch, a, n, rr=False):                                                     # A86-S5 (rr arg)
++        xs = sorted(arch.values(), key=SS.rank_key(a))                                 # A86-S5
++        if rr:                                                                         # A86-S5
++            xs = niche_order(xs, tier=lambda r: -act(r))                               # A86-S5
++        return xs[:n]                                                                  # A86-S5
+ 
++    rr_par = bool(nch and nch['parents'])                                              # A86-S5
++    rr_fin = bool(nch and nch['finalists'])                                            # A86-S5
+     run(pop, screen, cfg['K_screen'])
+     for _ in range(int(cfg['generations'])):
+         ranked = sorted(evaluated.values(),
+                         key=lambda r: (act(r), r['score'] + SS.NOV_W * min(SS.NOV_CAP, r.get('novelty', 0.0))),
+                         reverse=True)
++        if rr_par:                                                                     # A86-S5
++            ranked = niche_order(ranked, tier=act)                                     # A86-S5
+         parents = [r['strategy'] for r in ranked[:int(cfg['n_elite'])]]
+         for a in SS.ARCHIVES:
+             parents += [r['strategy'] for r in top(archives[a], a, int(cfg['n_elite']) if a != 'fair'
+-                                                   else int(cfg['n_elite']) // 2)]
++                                                   else int(cfg['n_elite']) // 2, rr_par)]  # A86-S5 (rr_par)
++        if nch:                                                                        # A86-S5
++            nlog['parent_niches'].append(sorted({niche_label(p) for p in parents}))    # A86-S5
+         parents += extra
+         kids = [flt.child(rng, parents, cfg, dense, hold_only)                         # A85-S4
+                 for _j in range(int(cfg['n_children']))]
+@@ -181,13 +296,18 @@
+         run(kids, screen, cfg['K_screen'])
+     nf = int(cfg['finalists'])
+     fin = {}
+-    for r in sorted(evaluated.values(), key=lambda r: (act(r), r['score']), reverse=True)[:nf]:
++    fin_rank = sorted(evaluated.values(), key=lambda r: (act(r), r['score']), reverse=True)  # A86-S5
++    if rr_fin:                                                                         # A86-S5
++        fin_rank = niche_order(fin_rank, tier=act)                                     # A86-S5
++    for r in fin_rank[:nf]:                                                            # A86-S5
+         fin[r['key']] = r
+     for a in ('F', 'D', 'bounded', 'fairer', 'fair', 'delay'):
+-        for r in top(archives[a], a, nf):
++        for r in top(archives[a], a, nf, rr_fin):                                      # A86-S5 (rr_fin)
+             if len(fin) < 4 * nf:
+                 fin.setdefault(r['key'], r)
+     finals = [dict(f['strategy']) for f in fin.values()]
++    if nch:                                                                            # A86-S5
++        nlog['finalist_niches'] = sorted({niche_label(f) for f in finals})             # A86-S5
+     for c in SS.COMPARATORS:
+         if SS.strategy_key(c) not in {SS.strategy_key(f) for f in finals}:
+             finals.append(dict(c))
+@@ -231,14 +351,56 @@
+                               gain_vs_base=r['gain_vs_base'], gain_vs_inc=r['gain_vs_inc'],
+                               fair_cal=r.get('fair_cal')) for r in evaluated.values()])
+     if flt.excl:                                                                       # A85-S4
+-        out['a85'] = dict(flt.info(), a85s4_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
++        out['a85'] = dict(flt.info(), a86s5_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())  # A86-S5
++    if nch:                                                                            # A86-S5
++        out['a86'] = dict(schema=NICHE_SCHEMA, definition=NICHE_DEFINITION, niching=nch, **nlog,  # A86-S5
++                          final_niches={r['key']: niche_label(r['strategy']) for r in final},  # A86-S5
++                          a86s5_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())  # A86-S5
+     return out
+ 
+ 
++def write_niche_top(out, cell, k, cap):                                            # A86-S5
++    """Post-process after the unchanged a75ss.main TOP writer (module docstring, top_cap)."""
++    out = Path(out)
++    res = json.loads((out / f'STRATEGY_SEARCH_{cell}.json').read_text())
++    capped, glob = capped_top(res['final'], k, cap)
++    g_file = out / f'TOP_OFFER_CONDITIONS_{cell}.json'
++    if [r['strategy_key'] for r in json.loads(g_file.read_text())] != [r['key'] for r in glob]:
++        raise SystemExit('A86-S5: the a75ss TOP file differs from the recomputed global top (no niche file written)')
++    g_new = out / f'TOP_OFFER_CONDITIONS_GLOBAL_UNCAPPED_{cell}.json'
++    g_file.rename(g_new)
++    rows = [dict(family=r['strategy']['name'], strategy_key=r['key'], score=r['score'], gain_vs_base=r['gain_vs_base'],
++                 gain_vs_base_lcb=r['gain_vs_base_lcb'], feasible=r['feasible'], extended=A.is_extended(r['strategy']),
++                 offer_condition=A.offer_condition(r['strategy'])) for r in capped]   # row keys as in a75ss.main
++    c_file = out / f'TOP_OFFER_CONDITIONS_NICHECAP{int(cap)}_FOR_SUMO_{cell}.json'
++    c_file.write_text(json.dumps(rows, indent=1))
++
++    def lst(xs):
++        return [dict(rank=i + 1, strategy_key=r['key'], family=r['strategy']['name'],
++                     niche=niche_label(r['strategy']), score=r['score']) for i, r in enumerate(xs)]
++    (out / f'NICHE_TOP_{cell}.json').write_text(json.dumps(dict(
++        schema=NICHE_SCHEMA, definition=NICHE_DEFINITION, top_cap=int(cap), top_bank=int(k), for_sumo=c_file.name,
++        global_uncapped=g_new.name, niche_capped=lst(capped), global_top=lst(glob),
++        n_niches_capped=len({niche(r['strategy']) for r in capped}),
++        n_niches_global=len({niche(r['strategy']) for r in glob})), indent=1))
++    return capped, glob
++
++
+ def main(argv=None):
+-    """a75ss.main unchanged (checkpoint pin, outputs, TOP writer), routed through the S4 search_cell."""
++    """a75ss.main unchanged (checkpoint pin, outputs, TOP writer), routed through the S5 search_cell; then, when the
++    cfg sets niching.top_cap > 0, the niche-capped TOP file (write_niche_top)."""
+     A.search_cell = search_cell                                                        # A85-S4
+-    return A.main(argv)
++    ap = argparse.ArgumentParser(add_help=False)                                       # A86-S5
++    for o in ('--config', '--out', '--cell'):                                          # A86-S5
++        ap.add_argument(o)                                                             # A86-S5
++    ap.add_argument('--top-bank', type=int, default=12)                                # A86-S5 (a75ss default)
++    a, _ = ap.parse_known_args(argv)                                                   # A86-S5 (None = sys.argv)
++    ret = A.main(argv)
++    raw = json.loads(Path(a.config).read_text(encoding='utf-8')) if a.config else {}  # A86-S5
++    nch = niching_cfg(raw.get('config', raw))                                          # A86-S5
++    if nch and nch['top_cap'] > 0:                                                     # A86-S5
++        write_niche_top(a.out, a.cell, a.top_bank, nch['top_cap'])                     # A86-S5
++    return ret                                                                         # A86-S5
+ 
+ 
+ if __name__ == '__main__':
+
+## cfg A85S4_SEARCH_CFG.json (0a80c0f4) -> A86S5_SEARCH_CFG.json
+--- cfg/S4_REF/A85S4_SEARCH_CFG.json	2026-11-13 21:15:51.266664600 +0800
++++ cfg/A86S5_SEARCH_CFG.json	2026-11-13 22:30:34.565357900 +0800
+@@ -1,5 +1,5 @@
+ {
+- "seed": 20261185,
++ "seed": 20261187,
+  "hold_only": true,
+  "dense": true,
+  "unconditional": true,
+@@ -64,10 +64,10 @@
+  ],
+  "descriptor_v2": true,
+  "rank_activated_first": true,
+- "n_init": 216,
+- "generations": 4,
+- "n_children": 60,
+- "n_immigrants": 36,
++ "n_init": 72,
++ "generations": 3,
++ "n_children": 20,
++ "n_immigrants": 12,
+  "p_mutate": 0.55,
+  "n_screen_states": 18,
+  "n_final_states": 30,
+@@ -208,8 +208,20 @@
+  },
+  "exclude_lane_sets": [
+   [
++   1
++  ],
++  [
++   2
++  ],
++  [
+    1,
+    2
+   ]
+- ]
++ ],
++ "niching": {
++  "definition": "a80_form_family x role_lane_set",
++  "parents": true,
++  "finalists": true,
++  "top_cap": 2
++ }
+ }
+\ No newline at end of file
+
+## launcher run_search_s4.sh (293ed036) -> run_search_s5.sh
+--- E:/research-dense/experiments/a85_s4_diffsearch_20261113/box/run_search_s4.sh	2026-11-13 21:18:30.275189100 +0800
++++ box/run_search_s5.sh	2026-11-13 22:34:12.071588400 +0800
+@@ -1,13 +1,14 @@
+ #!/bin/bash
+-# A85 S4 (MPS env, 14 workers) copy of: A79 S2b launcher /root/autodl-tmp/a75/run_search_s2b.sh (f6c4afeb).
++# A86 S5 (gpuR RTX 4090 24 GB, 3 workers, no MPS) copy of: A85 S4 launcher run_search_s4.sh (293ed036).
+ # Zero SUMO; frozen WM-S wm_s.pt 6da9d333; never trains.
+-#   run_search_s4.sh <cfg.json> <outdir>     one launch per out dir; refuses an existing dir
+-# Same as run_search_s2b.sh except: own bundle copy A=/root/autodl-tmp/a85/a75 (a75_search_box.tgz 9eb32080,
+-# like a75p20/a75), PYTHONPATH ship = /root/autodl-tmp/a85/a85ship (a75ss/a75_wmforms/wm_fix_crn unchanged + a85s4.py),
+-# module a85s4 (a75ss.main routed through the S4 lane-set filter) instead of a75ss.
++#   run_search_s5.sh <cfg.json> <outdir>     one launch per out dir; refuses an existing dir
++# Same as run_search_s4.sh except: own bundle copy A=/root/autodl-tmp/a86/a75 (a75_search_box.tgz 9eb32080),
++# ship /root/autodl-tmp/a86/ship (a75ss/a75_wmforms/wm_fix_crn/a85s4 unchanged + a86s5.py), module a86s5,
++# --workers 3 (24 GB card: gpuR S1b OOM'd at 5 workers, 3.8-5.0 GB per worker), no MPS client env (no daemon on gpuR),
++# NICHE_TOP_*.json added to SHA256SUMS. --max-rows 64 and everything that scores a plan are unchanged.
+ set -u
+-A=/root/autodl-tmp/a85/a75
+-SHIP=/root/autodl-tmp/a85/a85ship
++A=/root/autodl-tmp/a86/a75
++SHIP=/root/autodl-tmp/a86/ship
+ CFGF=$1; OUT=$2; M=$OUT.meta
+ [ -e "$OUT" ] && { echo "REFUSE: $OUT exists"; exit 3; }
+ [ -e "$M" ] && { echo "REFUSE: $M exists"; exit 3; }
+@@ -17,9 +18,9 @@
+ date +%s > "$M/T_START"
+ sha256sum "$CFGF" > "$M/CFG_SHA256"
+ sha256sum $SHIP/*.py > "$M/SHIP_SHA256"
+-PYTHONPATH=src:.:$SHIP /root/miniconda3/bin/python -B -m a85s4 --states data/regime_STATES.json --cell D2800_p60 \
++PYTHONPATH=src:.:$SHIP /root/miniconda3/bin/python -B -m a86s5 --states data/regime_STATES.json --cell D2800_p60 \
+   --config "$CFGF" --out "$OUT" --ckpt $A/ckpt/ckpt/wm_s.pt --map-spec maps/wz3to2/MAP_SPEC.json \
+-  --device cuda --max-rows 64 --workers 14 > "$M/run.log" 2>&1
++  --device cuda --max-rows 64 --workers 3 > "$M/run.log" 2>&1
+ echo $? > "$M/RC"
+ date +%s > "$M/T_END"
+-( cd "$OUT" && sha256sum STRATEGY_SEARCH_*.json LOG_*.jsonl ARMS.json TOP_OFFER_CONDITIONS_*.json > "$M/SHA256SUMS" 2>/dev/null )
++( cd "$OUT" && sha256sum STRATEGY_SEARCH_*.json LOG_*.jsonl ARMS.json TOP_OFFER_CONDITIONS_*.json NICHE_TOP_*.json > "$M/SHA256SUMS" 2>/dev/null )

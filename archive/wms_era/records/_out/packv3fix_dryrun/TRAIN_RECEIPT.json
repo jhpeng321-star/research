@@ -1,0 +1,134 @@
+{
+  "batch_size": 4,
+  "black_box": false,
+  "data": {
+    "exclude_keys_requested": 0,
+    "excluded_records": 0,
+    "horizon_steps": 20,
+    "identity_rows": 3,
+    "identity_sidecars": [
+      "E:/rd-wt/ws-packv3fix/_out/sidecars_packv3_v2/identities",
+      "E:/rd-wt/a9/_out/identities_dspeed",
+      "E:/rd-wt/damping-snap/_out/identities_damping"
+    ],
+    "item_filter": {
+      "controller_windows_dropped": 0,
+      "held_world_guard": false,
+      "leave_pi_wall_out": true,
+      "n_kept": 911
+    },
+    "kept_by_pack": {
+      "pack_damping": 173,
+      "pack_dspeed": 444,
+      "pack_v3": 294
+    },
+    "mode": "a11-index-window",
+    "n_corpus_windows": 3060,
+    "n_records": 911,
+    "overlays": [
+      "E:/rd-wt/dspeed-data/_out/labels_overlay_dspeed",
+      "E:/rd-wt/damping-snap/_out/labels_overlay_damping"
+    ],
+    "packs": [
+      "D:/rd-staging/wmn1_feat/pack_v3",
+      "E:/rd-wt/dspeed-data/_out/pack_dspeed",
+      "E:/rd-wt/damping-snap/_out/pack_damping"
+    ],
+    "select_windows_requested": null,
+    "split": "TRAIN",
+    "start_shift_prob": 0.0,
+    "timeline_packs": null,
+    "total_by_pack": {
+      "pack_damping": 173,
+      "pack_dspeed": 444,
+      "pack_v3": 294
+    },
+    "window_filter": {
+      "dropped": 2149,
+      "exclude_window_list": [
+        "E:/rd-wt/ws-packv3fix/_out/lpwo_v3/excluded_runs_PI_wall_v3.json"
+      ],
+      "kept": 911,
+      "matched": 911,
+      "pack_name_resolution": null,
+      "requested": 911,
+      "window_list": "E:/rd-wt/ws-packv3fix/_out/lpwo_v3/windows_train_noPI_noWall.json"
+    }
+  },
+  "driver_recovery": null,
+  "optimizer_steps": 2,
+  "profiles": [
+    {
+      "fwd_bwd_time_per_sim_step_ms": 5094.31301500008,
+      "fwd_bwd_time_s": 101.8862603000016,
+      "peak_working_set_mb_cumulative": 8288.484375,
+      "rss_after_mb": 7534.45703125,
+      "rss_before_mb": 6869.58203125,
+      "steps": 20,
+      "unroll_s": 10.0
+    }
+  ],
+  "schema": "wm_s_train_receipt/1",
+  "split": "TRAIN",
+  "status": "passed",
+  "threads": 2,
+  "unroll_s": 10.0,
+  "updates": [
+    {
+      "driver_param_stats": null,
+      "entrants": 0,
+      "finite": true,
+      "gate_curve": [
+        0.0,
+        0.006715348456054926,
+        0.013430696912109852,
+        0.03357674181461334,
+        0.06715348362922668,
+        0.13430696725845337,
+        0.26861393451690674,
+        0.5372278690338135,
+        1.074455738067627,
+        1.6116836071014404
+      ],
+      "gate_g0": 0.0,
+      "gate_g_last": 0.12759162485599518,
+      "gate_monotone": true,
+      "lane": 0.0745328962802887,
+      "loss": 1.2002431154251099,
+      "position": 1.1155245304107666,
+      "seconds": 76.85167800000636,
+      "speed": 0.010185692459344864,
+      "unroll_steps": 20,
+      "valid_hdv_slots_t0": 4,
+      "valid_targets": 80
+    },
+    {
+      "driver_param_stats": null,
+      "entrants": 0,
+      "finite": true,
+      "gate_curve": [
+        0.0,
+        0.0067086596973240376,
+        0.013417319394648075,
+        0.03354329988360405,
+        0.0670865997672081,
+        0.13420674204826355,
+        0.2685137093067169,
+        0.537127673625946,
+        1.0743554830551147,
+        1.6115833520889282
+      ],
+      "gate_g0": 0.0,
+      "gate_g_last": 0.12749139964580536,
+      "gate_monotone": true,
+      "lane": 0.07350072264671326,
+      "loss": 0.6207139492034912,
+      "position": 0.5421651601791382,
+      "seconds": 92.88482939999085,
+      "speed": 0.005048016086220741,
+      "unroll_steps": 20,
+      "valid_hdv_slots_t0": 4,
+      "valid_targets": 80
+    }
+  ]
+}

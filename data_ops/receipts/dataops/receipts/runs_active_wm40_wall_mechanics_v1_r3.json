@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/wm40_wall_mechanics_v1_r3",
+ "name": "wm40_wall_mechanics_v1_r3",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\wm40_wall_mechanics_v1_r3",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/wm40_wall_mechanics_v1_r3/wm40_wall_mechanics_v1_r3.tar.zst",
+ "bytes": 11790078,
+ "files": 108,
+ "archive_bytes": 350920,
+ "archive_md5": "8a722a2f78e4a759efb25d8c7e72d1eb",
+ "member_manifest": "manifests/members/runs_active_wm40_wall_mechanics_v1_r3.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 113.4,
+ "timestamp": "2026-10-10T04:02:53"
+}

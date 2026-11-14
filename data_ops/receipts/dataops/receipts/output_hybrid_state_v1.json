@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/hybrid_state_v1",
+ "name": "hybrid_state_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\hybrid_state_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/hybrid_state_v1/hybrid_state_v1.tar.zst",
+ "bytes": 599022,
+ "files": 37,
+ "archive_bytes": 106276,
+ "archive_md5": "137d6bd5d8e168921c56166a8b248a60",
+ "member_manifest": "manifests/members/output_hybrid_state_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 12.4,
+ "timestamp": "2026-10-10T01:44:41"
+}

@@ -1,0 +1,36 @@
+{
+  "experiment_id": "WD-01",
+  "part": "3i-delay-bias-diagnosis",
+  "status": "partial (diagnosis complete; fix not implemented; holdout NOT accessed)",
+  "generated_utc": "2026-09-26T12:00:00+00:00",
+  "zero_simulation": true,
+  "holdout_accessed": false,
+  "diagnosis": {
+    "root_cause": "IDM physics do not capture SUMO lane-change deceleration, merge waiting, or junction traversal delay",
+    "evidence": "B2 deterministic IDM-normal already under-predicts delay by 5-14% (grows with H); B3 oracle vType shows the same bias, ruling out vType identification",
+    "top_contributors": [
+      "missing LC deceleration",
+      "missing merge waiting",
+      "missing downstream queue dynamics"
+    ],
+    "fix_feasibility": "requires substantive modelling changes beyond the current brief"
+  },
+  "completed": [
+    "holdout block (part 3d, tested)",
+    "SUMO IDM emulator + sigma finding (part 3d)",
+    "dawdle hypothesis confirmed (part 3e)",
+    "LC hazard trained + integrated (part 3d/3f)",
+    "lc_scale calibrated on TRAIN = 0.003 (part 3g)",
+    "D1-D5 diagnostics (part 3b/3c)",
+    "engine defect fixes: LC d-continuity, mask, attr refresh, limits, phase-1 full-state slots, 250m presence cutoff, phase-2 CE removal"
+  ],
+  "not_completed": [
+    "delay bias fix (physics-level deficit, not parameter)",
+    "parameter uncertainty bootstrap",
+    "full M=5 x 52-window x 5-variant ladder eval",
+    "gate v2 evaluation at H=30",
+    "robust posterior epsilon calibration",
+    "LC hazard reliability calibration"
+  ],
+  "recommendation": "the gate v2 (c) criterion (member band coverage >= 80% for delay proxy) requires member diversity that IDM-based emulators sharing the same dynamics cannot produce; a data-driven residual on delay features or a modified IDM with LC deceleration is needed"
+}

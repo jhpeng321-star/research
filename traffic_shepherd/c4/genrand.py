@@ -1,6 +1,6 @@
 """Undirected random CAV-action data for world-model training (GENRAND_NOTES.md).
 
-Design rule: the world model learns action effects from UNDIRECTED data only -
+Owner rule (2026-10-14): the world model learns action effects from UNDIRECTED data only -
 native driving, generic random direct-output commands and the learned policy's own rollouts.
 Nothing here is a designed controller: there is no spatial selection, no gap/merge targeting,
 no damping/PI/wall behaviour.  Random STRUCTURE (hold durations, jerk, shared random latents
@@ -18,7 +18,7 @@ among random CAV subsets, random lane intents) is the only shaping.
   (Bernoulli(rho)) starts a new segment synchronised with that latent: target =
   w * latent + (1 - w) * own U[-3, 2.6] draw, w ~ U(0, 1), hold = the latent's hold.  rho = 0
   gives independent CAVs; no position, lane or traffic state enters the selection.
-* ``mode="speed"`` (DEFAULT, keeps states realistic while staying
+* ``mode="speed"`` (DEFAULT, integrator 2026-10-14, keeps states realistic while staying
   undirected): each hold draws a random TARGET SPEED instead of a target acceleration -
   65 % U[0.8, 1.15] x the speed limit (31.29 m/s), 25 % U[0.3, 0.8] x it, 10 % "free"
   (command +2.6; SUMO caps it at the allowed speed) - with an acceleration limit U[0.5, 2.6]

@@ -1,0 +1,38 @@
+{
+  "id": "C4-LOOP14-COOPON-20261026",
+  "status": "registered",
+  "split": "TRAIN",
+  "acknowledged_by": "owner-approved TASK S-MAIN-COOPON, 2026-10-26 (UTC+8)",
+  "seed_block": [968100, 968227],
+  "exclude": [[968100, 968102]],
+  "sources": {
+    "initial_wm_rule": "14b iff no new HDV-reaction sign/magnitude FAIL versus 13E and strict all-pair TTC ratio <= 13E; otherwise 13E b2 FINAL",
+    "fallback_wm_sha256": "952ec059de5a9c0285d2327bcea57c836fd5d736c9975592ffbb932a506e84c8",
+    "policy0": "from scratch; policy optimisation seed 965140 + cycle; fixed start split seed 965140",
+    "code_sha": "filled from committed c4/main14 HEAD before arm"
+  },
+  "comparators": "previous accepted WM (same registered flags and fixed panel); real SUMO native B per pair",
+  "budget": {
+    "max_cycles": 4, "policy_updates_per_cycle": 150,
+    "sim_s_per_cycle": 30000, "sim_s_total": 120000,
+    "gpu_h_policy_per_cycle": 3, "gpu_h_wm_per_cycle": 1.5,
+    "wm_steps_per_cycle": 40
+  },
+  "stop": {"consecutive_wm_rejects": 2, "max_branch_incidents_per_cycle": 0},
+  "collection": {"host": "cpuX", "workers_max": 16, "worlds_per_cycle": 13,
+    "charged_sim_s_per_cycle": 29133, "charged_sim_s_four_cycles": 116532,
+    "gate_candidates": 8, "gate_horizon": 10, "credit_horizon": 30,
+    "gate_threshold": 0.8, "gated_arm": false,
+    "note": "collect ungated POLICY/B plus calibration and real-credit arms; fit both K=8 deployment tables; calibrated gated evaluation supported separately"},
+  "gates": {"update_10": "frozen 16-start VAL panel from TRAIN corpus; paired mean delta J < 0",
+    "horizon": "10 -> 30 -> 60 s at curriculum positions 0/150/300; WM-sha-bound paired-difference gate, fixed 13E b2 measured lower-bound threshold; missing/failing receipt keeps 10 s",
+    "before_launch": "round14b chain PID 636520 exited + stage-B RUN_SUMMARY; GPU has no compute jobs; cpuX 14b qualification; unit tests and real-WM CPU smoke pass",
+    "verdict_deadline": "2026-10-26T13:00:00+08:00",
+    "failure": "log, write WAIT_OWNER, no automatic retry or substitute run"},
+  "resources": {"gpu": "gpuR RTX4090 24 GB", "cuda_memory_fraction": 0.88,
+    "policy_batch": 1, "driver_futures": 2, "checkpoint_imagination": true,
+    "policy_threads": 2, "wm_threads": 4, "check_workers": 4,
+    "disk_floor_gib": 1.5, "disk_plan": "verify cpuX archive then retire only this arm's completed-cycle converted pair cache"},
+  "smoke": {"host": "gpuR", "device": "cpu", "policy_updates": 2,
+    "synthetic_starts": true, "real_selected_wm": true, "new_sumo_sim_s": 0}
+}

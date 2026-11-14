@@ -1,0 +1,126 @@
+{
+ "amendment": "28",
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend26.json",
+  "registration_sha256": "d9480619e11b35d9ca799dfa095161caa0983a5a7f079bfc92862b08fafee1c4"
+ },
+ "analysis": {
+  "bootstrap": {
+   "level": 0.95,
+   "method": "paired_percentile (whole-world)",
+   "reps": 10000,
+   "seed": 20261104
+  },
+  "co_criteria": "for every contrast: owner fairness groups (origin:L0/L1/L2, class:hdv, class:cav; labels from the reference arm by vehicle id) mean per-vehicle delay increase <= 10 s (point; CI reported) and CVaR90 paired 95% CI lower <= 0 (amendments 13/19); safety totals",
+  "command": "python -m ops.nm_finaleval --setting p20c confirm-analyse --final-root <bank root> --trained-roots C5D=<root>,F8B=<root>",
+  "convention": "diff = treatment - reference; negative = treatment has less delay",
+  "not_registered": "F8B - U0 or any other contrast is not part of this registration",
+  "output": "CONFIRM_TABLES.json (sealed, in the bank root)",
+  "pooling": "a SEPARATE pre-registered confirmation test: never pooled with the amendment-27 p20x panel; no applicability or breakdown subsets in amendment 28",
+  "primary": "ORACLE_WM - U0 paired total delay over the 192 worlds: PASS iff 95% CI upper < 0",
+  "secondary": [
+   "LEARNED_TRIGGER - U0",
+   "C5D - U0",
+   "C5D - F8B"
+  ]
+ },
+ "arms": {
+  "C5D": "CLEAN5C5D-B at u12 (cpuZ root coopmwm20261109_clean5c5d, CONFIG de74ceb3, c4/strongguide 905a5a02): bound at export by the registered u12 gate (A/B/R u12 receipts + checkpoints, monitors u1..u12 bound to the CONFIG, safety clean, frozen A == u0; the registered OWNER_STOP at u12 is expected, FAULT or PAUSE_SAFETY refuse) with B_checkpoint_012.pt + B_track2_012.pt sealed by sha; evaluated on its own training CONFIG/source (the training execution path incl. none_bias and the guaranteed offer)",
+  "F8B": "F8V4B-B at u12 (cpuW root coopmwm20261109_f8v4b, CONFIG 0f4101f5, c4/strongguide 905a5a02): the same binding rule",
+  "LEARNED_TRIGGER": "amendments 26/27: ORACLE_WM plans admitted by the frozen classifier (model 8e0ddd3e, digest 41fc8d1a, p >= 0.378785); same bank and plant",
+  "ORACLE_WM": "amendments 25b/27: U0 + the WM-sourced admitted plans of the frozen bank fd385a2b; oracle_plan 7409a7b4; privileged upper bound, not deployable; same plant as U0",
+  "U0": "frozen MAPPO d9042cc5 (/home/ubuntu/mappospeed/production2/policy_00169.pt) + zero-residual u0 5ea22964 on the p20x pre-run plant (clean5bf8u CONFIG digest bfbdef90) = amendment 27 exactly",
+  "not_in_amendment_28": [
+   "ORACLE",
+   "NATIVE",
+   "RULE",
+   "RULE_FAIR",
+   "MAPPO_LANE"
+  ]
+ },
+ "authority": [
+  "owner (chat) approval, MAIN 2026-11-09 08:46 AMENDMENT 28 (runs/active/C4-V7FT-20261017/REGISTRATION.md)",
+  "MAIN 2026-11-09 to N6: formal registration, seed audit via IMITREPLAY, panel, arm bindings, analysis config; zero SUMO until after u12; final-eval allocation 4,000,000; cpuZ + cpuW + gpuA in parallel"
+ ],
+ "budget": {
+  "allocation_total": 4000000,
+  "detail": "p20 723,480 + p20x r1 1,800 + p20x r2 923,400 + amendment-26 smoke 2,400; after p20c <= 2,809,680 <= 4,000,000",
+  "registered_sim_s": 1158600,
+  "used_before": 1651080
+ },
+ "execution": {
+  "analysis_host": "gpuA, with copies of both trained roots at the same absolute paths, then confirm-analyse",
+  "bank_root": {
+   "cap_sim_s": 693000,
+   "host": "gpuA",
+   "root": "/home/ubuntu/nm_finaleval_p20c_bank (symlink into /root/autodl-fs)",
+   "steps": [
+    "prerun-register (plant = the p20x pre-run plant source CONFIG + u0 5ea22964)",
+    "bind-mappo U0",
+    "bind-oracle (copies of bank fd385a2b + model 8e0ddd3e)",
+    "after u12: prerun-logcheck 720, prerun-seqcheck 1,080, prerun-run U0 230,400, bank-run ORACLE_WM,LEARNED_TRIGGER 460,800"
+   ]
+  },
+  "code": "c4/nm-finaleval (amendment-28 commit) as an overlay on the deployed sources: gpuA src = p20x src b5268408 + overlay; cpuZ/cpuW src = clean5c_src_905a5a02 + overlay",
+  "nice": 19,
+  "trained_roots": [
+   {
+    "cap_sim_s": 232800,
+    "host": "cpuZ",
+    "label": "C5D",
+    "root": "/home/ubuntu/nm_finaleval_p20c_c5d"
+   },
+   {
+    "cap_sim_s": 232800,
+    "host": "cpuW",
+    "label": "F8B",
+    "root": "/home/ubuntu/nm_finaleval_p20c_f8b"
+   }
+  ],
+  "trained_steps": [
+   "confirm-register (now, zero physics)",
+   "bind-mappo U0 (residual = training root A_checkpoint_000.pt)",
+   "after the u12 export and OWNER_STOP: bind-trained",
+   "confirm-run (identity 2 worlds, then B 192 worlds)"
+  ],
+  "workers": "cpuZ/cpuW 44, gpuA 18"
+ },
+ "panel": {
+  "cell": "D2800_p20",
+  "eval_range_runtime": "tools/coopmwm/nm_eval_runner.EVAL_HELDOUT_RANGE extended to (993000, 993299); repeat = seed - 993000 (p20x worlds unchanged); TRAIN roles still refuse them",
+  "file": "ops/nm_eval_panel_wz3to2_p20c_D2800.json",
+  "file_sha256_lf": "d58eedd1e6b26938417e4f1123ee3b03c5fb0e50a45e0a1fad749a7fd6c3a294",
+  "horizon_s": 1200,
+  "metric": "J_veh_s team delay (identical reducer for every arm)",
+  "panel_sha256": "d2ed7783ae9ea071f89aec4397d3ee155161878b44e1717b02188b16e7ff7fa2",
+  "reserved_unused": [
+   993292,
+   993299
+  ],
+  "role": "evaluation only",
+  "seeds": [
+   993100,
+   993291
+  ],
+  "setting": "p20c",
+  "window": [
+   0,
+   1200
+  ],
+  "worlds": 192
+ },
+ "plant_identity": "each trained root first runs U0 (the same frozen executor + its training root u0, sha = CONFIG common_checkpoint_sha256) on panel worlds 993100 and 993101 on the training plant; PASS iff J equal within 1e-6 veh-s and identical safety counters vs the bank-root U0 records (vehicle-log sha reported). FAILED: the trained-arm - U0 contrast is reported as plant-identity FAILED, not as a claim. 2 x 2,400 sim-s",
+ "registration_sha256": "b71061e04005429b77beb64c2dd7872844fb932b0ca0e9d13877849b16c7b533",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "sealed": "F12: no wave is opened, tabulated or summarised until confirm-analyse after every registered arm is published",
+ "seed_audit": {
+  "local": "standalone 993100-993299 integers: 0 seed uses in REGISTRATION.md, protocols/, docs/ and 952 local/remote git refs (only ops/test_nm_finaleval.py asserted seed_scope(993100) is None; now 993300)",
+  "remote": "runs/active/C4-V7FT-20261017/p20c_seed_audit/SEED_AUDIT_993100_993299.json (sha256 f533438a97c29cbe2860f7c0ded7ff6a6633ca8abfb63e465cad176a92c32aad; IMITREPLAY: 0 hits on cpuZ, cpuW, gpuA and the cpuV migration archive; positive control on 993000-993099)"
+ },
+ "status": "pre-results: registered before any amendment-28 episode and before any CLEAN5C5D / F8V4B u12 evaluation outcome. Disclosed: the amendment-27 BANK_TABLES (p20x) were opened before this registration; this panel exists to confirm them on fresh worlds",
+ "stop_rules": [
+  "STOP_PRERUN in a root stops after the chunk in flight",
+  "per-root phase caps and own ledgers; charged jobs are never re-run without a MAIN replay authorisation",
+  "any integrity or identity failure is reported, never imputed"
+ ]
+}

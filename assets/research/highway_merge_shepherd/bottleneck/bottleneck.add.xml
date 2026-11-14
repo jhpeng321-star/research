@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<additional version="1.16">
+    <!-- 缩减点上游 1 km 处（排队区） -->
+    <e1Detector id="det_before" lane="upstream_0"   pos="4000" period="60" file="det_before.xml"/>
+    <e1Detector id="det_before1" lane="upstream_1"  pos="4000" period="60" file="det_before1.xml"/>
+    <e1Detector id="det_before2" lane="upstream_2"  pos="4000" period="60" file="det_before2.xml"/>
+    <!-- 缩减点下游 100 m 处（通行能力区） -->
+    <e1Detector id="det_after0" lane="downstream_0" pos="100" period="60" file="det_after0.xml"/>
+    <e1Detector id="det_after1" lane="downstream_1" pos="100" period="60" file="det_after1.xml"/>
+    <!-- 全路段时空数据（每 60s 一条记录，用于画时空图） -->
+    <edgeData id="ed" file="edge_data.xml" period="60" excludeEmpty="false"/>
+</additional>

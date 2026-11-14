@@ -13,7 +13,7 @@ import torch
 from wms.control import deploy
 from wms.control.contract import RewardWeights
 
-R5B = Path("runs/active/WM-S-R5B-20261012/box/gpu/r5b_main_a1/wm_s_best.pt")
+R5B = Path("E:/research-dense/runs/active/WM-S-R5B-20261012/box/gpuA/r5b_main_a1/wm_s_best.pt")
 HAS_SUMO = shutil.which("sumo") is not None
 
 
@@ -86,7 +86,7 @@ def test_pi_invalidate_keeps_other_vehicles():
     from wms.train.cav_drive import load_controller_dependencies
 
     # Frozen controller sources with ONE shared (stateless) CIRCLES ONNX session (the former
-    # deploy.classic_dependencies; damping/PI are no longer check candidates).
+    # deploy.classic_dependencies; damping/PI are no longer check candidates, owner 2026-10-12 late).
     deps = list(load_controller_dependencies(np.array([1, 2])))
     shared = deps[1](deps[0])
     deps[1] = lambda _config, _shared=shared: _shared

@@ -98,7 +98,7 @@ def make_cav_controller(policy: Policy, group_encoder, safety: SafetyLayer, reco
     held = None
     previous_mask = None
     internal_index = 0
-    # Reported to the other CAVs: each CAV's last commanded (safe)
+    # Reported to the other CAVs (owner 2026-10-12 late): each CAV's last commanded (safe)
     # acceleration and lane intent; seeded from state["cmd_accel_mps2"/"lane_intent"] if given.
     last_command = last_intent = None
 

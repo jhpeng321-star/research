@@ -1,0 +1,80 @@
+{
+ "confirm_waves": [
+  {
+   "block": "conf",
+   "kind": "U0",
+   "n_worlds": 96,
+   "wave": "CONF_U0"
+  },
+  {
+   "arm": "F",
+   "bank": "A42_BIG_BANK_D2800_p60.json",
+   "bank_sha256": "7e7dc76b8a0cd5c158205a0e3f6ef96d73a36a483c46d03ac422428dc8c573ff",
+   "block": "conf",
+   "kind": "BANK",
+   "n_worlds": 96,
+   "wave": "E2C_F"
+  },
+  {
+   "arm": "S",
+   "bank": "E2_S_BANK.json",
+   "bank_sha256": "ea453cd7c12f343f0e38bc86274e9a6887eb72de0bb428138f765782d90f3617",
+   "block": "conf",
+   "kind": "BANK",
+   "n_worlds": 96,
+   "wave": "E2C_S"
+  },
+  {
+   "arm": "H20",
+   "bank": "E2_H20_BANK.json",
+   "bank_sha256": "b88be29d2c51f8343c699184a1fd8c9edc66a8ac4d382423212815872e726a48",
+   "block": "conf",
+   "kind": "BANK",
+   "n_worlds": 96,
+   "wave": "E2C_H20"
+  }
+ ],
+ "doc_sha256": "efa4c818dcbebc5bf5ef7eb6ffcd2c0ba0db223a31bdcc8aaa7611a893c96e28",
+ "manifest_sha256": "ff8793b9270e5cb05d886fed545f98087aa0a3974904334e729ec85901731210",
+ "rule": "H* = the common speed with the lowest mean total delay on the Development worlds (strongest uniform hold); exact ties -> the lower speed",
+ "run_id": "20261113_0231",
+ "schema": "claim_validation.e2.selection.v1",
+ "selected_arm": "H20",
+ "sim_s": {
+  "new": 345600,
+  "u0_shared_with_e1": 115200
+ },
+ "table": [
+  {
+   "arm": "H18",
+   "mean_minus_u0": -7405.253121095971,
+   "mean_total_delay": 33866.421485631545,
+   "v_common": 18
+  },
+  {
+   "arm": "H19",
+   "mean_minus_u0": -9802.69218107437,
+   "mean_total_delay": 31468.982425653146,
+   "v_common": 19
+  },
+  {
+   "arm": "H20",
+   "mean_minus_u0": -10852.476942077457,
+   "mean_total_delay": 30419.19766465006,
+   "v_common": 20
+  },
+  {
+   "arm": "H21",
+   "mean_minus_u0": -9332.42964833153,
+   "mean_total_delay": 31939.244958395986,
+   "v_common": 21
+  },
+  {
+   "arm": "H22",
+   "mean_minus_u0": -10819.823609199495,
+   "mean_total_delay": 30451.85099752802,
+   "v_common": 22
+  }
+ ],
+ "tuning_results_sha256": "9b8c47a42dd03fe51ffecba2b188bb6a009bb5e2cc3440518bad233e3cf5b477"
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/worldmodel_stage1_corpus",
+ "name": "worldmodel_stage1_corpus",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\worldmodel_stage1_corpus",
+ "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_stage1_corpus/worldmodel_stage1_corpus.tar.zst",
+ "bytes": 3063,
+ "files": 1,
+ "archive_bytes": 1736,
+ "archive_md5": "98ebe9d3aa2f17f3763a676026ede934",
+ "member_manifest": "manifests/members/output_worldmodel_stage1_corpus.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 21.3,
+ "timestamp": "2026-10-10T01:29:35"
+}

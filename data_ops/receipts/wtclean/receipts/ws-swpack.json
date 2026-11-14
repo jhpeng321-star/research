@@ -1,0 +1,39 @@
+﻿{
+    "name":  "ws-swpack",
+    "path":  "E:\\rd-wt\\ws-swpack",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "wms/swpack",
+    "headBefore":  "5dd93d15603239439740e3c431992fea1b041504",
+    "headType":  null,
+    "dirtyBefore":  4,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/ws-swpack",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-swpack.txt",
+    "uploadCount":  61,
+    "uploadBytes":  571593,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-swpack.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 00:11:46 NOTICE: Google drive root \u0027research-archive/worktrees/ws-swpack\u0027: 0 differences found | 2026/10/10 00:11:46 NOTICE: Google drive root \u0027research-archive/worktrees/ws-swpack\u0027: 61 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-swpack.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  0,
+    "skippedSensitiveSample":  [
+
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "commit_failed",
+    "error":  "commit failed: \t_in/SWITCH_MODEL_READY.md  nothing added to commit but untracked files present (use \"git add\" to track)",
+    "timestamp":  "2026-10-10T00:06:33.8509272+08:00"
+}

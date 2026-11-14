@@ -1,0 +1,40 @@
+priority below-normal: False
+=== WD-01 part 3l TASK D: gate v2 ladder (VALIDATION only) ===
+ZERO simulation; holdout blocked in root_arrays (never passed).
+device=cpu torch_threads=2
+validation roots ['cv20_7005m2000', 'cv20_7006m2000', 'cv30_7305m2700', 'seed_7535m2400']; t0 every 30 s (120, 150, 180, 210, 240, 270, 300, 330, 360, 390, 420, 450, 480) (52 windows); H (30, 60, 90, 120)
+member configs (L4 = p3k reference incl. its follower-slot defect; L5 = part 3l fit, fixed slot):
+  L0 member 0: seed=1 lc_scale=0.0 merge_params=None dawdle_scale=1.0
+  L4 member 0: seed=1 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0} dawdle_scale=1.0
+  L4 member 1: seed=18 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0} dawdle_scale=1.0
+  L4 member 2: seed=35 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0} dawdle_scale=1.0
+  L4 member 3: seed=52 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.25} dawdle_scale=1.0
+  L4 member 4: seed=69 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0} dawdle_scale=1.0
+  L5 member 0: seed=1 lc_scale=0.00075 merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.0} dawdle_scale=1.0
+  L5 member 1: seed=18 lc_scale=0.003 merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.25} dawdle_scale=1.25
+  L5 member 2: seed=35 lc_scale=0.0005 merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.25} dawdle_scale=1.5
+  L5 member 3: seed=52 lc_scale=0.0015 merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.0} dawdle_scale=0.8
+  L5 member 4: seed=69 lc_scale=0.001 merge_params={'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.25} dawdle_scale=1.5
+[   0.1s] rolling L0 member 0 (seed 1, dawdle 1.0) ...
+[ 166.4s] L0 member 0: done (208 rows total)
+[ 166.4s] rolling L4 member 0 (seed 1, dawdle 1.0) ...
+[ 489.8s] L4 member 0: done (416 rows total)
+[ 489.8s] rolling L4 member 1 (seed 18, dawdle 1.0) ...
+[ 820.1s] L4 member 1: done (624 rows total)
+[ 820.1s] rolling L4 member 2 (seed 35, dawdle 1.0) ...
+[1173.1s] L4 member 2: done (832 rows total)
+[1173.1s] rolling L4 member 3 (seed 52, dawdle 1.0) ...
+[1516.8s] L4 member 3: done (1040 rows total)
+[1516.8s] rolling L4 member 4 (seed 69, dawdle 1.0) ...
+[1856.8s] L4 member 4: done (1248 rows total)
+[1856.8s] rolling L5 member 0 (seed 1, dawdle 1.0) ...
+[2193.1s] L5 member 0: done (1456 rows total)
+[2193.1s] rolling L5 member 1 (seed 18, dawdle 1.25) ...
+[2533.3s] L5 member 1: done (1664 rows total)
+[2533.3s] rolling L5 member 2 (seed 35, dawdle 1.5) ...
+[2894.0s] L5 member 2: done (1872 rows total)
+[2894.0s] rolling L5 member 3 (seed 52, dawdle 0.8) ...
+[3231.8s] L5 member 3: done (2080 rows total)
+[3231.8s] rolling L5 member 4 (seed 69, dawdle 1.5) ...
+[3553.8s] L5 member 4: done (2288 rows total)
+[3553.8s] raw rows written to D:\rd-wt\wd01f\output\wd01\part3l\results\raw\raw_metrics.jsonl (total this run: 2288)

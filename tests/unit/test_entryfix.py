@@ -278,7 +278,7 @@ def test_data_config_key_maps_to_settings():
 
 
 # ------------------------------------------------------- recorded SUMO episode (skip if absent)
-_EPISODE = Path("runs/active/c4_dev/b1_native")
+_EPISODE = Path("E:/agent-work/c4-sumo/runs/active/c4_dev/b1_native")
 
 
 @pytest.mark.skipif(not (_EPISODE / "episode.npz").is_file(),

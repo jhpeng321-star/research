@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_walls_pilot_chunk4",
+ "name": "campaign_walls_pilot_chunk4",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_walls_pilot_chunk4",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_walls_pilot_chunk4/campaign_walls_pilot_chunk4.tar.zst",
+ "bytes": 11827830738,
+ "files": 2128,
+ "archive_bytes": 1148870879,
+ "archive_md5": "c7f66e464afdae6a3823d5f6fbb3f2ee",
+ "member_manifest": "manifests/members/runs_campaign_walls_pilot_chunk4.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 478.6,
+ "timestamp": "2026-10-10T04:52:54"
+}

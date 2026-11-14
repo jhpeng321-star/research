@@ -1,0 +1,179 @@
+# S-RAMPSPEED (R16) stage B = the R14 stage-B recipe (13C schedule, residual + courtesy on, learned yield
+# frozen; inlined) plus EXACTLY the registered R16 changes: model.ramp_speed_adapt_learnable = true with the
+# R16 stage-A scalars FROZEN ("ramp_speed_adapt" appended to optim.freeze_prefixes, like merge_yield),
+# init = R16 stage-A FINAL, new name / output.  NOT LAUNCHED: preparation only (R16_DESIGN.md).
+schema_version = 2
+name = "WM-S-C4-V10ROUND16-STAGE-B"
+extends = "c4_wm_v10round2.toml"
+
+[model]
+merge_decision = "first_passage"
+merge_st_width = 1.0
+merge_passage_law = "hybrid"
+merge_w_init = 1.0
+merge_quadrature_order = 32
+merge_pivot_state_st = true
+checkpoint_forward = true
+merge_negotiation = false
+driver_param_mode = "physical"
+driver_param_init = "checkpoint"
+residual_accel_reinit = false
+temporal_accel_off = true
+residual_accel_off = false
+follower_courtesy_off = false
+follower_courtesy = true
+follower_courtesy_hidden = 32
+follower_courtesy_embedding = false
+follower_courtesy_rollout_grad = false
+follower_courtesy_version = 2
+follower_courtesy_init_zero = true
+follower_courtesy_state_grad = true
+follower_courtesy_intent = "pivot"
+init_from = "runs/c4_wm_v10_round16_a/wm_s.pt"
+# R13Y learned yield (fitted in stage A, frozen with the core here).
+mainline_merge_yield_learnable = true
+# R16: learned ramp-HDV speed adaptation (stage-A scalars, frozen below).
+ramp_speed_adapt_learnable = true
+
+[physics]
+emergency_braking = true
+secure_gap_veto = true
+# R14 D1: HDV mainline lane changes need the same learned-parameter gs.
+lane_change_secure_gap = true
+# S-R14B (S-TTC, c4/loop14 68366f88): plan the emergency envelope with each driver's learned
+# comfortable decel b (plant limit stays the -9 floor; SUMO maximumSafeFollowSpeed onset).
+emergency_onset = "driver_b"
+merge_end_wait = false
+ramp_lane_end_stop = true
+ramp_risk_retain = true
+
+# R14 D3: the S-LOWPEN-20261025 packs are ADDITIONAL C4 sources (TRAIN-role worlds only:
+# wms.data.c4_pairs.world_roles keeps every manifest val-role world on the val side; their val
+# windows join the monitoring set like every other source).  `data.c4_sources` REPLACES the
+# parent list, so all sources are restated.  Shares: each v5 share is split between the v5 source
+# and its low-share sibling in proportion to TRAIN windows (= TRAIN episodes x 61 / 79 windows per
+# episode at 300 s / 120 s; v5 384/384/28 bases, lowpen 25/19/6), so a low-share-pack window is
+# drawn exactly as often as a v5 window of the same kind (derivation: R14_DESIGN.md, D3).
+[[data.c4_sources]]
+name = "native_v5"
+path = "v5_native"          # WMS_DATA_V5_NATIVE
+mix_ratio = 0.4694          # 0.50 * 384 / (384 + 25)
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "lowpen_native"
+path = "lowpen_native"      # WMS_DATA_LOWPEN_NATIVE (S-LOWPEN-20261025, 5 % / 10 % CAV share)
+mix_ratio = 0.0306          # 0.50 * 25 / (384 + 25)
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain"      # WMS_DATA_GENRAND_PLAIN
+mix_ratio = 0.2382          # 0.25 * 384 / (384 + 19)
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "lowpen_genrand_plain"
+path = "lowpen_genrand_plain"   # WMS_DATA_LOWPEN_GENRAND_PLAIN
+mix_ratio = 0.0118          # 0.25 * 19 / (384 + 19)
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_branch"
+path = "genrand_branch"     # WMS_DATA_GENRAND_BRANCH (ordinary windows only)
+mix_ratio = 0.0824          # 0.10 * 28 / (28 + 6) base episodes
+window_stride_s = 10.0
+use_val = true
+paired = false
+
+[[data.c4_sources]]
+name = "lowpen_genrand_branch"
+path = "lowpen_genrand_branch"  # WMS_DATA_LOWPEN_GENRAND_BRANCH (ordinary windows only)
+mix_ratio = 0.0176          # 0.10 * 6 / (28 + 6)
+window_stride_s = 10.0
+use_val = true
+paired = false
+
+[[data.c4_sources]]
+name = "pairs300"
+path = "pairs300"           # WMS_DATA_PAIRS300 (300 s paired branches; unchanged)
+mix_ratio = 0.15
+window_stride_s = 10.0
+use_val = true
+paired = true
+
+# R14 D3: low-CAV-share windows (realized first-row CAV share <= 0.15, i.e. the 5 % / 10 % design
+# levels separated from 20 % at their midpoint) are drawn x1.69 in every stage >= 120 s:
+# 1.69 = M_high / M_low, the base-weighted TRAIN window mass with design share > 10 % over that
+# with <= 10 % (0.6277 / 0.3723), so both halves of the equal-weight 5/10/20/40 % evaluation grid
+# get equal draw mass at long horizons.  Sampling only; the merge/CAV-follower/brake replay terms
+# of the inherited recipe are restated unchanged (tables merge key by key).
+[data.replay]
+low_share_oversample = 1.69
+low_share_max = 0.15
+low_share_min_stage_s = 120.0
+
+[loss]
+recorded_replay_present = "filled"
+
+[loss.merge_core]
+version = 2
+weight = 0.0
+tf_weight = 0.6
+yield_weight = 0.0
+metrics = true
+pos_tol_m = 50.0
+speed_tol_mps = 8.0
+gap_tol_m = 40.0
+gap_speed_tol_mps = 8.0
+location_reg_weight = 0.0
+sigma_reg_weight = 0.0
+tau_reg_weight = 0.0
+w_reg_weight = 0.0
+z_tf = 395.2
+z_on = 2.15
+
+[loss.merge_survival]
+weight = 0.0
+negative_weight = 0.0
+
+[loss.cutin_reaction]
+weight = 0.0
+
+[loss.driver_prior]
+weight = 0.0
+
+[loss.follower_courtesy]
+weight = 9.067
+huber_delta_mps2 = 1.0
+contrast = true
+absolute_weight = 4.525
+
+[curriculum]
+unroll_s = [120.0, 300.0]
+stage_steps = [40, 60]
+truncation_steps_per_stage = [120, 60]
+max_hours = 8.0
+
+[optim]
+lr_per_stage = [5.0e-5, 3.0e-5]
+batch_size_per_stage = [4, 2]
+freeze_prefixes = [
+  "driver_encoder", "driver_updater", "gate_", "lane_gate_", "history_proj", "k_embedding",
+  "lane_v5", "merge_core", "merge_pivot", "residual_net.lane", "temporal", "merge_yield",
+  "ramp_speed_adapt",
+]
+
+[optim.lr_scale]
+"residual_net" = 0.5
+"follower_courtesy" = 1000.0
+
+[selection]
+val_max_windows = 16
+
+[runtime]
+out_dir = "runs/c4_wm_v10_round16_b"

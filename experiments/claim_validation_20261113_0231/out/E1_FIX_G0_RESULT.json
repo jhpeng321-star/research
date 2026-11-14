@@ -1,0 +1,173 @@
+{
+ "gate": "G0",
+ "label": "POST HOC REPAIR (Amendment 74 E1-FIX); never replaces the registered E1 null",
+ "max_abs_score_diff": 6.32,
+ "seeds": [
+  {
+   "activation_flags_equal": true,
+   "first_six_main": [
+    "8ab6c0cb8fa9",
+    "14f43e0affb3",
+    "c02b2036c1f6",
+    "8b26448172d1",
+    "db5d9b10c5d8",
+    "5f3697914737"
+   ],
+   "first_six_repeat": [
+    "8ab6c0cb8fa9",
+    "14f43e0affb3",
+    "c02b2036c1f6",
+    "8b26448172d1",
+    "db5d9b10c5d8",
+    "5f3697914737"
+   ],
+   "max_abs_score_diff": 6.32,
+   "max_rows": [
+    64,
+    32
+   ],
+   "same_first_six": true,
+   "same_full_order": false,
+   "search_seed": 11
+  },
+  {
+   "activation_flags_equal": true,
+   "first_six_main": [
+    "a955aed969fd",
+    "77d958bfe7c9",
+    "d469cb774323",
+    "38fbddfdf170",
+    "edc4b5535ad8",
+    "f1b75e2e4350"
+   ],
+   "first_six_repeat": [
+    "a955aed969fd",
+    "77d958bfe7c9",
+    "d469cb774323",
+    "38fbddfdf170",
+    "edc4b5535ad8",
+    "f1b75e2e4350"
+   ],
+   "max_abs_score_diff": 3.2199999999999704,
+   "max_rows": [
+    64,
+    32
+   ],
+   "same_first_six": true,
+   "same_full_order": true,
+   "search_seed": 23
+  },
+  {
+   "activation_flags_equal": true,
+   "first_six_main": [
+    "78dc43b9095e",
+    "365f26583499",
+    "9161845fdd68",
+    "055a8e2ff19d",
+    "70c0bc420286",
+    "ffb690fa63f1"
+   ],
+   "first_six_repeat": [
+    "78dc43b9095e",
+    "365f26583499",
+    "9161845fdd68",
+    "055a8e2ff19d",
+    "70c0bc420286",
+    "ffb690fa63f1"
+   ],
+   "max_abs_score_diff": 1.6200000000000045,
+   "max_rows": [
+    64,
+    32
+   ],
+   "same_first_six": true,
+   "same_full_order": true,
+   "search_seed": 42
+  },
+  {
+   "activation_flags_equal": true,
+   "first_six_main": [
+    "791f8a1d3434",
+    "345de9797f36",
+    "04601cbec587",
+    "76eccc30c345",
+    "3b1b1a466627",
+    "cce45455d351"
+   ],
+   "first_six_repeat": [
+    "791f8a1d3434",
+    "345de9797f36",
+    "04601cbec587",
+    "3b1b1a466627",
+    "76eccc30c345",
+    "cce45455d351"
+   ],
+   "max_abs_score_diff": 4.439999999999941,
+   "max_rows": [
+    64,
+    32
+   ],
+   "same_first_six": false,
+   "same_full_order": false,
+   "search_seed": 67
+  },
+  {
+   "activation_flags_equal": true,
+   "first_six_main": [
+    "2bb724164c8d",
+    "f3f30dae1be2",
+    "9aa37c98a7ba",
+    "07d23ab506fb",
+    "b6db97c6e9fe",
+    "4a3c4c0ac1d9"
+   ],
+   "first_six_repeat": [
+    "2bb724164c8d",
+    "f3f30dae1be2",
+    "9aa37c98a7ba",
+    "07d23ab506fb",
+    "b6db97c6e9fe",
+    "4a3c4c0ac1d9"
+   ],
+   "max_abs_score_diff": 2.3900000000000006,
+   "max_rows": [
+    64,
+    32
+   ],
+   "same_first_six": true,
+   "same_full_order": true,
+   "search_seed": 89
+  },
+  {
+   "activation_flags_equal": true,
+   "first_six_main": [
+    "c6f215c53f90",
+    "933838043769",
+    "d563921165c2",
+    "31962b707e81",
+    "ef628713d138",
+    "0f60aefd0391"
+   ],
+   "first_six_repeat": [
+    "c6f215c53f90",
+    "933838043769",
+    "d563921165c2",
+    "31962b707e81",
+    "ef628713d138",
+    "0f60aefd0391"
+   ],
+   "max_abs_score_diff": 0.29999999999999716,
+   "max_rows": [
+    64,
+    32
+   ],
+   "same_first_six": true,
+   "same_full_order": true,
+   "search_seed": 103
+  }
+ ],
+ "stage": "e1_order_fix g0",
+ "stop": "WM cannot rank these plans reproducibly",
+ "verdict": "FAIL"
+}
+G0 FAIL max |score diff| 6.32

@@ -1,0 +1,82 @@
+{
+  "name": "rc07",
+  "path": "E:\\rd-wt\\rc07",
+  "class": "worktree",
+  "manual": false,
+  "branch": "HEAD",
+  "headBefore": "7350ee15d73fb48c139e6bcb5cf5c674a2dbf3b9",
+  "headType": "detached",
+  "dirtyBefore": 115,
+  "committed": true,
+  "commitSha": "b0c298155ef29220f8e392f55bd8f2e1f3580635",
+  "preserveRef": "refs/heads/wip-preserve/rc07",
+  "dest": "gdrive:research-archive/worktrees/rc07",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\rc07.tar.txt",
+  "uploadCount": 431,
+  "uploadBytes": 26926318,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\rc07.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 38777248d804f6ac34286e00860f829c local 38777248d804f6ac34286e00860f829c; size 1510973/1510973; manifest md5 match size match; members=431 (tar -t 431, sha256 431); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\rc07.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 5,
+  "skippedSensitiveSample": [
+    "output/recon_learned_v1/DEVIATION_R1_HOLDOUT.md",
+    "tests/planner/test_holdout_guard.py",
+    "tests/test_holdout_exclusions.py",
+    "tools/holdout_guard.py",
+    "traffic_shepherd/planner/holdout.py"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T06:49:38.687058+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "b0c298155ef29220f8e392f55bd8f2e1f3580635",
+  "skippedSensitive": [
+    "output/recon_learned_v1/DEVIATION_R1_HOLDOUT.md",
+    "tests/planner/test_holdout_guard.py",
+    "tests/test_holdout_exclusions.py",
+    "tools/holdout_guard.py",
+    "traffic_shepherd/planner/holdout.py"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/rc07/rc07.tar.zst",
+    "name": "rc07.tar.zst",
+    "size": 1510973,
+    "md5": "38777248d804f6ac34286e00860f829c",
+    "sha256": "f22df14ebd574e29475c8e59b9d0ad534c9e299a0251e780461e0de7757a0133",
+    "manifest_remote": "gdrive:research-archive/worktrees/rc07/rc07.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\rc07.manifest.json",
+    "manifest_size": 71698,
+    "manifest_md5": "6b05d8d438efef47cd6afed39a18f5d3",
+    "member_count": 431,
+    "member_bytes": 26926318,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 3.8,
+    "verify_seconds": 0.5,
+    "upload_seconds": 24.8,
+    "upload_MBps": 0.06,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 431,
+  "memberBytes": 26926318,
+  "junctionsFound": []
+}

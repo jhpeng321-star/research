@@ -25,7 +25,7 @@ from wms.model.entries import (ENTRY_S_M, SUMO_POSITION_EPS_M, VTYPE_LENGTH_M, V
                                EntranceHistory, EntryConfig, TorchEntryProcessV2)
 
 REPO = Path(__file__).resolve().parents[2]
-SCRATCH = Path("runs/scratch/v5data")
+SCRATCH = Path("E:/agent-work/tmp/v5data")
 
 
 @pytest.fixture(autouse=True)

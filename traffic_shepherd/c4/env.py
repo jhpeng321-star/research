@@ -7,11 +7,11 @@ CAV speedMode 27 (the campaign mode, ``CommandOwnership(cav_speed_mode=27)``), C
 acceleration bounds [-3, 1.5] m/s^2 from the adapter config for damping / PI / wall; ``direct``
 commands use the upper bound ``direct_accel_max_mps2`` (default 3.0 = the largest SUMO driver
 accel; ACCELCAP_NOTES.md) so a policy's own stored cap (legacy 1.5, new 2.6) is what binds.
-Every CAV uses the single "normal_car" vType (``cav_vtype``, default
+Owner 2026-10-14: every CAV uses the single "normal_car" vType (``cav_vtype``, default
 CAV_VTYPE; also when released to native) -- a CAV has no driver personality.  Under speedMode 27
 (bit 1 = respect the vType max acceleration) SUMO caps a CAV at that type's accel (2.6).
 ``cav_vtype=None`` restores the legacy behaviour (CAVs keep their drawn driver type).
-``population="textbook"`` replaces the three discrete HDV types by a
+Owner 2026-10-14 (late): ``population="textbook"`` replaces the three discrete HDV types by a
 continuous per-vehicle IDM/LC2013 population centred on the textbook highway values and puts every
 CAV on the ``cav_typical`` vType (population medians, accel 1.2, decel 2.0; see
 :mod:`traffic_shepherd.c4.population`); ``cav_vtype`` is then ignored.  Default "legacy3" keeps
@@ -34,7 +34,7 @@ longitudinal writer; HDVs are never commanded.  Episode controllers:
 The warmup (``warmup_s``) always runs native; native -> damping/pi uses the frozen
 ``FleetSwitchSession`` one-boundary switch at ``t = warmup_s``.
 
-Lane commands (``direct`` only): ``step(accel, lanes=...)`` with ``lanes``
+Lane commands (owner 2026-10-12 late, ``direct`` only): ``step(accel, lanes=...)`` with ``lanes``
 ``[1,K]`` (-1 = stay / none, 0/1/2 = target WM lane) puts every CAV with a finite direct command
 this tick under policy lane control: SUMO's own discretionary lane changing is disabled for it with
 ``laneChangeMode`` = ``LC_MODE_POLICY`` = 513, i.e. bits 0-1 = 01 (strategic changes required by
@@ -87,7 +87,7 @@ PI_U_MPS = 31.29
 DEFAULT_K = 192
 #: Upper bound of DIRECT commands (wms.control.contract.DIRECT_ACCEL_MAX_MPS2; ACCELCAP_NOTES.md).
 DIRECT_ACCEL_MAX_MPS2 = 3.0
-#: a CAV has no driver personality -- every CAV uses the "normal_car" vType (also
+#: Owner 2026-10-14: a CAV has no driver personality -- every CAV uses the "normal_car" vType (also
 #: when released to native).  None = legacy (CAVs keep their drawn aggressive/normal/cautious type).
 CAV_VTYPE = "normal_car"
 
@@ -132,7 +132,7 @@ class CavSumoEnv:
         from .population import TEXTBOOK_CAV_VTYPE, check_population
         self.population = check_population(population)
         if self.population == "textbook":
-            cav_vtype = TEXTBOOK_CAV_VTYPE          # CAVs have no driver type
+            cav_vtype = TEXTBOOK_CAV_VTYPE          # owner rule: CAVs have no driver type
         elif cav_vtype not in (None, "normal_car", "aggressive_car", "cautious_car"):
             raise ValueError(f"cav_vtype must be None or a scenario vType, got {cav_vtype!r}")
         self.cav_vtype = cav_vtype

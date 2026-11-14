@@ -1,0 +1,103 @@
+{
+  "pre": {
+    "common.py": {
+      "live_path": "E:\\research-dense\\output\\campaign_walls_v1\\common.py",
+      "lf_sha256": "bb2a1ca37065d24aef27f1dad77e19b98d9a60c7ca5d89d584d180df3d34bd91",
+      "bytes": 16781,
+      "lines": 358
+    },
+    "wall_request.py": {
+      "live_path": "E:\\research-dense\\output\\campaign_walls_v1\\wall_request.py",
+      "lf_sha256": "bb7bcb4249a8360aadc9cab8c1a77cb6dbafad327a50f19eeafb21756f3f209b",
+      "bytes": 11809,
+      "lines": 265
+    },
+    "wall_driver.py": {
+      "live_path": "E:\\research-dense\\output\\campaign_walls_v1\\wall_driver.py",
+      "lf_sha256": "6810330d4e4650a8903b197baf163c0df446646664726d74c5355e65ca9a908f",
+      "bytes": 38976,
+      "lines": 838
+    },
+    "wall_group.py": {
+      "live_path": "E:\\rd-wt\\wallmr\\traffic_shepherd\\wall_group.py",
+      "lf_sha256": "6e0a0805a63da905f7d7a1b38dad70526da3540d09bd0721411f0b3449c04bfa",
+      "bytes": 15092,
+      "lines": 312
+    },
+    "sensing.py": {
+      "live_path": "E:\\rd-wt\\wallmr\\traffic_shepherd\\sensing.py",
+      "lf_sha256": "1f0651049686317272e681d0a3c61c8cfb6b5626263ddfc068f1d5153cc4f0dc",
+      "bytes": 5282,
+      "lines": 141
+    }
+  },
+  "post": {
+    "common.py": {
+      "live_path": "E:\\research-dense\\output\\campaign_walls_v1\\common.py",
+      "lf_sha256": "47ac5bbae2185d0d6ec75743925759ea91ed0c868c057fe4ee3d31049be4efd9",
+      "bytes": 18072,
+      "lines": 383,
+      "patch": "patches/common.py.diff"
+    },
+    "wall_request.py": {
+      "live_path": "E:\\research-dense\\output\\campaign_walls_v1\\wall_request.py",
+      "lf_sha256": "5bce4c4e9aca141db6e163128d6daf62255659601c1f994db2ffb63fbb2d501e",
+      "bytes": 18039,
+      "lines": 393,
+      "patch": "patches/wall_request.py.diff"
+    },
+    "wall_driver.py": {
+      "live_path": "E:\\research-dense\\output\\campaign_walls_v1\\wall_driver.py",
+      "lf_sha256": "5f98188571baffb900a7cee4f9afec8b9575e6623f07b54ff959170d76306c5d",
+      "bytes": 42617,
+      "lines": 900,
+      "patch": "patches/wall_driver.py.diff"
+    },
+    "wall_group.py": {
+      "live_path": "E:\\rd-wt\\wallmr\\traffic_shepherd\\wall_group.py",
+      "lf_sha256": "d8973f1aee14ef7aa141e1e352c5586087eb6762733882dd81f9c47a62b00c3f",
+      "bytes": 19373,
+      "lines": 401,
+      "patch": "patches/wall_group.py.diff"
+    },
+    "sensing.py": {
+      "live_path": "E:\\rd-wt\\wallmr\\traffic_shepherd\\sensing.py",
+      "lf_sha256": "1f0651049686317272e681d0a3c61c8cfb6b5626263ddfc068f1d5153cc4f0dc",
+      "bytes": 5282,
+      "lines": 141
+    }
+  },
+  "unchanged": {
+    "sensing.py": "no functional change for v2.2: SensorFrame already carries the lane id (edge identity) and the lane-local position that frame_s_road reads; sha recorded so the deployed file is verifiable"
+  },
+  "logging_patch": {
+    "note": "v2.2 LOGGING patch (behaviour-neutral, smoke R2 prep): hold_cap.a_priori_effective_hold_s is computed AT ASSEMBLY (min(H, (2644.2 - lead_s_road_at_assembly_m)/wall_speed_mps)) instead of from the release-tick lead position, and the row adds lead_s_road_at_assembly_m. No control-path change. Apply AFTER patches/wall_driver.py.diff; the patched result is what copies/post/wall_driver.py contains (the 'post' entry above stays the pure v2.2 LAW version that the frozen registration binds).",
+    "wall_driver.py": {
+      "live_path": "E:\\research-dense\\output\\campaign_walls_v1\\wall_driver.py",
+      "base": "pre + patches/wall_driver.py.diff (v2.2 law)",
+      "base_lf_sha256": "5f98188571baffb900a7cee4f9afec8b9575e6623f07b54ff959170d76306c5d",
+      "patch": "patches/wall_driver_v22_logging.diff",
+      "patched_lf_sha256": "ef01bfcf652eeee5439a705119acb7e6e75c4414d3ab0aa0748b0f11ca6590e3",
+      "lf_sha256": "ef01bfcf652eeee5439a705119acb7e6e75c4414d3ab0aa0748b0f11ca6590e3",
+      "bytes": 44609,
+      "lines": 934,
+      "round_trip_verified": true
+    }
+  },
+  "inc1_hook": {
+    "note": "INC1 hook patch (REGISTRATION_WM_N1_INC1_ADDENDUM_1 A1.2): adds ONLY the optional kwargs post_restore_hook(api, t_s) (called once right after the restore, before the first control tick; return value logged in the branch record) and branch_length_s_override.  With both absent the driver is byte-for-byte behaviour-identical to the frozen post driver (tests/test_wall_driver_inc1_hook_identity.py).  No change to proposal, assembly, D_min, hold cap, release, safety aborts, ownership or speedMode.",
+    "wall_driver.py": {
+      "live_path": "E:\\rd-wt\\inc1r4\\output\\wd01\\walls_design\\merge_release\\copies\\post\\wall_driver.py",
+      "base": "copies/post/wall_driver.py (v2.2 law + logging patch)",
+      "base_lf_sha256": "ef01bfcf652eeee5439a705119acb7e6e75c4414d3ab0aa0748b0f11ca6590e3",
+      "patch": "patches/wall_driver_inc1_hook.diff",
+      "patched_file": "copies/post_inc1/wall_driver.py",
+      "patched_lf_sha256": "94d392e8770cf2ea627de6ae613780d85e400008c3ef3bc7bcfb48e2ef0637f5",
+      "lf_sha256": "94d392e8770cf2ea627de6ae613780d85e400008c3ef3bc7bcfb48e2ef0637f5",
+      "bytes": 45658,
+      "lines": 953,
+      "diff_sha256": "a926a08196dd4c60e604e247c7dec3c68a855b2bc5f3f2f992d111241a81ec27",
+      "round_trip_verified": true
+    }
+  }
+}

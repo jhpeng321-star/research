@@ -1,0 +1,43 @@
+﻿{
+    "name":  "rc05",
+    "path":  "E:\\rd-wt\\rc05",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "HEAD",
+    "headBefore":  "7350ee15d73fb48c139e6bcb5cf5c674a2dbf3b9",
+    "headType":  null,
+    "dirtyBefore":  118,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/rc05",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\rc05.txt",
+    "uploadCount":  361,
+    "uploadBytes":  24518010,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\rc05.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 07:21:51 NOTICE: Google drive root \u0027research-archive/worktrees/rc05\u0027: 0 differences found | 2026/10/10 07:21:51 NOTICE: Google drive root \u0027research-archive/worktrees/rc05\u0027: 361 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\rc05.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  5,
+    "skippedSensitiveSample":  [
+                                   "protocols/holdout_exclusions.json",
+                                   "tests/planner/test_holdout_guard.py",
+                                   "tests/test_holdout_exclusions.py",
+                                   "tools/holdout_guard.py",
+                                   "traffic_shepherd/planner/holdout.py"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "commit_failed",
+    "error":  "commit failed: \ttraffic_shepherd/planner/holdout.py  nothing added to commit but untracked files present (use \"git add\" to track)",
+    "timestamp":  "2026-10-10T07:14:57.9924652+08:00"
+}

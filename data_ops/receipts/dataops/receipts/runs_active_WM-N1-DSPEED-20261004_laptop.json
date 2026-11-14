@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/WM-N1-DSPEED-20261004/laptop",
+ "name": "laptop",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\WM-N1-DSPEED-20261004\\laptop",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-DSPEED-20261004/laptop/laptop.tar.zst",
+ "bytes": 1970510425,
+ "files": 1738,
+ "archive_bytes": 1450070784,
+ "archive_md5": "347cae7c8cdb0b086da94ba554a72570",
+ "member_manifest": "manifests/members/runs_active_WM-N1-DSPEED-20261004_laptop.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 629.6,
+ "timestamp": "2026-10-09T23:44:33"
+}

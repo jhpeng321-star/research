@@ -1,0 +1,43 @@
+40 states, workers=2
+[1/40] wall_same w8660m2700p10t300 arm=wall slots=94 cav=12 queries=1449 12.0s
+[2/40] wall_same w8663m2700p10t480 arm=wall slots=111 cav=15 queries=1893 15.0s
+[3/40] wall_same w8664m2600p10t360 arm=wall slots=113 cav=11 queries=1978 15.5s
+[4/40] wall_same w8665m2700p10t240 arm=wall slots=91 cav=13 queries=1401 12.1s
+[5/40] wall_same w8668m2600p10t240 arm=wall slots=95 cav=9 queries=1584 12.5s
+[6/40] wall_same w8676m2700p20t360 arm=wall slots=105 cav=22 queries=1497 13.1s
+[7/40] wall_same w8677m2700p20t360 arm=wall slots=100 cav=25 queries=1483 13.5s
+[8/40] wall_same w8678m2700p20t300 arm=wall slots=114 cav=37 queries=1549 15.3s
+[9/40] wall_same w8679m2400p20t540 arm=wall slots=103 cav=25 queries=1348 14.3s
+[10/40] wall_same w8680m2600p20t300 arm=wall slots=101 cav=22 queries=1538 14.2s
+[11/40] wall_same w8681m2700p20t420 arm=wall slots=101 cav=15 queries=1711 13.4s
+[12/40] wall_same w8682m2400p20t240 arm=wall slots=77 cav=13 queries=1108 9.5s
+[13/40] wall_same w8684m2700p20t360 arm=wall slots=121 cav=22 queries=1968 16.0s
+[14/40] wall_same w8685m2700p20t480 arm=wall slots=124 cav=24 queries=1909 16.4s
+[15/40] wall_same w8687m2600p20t480 arm=wall slots=87 cav=16 queries=1289 11.6s
+[16/40] wall_same w8693m2600p40t420 arm=wall slots=117 cav=40 queries=1492 15.0s
+[17/40] wall_same w8694m2600p40t240 arm=wall slots=89 cav=34 queries=1002 10.4s
+[18/40] wall_same w8695m2400p40t480 arm=wall slots=102 cav=41 queries=1114 10.7s
+[19/40] wall_same w8696m2600p40t420 arm=wall slots=115 cav=43 queries=1452 12.5s
+[20/40] wall_same w8697m2700p40t240 arm=wall slots=82 cav=32 queries=878 9.8s
+[21/40] seen_controls w8660m2700p10t300 arm=arm0 slots=94 cav=12 queries=1462 12.6s
+[22/40] seen_controls w8663m2700p10t480 arm=arm0 slots=111 cav=15 queries=2024 17.2s
+[23/40] seen_controls w8664m2600p10t360 arm=arm0 slots=113 cav=11 queries=1975 17.1s
+[24/40] seen_controls w8665m2700p10t240 arm=arm0 slots=91 cav=13 queries=1466 13.4s
+[25/40] seen_controls w8667m2700p10t420 arm=arm0 slots=93 cav=9 queries=1622 15.3s
+[26/40] seen_controls w8668m2600p10t240 arm=arm0 slots=95 cav=9 queries=1606 15.8s
+[27/40] seen_controls w8676m2700p20t360 arm=arm0 slots=104 cav=21 queries=1502 16.8s
+[28/40] seen_controls w8677m2700p20t360 arm=arm0 slots=100 cav=25 queries=1558 15.9s
+[29/40] seen_controls w8678m2700p20t300 arm=arm0 slots=114 cav=37 queries=1578 15.1s
+[30/40] seen_controls w8679m2400p20t540 arm=arm0 slots=103 cav=25 queries=1311 12.8s
+[31/40] seen_controls w8680m2600p20t300 arm=arm0 slots=101 cav=22 queries=1570 14.4s
+[32/40] seen_controls w8681m2700p20t420 arm=arm0 slots=101 cav=15 queries=1712 15.1s
+[33/40] seen_controls w8682m2400p20t240 arm=arm0 slots=77 cav=13 queries=1105 12.1s
+[34/40] seen_controls w8684m2700p20t360 arm=arm0 slots=122 cav=22 queries=2153 20.6s
+[35/40] seen_controls w8685m2700p20t480 arm=arm0 slots=124 cav=24 queries=2052 20.5s
+[36/40] seen_controls w8687m2600p20t480 arm=arm0 slots=87 cav=16 queries=1301 13.7s
+[37/40] seen_controls w8688m2700p20t420 arm=arm0 slots=98 cav=16 queries=1569 13.2s
+[38/40] seen_controls w8693m2600p40t420 arm=arm0 slots=119 cav=41 queries=1641 16.6s
+[39/40] seen_controls w8694m2600p40t240 arm=arm0 slots=89 cav=34 queries=1160 13.7s
+[40/40] seen_controls w8695m2400p40t480 arm=arm0 slots=102 cav=41 queries=1119 15.3s
+done in 306s
+wrote E:/rd-wt/ws-attn/_out/attention_check/raw_results.json

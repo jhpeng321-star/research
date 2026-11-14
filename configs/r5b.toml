@@ -1,4 +1,4 @@
-# ROUND 5b: continue round 5 from its own 30 s-stage checkpoint with the
+# ROUND 5b (owner request 2026-10-12 ~13:35): continue round 5 from its own 30 s-stage checkpoint with the
 # stabilising fixes for the long stages, where R5's 60 s stage drifted upward (train position median 97 -> 165,
 # val 60 s 125 -> 160):
 #   (a) batch 32 instead of 8 (4x less gradient noise; GPU memory was 1.5 of 49 GB),

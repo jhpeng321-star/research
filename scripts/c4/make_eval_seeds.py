@@ -14,7 +14,7 @@ Rule (outcome-independent, frozen before any C4 run):
      skipping seeds already given to another demand (independent worlds per demand cell).
   5. Collection (training-data) seeds are NOT chosen here; they need their own exposure audit.
 
-This is development evidence only.  A final claim needs a freshly audited, registered seed block
+This is development evidence only.  A final claim needs a freshly audited, owner-approved seed block
 (see REGISTRATION.md section 7); this script never certifies freshness.
 """
 from __future__ import annotations
@@ -28,7 +28,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-DEFAULT_DATA = Path("data_cache")
+DEFAULT_DATA = Path("E:/research-dense/data_cache")
 PACK_INDEXES = ["pack_v3", "pack_dspeed", "pack_damping", "wmn1_switching_train/pack_switching_train"]
 DEMANDS = (2400, 2600, 2700)
 

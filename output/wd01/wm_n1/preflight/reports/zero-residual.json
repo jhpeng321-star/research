@@ -1,0 +1,21 @@
+{
+ "schema": "wm_n1_preflight_gate/1",
+ "gate": "zero-residual",
+ "title": "G1 zero-residual (Idea A == Part A v2g, residual 0, arrivals off)",
+ "passed": true,
+ "verdict": "PASS",
+ "detail": "pos<= 0 m, speed<= 0 m/s, tol 1e-06, 1 window(s)",
+ "entry_points": [
+  "rollout2.equivalence.zero_residual_report"
+ ],
+ "checks": {
+  "tolerance_m": 1e-06,
+  "max_position_error_m": 0.0,
+  "max_speed_error_mps": 0.0,
+  "n_windows": 1,
+  "integrator": "v2g",
+  "tolerance_explained": false
+ },
+ "error": null,
+ "generated_utc": "2026-10-02T04:49:19Z"
+}

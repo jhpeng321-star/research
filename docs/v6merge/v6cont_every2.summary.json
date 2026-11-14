@@ -1,0 +1,102 @@
+{
+ "args": {
+  "ckpt": "/root/autodl-tmp/c4/v5/diag_merge2/ckpt_v6cont/wm_s_latest.pt",
+  "set": "/root/autodl-tmp/c4/v5/runs/v5_wallregen_20261014/out/states_h60full/wall_same.json",
+  "arm": "wall",
+  "limit": null,
+  "every": 2,
+  "modes": "OFF,ON,WAIT",
+  "out": "v6cont_every2",
+  "horizon": 120.0,
+  "workers": 2
+ },
+ "summary": {
+  "OFF": {
+   "n_states": 72,
+   "blowups": 19,
+   "blow_den": 69,
+   "ds_median": {
+    "30": 13.744430541992188,
+    "60": 35.5060920715332,
+    "120": 84.8609619140625
+   },
+   "ds_mean60": 42.72213861677382,
+   "wait_stopped": {
+    "n": 56,
+    "model_median": 3.25,
+    "sumo_median": 39.75,
+    "model_frac_gt30": 0.10714285714285714,
+    "sumo_frac_gt30": 0.6071428571428571
+   },
+   "wait_all": {
+    "n": 174,
+    "model_median": 20.5,
+    "sumo_median": 32.5,
+    "model_frac_gt30": 0.25287356321839083,
+    "sumo_frac_gt30": 0.5172413793103449
+   },
+   "over_hdv_steps": 0,
+   "over_hdv_veh": 0,
+   "over_all_steps": 0,
+   "sec_per_state": 6.274432321389516
+  },
+  "ON": {
+   "n_states": 72,
+   "blowups": 14,
+   "blow_den": 69,
+   "ds_median": {
+    "30": 12.785340309143066,
+    "60": 33.25248908996582,
+    "120": 60.70587158203125
+   },
+   "ds_mean60": 39.82253249486288,
+   "wait_stopped": {
+    "n": 56,
+    "model_median": 14.25,
+    "sumo_median": 39.75,
+    "model_frac_gt30": 0.2857142857142857,
+    "sumo_frac_gt30": 0.6071428571428571
+   },
+   "wait_all": {
+    "n": 174,
+    "model_median": 28.0,
+    "sumo_median": 32.5,
+    "model_frac_gt30": 0.4367816091954023,
+    "sumo_frac_gt30": 0.5172413793103449
+   },
+   "over_hdv_steps": 0,
+   "over_hdv_veh": 0,
+   "over_all_steps": 0,
+   "sec_per_state": 6.683098647329542
+  },
+  "WAIT": {
+   "n_states": 72,
+   "blowups": 18,
+   "blow_den": 69,
+   "ds_median": {
+    "30": 13.445178985595703,
+    "60": 33.78373718261719,
+    "120": 84.8609619140625
+   },
+   "ds_mean60": 41.36167526245117,
+   "wait_stopped": {
+    "n": 56,
+    "model_median": 17.75,
+    "sumo_median": 39.75,
+    "model_frac_gt30": 0.25,
+    "sumo_frac_gt30": 0.6071428571428571
+   },
+   "wait_all": {
+    "n": 174,
+    "model_median": 30.5,
+    "sumo_median": 32.5,
+    "model_frac_gt30": 0.5172413793103449,
+    "sumo_frac_gt30": 0.5172413793103449
+   },
+   "over_hdv_steps": 0,
+   "over_hdv_veh": 0,
+   "over_all_steps": 0,
+   "sec_per_state": 6.56673217482037
+  }
+ }
+}

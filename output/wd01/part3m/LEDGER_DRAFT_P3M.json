@@ -1,0 +1,939 @@
+{
+ "part": "3m",
+ "date": "2026-09-27",
+ "title": "TTC<3 exposure bias fix: TASK A per-side attribution diagnosis, TRAIN refit with an added TTC<3 target and end-force/post-merge knobs, recalibrated spread frozen before validation, gate v2 re-run (L6c)",
+ "holdout_accessed": false,
+ "holdout_note": "no holdout root loaded, no registration hash created or passed; holdout_block authoritative",
+ "simulation": false,
+ "engine_change": "part3/engine.py, all default-neutral (shipped behaviour byte-identical, pinned by tests/test_p3m_engine.py::test_default_params_reproduce_p3l_raw_row): (1) run(n_ticks=None) early-stop (metrics at H <= n_ticks*DT identical to the full roll); (2) vtype_map instrumentation (vid -> sampled vType; the live array is re-indexed by exits); (3) merge_params end_force_s=0.0 (near-lane-end M2 acceptance relaxation, end_force_params pure helper); (4) merge_params v_merge_blend=0.0 (post-merge speed blend toward the target-lane local mean, local_target_speed pure helper). idm_sampled untouched",
+ "data_root": "runs used WD01_DATA_ROOT=D:/rd-wt/wd01/output/wd01 read-only; never written",
+ "diagnosis": {
+  "K": 60,
+  "t0s": [
+   120,
+   180,
+   240,
+   300,
+   360,
+   420,
+   480
+  ],
+  "windows_per_split": 140,
+  "views": "pa = pred all (frozen metric), pm = matched vehicles with predicted states, tr = matched vehicles with true states; composition = pa-pm, behaviour = pm-tr",
+  "train": {
+   "n_windows": 140,
+   "pred_all": 8.489,
+   "pred_matched": 8.489,
+   "truth": 2.732,
+   "bias": 5.757,
+   "composition": 0.0,
+   "behaviour": 5.757
+  },
+  "validation": {
+   "n_windows": 140,
+   "pred_all": 14.246,
+   "pred_matched": 14.246,
+   "truth": 7.318,
+   "bias": 6.929,
+   "composition": 0.0,
+   "behaviour": 6.929
+  },
+  "parity": "pa/tr == window_metrics pred_/true_ttc3_exposure on every window (asserted in diag_p3m.py)",
+  "train_top": {
+   "ev": [
+    {
+     "excess": 660.0,
+     "key": "pure_cf",
+     "pa": 1042.5,
+     "pm": 1042.5,
+     "tr": 382.5,
+     "na": 2085,
+     "nt": 765
+    },
+    {
+     "excess": 122.5,
+     "key": "post_merge",
+     "pa": 122.5,
+     "pm": 122.5,
+     "tr": 0.0,
+     "na": 245,
+     "nt": 0
+    },
+    {
+     "excess": 23.5,
+     "key": "post_lc",
+     "pa": 23.5,
+     "pm": 23.5,
+     "tr": 0.0,
+     "na": 47,
+     "nt": 0
+    }
+   ],
+   "seg": [
+    {
+     "excess": 887.5,
+     "key": "downstream",
+     "pa": 1082.5,
+     "pm": 1082.5,
+     "tr": 195.0,
+     "na": 2165,
+     "nt": 390
+    },
+    {
+     "excess": 0.0,
+     "key": "upstream",
+     "pa": 2.5,
+     "pm": 2.5,
+     "tr": 2.5,
+     "na": 5,
+     "nt": 5
+    },
+    {
+     "excess": -28.5,
+     "key": "rsu_window",
+     "pa": 29.0,
+     "pm": 29.0,
+     "tr": 57.5,
+     "na": 58,
+     "nt": 115
+    },
+    {
+     "excess": -53.0,
+     "key": "merge_edge",
+     "pa": 74.5,
+     "pm": 74.5,
+     "tr": 127.5,
+     "na": 149,
+     "nt": 255
+    }
+   ],
+   "lane": [
+    {
+     "excess": 418.5,
+     "key": "2",
+     "pa": 628.5,
+     "pm": 628.5,
+     "tr": 210.0,
+     "na": 1257,
+     "nt": 420
+    },
+    {
+     "excess": 370.5,
+     "key": "1",
+     "pa": 543.0,
+     "pm": 543.0,
+     "tr": 172.5,
+     "na": 1086,
+     "nt": 345
+    },
+    {
+     "excess": 17.0,
+     "key": "0",
+     "pa": 17.0,
+     "pm": 17.0,
+     "tr": 0.0,
+     "na": 34,
+     "nt": 0
+    }
+   ],
+   "ttc": [
+    {
+     "excess": 563.0,
+     "key": "[2,3)",
+     "pa": 943.0,
+     "pm": 943.0,
+     "tr": 380.0,
+     "na": 1886,
+     "nt": 760
+    },
+    {
+     "excess": 202.5,
+     "key": "[1.5,2)",
+     "pa": 202.5,
+     "pm": 202.5,
+     "tr": 0.0,
+     "na": 405,
+     "nt": 0
+    },
+    {
+     "excess": 31.5,
+     "key": "[1,1.5)",
+     "pa": 31.5,
+     "pm": 31.5,
+     "tr": 0.0,
+     "na": 63,
+     "nt": 0
+    },
+    {
+     "excess": 9.0,
+     "key": "[0,1)",
+     "pa": 11.5,
+     "pm": 11.5,
+     "tr": 2.5,
+     "na": 23,
+     "nt": 5
+    }
+   ],
+   "vt": [
+    {
+     "excess": 379.5,
+     "key": "2",
+     "pa": 387.0,
+     "pm": 387.0,
+     "tr": 7.5,
+     "na": 774,
+     "nt": 15
+    },
+    {
+     "excess": 343.5,
+     "key": "1",
+     "pa": 698.5,
+     "pm": 698.5,
+     "tr": 355.0,
+     "na": 1397,
+     "nt": 710
+    },
+    {
+     "excess": 83.0,
+     "key": "0",
+     "pa": 103.0,
+     "pm": 103.0,
+     "tr": 20.0,
+     "na": 206,
+     "nt": 40
+    }
+   ],
+   "dawdle": [
+    {
+     "excess": 342.0,
+     "key": "1.5",
+     "pa": 495.0,
+     "pm": 495.0,
+     "tr": 153.0,
+     "na": 990,
+     "nt": 306
+    },
+    {
+     "excess": 173.5,
+     "key": "1.25",
+     "pa": 250.0,
+     "pm": 250.0,
+     "tr": 76.5,
+     "na": 500,
+     "nt": 153
+    },
+    {
+     "excess": 157.0,
+     "key": "0.8",
+     "pa": 233.5,
+     "pm": 233.5,
+     "tr": 76.5,
+     "na": 467,
+     "nt": 153
+    },
+    {
+     "excess": 133.5,
+     "key": "1.0",
+     "pa": 210.0,
+     "pm": 210.0,
+     "tr": 76.5,
+     "na": 420,
+     "nt": 153
+    }
+   ]
+  },
+  "validation_top": {
+   "ev": [
+    {
+     "excess": 767.5,
+     "key": "pure_cf",
+     "pa": 1784.5,
+     "pm": 1784.5,
+     "tr": 1017.0,
+     "na": 3569,
+     "nt": 2034
+    },
+    {
+     "excess": 134.0,
+     "key": "post_merge",
+     "pa": 141.5,
+     "pm": 141.5,
+     "tr": 7.5,
+     "na": 283,
+     "nt": 15
+    },
+    {
+     "excess": 68.5,
+     "key": "post_lc",
+     "pa": 68.5,
+     "pm": 68.5,
+     "tr": 0.0,
+     "na": 137,
+     "nt": 0
+    }
+   ],
+   "seg": [
+    {
+     "excess": 1284.0,
+     "key": "downstream",
+     "pa": 1756.0,
+     "pm": 1756.0,
+     "tr": 472.0,
+     "na": 3512,
+     "nt": 944
+    },
+    {
+     "excess": 3.5,
+     "key": "upstream",
+     "pa": 3.5,
+     "pm": 3.5,
+     "tr": 0.0,
+     "na": 7,
+     "nt": 0
+    },
+    {
+     "excess": -84.0,
+     "key": "rsu_window",
+     "pa": 83.5,
+     "pm": 83.5,
+     "tr": 167.5,
+     "na": 167,
+     "nt": 335
+    },
+    {
+     "excess": -233.5,
+     "key": "merge_edge",
+     "pa": 151.5,
+     "pm": 151.5,
+     "tr": 385.0,
+     "na": 303,
+     "nt": 770
+    }
+   ],
+   "lane": [
+    {
+     "excess": 480.5,
+     "key": "1",
+     "pa": 995.5,
+     "pm": 995.5,
+     "tr": 515.0,
+     "na": 1991,
+     "nt": 1030
+    },
+    {
+     "excess": 440.5,
+     "key": "2",
+     "pa": 945.0,
+     "pm": 945.0,
+     "tr": 504.5,
+     "na": 1890,
+     "nt": 1009
+    },
+    {
+     "excess": 49.0,
+     "key": "0",
+     "pa": 54.0,
+     "pm": 54.0,
+     "tr": 5.0,
+     "na": 108,
+     "nt": 10
+    }
+   ],
+   "ttc": [
+    {
+     "excess": 558.5,
+     "key": "[2,3)",
+     "pa": 1580.5,
+     "pm": 1580.5,
+     "tr": 1022.0,
+     "na": 3161,
+     "nt": 2044
+    },
+    {
+     "excess": 324.5,
+     "key": "[1.5,2)",
+     "pa": 327.0,
+     "pm": 327.0,
+     "tr": 2.5,
+     "na": 654,
+     "nt": 5
+    },
+    {
+     "excess": 59.0,
+     "key": "[1,1.5)",
+     "pa": 59.0,
+     "pm": 59.0,
+     "tr": 0.0,
+     "na": 118,
+     "nt": 0
+    },
+    {
+     "excess": 28.0,
+     "key": "[0,1)",
+     "pa": 28.0,
+     "pm": 28.0,
+     "tr": 0.0,
+     "na": 56,
+     "nt": 0
+    }
+   ],
+   "vt": [
+    {
+     "excess": 503.5,
+     "key": "1",
+     "pa": 1323.0,
+     "pm": 1323.0,
+     "tr": 819.5,
+     "na": 2646,
+     "nt": 1639
+    },
+    {
+     "excess": 465.0,
+     "key": "2",
+     "pa": 520.0,
+     "pm": 520.0,
+     "tr": 55.0,
+     "na": 1040,
+     "nt": 110
+    },
+    {
+     "excess": 1.5,
+     "key": "0",
+     "pa": 151.5,
+     "pm": 151.5,
+     "tr": 150.0,
+     "na": 303,
+     "nt": 300
+    }
+   ],
+   "dawdle": [
+    {
+     "excess": 372.5,
+     "key": "1.5",
+     "pa": 782.0,
+     "pm": 782.0,
+     "tr": 409.5,
+     "na": 1564,
+     "nt": 819
+    },
+    {
+     "excess": 213.5,
+     "key": "1.25",
+     "pa": 419.0,
+     "pm": 419.0,
+     "tr": 205.5,
+     "na": 838,
+     "nt": 411
+    },
+    {
+     "excess": 195.0,
+     "key": "0.8",
+     "pa": 400.0,
+     "pm": 400.0,
+     "tr": 205.0,
+     "na": 800,
+     "nt": 410
+    },
+    {
+     "excess": 189.0,
+     "key": "1.0",
+     "pa": 393.5,
+     "pm": 393.5,
+     "tr": 204.5,
+     "na": 787,
+     "nt": 409
+    }
+   ]
+  },
+  "verdict": "the excess is BEHAVIOUR, not vehicle-set composition (composition exactly 0.0): (1) stop-and-go queueing of unmerged accel vehicles DOWNSTREAM (d<0) at the lane-end obstacle (pure_cf, lane 2); (2) merge-created transients the truth never shows (post_merge: TRAIN pred 122.5 vs truth 0.0); (3) mild closings, TTC in [1.5,3) (truth has almost none below 1.5 s); (4) sampled cautious vType 10-50x over the truth exposure; (5) truth exposure concentrates at the merge_edge/rsu_window approach, where the emulator UNDER-predicts"
+ },
+ "fit": {
+  "fitted_on": {
+   "roots": [
+    "cv17",
+    "cv19_4107",
+    "cv19_4108",
+    "cv20_7001m2000"
+   ],
+   "t0s": [
+    120.0,
+    300.0
+   ],
+   "H": 60.0,
+   "note": "TRAIN only; holdout never accessed; calibration split never rolled here"
+  },
+  "added_target": {
+   "name": "ttc3_exposure_H60",
+   "form": "((pred-truth)/max(truth,5))^2 per window",
+   "truth": "ALL truth rows (p3m_lib.truth_ttc3_exposure)"
+  },
+  "selected": {
+   "merge_params": {
+    "tau_accept": 1.9,
+    "b_accept": 2.0,
+    "p_coop_scale": 0.0,
+    "end_force_s": 150.0,
+    "v_merge_blend": 0.0
+   },
+   "lc_scale": 0.002,
+   "joint_loss": 1.8585533986337244,
+   "stage1_loss": 0.6271610353671151,
+   "stage2_loss": 1.2313923632666093,
+   "before": {
+    "p3l_stage1": 1.1095232627891218,
+    "p3l_stage2": 7.361776304596102,
+    "detail1": {
+     "occ": 1.0299149542658987,
+     "prof": 0.288453904302041,
+     "merge": 0.043551570485467775
+    },
+    "detail2": {
+     "mr": 0.27373282658194953,
+     "delay": 0.5927296270059751,
+     "lc30": 0.28534786788337924,
+     "lc60": 0.3824319662495947,
+     "ttc3": 6.018750000000001
+    }
+   },
+   "after": {
+    "stage1": 0.6271610353671151,
+    "stage2": 1.2313923632666093,
+    "detail1": {
+     "occ": 0.5475097807593584,
+     "prof": 0.38083060276754993,
+     "merge": 0.03204742926181291
+    },
+    "detail2": {
+     "mr": 0.29760893582567616,
+     "delay": 0.30544799828119973,
+     "lc30": 0.22710390082963477,
+     "lc60": 0.13299361221575282,
+     "ttc3": 0.3347347222222222
+    }
+   }
+  },
+  "grids": {
+   "tau_accept": [
+    1.9,
+    2.4,
+    3.0,
+    3.6
+   ],
+   "b_accept": [
+    2.0,
+    3.0,
+    4.0,
+    5.0
+   ],
+   "end_force_s": [
+    0.0,
+    150.0
+   ],
+   "v_merge_blend": [
+    0.0,
+    0.5,
+    1.0
+   ],
+   "lc_scale": [
+    0.0005,
+    0.00075,
+    0.001,
+    0.0015,
+    0.002,
+    0.003
+   ],
+   "p_coop_scale": [
+    0.0,
+    0.25
+   ],
+   "dawdle_scale": [
+    0.8,
+    1.0,
+    1.25,
+    1.5
+   ],
+   "softmax_T": 0.15
+  },
+  "members": [
+   {
+    "seed": 1,
+    "lc_scale": 0.002,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 2.0,
+     "p_coop_scale": 0.0,
+     "end_force_s": 150.0,
+     "v_merge_blend": 0.0
+    },
+    "dawdle_scale": 1.0
+   },
+   {
+    "seed": 18,
+    "lc_scale": 0.003,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 5.0,
+     "p_coop_scale": 0.25,
+     "end_force_s": 150.0,
+     "v_merge_blend": 0.5
+    },
+    "dawdle_scale": 1.0,
+    "resample": [
+     "cv17",
+     "cv19_4107",
+     "cv19_4108"
+    ]
+   },
+   {
+    "seed": 35,
+    "lc_scale": 0.002,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 3.0,
+     "p_coop_scale": 0.25,
+     "end_force_s": 150.0,
+     "v_merge_blend": 0.0
+    },
+    "dawdle_scale": 1.5,
+    "resample": [
+     "cv17",
+     "cv19_4107",
+     "cv19_4108",
+     "cv20_7001m2000"
+    ]
+   },
+   {
+    "seed": 52,
+    "lc_scale": 0.002,
+    "merge_params": {
+     "tau_accept": 2.4,
+     "b_accept": 5.0,
+     "p_coop_scale": 0.25,
+     "end_force_s": 150.0,
+     "v_merge_blend": 0.5
+    },
+    "dawdle_scale": 1.25,
+    "resample": [
+     "cv17",
+     "cv19_4108",
+     "cv20_7001m2000"
+    ]
+   },
+   {
+    "seed": 69,
+    "lc_scale": 0.002,
+    "merge_params": {
+     "tau_accept": 2.4,
+     "b_accept": 4.0,
+     "p_coop_scale": 0.0,
+     "end_force_s": 150.0,
+     "v_merge_blend": 0.0
+    },
+    "dawdle_scale": 1.25,
+    "resample": [
+     "cv19_4107",
+     "cv19_4108",
+     "cv20_7001m2000"
+    ]
+   }
+  ]
+ },
+ "calibration": {
+  "roots": [
+   "cv20_7002m2000",
+   "cv20_7003m2000",
+   "cv20_7004m2000",
+   "cv20_7007m2700"
+  ],
+  "windows": 28,
+  "members": 5,
+  "s_out": {
+   "delay_phys": {
+    "30": 2.5198,
+    "60": 2.2974
+   },
+   "ttc3": {
+    "30": 7.6387,
+    "60": 14.5876
+   }
+  },
+  "coverage": {
+   "delay_phys@H30": {
+    "raw_coverage": 0.3929,
+    "s_out": 2.5198,
+    "target": 0.8,
+    "coverage_mean_centred": 0.8214,
+    "crps_raw_mean": 33.279,
+    "crps_widened_mean": 32.024,
+    "mean_shift_max": 0.0
+   },
+   "delay_phys@H60": {
+    "raw_coverage": 0.3929,
+    "s_out": 2.2974,
+    "target": 0.8,
+    "coverage_mean_centred": 0.8214,
+    "crps_raw_mean": 76.013,
+    "crps_widened_mean": 76.036,
+    "mean_shift_max": 0.0
+   },
+   "ttc3@H30": {
+    "raw_coverage": 0.5357,
+    "s_out": 7.6387,
+    "target": 0.8,
+    "coverage_mean_centred": 0.8214,
+    "crps_raw_mean": 2.74,
+    "crps_widened_mean": 6.138,
+    "mean_shift_max": 0.0
+   },
+   "ttc3@H60": {
+    "raw_coverage": 0.1786,
+    "s_out": 14.5876,
+    "target": 0.8,
+    "coverage_mean_centred": 0.8214,
+    "crps_raw_mean": 5.806,
+    "crps_widened_mean": 16.06,
+    "mean_shift_max": 0.0
+   }
+  },
+  "frozen_sha256": "968d20ba26d8552014807f0fbd3a2d9d2bf0b87c41d5aa49410d4ae804b97334",
+  "frozen_utc": "2026-09-26T20:24:17.243056+00:00",
+  "freeze_order": "calibrated and frozen on the TRAIN-internal split BEFORE any validation row was written (eval_p3m.py freeze gate; re-checked by aggregate_p3m.py)"
+ },
+ "ladder": {
+  "validation_roots": 4,
+  "windows_per_member": 52,
+  "t0_grid": "120:30:480",
+  "H": [
+   30,
+   60
+  ],
+  "members": 5,
+  "rungs": "L0/L4/L5/L5c reused verbatim from part 3l rows (results/raw/raw_p3l_metrics.jsonl); L6 = part 3m refit members (fresh rows, results/raw/raw_metrics_p3m.jsonl); L6c = L6 + the frozen part 3m recalibration"
+ },
+ "gate_v2": {
+  "primary_H": 30,
+  "d_binding": "per-horizon 1.05 x L0@same-H; fixed 5.2185 alongside (part 3l convention, verdict functions reused from aggregate_p3l)",
+  "H30": {
+   "L0": {
+    "pass_": false,
+    "failing": [
+     "b_lc"
+    ],
+    "ttc3_cov": null,
+    "delay_phys_cov": null,
+    "crps": null,
+    "l0_delay_mae": 293.39,
+    "speed": 4.1881,
+    "lc_dev": 1.0,
+    "coll_1000": 0.0
+   },
+   "L4": {
+    "pass_": false,
+    "failing": [
+     "c_coverage_crps"
+    ],
+    "ttc3_cov": 0.1923,
+    "delay_phys_cov": 0.0577,
+    "crps": 47.26,
+    "l0_delay_mae": 293.39,
+    "speed": 4.0141,
+    "lc_dev": 0.0338,
+    "coll_1000": 0.024
+   },
+   "L5": {
+    "pass_": false,
+    "failing": [
+     "c_coverage_crps"
+    ],
+    "ttc3_cov": 0.1923,
+    "delay_phys_cov": 0.5,
+    "crps": 42.6,
+    "l0_delay_mae": 293.39,
+    "speed": 3.954,
+    "lc_dev": 0.0952,
+    "coll_1000": 0.019
+   },
+   "L5c": {
+    "pass_": false,
+    "failing": [
+     "c_coverage_crps"
+    ],
+    "ttc3_cov": 0.5962,
+    "delay_phys_cov": 0.8462,
+    "crps": 46.72,
+    "l0_delay_mae": 293.39,
+    "speed": 3.954,
+    "lc_dev": 0.0952,
+    "coll_1000": 0.019
+   },
+   "L6": {
+    "pass_": false,
+    "failing": [
+     "b_lc",
+     "c_coverage_crps"
+    ],
+    "ttc3_cov": 0.4038,
+    "delay_phys_cov": 0.2885,
+    "crps": 36.4,
+    "l0_delay_mae": 293.39,
+    "speed": 4.3438,
+    "lc_dev": 0.3965,
+    "coll_1000": 0.03
+   },
+   "L6c": {
+    "pass_": false,
+    "failing": [
+     "b_lc"
+    ],
+    "ttc3_cov": 0.9231,
+    "delay_phys_cov": 0.8077,
+    "crps": 36.33,
+    "l0_delay_mae": 293.39,
+    "speed": 4.3438,
+    "lc_dev": 0.3965,
+    "coll_1000": 0.03
+   }
+  },
+  "H60": {
+   "L0": {
+    "pass_": false,
+    "failing": [
+     "b_lc"
+    ],
+    "ttc3_cov": null,
+    "delay_phys_cov": null,
+    "crps": null,
+    "l0_delay_mae": 738.77,
+    "speed": 4.9774,
+    "lc_dev": 1.0,
+    "coll_1000": 0.0
+   },
+   "L4": {
+    "pass_": false,
+    "failing": [
+     "c_coverage_crps"
+    ],
+    "ttc3_cov": 0.0769,
+    "delay_phys_cov": 0.25,
+    "crps": 144.37,
+    "l0_delay_mae": 738.77,
+    "speed": 5.1805,
+    "lc_dev": 0.0038,
+    "coll_1000": 0.019
+   },
+   "L5": {
+    "pass_": false,
+    "failing": [
+     "c_coverage_crps"
+    ],
+    "ttc3_cov": 0.2692,
+    "delay_phys_cov": 0.5385,
+    "crps": 106.94,
+    "l0_delay_mae": 738.77,
+    "speed": 4.8965,
+    "lc_dev": 0.1068,
+    "coll_1000": 0.015
+   },
+   "L5c": {
+    "pass_": false,
+    "failing": [
+     "c_coverage_crps"
+    ],
+    "ttc3_cov": 0.5962,
+    "delay_phys_cov": 0.7308,
+    "crps": 113.18,
+    "l0_delay_mae": 738.77,
+    "speed": 4.8965,
+    "lc_dev": 0.1068,
+    "coll_1000": 0.015
+   },
+   "L6": {
+    "pass_": false,
+    "failing": [
+     "b_lc",
+     "c_coverage_crps"
+    ],
+    "ttc3_cov": 0.3462,
+    "delay_phys_cov": 0.4423,
+    "crps": 89.78,
+    "l0_delay_mae": 738.77,
+    "speed": 5.134,
+    "lc_dev": 0.2954,
+    "coll_1000": 0.019
+   },
+   "L6c": {
+    "pass_": false,
+    "failing": [
+     "b_lc",
+     "c_coverage_crps"
+    ],
+    "ttc3_cov": 0.8846,
+    "delay_phys_cov": 0.75,
+    "crps": 93.12,
+    "l0_delay_mae": 738.77,
+    "speed": 5.134,
+    "lc_dev": 0.2954,
+    "coll_1000": 0.019
+   }
+  },
+  "ttc3_breakdown": {
+   "L5c@H30": {
+    "ttc3_cov_frac": 0.5962,
+    "ttc3_below_frac": 0.3846,
+    "ttc3_above_frac": 0.0192,
+    "ttc3_below_truth0": 3,
+    "ttc3_above_truth0": 0
+   },
+   "L5c@H60": {
+    "ttc3_cov_frac": 0.5962,
+    "ttc3_below_frac": 0.3846,
+    "ttc3_above_frac": 0.0192,
+    "ttc3_below_truth0": 2,
+    "ttc3_above_truth0": 0
+   },
+   "L6c@H30": {
+    "ttc3_cov_frac": 0.9231,
+    "ttc3_below_frac": 0.0,
+    "ttc3_above_frac": 0.0769,
+    "ttc3_below_truth0": 0,
+    "ttc3_above_truth0": 0
+   },
+   "L6c@H60": {
+    "ttc3_cov_frac": 0.8846,
+    "ttc3_below_frac": 0.0,
+    "ttc3_above_frac": 0.1154,
+    "ttc3_below_truth0": 0,
+    "ttc3_above_truth0": 0
+   }
+  }
+ },
+ "old_gate": {
+  "H30": {
+   "L0": false,
+   "L4": false,
+   "L5": true,
+   "L5c": true,
+   "L6": false,
+   "L6c": false
+  },
+  "H60": {
+   "L0": false,
+   "L4": false,
+   "L5": true,
+   "L5c": true,
+   "L6": false,
+   "L6c": false
+  }
+ },
+ "deviations": [
+  "b_accept grid low end 1.5 dropped (p3l-measured cliff: stage-1 loss 8.1-8.8 vs 0.92-1.57 at b=3.0; the fix direction needs the ramp to discharge more, not less); extended up to 4.0/5.0 per the brief",
+  "member ensemble keeps the p3l wider-draw mechanism (bootstrap resample x softmax T=0.15 lines x dawdle width), now over the extended coordinate grids",
+  "end_force_s relaxation thresholds (tau 0.5 / b 6.0 inside the zone) are fixed knob constants, not fitted per-vType"
+ ],
+ "not_done": [
+  "gate v2 (c) ttc3 coverage may still fall short on validation (see gate_v2_p3m.json; the calibration split predicted 82-100 %)",
+  "sampled-vType posterior re-fit (diagnosis shows the cautious draw over-exposes; the vType mixture is the part 3d posterior, untouched here)",
+  "idm_sampled stale-llen defect (p3k item) recorded, not fixed",
+  "holdout evaluation (blocked until the owner opens it)"
+ ]
+}

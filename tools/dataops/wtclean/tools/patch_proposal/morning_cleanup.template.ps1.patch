@@ -1,0 +1,23 @@
+--- morning_cleanup.template.ps1.orig	2026-10-10 06:42:17.530779900 +0800
++++ morning_cleanup.template.ps1.new	2026-10-10 06:42:17.792895500 +0800
+@@ -897,7 +897,19 @@
+     $dest = ([string]$w.dest).TrimEnd('/')
+     $present = New-Object System.Collections.ArrayList
+     foreach ($f in $cur) { if ($list.ContainsKey($f)) { [void]$present.Add($f) } }
+-    if ($present.Count -gt 0) {
++    if ([string]$w.method -eq 'tar.zst' -and $w.archive) {
++        # tar.zst backup (wtclean pack_wt.py): the Drive proof is the archive object (size + md5 recorded in the
++        # receipt and re-verified on Drive) plus its manifest; there are no per-file objects under $dest.
++        $ar = $w.archive
++        $e1 = Get-Remote ([string]$ar.remote)
++        $e2 = Get-Remote ([string]$ar.manifest_remote)
++        if ($null -eq $e1 -or [long]$e1.size -ne [long]$ar.size -or ([string]$e1.md5).ToLowerInvariant() -ne ([string]$ar.md5).ToLowerInvariant()) {
++            return Add-Res $id 'worktree' $path 'DRIVE_UNVERIFIED' ("tar.zst archive absent/different on Drive: " + [string]$ar.remote) $wlk.Bytes $wlk.Rel.Count @()
++        }
++        if ($null -eq $e2 -or [long]$e2.size -ne [long]$ar.manifest_size -or ([string]$e2.md5).ToLowerInvariant() -ne ([string]$ar.manifest_md5).ToLowerInvariant()) {
++            return Add-Res $id 'worktree' $path 'DRIVE_UNVERIFIED' ("tar.zst manifest absent/different on Drive: " + [string]$ar.manifest_remote) $wlk.Bytes $wlk.Rel.Count @()
++        }
++    } elseif ($present.Count -gt 0) {
+         if (-not $dest) { return Add-Res $id 'worktree' $path 'DRIVE_UNVERIFIED' 'no Drive destination in receipt' $wlk.Bytes $wlk.Rel.Count @() }
+         $badR = 0; $first = ''
+         foreach ($f in $present) {

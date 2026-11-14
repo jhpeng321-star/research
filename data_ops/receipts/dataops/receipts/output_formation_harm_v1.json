@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/formation_harm_v1",
+ "name": "formation_harm_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\formation_harm_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/formation_harm_v1/formation_harm_v1.tar.zst",
+ "bytes": 101807042,
+ "files": 26,
+ "archive_bytes": 99145549,
+ "archive_md5": "d0ebf9a92130d6dfff0221617f926e1f",
+ "member_manifest": "manifests/members/output_formation_harm_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 1473.6,
+ "timestamp": "2026-10-10T01:51:55"
+}

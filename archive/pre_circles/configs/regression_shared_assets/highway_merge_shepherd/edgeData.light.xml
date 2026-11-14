@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2026-09-06T01:58:28.400919+08:00 by Eclipse SUMO sumo 1.27.1
+<sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="D:\research-dense\archive\pre_circles\configs\regression_shared_assets\highway_merge_shepherd\osm.net.xml.gz"/>
+        <route-files value="D:\research-dense\archive\pre_circles\configs\regression_shared_assets\highway_merge_shepherd\osm.demand.light.rou.xml"/>
+        <additional-files value="D:\research-dense\archive\pre_circles\configs\regression_shared_assets\highway_merge_shepherd\output.light.add.xml"/>
+    </input>
+
+    <output>
+        <fcd-output value="D:\research-dense\archive\pre_circles\research\highway_merge_shepherd\fcd.eval.constant_speed.merge.light.seed42.xml"/>
+        <tripinfo-output value="D:\research-dense\archive\pre_circles\research\highway_merge_shepherd\tripinfos.eval.constant_speed.merge.light.seed42.xml"/>
+        <collision-output value="D:\research-dense\archive\pre_circles\configs\regression_shared_assets\highway_merge_shepherd\collisions.light.xml"/>
+        <statistic-output value="D:\research-dense\archive\pre_circles\research\highway_merge_shepherd\stats.eval.constant_speed.merge.light.seed42.xml"/>
+    </output>
+
+    <time>
+        <step-length value="0.5"/>
+    </time>
+
+    <processing>
+        <ignore-route-errors value="true"/>
+        <collision.action value="warn"/>
+        <time-to-teleport value="-1"/>
+    </processing>
+
+    <report>
+        <verbose value="true"/>
+        <duration-log.statistics value="true"/>
+        <no-step-log value="true"/>
+    </report>
+
+    <fcd_device>
+        <device.fcd.period value="1"/>
+    </fcd_device>
+
+    <traci_server>
+        <remote-port value="10151"/>
+    </traci_server>
+
+    <random_number>
+        <seed value="42"/>
+    </random_number>
+
+    <gui_only>
+        <gui-settings-file value="D:\research-dense\archive\pre_circles\configs\regression_shared_assets\highway_merge_shepherd\osm.view.xml"/>
+    </gui_only>
+
+</sumoConfiguration>
+-->
+
+<meandata xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/meandata_file.xsd">
+    <interval begin="0.00" end="37.00" id="wizard_light">
+        <edge id="11553048#1" sampledSeconds="94.87" traveltime="18.37" overlapTraveltime="18.61" density="6.70" overlapDensity="6.77" laneDensity="6.70" occupancy="3.37" waitingTime="0.00" timeLoss="1.52" speed="20.62" speedRelative="0.93" departed="7" arrived="0" entered="0" left="4" laneChangedFrom="0" laneChangedTo="0" flow="497.39"/>
+        <edge id="1191554636" sampledSeconds="274.50" traveltime="36.64" overlapTraveltime="36.80" density="6.48" overlapDensity="6.48" laneDensity="3.24" occupancy="1.62" waitingTime="0.00" timeLoss="7.41" speed="31.25" speedRelative="1.00" departed="15" arrived="0" entered="0" left="0" laneChangedFrom="2" laneChangedTo="2" flow="728.88"/>
+        <edge id="1487606178" sampledSeconds="19.69" traveltime="14.65" overlapTraveltime="14.79" density="1.11" overlapDensity="1.11" laneDensity="0.55" occupancy="0.27" waitingTime="0.00" timeLoss="0.28" speed="32.64" speedRelative="1.04" departed="0" arrived="1" entered="2" left="0" laneChangedFrom="0" laneChangedTo="0" flow="129.83"/>
+        <edge id="1487606179" sampledSeconds="9.81" traveltime="3.22" overlapTraveltime="3.41" density="3.39" overlapDensity="3.52" laneDensity="1.13" occupancy="0.55" waitingTime="0.00" timeLoss="1.72" speed="23.60" speedRelative="0.75" departed="0" arrived="0" entered="4" left="2" laneChangedFrom="4" laneChangedTo="4" flow="285.77"/>
+    </interval>
+</meandata>

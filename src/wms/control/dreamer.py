@@ -387,7 +387,7 @@ class DreamerTrainer:
                  reward_weights=None, device="cpu", output_dir=None, lane_rules=None,
                  counterfactual=None):
         self.config = config or DreamerConfig()
-        # Lane head: active when lane rules are supplied AND the
+        # Lane head (owner 2026-10-12 late): active when lane rules are supplied AND the
         # policy has a categorical lane head; trained by REINFORCE (accelerations stay analytic).
         self.lane_rules = lane_rules
         self.use_lanes = lane_rules is not None and bool(getattr(policy, "has_lane_head", False))

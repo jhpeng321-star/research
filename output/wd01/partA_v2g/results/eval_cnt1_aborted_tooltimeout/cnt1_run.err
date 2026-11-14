@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "C:\Users\jpeng\miniconda3\envs\rl_driving\lib\runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "C:\Users\jpeng\miniconda3\envs\rl_driving\lib\runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "E:\rd-wt\wd01cnt1\output\wd01\partA_v2g\eval_cnt1.py", line 555, in <module>
+    main()
+  File "E:\rd-wt\wd01cnt1\output\wd01\partA_v2g\eval_cnt1.py", line 523, in main
+    f"edge (main {ARR.MAIN_ENTRY_EDGE}, ramp {ARR.RAMP_EDGE}); "
+AttributeError: module 'partA_v2g.arrivals' has no attribute 'RAMP_EDGE'

@@ -1,0 +1,34 @@
+{
+ "overtake": {
+  "recorded": 621,
+  "masked": 386,
+  "lead_gap<6m": 230,
+  "follow_gap<6m": 156,
+  "follower_brake>6": 153,
+  "median_lead_gap_m": 1.78125,
+  "median_follow_gap_m": 14.78125,
+  "median_speed_mps": 2.37109375
+ },
+ "return": {
+  "recorded": 171,
+  "masked": 29,
+  "lead_gap<6m": 5,
+  "follow_gap<6m": 23,
+  "follower_brake>6": 20,
+  "follower_brake>4": 4,
+  "median_lead_gap_m": 99.625,
+  "median_follow_gap_m": 1.0,
+  "median_speed_mps": 27.796875
+ },
+ "merge": {
+  "recorded": 160,
+  "masked": 152,
+  "follow_gap<6m": 106,
+  "follower_brake>6": 38,
+  "lead_gap<6m": 91,
+  "follower_brake>4": 1,
+  "median_lead_gap_m": 4.37109375,
+  "median_follow_gap_m": 4.125,
+  "median_speed_mps": 0.0
+ }
+}

@@ -1,4 +1,4 @@
-"""Every CAV uses the normal_car vType; HDV type draws are unchanged."""
+"""Owner 2026-10-14: every CAV uses the normal_car vType; HDV type draws are unchanged."""
 from traffic_shepherd.scenarios import request_schedule
 
 

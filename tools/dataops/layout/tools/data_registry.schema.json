@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/research-dense/data_registry.schema.json",
+  "title": "Research data registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "datasets"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "description": {"type": "string"},
+    "datasets": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["drive_path", "size_bytes", "md5_manifest", "local_path"],
+        "properties": {
+          "drive_path": {"type": "string", "pattern": "^gdrive:research-archive/[^\\s]+$"},
+          "size_bytes": {"type": "integer", "minimum": 0},
+          "md5_manifest": {
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": {"pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\:*?\"<>|]+$"},
+            "additionalProperties": {"type": "string", "pattern": "^[a-fA-F0-9]{32}$"}
+          },
+          "local_path": {"type": "string", "pattern": "^data_cache/[A-Za-z0-9._/-]+$"}
+        }
+      }
+    }
+  }
+}

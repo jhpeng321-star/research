@@ -18,7 +18,7 @@ entry conditions, rearm deadband) are NOT part of this session -- the
 planner decides, and the declared safe-speed floor is a SAFETY limit,
 never a trigger.
 
-ASSEMBLY CLOSURE RULE ("Option B", law version
+ASSEMBLY CLOSURE RULE (owner decision 2026-09-30, "Option B", law version
 ``WALL_LAW_VERSION``).  Pacing every member to the same speed can never close
 a longitudinal gap, so wide requests (up to MAX_WALL_SPAN_M) never assembled.
 During ASSEMBLY the FRONT member (largest downstream position) holds
@@ -59,7 +59,7 @@ REAR_GAP_M = 10.0
 #: A non-member this much faster than the wall inside the rear gap is a
 #: rear-end risk -> safety abort.
 REAR_SPEED_EXCESS_MPS = 2.0
-#: Assembly closure (Option B): rear members target
+#: Assembly closure (owner decision 2026-09-30, Option B): rear members target
 #: v_wall + min(MAX_DELTA, GAIN * gap_to_front).
 ASSEMBLY_CLOSE_MAX_DELTA_MPS = 2.0
 ASSEMBLY_CLOSE_GAIN_PER_S = 0.1

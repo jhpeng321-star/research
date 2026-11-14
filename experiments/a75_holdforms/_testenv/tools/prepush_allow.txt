@@ -1,0 +1,8 @@
+# Reviewed false positives and reviewed exceptions for tools/prepush_check.py (one per line).
+# Format: <path-or-glob>[:LINE]  <RULE-ID>  # mandatory reason (what was reviewed and why it is safe)
+# Rule ids: python tools/prepush_check.py --list-rules.  SIZE-HARD (>100 MiB) cannot be allowed.
+# Entries that match nothing are reported as stale; a missing reason or unknown rule exits 2.
+docs/records/reorg_v3/architect/scripts/DELETE_AFTER_VERIFY.ps1:31 SEC-GENERIC-ASSIGN  # reviewed by masked shape only: the value is a 44-char pipe-delimited list of 7 name fragments (a protected-name pattern for a delete script), no credential
+tests/golden/data/*.npz PATH-BINARY-EXT  # reviewed: 9 golden fixtures (0.3-3 MB each) that the equivalence tests load; with c1/wm_s.pt the golden data is 19.2 MB in total
+tests/golden/data/c1/wm_s.pt PATH-BINARY-EXT  # reviewed: 5.4 MB golden C1 model checkpoint needed by the golden/equivalence tests
+archive/pre_circles/manifest.json SIZE-BLOCK  # reviewed: 53 MB (50.8 MiB), under GitHub's 100 MB hard limit; needed for historical path resolution (AGENTS.md archive manifest)

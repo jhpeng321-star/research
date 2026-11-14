@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe64_w2_feasibility_v1",
+ "name": "oe64_w2_feasibility_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe64_w2_feasibility_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe64_w2_feasibility_v1/oe64_w2_feasibility_v1.tar.zst",
+ "bytes": 360244,
+ "files": 14,
+ "archive_bytes": 49252,
+ "archive_md5": "2d3bf9a61ee9bc6eb3f57eac80fc9872",
+ "member_manifest": "manifests/members/output_oe64_w2_feasibility_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 48.4,
+ "timestamp": "2026-10-10T01:43:52"
+}

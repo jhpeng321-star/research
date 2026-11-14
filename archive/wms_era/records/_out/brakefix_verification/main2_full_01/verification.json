@@ -1,0 +1,16 @@
+{
+  "command": [
+    "C:\\Users\\jpeng\\miniconda3\\envs\\rl_driving\\python.exe",
+    "-c",
+    "import glob,pytest,psutil; code=pytest.main(['output/wd01/wm_n1/wms/tests','output/wd01/wm_n1/hdv/tests',*sorted(glob.glob('tests/test_wms_eval_*.py')),'-q','--basetemp=_out/pytest_main2_full_01','--junitxml=_out/MAIN2_TESTS_01.xml']); print('Peak process working set bytes:',psutil.Process().memory_info().peak_wset); raise SystemExit(code)"
+  ],
+  "returncode": 1,
+  "status": "failed",
+  "peak_sampled_rss_bytes": 892264448,
+  "peak_os_working_set_bytes": 892272640,
+  "memory_limit_bytes": 6000000000,
+  "memory_limit_exceeded": false,
+  "wall_seconds": 374.079,
+  "log": "E:\\rd-wt\\ws-main2\\_out\\brakefix_verification\\main2_full_01\\command.log",
+  "device": "cpu"
+}

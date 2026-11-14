@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "wallc1_states_h60_smoke",
+ "name": "wallc1_states_h60_smoke",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "wallc1 60s history smoke states (D:)",
+ "local": "D:\\rd-staging\\wallc1_states_h60_smoke",
+ "drive": "gdrive:research-archive/data/staging/rd-staging/wallc1_states_h60_smoke/wallc1_states_h60_smoke.tar.zst",
+ "bytes": 563638038,
+ "files": 7,
+ "archive_bytes": 44331215,
+ "archive_md5": "4e972e54c3e57e3118849ce1e2b9e675",
+ "member_manifest": "manifests/members/wallc1_states_h60_smoke.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 86.3,
+ "timestamp": "2026-10-10T02:54:57"
+}

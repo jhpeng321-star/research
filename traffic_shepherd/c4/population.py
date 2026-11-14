@@ -1,4 +1,4 @@
-"""Continuous "textbook" human-driver population.
+"""Continuous "textbook" human-driver population (owner-approved 2026-10-14).
 
 Replaces the three discrete legacy HDV vTypes (aggressive_car 10 % / normal_car 70 % /
 cautious_car 20 %, ``scenarios/idm/driver_routes.rou.xml``) with one vType PER HDV whose IDM and
@@ -10,7 +10,7 @@ IDM centre values -- Treiber, M. & Kesting, A. (2013) *Traffic Flow Dynamics: Da
 Simulation*, Springer, Table 11.2 (IDM, highway): desired speed v0 = speed limit, time gap
 T = 1.0-1.5 s (1.2 s used here), max acceleration a = 1.0-1.5 m/s^2 (1.2), comfortable
 deceleration b = 2.0 m/s^2, minimum gap s0 = 2 m, acceleration exponent delta = 4; see also
-Treiber, Hennecke & Helbing (2000), Phys. Rev. E 62, 1805.  The spreads below are chosen
+Treiber, Hennecke & Helbing (2000), Phys. Rev. E 62, 1805.  The spreads below are owner-chosen
 (2026-10-14) to give a plausible continuous heterogeneity around those medians:
 
 =====================  ============================================  ===============
@@ -40,7 +40,7 @@ is written as 0 anyway); ``emergencyDecel`` = 9 m/s^2 (SUMO passenger default), 
 brake beyond its comfortable ``decel`` to avoid a collision.  CAVs run speedMode 27 (bit 2 = 0:
 deceleration bounds are NOT enforced on commands), so a CAV's b = 2.0 never limits its braking.
 
-CAVs use one vType ``cav_typical`` with the population
+CAVs (owner rule: a CAV has no driver type) use one vType ``cav_typical`` with the population
 MEDIANS (:data:`TEXTBOOK_CAV_PARAMS`).  The per-vehicle parameters are recorded as a truth table
 (``scenario/hetdata_truth.csv``, the ``wms.data.driver_truth`` format) for EVALUATION ONLY --
 never a model input, never in a training loss.

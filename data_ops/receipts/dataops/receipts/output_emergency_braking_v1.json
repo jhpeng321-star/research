@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/emergency_braking_v1",
+ "name": "emergency_braking_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\emergency_braking_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/emergency_braking_v1/emergency_braking_v1.tar.zst",
+ "bytes": 452744,
+ "files": 52,
+ "archive_bytes": 74258,
+ "archive_md5": "39be5600caad87b1edb9648e288c9494",
+ "member_manifest": "manifests/members/output_emergency_braking_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 61.4,
+ "timestamp": "2026-10-10T01:43:55"
+}

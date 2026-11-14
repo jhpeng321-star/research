@@ -3,7 +3,7 @@
 Controller factories take no arguments and return fresh contract CavControllers.
 Factories must isolate mutable controller state and be deterministic; the learned
 bridge can be supplied through :func:`default_candidates`, which builds direct-output
-candidates only. No simulation imports,
+candidates only (owner 2026-10-12 late: no designed controller is a check candidate). No simulation imports,
 checkpoint loading, or training are performed here.
 """
 from __future__ import annotations
@@ -92,7 +92,7 @@ def hold_actor(obs, signal, *, lane_mask=None, **kwargs):
 def default_candidates(model=None, *, policy, group_encoder, safety, bridge, lane_rules=None,
                        perturbation: float = 0.1, sample_streams=(),
                        alternative_group_encoders=()):
-    """Direct-output candidates ONLY (no designed controllers):
+    """Direct-output candidates ONLY (owner 2026-10-12 late; no designed controllers):
 
     ``policy`` (deterministic accel + lane), ``policy_group_0`` (zero group signal),
     ``policy_group_1`` (perturbed group signal), ``policy_group_<2+>`` (injected

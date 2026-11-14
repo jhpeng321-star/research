@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "C:\Users\jpeng\miniconda3\envs\rl_driving\lib\runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "C:\Users\jpeng\miniconda3\envs\rl_driving\lib\runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "E:\rd-wt\wd01v04a\output\wd01\partB_v0\__main__.py", line 547, in <module>
+    sys.exit(main())
+  File "E:\rd-wt\wd01v04a\output\wd01\partB_v0\__main__.py", line 431, in main
+    metrics, ds, all_skipped = run_gbm_training(cfg, log=log)
+  File "E:\rd-wt\wd01v04a\output\wd01\partB_v0\gbm.py", line 1231, in run_gbm_training
+    man = load_manifest(cfg.data_root, splits=splits,
+  File "E:\rd-wt\wd01v04a\output\wd01\partB_v0\data.py", line 191, in load_manifest
+    got = sha256_of(p)
+  File "E:\rd-wt\wd01v04a\output\wd01\partB_v0\data.py", line 92, in sha256_of
+    for chunk in iter(lambda: fh.read(1 << 20), b""):
+  File "E:\rd-wt\wd01v04a\output\wd01\partB_v0\data.py", line 92, in <lambda>
+    for chunk in iter(lambda: fh.read(1 << 20), b""):
+MemoryError

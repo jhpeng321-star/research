@@ -27,7 +27,7 @@ Controller commands:
   The belief variant uses the RSU BeliefTracker (no separate checkpoint); --belief-ckpt is passed
   through if given and ignored by the runner.  The C4 runner's seed gate
   (traffic_shepherd.c4.seeds.check_case) only admits 4107-4148: see OPS_NOTES section 10.
-  MAPPO is deferred.
+  MAPPO is deferred (owner decision 2026-10-12).
 """
 from __future__ import annotations
 

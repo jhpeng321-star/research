@@ -1,0 +1,23 @@
+{
+ "_meta": {
+  "purpose": "fitted merge-cal physics for torch MOBIL-merge baseline (training run 2)",
+  "source": "output/wd01/wm_n1/rollout2/merge_cal_params.json",
+  "code": "rollout2/merge_cal.py MergeCalParams (flag merge_cal, default off)",
+  "fit": "TRAIN chunk-4 only; _out/merge_cal_recorded.json vs _out/mc_fitB{,_res}.json (20 states, HORIZON_ERROR set)",
+  "fit_result_8_train": "merge stopped 1516 vs 1849 recorded (was ~7x over-queue pre-calibration)",
+  "fit_result_20_states": "stopped 3918 (phys) / 3944 (residual) vs 6293 recorded; rate 6.92/7.18 vs 6.5 veh/min",
+  "unknown_keys": "filtered by MergeCalParams.load"
+ },
+ "t_lead_base_s": 1.0,
+ "t_lead_end_s": 0.1,
+ "b_accept_base_mps2": 4.0,
+ "b_accept_end_mps2": 6.0,
+ "gap_floor_m": 0.3,
+ "u_yield": 0.35,
+ "yield_lookahead_m": 120.0,
+ "b_yield_max_mps2": 1.75,
+ "yield_min_speed_mps": 2.5,
+ "yield_min_merger_speed_mps": 3.5,
+ "end_obstacle_range_m": 25.0,
+ "speed_factor": null
+}

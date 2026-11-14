@@ -1,0 +1,40 @@
+TRAIN worlds total 98, running 25; p3o ON; sweep every 8
+  [1/25] w8481m2700p02t480: 210 rows, 751.5s
+  [2/25] w8485m2700p02t360: 210 rows, 246.8s
+  [3/25] w8489m2700p02t420: 210 rows, 205.8s
+  [4/25] w8497m2400p05t420: 210 rows, 131.9s
+  [5/25] w8501m2600p05t480: 210 rows, 160.1s
+  [6/25] w8509m2700p10t540: 210 rows, 241.7s
+  [7/25] w8513m2600p10t300: 210 rows, 202.9s
+  [8/25] w8517m2700p10t480: 210 rows, 192.9s
+  [9/25] w8526m2700p20t300: 210 rows, 505.1s
+  [10/25] w8530m2600p20t420: 210 rows, 145.5s
+  [11/25] w8538m2600p40t360: 210 rows, 263.0s
+  [12/25] w8542m2700p40t420: 210 rows, 241.5s
+  [13/25] w8546m2700p40t540: 210 rows, 317.3s
+  [14/25] w8554m2700p02t420: 210 rows, 294.3s
+  [15/25] w8558m2700p02t480: 210 rows, 293.9s
+  [16/25] w8566m2700p05t240: 210 rows, 200.0s
+  [17/25] w8570m2700p05t540: 210 rows, 419.2s
+  [18/25] w8574m2700p05t480: 210 rows, 154.2s
+  [19/25] w8582m2600p10t360: 210 rows, 102.0s
+  [20/25] w8586m2700p10t240: 210 rows, 125.4s
+  [21/25] w8595m2400p20t540: 210 rows, 136.4s
+  [22/25] w8599m2600p20t480: 210 rows, 164.6s
+  [23/25] w8607m2600p40t420: 210 rows, 114.3s
+  [24/25] w8611m2400p40t480: 210 rows, 133.1s
+  [25/25] w8615m2700p40t300: 210 rows, 211.5s
+per-model H rows:
+  const_speed|H10 n 450 s_rmse 16.111 delay_err -9.443
+  const_speed|H30 n 450 s_rmse 87.694 delay_err -26.407
+  const_speed|H60 n 1026 s_rmse 129.024 delay_err 123.448
+  const_speed|H120 n 400 s_rmse 156.099 delay_err 734.312
+  v1_p3o_replica|H10 n 450 s_rmse 11.579 delay_err 12.345
+  v1_p3o_replica|H30 n 450 s_rmse 62.383 delay_err 30.858
+  v1_p3o_replica|H60 n 450 s_rmse 103.577 delay_err -69.063
+  v1_p3o_replica|H120 n 400 s_rmse 137.505 delay_err -600.191
+  v2g|H10 n 450 s_rmse 28.242 delay_err 48.912
+  v2g|H30 n 450 s_rmse 119.241 delay_err 217.883
+  v2g|H60 n 450 s_rmse 151.305 delay_err 396.563
+  v2g|H120 n 400 s_rmse 183.595 delay_err 49.781
+DONE WD-01-PA2G-A wall 5967s

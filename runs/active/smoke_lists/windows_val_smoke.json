@@ -1,0 +1,127 @@
+{
+ "counts": {
+  "by_batch": {
+   "chunk1": 10,
+   "chunk2": 60,
+   "chunk3": 30,
+   "chunk4": 36,
+   "truearms_chunk2": 10,
+   "truearms_chunk3": 5
+  },
+  "by_pack": {
+   "pack_damping": 28,
+   "pack_dspeed": 76,
+   "pack_v3": 47
+  },
+  "by_policy": {
+   "damping": 48,
+   "native": 27,
+   "trajectory": 76
+  },
+  "n_worlds": 24,
+  "total": 151
+ },
+ "list": "windows_val_noPI_noWall",
+ "n_windows": 6,
+ "pack_names": [
+  "pack_damping",
+  "pack_dspeed",
+  "pack_v3"
+ ],
+ "rule": "LPWO v2 TRAIN-scoped validation windows, same world exclusions",
+ "schema": "wm_s_lpo_windows/1",
+ "source": {
+  "sha256": {
+   "BUILD_RECEIPT.json": "1df0239cf0418a86f943ed7ce87d558a204a6aa3c61ca01e5162819aa032496c",
+   "excluded_runs_PI_wall.json": "715df7dc980feee5f5d239822f80df3b50b2b330c088fd3e95f8d33d679258dd",
+   "wall_removed_windows.json": "adbc9843e741097d8c8da1aec7059870dd440a981f4b81fb391fdce09e35d2a9",
+   "windows_train_noPI_noWall.json": "dafac02013822b6c33372091c0b6722de4dfa51fa753ee04003dad68ad8951f9",
+   "windows_val_noPI_noWall.json": "cb90e66dcf4ca2010f15b8230be728e9c687ede391ed817085ed0a6680f156ab"
+  },
+  "windows": "E:/rd-wt/ws-wallc1/_out/lpwo_v2"
+ },
+ "windows": [
+  {
+   "arm": "base",
+   "batch": "chunk1",
+   "chunk": "chunk1",
+   "key": "chunk1/w8415m2700p02t540__base",
+   "n_ticks": 2281,
+   "pack": "pack_v3",
+   "policy": "damping",
+   "run": "w8415m2700p02t540__base",
+   "split": "TRAIN",
+   "t0_s": 540.0,
+   "world": "w8415m2700p02t540"
+  },
+  {
+   "arm": "base",
+   "batch": "chunk1",
+   "chunk": "chunk1",
+   "key": "chunk1/w8442m2400p10t300__base",
+   "n_ticks": 1801,
+   "pack": "pack_v3",
+   "policy": "damping",
+   "run": "w8442m2400p10t300__base",
+   "split": "TRAIN",
+   "t0_s": 300.0,
+   "world": "w8442m2400p10t300"
+  },
+  {
+   "arm": "arm0",
+   "batch": "chunk2",
+   "chunk": "chunk2",
+   "key": "chunk2/w8481m2700p02t480__arm0",
+   "n_ticks": 1201,
+   "pack": "pack_dspeed",
+   "policy": "trajectory",
+   "run": "w8481m2700p02t480__arm0",
+   "split": "TRAIN",
+   "t0_s": 480.0,
+   "world": "w8481m2700p02t480"
+  },
+  {
+   "arm": "arm1",
+   "batch": "chunk2",
+   "chunk": "chunk2",
+   "key": "chunk2/w8481m2700p02t480__arm1",
+   "n_ticks": 1201,
+   "pack": "pack_dspeed",
+   "policy": "trajectory",
+   "run": "w8481m2700p02t480__arm1",
+   "split": "TRAIN",
+   "t0_s": 480.0,
+   "world": "w8481m2700p02t480"
+  },
+  {
+   "arm": "base",
+   "batch": "chunk1",
+   "chunk": "chunk1",
+   "key": "chunk1/w8415m2700p02t540__base",
+   "n_ticks": 1201,
+   "pack": "pack_damping",
+   "policy": "damping",
+   "run": "w8415m2700p02t540__base",
+   "split": "TRAIN",
+   "t0_s": 540.0,
+   "world": "w8415m2700p02t540"
+  },
+  {
+   "arm": "base",
+   "batch": "chunk1",
+   "chunk": "chunk1",
+   "key": "chunk1/w8442m2400p10t300__base",
+   "n_ticks": 1201,
+   "pack": "pack_damping",
+   "policy": "damping",
+   "run": "w8442m2400p10t300__base",
+   "split": "TRAIN",
+   "t0_s": 300.0,
+   "world": "w8442m2400p10t300"
+  }
+ ],
+ "smoke_of": {
+  "source": "lpwo_v3/windows_val_noPI_noWall.json",
+  "per_pack": 2
+ }
+}

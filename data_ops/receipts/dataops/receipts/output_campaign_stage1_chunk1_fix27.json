@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/campaign_stage1_chunk1_fix27",
+ "name": "campaign_stage1_chunk1_fix27",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\campaign_stage1_chunk1_fix27",
+ "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_chunk1_fix27/campaign_stage1_chunk1_fix27.tar.zst",
+ "bytes": 910,
+ "files": 1,
+ "archive_bytes": 686,
+ "archive_md5": "7bc2d396dbd3b1c9ecf835e72c7b5da9",
+ "member_manifest": "manifests/members/output_campaign_stage1_chunk1_fix27.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.5,
+ "timestamp": "2026-10-10T01:29:18"
+}

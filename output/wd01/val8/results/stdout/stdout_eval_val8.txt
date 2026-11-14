@@ -1,0 +1,37 @@
+priority below-normal: False
+=== WD-01 VALIDATION LOOK #8 (single, final for this candidate) ===
+ZERO simulation; HOLDOUT not accessed (never passed to root_arrays); ONE evaluation pass, frozen settings only.
+HASH OK: D:\rd-wt\wd01p\output\wd01\part3o\results\candidate_p3o_iter2.json
+        registered 458890d9c4b0ee6ee03de145be50498d9bd0873505a4e86f2bf8a1e224ebe45d
+        observed  458890d9c4b0ee6ee03de145be50498d9bd0873505a4e86f2bf8a1e224ebe45d
+HASH OK: D:\rd-wt\wd01p\output\wd01\part3o\results\calibration_p3o.json
+        registered c7ffa7540768fa67e75e99881eec6f801201990dea4ace90af93c202f789c22a
+        observed  c7ffa7540768fa67e75e99881eec6f801201990dea4ace90af93c202f789c22a
+HASH OK: D:\rd-wt\wd01p\output\wd01\part3f\VALIDATION_GATE_V2.md
+        registered 84b8a23df1ff654f8d602e1fd75119517c4bd7cb458dfb2191d2d088452da47f
+        observed  84b8a23df1ff654f8d602e1fd75119517c4bd7cb458dfb2191d2d088452da47f
+HASH OK: D:\rd-wt\wd01p\output\wd01\part3f\VALIDATION_GATE_V2_AMENDMENT_1.md
+        registered 27aeddab51a899dd1e7a7e24f073fbfe4d29efbe6c2cd3db7e992663d39d79d4
+        observed  27aeddab51a899dd1e7a7e24f073fbfe4d29efbe6c2cd3db7e992663d39d79d4
+SIDECAR OK: candidate_p3o_iter2.json.FROZEN.sha256 sha256=458890d9c4b0ee6ee03de145be50498d9bd0873505a4e86f2bf8a1e224ebe45d frozen_utc=2026-09-27T05:09:19.400476+00:00
+SIDECAR OK: calibration_p3o.json.FROZEN.sha256 sha256=c7ffa7540768fa67e75e99881eec6f801201990dea4ace90af93c202f789c22a frozen_utc=2026-09-27T05:09:19.400476+00:00
+HASH GATE PASSED (candidate, calibration, gate v2, amendment 1).
+validation roots ['cv20_7005m2000', 'cv20_7006m2000', 'cv30_7305m2700', 'seed_7535m2400']; t0 every 30 s in [120, 480] (13 t0 x 4 roots = 52 windows); H (30, 60); M=5 members; L0 rolled in this run
+holdout ['cv28_7101m2000', 'seed_7011m2700', 'seed_7012m2700', 'seed_7534m2700', 'seed_7536m2400'] BLOCKED (never passed anywhere)
+frozen candidate: L6 kind='idm_merge' (p3o per-type LC-hazard fix; engine flags lc_scale_disc + merge_accept_prob)
+engine flags: {'lc_scale_disc': 'part 3o: discretionary 0<->1 hazard scale (default: lc_scale)', 'merge_accept_prob': 'part 3o: thinning of gap-accepted M2 merges (default 1.0 = shipped deterministic)'}
+  member 0: lc 0.002 disc 0.0016 mprob 0.55 tau 2.4 b 1.0 force 60.0 blend 0.0 pcoop 0.0 dawdle 1.0
+  member 1: lc 0.002 disc 0.002 mprob 0.85 tau 1.9 b 5.0 force 60.0 blend 0.0 pcoop 0.25 dawdle 1.0
+  member 2: lc 0.002 disc 0.0016 mprob 0.85 tau 2.4 b 3.0 force 60.0 blend 0.0 pcoop 0.25 dawdle 1.5
+  member 3: lc 0.002 disc 0.0016 mprob 0.7 tau 2.4 b 5.0 force 60.0 blend 0.0 pcoop 0.25 dawdle 1.25
+  member 4: lc 0.002 disc 0.0016 mprob 0.7 tau 2.4 b 4.0 force 60.0 blend 0.0 pcoop 0.0 dawdle 1.25
+[ 128.3s] member 0: wrote 104 rows -> raw_val8_m0.jsonl
+[ 253.6s] member 1: wrote 104 rows -> raw_val8_m1.jsonl
+[ 378.2s] member 2: wrote 104 rows -> raw_val8_m2.jsonl
+[ 502.7s] member 3: wrote 104 rows -> raw_val8_m3.jsonl
+[ 628.6s] member 4: wrote 104 rows -> raw_val8_m4.jsonl
+[ 692.9s] L0: wrote 104 rows -> raw_val8_L0.jsonl
+
+raw rows saved BEFORE aggregation: L6 520 (5 members x 52 windows x 2 H) + L0 104
+
+DONE the ONE validation evaluation (next: aggregate_val8.py -- no re-roll, no second look regardless of verdict).

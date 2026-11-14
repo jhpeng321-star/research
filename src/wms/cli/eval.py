@@ -2,7 +2,7 @@
 
 The candidate is ``--checkpoint`` (logical name or path); the reference is ``--previous-best``
 (default ``previous_best`` of the config).  Both are rolled out on the sets of the config and
-compared with :func:`wms.eval.compare.compare`.
+compared with :func:`wms.eval.compare.compare` (owner rule 2026-10-09: previous best only).
 Outputs in ``--out`` (default ``out_dir`` of the config): ``result.json`` (all per-state results),
 ``config.resolved.json`` and ``<candidate>/COMPARISON.md|json``.
 """

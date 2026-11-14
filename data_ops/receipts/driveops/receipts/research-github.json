@@ -1,0 +1,17 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "research-github",
+ "kind": "dir",
+ "class": "ARCHIVE",
+ "producer": "public GitHub export staging (research-dense-public)",
+ "restore": "copy to E:/research-github",
+ "local": "E:/research-github",
+ "drive": "gdrive:research-archive/code/research-github",
+ "bytes": 33515736,
+ "files": 5408,
+ "md5_manifest": "receipts/md5/research-github.md5",
+ "check": "passed",
+ "check_method": "rclone check --one-way (size+MD5)",
+ "check_detail": "",
+ "timestamp": "2026-10-09T22:54:46"
+}

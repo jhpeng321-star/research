@@ -1,0 +1,24 @@
+{
+ "amendment": 14,
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend13.json",
+  "registration_sha256": "8c61d899f02edd61a25f62f8e1c094c9e61d4cf0cd23bfb6024197d13092650d"
+ },
+ "authority": [
+  "MAIN 2026-11-07: clean5b-F8 runs from c4/clean5b d12bbcd3; verify plant identity (4 pre-run arms) and training parity on d12bbcd3 + overlay 4397d777"
+ ],
+ "deploy": "u12 SRC = d12bbcd3 + overlay 4397d777",
+ "plant_identity": {
+  "diff": "1caf5c1c..d12bbcd3: CLEAN5BF8_QUOTE.json, ops/clean5b_chain.py, ops/clean5bf8_quote.py, clean4_restart (approved budget 3,960,000), clean5a/clean5b_restart (training world registry / config builder), tests; no plant file",
+  "head": "d12bbcd3",
+  "verdict": "IDENTICAL to 1caf5c1c (hence to the pre-run plant for NATIVE/U0/RULE/RULE_FAIR, amendments 10 and 12)"
+ },
+ "registered_utc": "2026-11-06T23:47:51.922357+00:00",
+ "registration_sha256": "ab19b58b60e4d737e8180c21fe8504a61490d2ac3580735af077377a992335c3",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: zero-SUMO check; no eval output exists",
+ "training_parity": {
+  "result": "166 passed (parity incl. LCEXEC, hold pins, fairness slate; runner; lc_runtime byte identity; eval == training per-vehicle table)",
+  "tree": "d12bbcd3 + overlay 4397d777"
+ }
+}

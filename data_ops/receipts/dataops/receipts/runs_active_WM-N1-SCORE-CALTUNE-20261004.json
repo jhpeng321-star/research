@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/WM-N1-SCORE-CALTUNE-20261004",
+ "name": "WM-N1-SCORE-CALTUNE-20261004",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\WM-N1-SCORE-CALTUNE-20261004",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/WM-N1-SCORE-CALTUNE-20261004/WM-N1-SCORE-CALTUNE-20261004.tar.zst",
+ "bytes": 1944378,
+ "files": 34,
+ "archive_bytes": 146292,
+ "archive_md5": "d549d2d4c934cc9d1aa29134f431e32c",
+ "member_manifest": "manifests/members/runs_active_WM-N1-SCORE-CALTUNE-20261004.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.7,
+ "timestamp": "2026-10-10T04:00:28"
+}

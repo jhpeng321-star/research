@@ -1,0 +1,44 @@
+{
+  "config": "WM-S-SMOKE-LOCAL",
+  "data": {
+    "identities[damping]": "E:\\rd-wt\\damping-snap\\_out\\identities_damping",
+    "identities[dspeed]": "E:\\rd-wt\\a9\\_out\\identities_dspeed",
+    "identities[pack_v3]": "E:\\rd-wt\\ws-packv3fix\\_out\\sidecars_packv3_v2\\identities",
+    "outcomes": "E:\\rd-wt\\ws-packv3fix\\_out\\sidecars_packv3_v2\\outcomes",
+    "overlay[damping]": "E:\\rd-wt\\damping-snap\\_out\\labels_overlay_damping",
+    "overlay[dspeed]": "E:\\rd-wt\\dspeed-data\\_out\\labels_overlay_dspeed",
+    "pack[damping]": "E:\\rd-wt\\damping-snap\\_out\\pack_damping",
+    "pack[dspeed]": "E:\\rd-wt\\dspeed-data\\_out\\pack_dspeed",
+    "pack[pack_v3]": "D:\\rd-staging\\wmn1_feat\\pack_v3",
+    "physics_params": "E:\\rd-wt\\ws-clean-int\\configs\\merge_params.json",
+    "windows.exclude[0]": "E:\\rd-wt\\ws-clean-int\\_out\\lpwo_v3\\excluded_runs_PI_wall_v3.json",
+    "windows.train": "E:\\rd-wt\\ws-clean-int\\_out\\lpwo_v3\\windows_train_noPI_noWall.json",
+    "windows.val": "E:\\rd-wt\\ws-clean-int\\runs\\active\\smoke_lists\\windows_val_smoke.json"
+  },
+  "failures": [],
+  "fingerprint": "6fe87ffd885adb42037667807761058fb0377c751573fcefcc8a3729090a03ef",
+  "plan": {
+    "max_hours": 1.0,
+    "stage_steps": [
+      2,
+      2,
+      2,
+      2
+    ],
+    "stages_s": [
+      10.0,
+      30.0,
+      60.0,
+      120.0
+    ],
+    "terms": [
+      "position",
+      "speed",
+      "lane",
+      "asym_speed",
+      "decel_weight",
+      "propagation"
+    ]
+  },
+  "status": "passed"
+}

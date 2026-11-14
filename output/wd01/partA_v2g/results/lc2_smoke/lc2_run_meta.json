@@ -1,0 +1,53 @@
+{
+ "analysis_id": "WD-01-PA2G-LC2",
+ "registration": "output/wd01/REGISTRATION_PA2G_LC2.md (LF-sha256 725e0a876c554d7b)",
+ "status": "completed",
+ "variants": [
+  "nominal",
+  "va",
+  "vb",
+  "vc",
+  "vabc"
+ ],
+ "variant_flags": {
+  "nominal": {
+   "va_enabled": false,
+   "vb_enabled": false,
+   "vc_enabled": false
+  },
+  "va": {
+   "va_enabled": true,
+   "vb_enabled": false,
+   "vc_enabled": false
+  },
+  "vb": {
+   "va_enabled": false,
+   "vb_enabled": true,
+   "vc_enabled": false
+  },
+  "vc": {
+   "va_enabled": false,
+   "vb_enabled": false,
+   "vc_enabled": true
+  },
+  "vabc": {
+   "va_enabled": true,
+   "vb_enabled": true,
+   "vc_enabled": true
+  }
+ },
+ "variant_config_sha256": "b6ed8ec8ff34beecc91d27569a7f8eb93b60b292e7983fa63154dbbc72c11bbd",
+ "param_set_id": "ba1fd93f0a21b1ffd2cdf20693e74fb8e3fbb8e4a1c57e7f88d9a3929e3455ce",
+ "params_nominal_unchanged": true,
+ "worlds": 1,
+ "workers": 1,
+ "wall_clock_s": 191.69250989999273,
+ "byte_identity_gate": "passed (nominal flags-off == pre-change reference on the first 2 panel worlds)",
+ "raw_rows": 350,
+ "merge_rows": 455,
+ "opened_run_files": [
+  "E:\\research-dense\\output\\campaign_stage1_v3\\results_plan_chunk4\\WORLD_PLAN.json",
+  "E:\\research-dense\\runs\\campaign_stage1_chunk4\\w8623m2600p02t540__native_base\\run\\physics_steps.jsonl"
+ ],
+ "assert_train_only": "passed"
+}

@@ -420,7 +420,7 @@ class PairedDiffLossConfig:
 
 @config_dataclass
 class DriverPriorConfig:
-    """INFRAV5 optional driver-estimate prior (weight 0 = off).
+    """INFRAV5 optional driver-estimate prior (weight 0 = off; owner decision pending).
 
     A weak L2 pull of the POPULATION MEAN of the encoded driver settings (mean over the
     valid t0 HDV slots of the batch) toward population targets; per-driver identification

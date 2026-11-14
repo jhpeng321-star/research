@@ -1,0 +1,41 @@
+﻿{
+    "name":  "ws-sweval",
+    "path":  "E:\\rd-wt\\ws-sweval",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "wms/sweval",
+    "headBefore":  "bb26bbadb9898637aed170bc553b44a303acc677",
+    "headType":  null,
+    "dirtyBefore":  0,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/ws-sweval",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-sweval.txt",
+    "uploadCount":  229,
+    "uploadBytes":  13305350,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-sweval.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 04:03:48 NOTICE: Google drive root \u0027research-archive/worktrees/ws-sweval\u0027: 0 differences found | 2026/10/10 04:03:48 NOTICE: Google drive root \u0027research-archive/worktrees/ws-sweval\u0027: 229 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-sweval.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  3,
+    "skippedSensitiveSample":  [
+                                   "tests/planner/__pycache__/test_holdout_guard.cpython-310-pytest-9.1.1.pyc",
+                                   "tests/planner/__pycache__/test_holdout_guard_seal.cpython-310-pytest-9.1.1.pyc",
+                                   "traffic_shepherd/planner/__pycache__/holdout.cpython-310.pyc"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T03:59:57.9871303+08:00"
+}

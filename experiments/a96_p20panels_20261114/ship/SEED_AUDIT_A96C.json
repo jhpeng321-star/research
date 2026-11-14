@@ -1,0 +1,90 @@
+{
+ "avoided": [
+  [
+   964000,
+   964199
+  ],
+  [
+   962000,
+   962999
+  ],
+  [
+   977000,
+   977999
+  ],
+  [
+   989600,
+   989699
+  ],
+  [
+   988200,
+   988999
+  ],
+  [
+   989000,
+   989699
+  ],
+  [
+   992400,
+   992523
+  ],
+  [
+   987200,
+   987599
+  ]
+ ],
+ "block": [
+  984400,
+  984599
+ ],
+ "box3": {
+  "charges_files": "/root/*/root/CHARGES.jsonl: 0 delimited tokens 9844xx/9845xx",
+  "code_hit_note": "all 3 tokens are inside hex strings of CPython Misc/svnmap.txt",
+  "code_hits": [
+   [
+    "/home/ubuntu/env/Python-3.12.16/Misc/svnmap.txt",
+    984598,
+    "d80c367ca9813b legacy-trunk 3381 1d7a4ed0c985f5ef82234bf5ffc984598c40b7fc legacy-trunk 3382 5122"
+   ],
+   [
+    "/home/ubuntu/env/Python-3.12.16/Misc/svnmap.txt",
+    984400,
+    "81f1466a37620e430906905659 release27-maint 85744 1618cb15b5b984400d8ae8a29204f2be64a23e73 py3k 8"
+   ],
+   [
+    "/home/ubuntu/env/Python-3.12.16/Misc/svnmap.txt",
+    984469,
+    "62951ac9b511e79ca12a2e7f9bad5b96d97e release27-maint 85785 f984469de0bb6d3dcd1b6f53fc6f5e43d24b2"
+   ]
+  ],
+  "n_files_scanned": 34643,
+  "n_panels": 604,
+  "panel_overlap": [],
+  "runner_overlap": [],
+  "tool": "/tmp/a94_seed_audit_box.py (byte copy of A91 seed_audit_box.py, sha 9655906c)",
+  "tops": [
+   "/root",
+   "/home/ubuntu"
+  ]
+ },
+ "date": "2026-11-14",
+ "laptop": {
+  "experiment_history_json": "0 tokens / ranges",
+  "not_done": "laptop working tree, git branch tips, Box 4",
+  "registration_md": "0 six-digit tokens and 0 ranges touching 984400-984599 (free run 984100-985599)"
+ },
+ "registered": "coordinator 2026-11-14: block 984400-984591 registered for Amendment 96 part (c)",
+ "rejected": {
+  "b988900_989099": "989000+ is a MAPPO training seed scope; 988900-988999 is the 20 % admission block / reserve"
+ },
+ "reserved_unused": [
+  984592,
+  984599
+ ],
+ "schema": "coopmwm.a96c.seed_audit.v1",
+ "used": [
+  984400,
+  984591
+ ],
+ "verdict": "FREE"
+}

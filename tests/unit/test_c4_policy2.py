@@ -1,4 +1,4 @@
-"""C4 policy v2: per-CAV lane head, lane masks, REINFORCE, counterfactual
+"""C4 policy v2 (owner 2026-10-12 late): per-CAV lane head, lane masks, REINFORCE, counterfactual
 difference rewards (individual / close groups / all, common random numbers) and SUMO lane commands.
 
 CPU only; the SUMO test skips without ``sumo``."""

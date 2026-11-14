@@ -1,0 +1,116 @@
+{
+ "schema": "wms_eval_shift_recovery/1",
+ "checkpoint": "E:/rd-wt/ws-evalshift/_out/shift_ckpt/oldhist/wm_s.pt",
+ "parameter_names": [
+  "v0",
+  "time_headway",
+  "min_gap",
+  "accel",
+  "decel",
+  "politeness",
+  "mobil_threshold",
+  "merge_gap",
+  "merge_urgency"
+ ],
+ "nearest_vtype_axes": [
+  "time_headway",
+  "min_gap",
+  "accel",
+  "decel"
+ ],
+ "vtype_centres": {
+  "aggressive_car": [
+   0.95,
+   1.5,
+   3.0,
+   4.5
+  ],
+  "normal_car": [
+   1.1,
+   2.5,
+   2.6,
+   4.5
+  ],
+  "cautious_car": [
+   1.5,
+   3.5,
+   2.0,
+   3.0
+  ]
+ },
+ "original": {
+  "n_typed": 32750,
+  "n_correct": 22718,
+  "accuracy": 0.6936793893129771,
+  "normal_base_rate": 0.6936793893129771,
+  "confusion": {
+   "aggressive_car": {
+    "aggressive_car": 0,
+    "normal_car": 3389,
+    "cautious_car": 0
+   },
+   "normal_car": {
+    "aggressive_car": 0,
+    "normal_car": 22718,
+    "cautious_car": 0
+   },
+   "cautious_car": {
+    "aggressive_car": 0,
+    "normal_car": 6643,
+    "cautious_car": 0
+   }
+  },
+  "recovered_means_tau_min_gap_accel_decel": {
+   "time_headway": 1.1405380432660344,
+   "min_gap": 2.646733667934214,
+   "accel": 2.4068499519551985,
+   "decel": 4.114760635827334
+  },
+  "valid_history_steps_median": 1.0
+ },
+ "shifted": {
+  "n_typed": 31429,
+  "n_correct": 13332,
+  "accuracy": 0.42419421553342457,
+  "normal_base_rate": 0.6945178020299723,
+  "confusion": {
+   "aggressive_car": {
+    "aggressive_car": 1538,
+    "normal_car": 830,
+    "cautious_car": 881
+   },
+   "normal_car": {
+    "aggressive_car": 6238,
+    "normal_car": 6878,
+    "cautious_car": 8712
+   },
+   "cautious_car": {
+    "aggressive_car": 50,
+    "normal_car": 1386,
+    "cautious_car": 4916
+   }
+  },
+  "recovered_means_tau_min_gap_accel_decel": {
+   "time_headway": 1.1751531991768513,
+   "min_gap": 2.8585254572719028,
+   "accel": 2.0669354316845303,
+   "decel": 3.7847667465026684
+  },
+  "valid_history_steps_median": 10.0
+ },
+ "paired_same_vehicle": {
+  "n": 16381,
+  "original_accuracy": 0.6920822904584579,
+  "shifted_accuracy": 0.4353214089493926,
+  "original_predicted_class_counts": {
+   "aggressive_car": 0,
+   "normal_car": 16381,
+   "cautious_car": 0
+  },
+  "shifted_predicted_class_counts": {
+   "aggressive_car": 4073,
+   "normal_car": 4601,
+   "cautious_car": 7707
+  }
+ }
+}

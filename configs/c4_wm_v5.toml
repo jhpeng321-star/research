@@ -1,13 +1,13 @@
-# WM-S-C4 v5 FINAL CANDIDATE (2026-10-14).  NOT trained yet.
+# WM-S-C4 v5 FINAL CANDIDATE (2026-10-14).  NOT trained yet; launch needs owner approval.
 #   = c4_wm_v5_base.toml (non-lane fixes, INFRAV5_NOTES.md)
 #   + the hazard_v5 lane model of c4_wm_v5_lane.toml (LANEV5_NOTES.md)
-#   + the population anchor on the encoded driver settings, textbook target:
+#   + the population anchor on the encoded driver settings, textbook target (owner option a):
 #     the v5 data come from the c4/popfix continuous textbook population.
 # Launch: pretrain the lane network on the v5 TRAIN windows first (tools/lanev5_pretrain.py),
 # then pass it with --set model.lane_v5_pretrain=<path>.  After training, rerun
 # tools/lanehazard_calib.py --write-ap on the selected checkpoint so "gated" uses its own AP.
 #
-# DATA (V5DATA, 2026-10-14; the v5 textbook data REPLACE the legacy data; a 50 GB GPU disk
+# DATA (V5DATA, 2026-10-14; owner: the v5 textbook data REPLACE the legacy data; a 50 GB GPU disk
 # cannot hold pack_v3 anyway).  data.c4_base = "native_v5" clears every inherited legacy table
 # (data.packs pack_v3 + pack_dspeed, their sidecars and window lists, the data.switching
 # direct-mix pack) - see wms.config.data.DataConfig.c4_base - so ALL training and validation
@@ -75,7 +75,7 @@ weight = 0.05
 target = "textbook"
 
 [curriculum]
-# the v4 references were measured on the legacy validation set; 0 = online
+# integrator 2026-10-14: the v4 references were measured on the legacy validation set; 0 = online
 # raw mean position over the common horizons, final selection normalised by the best candidate.
 selection_reference = [0.0, 0.0, 0.0, 0.0]
 

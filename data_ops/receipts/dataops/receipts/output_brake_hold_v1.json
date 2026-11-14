@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/brake_hold_v1",
+ "name": "brake_hold_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\brake_hold_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/brake_hold_v1/brake_hold_v1.tar.zst",
+ "bytes": 36126015,
+ "files": 81,
+ "archive_bytes": 33025670,
+ "archive_md5": "78523e889e1664fdcc7172a1c75deb1a",
+ "member_manifest": "manifests/members/output_brake_hold_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 940.4,
+ "timestamp": "2026-10-10T01:50:54"
+}

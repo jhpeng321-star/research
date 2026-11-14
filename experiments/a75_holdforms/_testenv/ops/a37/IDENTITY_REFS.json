@@ -1,0 +1,87 @@
+{
+ "note": "reference U0 per-world J and safety only; no other outcome read",
+ "receipt_sha256": "f049f546bd344b91adb4a6a07933f99e029e703e5478b0296323b05303a2bbdf",
+ "schema": "coopmwm.a37.identity_refs.v1",
+ "worlds": {
+  "a33:wz3to2_999500": {
+   "J_veh_s": 57858.67606143974,
+   "safety": {
+    "collisions": 0,
+    "hard_brakes": 23,
+    "teleports": 0,
+    "ttc_events": 7
+   },
+   "source": "a33_combined/root WAVE_A33_U0 (gpuB)"
+  },
+  "a33:wz3to2_999501": {
+   "J_veh_s": 62972.25917485341,
+   "safety": {
+    "collisions": 0,
+    "hard_brakes": 33,
+    "teleports": 0,
+    "ttc_events": 2
+   },
+   "source": "a33_combined/root WAVE_A33_U0 (gpuB)"
+  },
+  "a35d2400:wz3to2_998000": {
+   "J_veh_s": 18725.908907438366,
+   "safety": {
+    "collisions": 0,
+    "hard_brakes": 18,
+    "teleports": 0,
+    "ttc_events": 2
+   },
+   "source": "a35_transfer offload a35_d2400_p20_nmfinal_u0_0000 (gpuB; sha-verified)"
+  },
+  "a35d2400:wz3to2_998001": {
+   "J_veh_s": 21321.800637395434,
+   "safety": {
+    "collisions": 0,
+    "hard_brakes": 22,
+    "teleports": 0,
+    "ttc_events": 0
+   },
+   "source": "a35_transfer offload a35_d2400_p20_nmfinal_u0_0001 (gpuB; sha-verified)"
+  },
+  "a35d3200:wz3to2_998100": {
+   "J_veh_s": 65342.87457560734,
+   "safety": {
+    "collisions": 0,
+    "hard_brakes": 34,
+    "teleports": 0,
+    "ttc_events": 2
+   },
+   "source": "a35_transfer offload a35_d3200_p20_nmfinal_u0_0000 (gpuB; sha-verified)"
+  },
+  "a35d3200:wz3to2_998101": {
+   "J_veh_s": 55924.83495058585,
+   "safety": {
+    "collisions": 0,
+    "hard_brakes": 11,
+    "teleports": 0,
+    "ttc_events": 1
+   },
+   "source": "a35_transfer offload a35_d3200_p20_nmfinal_u0_0001 (gpuB; sha-verified)"
+  },
+  "p20c:wz3to2_993100": {
+   "J_veh_s": 23490.468896427356,
+   "safety": {
+    "collisions": 0,
+    "hard_brakes": 9,
+    "teleports": 0,
+    "ttc_events": 3
+   },
+   "source": "a32_ablation/root WAVE_A32_IDENT_U0 (== sealed a28 U0, a32 gate)"
+  },
+  "p20c:wz3to2_993101": {
+   "J_veh_s": 34039.560025945,
+   "safety": {
+    "collisions": 0,
+    "hard_brakes": 22,
+    "teleports": 0,
+    "ttc_events": 3
+   },
+   "source": "a32_ablation/root WAVE_A32_IDENT_U0 (== sealed a28 U0, a32 gate)"
+  }
+ }
+}

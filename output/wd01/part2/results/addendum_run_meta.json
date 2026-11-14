@@ -1,0 +1,19 @@
+{
+ "commands": [
+  "C:\\Users\\jpeng\\Miniconda3\\envs\\rl_driving\\python.exe addendum_run.py   (env: WD_DEVICE=cpu)"
+ ],
+ "python": "3.10.20",
+ "torch": "2.12.1+cpu",
+ "numpy": "2.2.6",
+ "registration_addendum_sha256": "52e95ac3ba391a016155344d7deab43165830856c6e213b4f21ca0edb680259a",
+ "checkpoint": "D:\\research-dense\\output\\worldmodel_v3_vehicle\\vehicle_dynamics.pt",
+ "checkpoint_start_sha256": "ded83907b8d218574d3f5359c332408f17167da055574afbe29eaecb59d4a8f5",
+ "checkpoint_end_sha256": "ded83907b8d218574d3f5359c332408f17167da055574afbe29eaecb59d4a8f5",
+ "device": "cpu",
+ "wall_seconds": 155.5,
+ "model_forward_seconds": 22.46,
+ "model_forward_vehicle_steps": 3568800,
+ "throughput_vehicle_steps_per_s": 158896.573945281,
+ "finished_utc": "2026-09-25T17:45:59.354783+00:00",
+ "deviations": []
+}

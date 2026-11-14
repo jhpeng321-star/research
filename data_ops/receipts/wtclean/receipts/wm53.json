@@ -1,0 +1,39 @@
+﻿{
+    "name":  "wm53",
+    "path":  "E:\\rd-wt\\wm53",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "HEAD",
+    "headBefore":  "4c4fb2ffb748063c4161b05674252a1b7176827a",
+    "headType":  null,
+    "dirtyBefore":  78,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/wm53",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\wm53.txt",
+    "uploadCount":  291,
+    "uploadBytes":  22048128,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\wm53.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 06:43:52 NOTICE: Google drive root \u0027research-archive/worktrees/wm53\u0027: 0 differences found | 2026/10/10 06:43:52 NOTICE: Google drive root \u0027research-archive/worktrees/wm53\u0027: 291 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\wm53.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  0,
+    "skippedSensitiveSample":  [
+
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "commit_failed",
+    "error":  "commit failed: \ttraffic_shepherd/wall_group.py.wm43_r6.bak  nothing added to commit but untracked files present (use \"git add\" to track)",
+    "timestamp":  "2026-10-10T06:32:55.5558567+08:00"
+}

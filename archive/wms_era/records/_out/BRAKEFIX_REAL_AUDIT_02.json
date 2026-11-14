@@ -1,0 +1,975 @@
+{
+ "acceleration_alignment": "assumed_destination_channel_not_verified_real",
+ "acceleration_alignment_diagnostics": {
+  "channel_vs_speed_fd_correlation": 0.999916050218386,
+  "dt_s": 0.5,
+  "max_abs_difference_mps2": 0.059326171875,
+  "mean_abs_difference_mps2": 0.007420085074724352,
+  "samples": 563649
+ },
+ "chunk_steps": 60,
+ "device": "cpu",
+ "evidence_kind": "recorded_or_mixed_unverified_provenance",
+ "hdv_steps": 563649,
+ "histogram": {
+  "counts": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   11,
+   198,
+   1551,
+   1720,
+   3109,
+   5211,
+   5782,
+   7901,
+   11123,
+   20082,
+   192964,
+   228921,
+   40058,
+   22344,
+   13775,
+   6250,
+   2649,
+   0,
+   0
+  ],
+  "edges": [
+   -12.0,
+   -11.5,
+   -11.0,
+   -10.5,
+   -10.0,
+   -9.5,
+   -9.0,
+   -8.5,
+   -8.0,
+   -7.5,
+   -7.0,
+   -6.5,
+   -6.0,
+   -5.5,
+   -5.0,
+   -4.5,
+   -4.0,
+   -3.5,
+   -3.0,
+   -2.5,
+   -2.0,
+   -1.5,
+   -1.0,
+   -0.5,
+   0.0,
+   0.5,
+   1.0,
+   1.5,
+   2.0,
+   2.5,
+   3.0,
+   3.5,
+   4.0
+  ],
+  "overflow": 0,
+  "underflow": 0
+ },
+ "horizon_steps": 240,
+ "limitations": [
+  "Acceleration alignment: states[t+1,:,5] is an assumption; real-data alignment is NOT verified here.",
+  "Global lower-envelope inclusion is necessary only; it is not recorded-state cap coverage or learned-model skill.",
+  "Needed corrections are one-step teacher-forced, fixed-default IDM scenarios; all other driver parameters stay at defaults. No checkpoint or encoder inference.",
+  "Encoder decel 2.7..5.7 is a default-centred outer envelope, not observed recovery: shrinkage narrows it and tanh endpoints are asymptotic; supplied vType defaults can differ.",
+  "Negative-cap diagnostics ignore positive-side capacity. Tanh cap equality is a limiting boundary, not a guaranteed finite-weight correction; gate(0)=0 permits no residual.",
+  "Physics uses IDM clips [-9,3], driver decel/accel clamps and ramp-end obstacle; merge_cal and injected physics are excluded.",
+  "Lane-logit cap constrains logit adjustments, not braking. Baseline MOBIL has safety-masked logits; residual adjustments can change argmax. History lane head replaces these logits and has separate feasibility/age gates.",
+  "Projection bounds post-step speed/lane/position but does not rewrite accel_mps2. Its effect, lane changes, speed-floor effective acceleration and rollout drift are not measured by this audit.",
+  "Propagation counts are recorded nearest-leader masks, not causal wave validation; windows truncate at their ends and overlapping sampled windows can count steps repeatedly.",
+  "TRAIN metadata/target_mask continuity is checked, not canonical vehicle identity, source authenticity or independently registered split membership.",
+  "old_hist_chain.sh uses driver_params with no residual, projection or stability; cap changes do not affect that acceleration path. Its full command supplies a VAL window list despite the TRAIN-only header."
+ ],
+ "min_recorded_accel_mps2": -5.34765625,
+ "needed_correction_evaluated_hdv_steps": 563649,
+ "needed_negative_correction": {
+  "driver_decel_ceiling": {
+   "a<-1.5": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.7279843384769304,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.34238511949142564,
+     "1.5": 0.33049483969705296,
+     "2": 0.21335792489110386,
+     "3": 0.09771220029038967,
+     "4.5": 0.042930581171761566
+    },
+    "steps": 25483
+   },
+   "a<-2": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.7914570065976889,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.3287453077010579,
+     "1.5": 0.32146513479695144,
+     "2": 0.25361164827664656,
+     "3": 0.10487999089978386,
+     "4.5": 0.06222272778978501
+    },
+    "steps": 17582
+   },
+   "a<-3": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.8610216747553269,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.25572924571255123,
+     "1.5": 0.25041736227045075,
+     "2": 0.240248899681287,
+     "3": 0.1356806799210806,
+     "4.5": 0.10396114736682349
+    },
+    "steps": 6589
+   },
+   "a<-3.5": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -1.2796210299358415,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.28132183908045977,
+     "1.5": 0.2764367816091954,
+     "2": 0.27011494252873564,
+     "3": 0.23448275862068965,
+     "4.5": 0.1882183908045977
+    },
+    "steps": 3480
+   },
+   "a<-4": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -2.3424018054766664,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.4590909090909091,
+     "1.5": 0.45284090909090907,
+     "2": 0.44488636363636364,
+     "3": 0.41818181818181815,
+     "4.5": 0.3494318181818182
+    },
+    "steps": 1760
+   },
+   "a<-4.5": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": 0.1616187916988391,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.0,
+     "1.5": 0.0,
+     "2": 0.0,
+     "3": 0.0,
+     "4.5": 0.0
+    },
+    "steps": 209
+   }
+  },
+  "driver_decel_floor": {
+   "a<-1.5": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.621842850885351,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.2553467017227171,
+     "1.5": 0.1455480124004238,
+     "2": 0.11533178982066476,
+     "3": 0.09033473295922773,
+     "4.5": 0.041086214338971076
+    },
+    "steps": 25483
+   },
+   "a<-2": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.863794223812007,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.2623706063018997,
+     "1.5": 0.1582300079626891,
+     "2": 0.11949721305881014,
+     "3": 0.09623478557615743,
+     "4.5": 0.05954953930155841
+    },
+    "steps": 17582
+   },
+   "a<-3": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -1.4989472593945936,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.42783426923660645,
+     "1.5": 0.23842768250113827,
+     "2": 0.15009864926392472,
+     "3": 0.12718166641371983,
+     "4.5": 0.09819395962968584
+    },
+    "steps": 6589
+   },
+   "a<-3.5": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -2.2262652790082895,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.7724137931034483,
+     "1.5": 0.4206896551724138,
+     "2": 0.257183908045977,
+     "3": 0.22413793103448276,
+     "4.5": 0.17758620689655172
+    },
+    "steps": 3480
+   },
+   "a<-4": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -3.2469239163985053,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 1.0,
+     "1.5": 0.7818181818181819,
+     "2": 0.46079545454545456,
+     "3": 0.4028409090909091,
+     "4.5": 0.3306818181818182
+    },
+    "steps": 1760
+   },
+   "a<-4.5": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -1.9857991449000163,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 1.0,
+     "1.5": 1.0,
+     "2": 0.37320574162679426,
+     "3": 0.0,
+     "4.5": 0.0
+    },
+    "steps": 209
+   }
+  },
+  "driver_defaults": {
+   "a<-1.5": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.42480559901494935,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.3359886983479182,
+     "1.5": 0.2658635168543735,
+     "2": 0.11956990935133226,
+     "3": 0.09433740140485813,
+     "4.5": 0.04230271161166268
+    },
+    "steps": 25483
+   },
+   "a<-2": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.46335594481427983,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.32305767261972473,
+     "1.5": 0.29416448640655213,
+     "2": 0.12222727789785007,
+     "3": 0.10129678079854397,
+     "4.5": 0.061312706176771696
+    },
+    "steps": 17582
+   },
+   "a<-3": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.585555683313958,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.2513279708605251,
+     "1.5": 0.2397935953862498,
+     "2": 0.1455456063135529,
+     "3": 0.13249354985582032,
+     "4.5": 0.10213993018667476
+    },
+    "steps": 6589
+   },
+   "a<-3.5": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -1.1926904002599614,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.2770114942528736,
+     "1.5": 0.2689655172413793,
+     "2": 0.24454022988505747,
+     "3": 0.22988505747126436,
+     "4.5": 0.1850574712643678
+    },
+    "steps": 3480
+   },
+   "a<-4": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -2.469143546686775,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.45454545454545453,
+     "1.5": 0.4431818181818182,
+     "2": 0.43125,
+     "3": 0.4102272727272727,
+     "4.5": 0.3443181818181818
+    },
+    "steps": 1760
+   },
+   "a<-4.5": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.48579938331859535,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.023923444976076555,
+     "1.5": 0.0,
+     "2": 0.0,
+     "3": 0.0,
+     "4.5": 0.0
+    },
+    "steps": 209
+   }
+  },
+  "residual_defaults": {
+   "a<-1.5": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.24553052033369327,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.33579248911038734,
+     "1.5": 0.2658635168543735,
+     "2": 0.11956990935133226,
+     "3": 0.09433740140485813,
+     "4.5": 0.04230271161166268
+    },
+    "steps": 25483
+   },
+   "a<-2": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.22894107263436259,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.32277329086565804,
+     "1.5": 0.29416448640655213,
+     "2": 0.12222727789785007,
+     "3": 0.10129678079854397,
+     "4.5": 0.061312706176771696
+    },
+    "steps": 17582
+   },
+   "a<-3": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.1387182298767598,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.25056913036879647,
+     "1.5": 0.2397935953862498,
+     "2": 0.1455456063135529,
+     "3": 0.13249354985582032,
+     "4.5": 0.10213993018667476
+    },
+    "steps": 6589
+   },
+   "a<-3.5": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -0.5224583937825659,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.27557471264367817,
+     "1.5": 0.2689655172413793,
+     "2": 0.24454022988505747,
+     "3": 0.22988505747126436,
+     "4.5": 0.1850574712643678
+    },
+    "steps": 3480
+   },
+   "a<-4": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": -1.671198758618729,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.45170454545454547,
+     "1.5": 0.4431818181818182,
+     "2": 0.43125,
+     "3": 0.4102272727272727,
+     "4.5": 0.3443181818181818
+    },
+    "steps": 1760
+   },
+   "a<-4.5": {
+    "at_negative_tanh_boundary_steps_tol_1e-6": {
+     "1": 0,
+     "1.5": 0,
+     "2": 0,
+     "3": 0,
+     "4.5": 0
+    },
+    "mean_signed_needed_correction_mps2": 1.4796602417977802,
+    "share_below_final_accel_clip": 0.0,
+    "share_negative_correction_exceeding_cap": {
+     "1": 0.0,
+     "1.5": 0.0,
+     "2": 0.0,
+     "3": 0.0,
+     "4.5": 0.0
+    },
+    "steps": 209
+   }
+  }
+ },
+ "prop_window_hdv_steps_by_threshold": {
+  "-1.5": 42961,
+  "-2": 31354,
+  "-3": 13604,
+  "-3.5": 8423,
+  "-4": 5028,
+  "-4.5": 644
+ },
+ "prop_window_share_of_hdv_steps": {
+  "-1.5": 0.07621942024203006,
+  "-2": 0.05562681739877122,
+  "-3": 0.024135587927948066,
+  "-3.5": 0.014943697230013714,
+  "-4": 0.008920445170664723,
+  "-4.5": 0.0011425550298146542
+ },
+ "prop_window_steps": 6,
+ "quantiles_mps2_binned_0.5": {
+  "q0.001": {
+   "bin": [
+    -4.5,
+    -4.0
+   ]
+  },
+  "q0.005": {
+   "bin": [
+    -4.0,
+    -3.5
+   ]
+  },
+  "q0.01": {
+   "bin": [
+    -3.5,
+    -3.0
+   ]
+  },
+  "q0.02": {
+   "bin": [
+    -3.0,
+    -2.5
+   ]
+  },
+  "q0.05": {
+   "bin": [
+    -1.5,
+    -1.0
+   ]
+  },
+  "q0.5": {
+   "bin": [
+    0.0,
+    0.5
+   ]
+  }
+ },
+ "real_data_alignment_verified": false,
+ "records_after_filter": 1307,
+ "records_in_corpus": 3060,
+ "sampled_filtered_indices": [
+  0,
+  22,
+  44,
+  66,
+  88,
+  110,
+  132,
+  154,
+  177,
+  199,
+  221,
+  243,
+  265,
+  287,
+  309,
+  332,
+  354,
+  376,
+  398,
+  420,
+  442,
+  464,
+  486,
+  509,
+  531,
+  553,
+  575,
+  597,
+  619,
+  641,
+  664,
+  686,
+  708,
+  730,
+  752,
+  774,
+  796,
+  819,
+  841,
+  863,
+  885,
+  907,
+  929,
+  951,
+  973,
+  996,
+  1018,
+  1040,
+  1062,
+  1084,
+  1106,
+  1128,
+  1151,
+  1173,
+  1195,
+  1217,
+  1239,
+  1261,
+  1283,
+  1306
+ ],
+ "sampled_windows_by_pack": {
+  "pack_damping": 11,
+  "pack_dspeed": 25,
+  "pack_v3": 24
+ },
+ "schema": "wm_s_brakefix_audit/2",
+ "settings": [
+  {
+   "cap_neg": null,
+   "cap_pos": null,
+   "decel_i": 4.2,
+   "global_lower_envelope_mps2": -9.0,
+   "recorded_state_raw_accel_interval_share_of_braking": {
+    "a<-1.5": 0.9951732527567397,
+    "a<-2": 0.9947104993743602,
+    "a<-3": 0.9939292760661709,
+    "a<-3.5": 0.9942528735632183,
+    "a<-4": 0.9943181818181818,
+    "a<-4.5": 1.0
+   },
+   "rollout_mode": "residual",
+   "setting": "residual / no cap",
+   "within_global_lower_envelope_share_of_braking": {
+    "a<-1.5": 1.0,
+    "a<-2": 1.0,
+    "a<-3": 1.0,
+    "a<-3.5": 1.0,
+    "a<-4": 1.0,
+    "a<-4.5": 1.0
+   }
+  },
+  {
+   "cap_neg": null,
+   "cap_pos": 1.5,
+   "decel_i": 4.2,
+   "global_lower_envelope_mps2": -9.0,
+   "recorded_state_raw_accel_interval_share_of_braking": {
+    "a<-1.5": 0.626025193266099,
+    "a<-2": 0.5931634626322375,
+    "a<-3": 0.6296858400364244,
+    "a<-3.5": 0.5936781609195402,
+    "a<-4": 0.42727272727272725,
+    "a<-4.5": 0.7129186602870813
+   },
+   "rollout_mode": "residual",
+   "setting": "residual / cap 1.5",
+   "within_global_lower_envelope_share_of_braking": {
+    "a<-1.5": 1.0,
+    "a<-2": 1.0,
+    "a<-3": 1.0,
+    "a<-3.5": 1.0,
+    "a<-4": 1.0,
+    "a<-4.5": 1.0
+   }
+  },
+  {
+   "cap_neg": null,
+   "cap_pos": null,
+   "decel_i": 4.2,
+   "global_lower_envelope_mps2": -4.2,
+   "recorded_state_raw_accel_interval_share_of_braking": {
+    "a<-1.5": 0.0,
+    "a<-2": 0.0,
+    "a<-3": 0.0,
+    "a<-3.5": 0.0,
+    "a<-4": 0.0,
+    "a<-4.5": 0.0
+   },
+   "rollout_mode": "driver_params",
+   "setting": "driver_params / defaults",
+   "within_global_lower_envelope_share_of_braking": {
+    "a<-1.5": 0.9478083428167798,
+    "a<-2": 0.9243544534182687,
+    "a<-3": 0.7981484292001821,
+    "a<-3.5": 0.617816091954023,
+    "a<-4": 0.24431818181818182,
+    "a<-4.5": 0.0
+   }
+  },
+  {
+   "cap_neg": null,
+   "cap_pos": null,
+   "decel_i": 4.2,
+   "global_lower_envelope_mps2": -9.0,
+   "recorded_state_raw_accel_interval_share_of_braking": {
+    "a<-1.5": 0.9951732527567397,
+    "a<-2": 0.9947104993743602,
+    "a<-3": 0.9939292760661709,
+    "a<-3.5": 0.9942528735632183,
+    "a<-4": 0.9943181818181818,
+    "a<-4.5": 1.0
+   },
+   "rollout_mode": "hybrid",
+   "setting": "hybrid / no cap",
+   "within_global_lower_envelope_share_of_braking": {
+    "a<-1.5": 1.0,
+    "a<-2": 1.0,
+    "a<-3": 1.0,
+    "a<-3.5": 1.0,
+    "a<-4": 1.0,
+    "a<-4.5": 1.0
+   }
+  },
+  {
+   "cap_neg": null,
+   "cap_pos": 1.5,
+   "decel_i": 4.2,
+   "global_lower_envelope_mps2": -5.7,
+   "recorded_state_raw_accel_interval_share_of_braking": {
+    "a<-1.5": 0.6695836439979594,
+    "a<-2": 0.6562962120350359,
+    "a<-3": 0.7558051297617241,
+    "a<-3.5": 0.7270114942528736,
+    "a<-4": 0.5539772727272727,
+    "a<-4.5": 1.0
+   },
+   "rollout_mode": "hybrid",
+   "setting": "hybrid / cap 1.5",
+   "within_global_lower_envelope_share_of_braking": {
+    "a<-1.5": 1.0,
+    "a<-2": 1.0,
+    "a<-3": 1.0,
+    "a<-3.5": 1.0,
+    "a<-4": 1.0,
+    "a<-4.5": 1.0
+   }
+  },
+  {
+   "cap_neg": null,
+   "cap_pos": 1.5,
+   "decel_i": 2.7,
+   "global_lower_envelope_mps2": -4.2,
+   "recorded_state_raw_accel_interval_share_of_braking": {
+    "a<-1.5": 0.8506062865439705,
+    "a<-2": 0.837504265726311,
+    "a<-3": 0.7568675064501442,
+    "a<-3.5": 0.5758620689655173,
+    "a<-4": 0.21647727272727274,
+    "a<-4.5": 0.0
+   },
+   "rollout_mode": "hybrid",
+   "setting": "hybrid / cap 1.5 / decel floor",
+   "within_global_lower_envelope_share_of_braking": {
+    "a<-1.5": 0.9478083428167798,
+    "a<-2": 0.9243544534182687,
+    "a<-3": 0.7981484292001821,
+    "a<-3.5": 0.617816091954023,
+    "a<-4": 0.24431818181818182,
+    "a<-4.5": 0.0
+   }
+  },
+  {
+   "cap_neg": null,
+   "cap_pos": 1.5,
+   "decel_i": 5.7,
+   "global_lower_envelope_mps2": -7.2,
+   "recorded_state_raw_accel_interval_share_of_braking": {
+    "a<-1.5": 0.6008711690146372,
+    "a<-2": 0.6105107496303037,
+    "a<-3": 0.688420094096221,
+    "a<-3.5": 0.6741379310344827,
+    "a<-4": 0.5215909090909091,
+    "a<-4.5": 1.0
+   },
+   "rollout_mode": "hybrid",
+   "setting": "hybrid / cap 1.5 / decel ceiling",
+   "within_global_lower_envelope_share_of_braking": {
+    "a<-1.5": 1.0,
+    "a<-2": 1.0,
+    "a<-3": 1.0,
+    "a<-3.5": 1.0,
+    "a<-4": 1.0,
+    "a<-4.5": 1.0
+   }
+  },
+  {
+   "cap_neg": 3.0,
+   "cap_pos": 1.5,
+   "decel_i": 4.2,
+   "global_lower_envelope_mps2": -7.2,
+   "recorded_state_raw_accel_interval_share_of_braking": {
+    "a<-1.5": 0.8401679551073264,
+    "a<-2": 0.8480832669775907,
+    "a<-3": 0.8621945667020792,
+    "a<-3.5": 0.7655172413793103,
+    "a<-4": 0.5863636363636363,
+    "a<-4.5": 1.0
+   },
+   "rollout_mode": "hybrid",
+   "setting": "hybrid / negative cap 3",
+   "within_global_lower_envelope_share_of_braking": {
+    "a<-1.5": 1.0,
+    "a<-2": 1.0,
+    "a<-3": 1.0,
+    "a<-3.5": 1.0,
+    "a<-4": 1.0,
+    "a<-4.5": 1.0
+   }
+  },
+  {
+   "cap_neg": 3.0,
+   "cap_pos": 1.5,
+   "decel_i": 2.7,
+   "global_lower_envelope_mps2": -5.7,
+   "recorded_state_raw_accel_interval_share_of_braking": {
+    "a<-1.5": 0.9054271475101048,
+    "a<-2": 0.8990444773063361,
+    "a<-3": 0.867354682045834,
+    "a<-3.5": 0.7709770114942529,
+    "a<-4": 0.5931818181818181,
+    "a<-4.5": 1.0
+   },
+   "rollout_mode": "hybrid",
+   "setting": "hybrid / negative cap 3 / decel floor",
+   "within_global_lower_envelope_share_of_braking": {
+    "a<-1.5": 1.0,
+    "a<-2": 1.0,
+    "a<-3": 1.0,
+    "a<-3.5": 1.0,
+    "a<-4": 1.0,
+    "a<-4.5": 1.0
+   }
+  },
+  {
+   "cap_neg": 4.5,
+   "cap_pos": 1.5,
+   "decel_i": 4.2,
+   "global_lower_envelope_mps2": -8.7,
+   "recorded_state_raw_accel_interval_share_of_braking": {
+    "a<-1.5": 0.8917709845779539,
+    "a<-2": 0.887726083494483,
+    "a<-3": 0.8923964182728791,
+    "a<-3.5": 0.8100574712643678,
+    "a<-4": 0.6517045454545455,
+    "a<-4.5": 1.0
+   },
+   "rollout_mode": "hybrid",
+   "setting": "hybrid / negative cap 4.5",
+   "within_global_lower_envelope_share_of_braking": {
+    "a<-1.5": 1.0,
+    "a<-2": 1.0,
+    "a<-3": 1.0,
+    "a<-3.5": 1.0,
+    "a<-4": 1.0,
+    "a<-4.5": 1.0
+   }
+  }
+ ],
+ "share_steps_below": {
+  "-1.5": 0.045210760597464025,
+  "-2": 0.03119317163695846,
+  "-3": 0.011689899210324156,
+  "-3.5": 0.006174055130054343,
+  "-4": 0.0031225106404872537,
+  "-4.5": 0.00037079813855786135
+ },
+ "sources": [
+  {
+   "pack": "E:\\rd-wt\\ws-cl\\_ext\\pack_v3",
+   "synthetic_declared": false
+  },
+  {
+   "pack": "E:\\rd-wt\\dspeed-data\\_out\\pack_dspeed",
+   "synthetic_declared": false
+  },
+  {
+   "pack": "E:\\rd-wt\\damping-snap\\_out\\pack_damping",
+   "synthetic_declared": false
+  }
+ ],
+ "split": "TRAIN",
+ "steps_below": {
+  "-1.5": 25483,
+  "-2": 17582,
+  "-3": 6589,
+  "-3.5": 3480,
+  "-4": 1760,
+  "-4.5": 209
+ },
+ "window_filter": {
+  "dropped": 1753,
+  "kept": 1307,
+  "matched": 1307,
+  "requested": 1307
+ },
+ "windows": 60
+}

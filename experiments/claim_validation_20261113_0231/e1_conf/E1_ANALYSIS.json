@@ -1,0 +1,358 @@
+{
+ "by_budget": {
+  "2": {
+   "admitted": {
+    "RANDOM": [
+     1,
+     2,
+     0,
+     2,
+     0,
+     2
+    ],
+    "WM": [
+     1,
+     0,
+     0,
+     2,
+     2,
+     0
+    ]
+   },
+   "not_run": "not every bank of this budget was confirmed (by design)",
+   "primary": false,
+   "seeds": [
+    11,
+    23,
+    42,
+    67,
+    89,
+    103
+   ]
+  },
+  "4": {
+   "admitted": {
+    "RANDOM": [
+     2,
+     3,
+     0,
+     3,
+     1,
+     2
+    ],
+    "WM": [
+     3,
+     2,
+     0,
+     3,
+     4,
+     0
+    ]
+   },
+   "not_run": "not every bank of this budget was confirmed (by design)",
+   "primary": false,
+   "seeds": [
+    11,
+    23,
+    42,
+    67,
+    89,
+    103
+   ]
+  },
+  "6": {
+   "admitted": {
+    "RANDOM": [
+     4,
+     5,
+     1,
+     5,
+     3,
+     2
+    ],
+    "WM": [
+     5,
+     4,
+     0,
+     4,
+     6,
+     1
+    ]
+   },
+   "bank_minus_u0": {
+    "RANDOM_seed103": {
+     "ci95": [
+      -8942.496684693177,
+      -5107.496914024128
+     ],
+     "convention": "diff = treatment - reference; negative = less delay",
+     "diff": -7020.771892213797,
+     "mean_reference": 42288.325230944654,
+     "mean_treatment": 35267.55333873086,
+     "n": 96,
+     "p_two_sided": 0.00019998000199980003,
+     "pct": -16.602151666853704,
+     "pct_ci95": [
+      -20.266183303192943,
+      -12.63093146124649
+     ],
+     "worlds_higher": 26,
+     "worlds_lower": 70
+    },
+    "RANDOM_seed11": {
+     "ci95": [
+      -11945.896348779981,
+      -7810.380657405509
+     ],
+     "convention": "diff = treatment - reference; negative = less delay",
+     "diff": -9856.329294768284,
+     "mean_reference": 42288.325230944654,
+     "mean_treatment": 32431.995936176372,
+     "n": 96,
+     "p_two_sided": 0.00019998000199980003,
+     "pct": -23.307447719768938,
+     "pct_ci95": [
+      -26.82014714655041,
+      -19.46820853340876
+     ],
+     "worlds_higher": 18,
+     "worlds_lower": 78
+    },
+    "RANDOM_seed23": {
+     "ci95": [
+      -11922.00250676531,
+      -7653.7679437235365
+     ],
+     "convention": "diff = treatment - reference; negative = less delay",
+     "diff": -9766.588381542077,
+     "mean_reference": 42288.325230944654,
+     "mean_treatment": 32521.736849402583,
+     "n": 96,
+     "p_two_sided": 0.00019998000199980003,
+     "pct": -23.09523569024041,
+     "pct_ci95": [
+      -26.8817148801379,
+      -19.076370971894395
+     ],
+     "worlds_higher": 21,
+     "worlds_lower": 75
+    },
+    "RANDOM_seed42": {
+     "ci95": [
+      -10388.112379238997,
+      -6441.171199376012
+     ],
+     "convention": "diff = treatment - reference; negative = less delay",
+     "diff": -8390.45655970906,
+     "mean_reference": 42288.325230944654,
+     "mean_treatment": 33897.8686712356,
+     "n": 96,
+     "p_two_sided": 0.00019998000199980003,
+     "pct": -19.841070824836788,
+     "pct_ci95": [
+      -23.426923464069674,
+      -15.985746004237436
+     ],
+     "worlds_higher": 20,
+     "worlds_lower": 76
+    },
+    "RANDOM_seed67": {
+     "ci95": [
+      -12551.620341429618,
+      -8293.732196696785
+     ],
+     "convention": "diff = treatment - reference; negative = less delay",
+     "diff": -10391.300071713977,
+     "mean_reference": 42288.325230944654,
+     "mean_treatment": 31897.025159230678,
+     "n": 96,
+     "p_two_sided": 0.00019998000199980003,
+     "pct": -24.572503202633573,
+     "pct_ci95": [
+      -28.116756726994065,
+      -20.775978575444128
+     ],
+     "worlds_higher": 17,
+     "worlds_lower": 79
+    },
+    "RANDOM_seed89": {
+     "ci95": [
+      -8959.978283475823,
+      -5220.2099903890885
+     ],
+     "convention": "diff = treatment - reference; negative = less delay",
+     "diff": -7086.066425247805,
+     "mean_reference": 42288.325230944654,
+     "mean_treatment": 35202.25880569685,
+     "n": 96,
+     "p_two_sided": 0.00019998000199980003,
+     "pct": -16.756554880216786,
+     "pct_ci95": [
+      -20.320602591348393,
+      -12.919690478000701
+     ],
+     "worlds_higher": 25,
+     "worlds_lower": 71
+    },
+    "WM_seed103": {
+     "ci95": [
+      -7230.211607339502,
+      -3600.9216859141284
+     ],
+     "convention": "diff = treatment - reference; negative = less delay",
+     "diff": -5418.022224544159,
+     "mean_reference": 42288.325230944654,
+     "mean_treatment": 36870.3030064005,
+     "n": 96,
+     "p_two_sided": 0.00019998000199980003,
+     "pct": -12.812099308627843,
+     "pct_ci95": [
+      -16.408127437196484,
+      -8.881293541482593
+     ],
+     "worlds_higher": 23,
+     "worlds_lower": 73
+    },
+    "WM_seed11": {
+     "ci95": [
+      -12410.654508963918,
+      -8012.197381241708
+     ],
+     "convention": "diff = treatment - reference; negative = less delay",
+     "diff": -10211.189403579938,
+     "mean_reference": 42288.325230944654,
+     "mean_treatment": 32077.13582736472,
+     "n": 96,
+     "p_two_sided": 0.00019998000199980003,
+     "pct": -24.14659210979548,
+     "pct_ci95": [
+      -27.845176319756455,
+      -20.077890960302025
+     ],
+     "worlds_higher": 17,
+     "worlds_lower": 79
+    },
+    "WM_seed23": {
+     "ci95": [
+      -9278.467435800352,
+      -5648.8672606740865
+     ],
+     "convention": "diff = treatment - reference; negative = less delay",
+     "diff": -7457.122712140471,
+     "mean_reference": 42288.325230944654,
+     "mean_treatment": 34831.20251880418,
+     "n": 96,
+     "p_two_sided": 0.00019998000199980003,
+     "pct": -17.633998677922797,
+     "pct_ci95": [
+      -21.041783872984073,
+      -13.970003261877059
+     ],
+     "worlds_higher": 20,
+     "worlds_lower": 76
+    },
+    "WM_seed42": {
+     "ci95": [
+      0.0,
+      0.0
+     ],
+     "diff": 0.0,
+     "note": "bank is U0",
+     "pct": 0.0
+    },
+    "WM_seed67": {
+     "ci95": [
+      -14492.242379727604,
+      -9979.170702074012
+     ],
+     "convention": "diff = treatment - reference; negative = less delay",
+     "diff": -12211.45345391513,
+     "mean_reference": 42288.325230944654,
+     "mean_treatment": 30076.871777029522,
+     "n": 96,
+     "p_two_sided": 0.00019998000199980003,
+     "pct": -28.87665422365639,
+     "pct_ci95": [
+      -32.41242719772459,
+      -25.018402216189667
+     ],
+     "worlds_higher": 13,
+     "worlds_lower": 83
+    },
+    "WM_seed89": {
+     "ci95": [
+      -13250.310329022868,
+      -8791.734800584629
+     ],
+     "convention": "diff = treatment - reference; negative = less delay",
+     "diff": -10994.270777124615,
+     "mean_reference": 42288.325230944654,
+     "mean_treatment": 31294.054453820037,
+     "n": 96,
+     "p_two_sided": 0.00019998000199980003,
+     "pct": -25.998359398445775,
+     "pct_ci95": [
+      -29.632630712191784,
+      -22.105071699176417
+     ],
+     "worlds_higher": 19,
+     "worlds_lower": 77
+    }
+   },
+   "permutation": {
+    "assignments": 64,
+    "mean": 1036.575675648448,
+    "min_p_two_sided": 0.03125,
+    "n": 6,
+    "note": "sign flips of the per-seed paired differences; exact, no resampling",
+    "p_less": 0.6875,
+    "p_two_sided": 0.65625
+   },
+   "primary": true,
+   "role": "secondary (delay); the registered E1 primary is FROZEN_BANKS.primary_admitted_count",
+   "seeds": [
+    11,
+    23,
+    42,
+    67,
+    89,
+    103
+   ],
+   "wm_minus_random": {
+    "ci95": [
+     -1865.5304259320953,
+     4525.446547506189
+    ],
+    "convention": "diff = treatment - reference; negative = less delay",
+    "design": "crossed",
+    "diff": 1036.575675648448,
+    "n_seeds": 6,
+    "n_worlds": [
+     96,
+     96,
+     96,
+     96,
+     96,
+     96
+    ],
+    "reps": 10000,
+    "seed": 20261104
+   },
+   "wm_minus_random_per_seed": [
+    -354.86010881165333,
+    2309.4656694016057,
+    8390.45655970906,
+    -1820.1533822011525,
+    -3908.2043518768114,
+    1602.7496676696383
+   ]
+  }
+ },
+ "convention": "diff = treatment - reference; negative = less delay",
+ "doc_sha256": "37d5b1001b055490053d5e8a32383b34f52e50029fea5b2b829c9941e60e48dc",
+ "frozen_banks_sha256": "c9b271b54085a5fbf3d5d0055e25d4cca0c1c9cc5c42bc7f003a3b7a985431c7",
+ "n_worlds": 96,
+ "results_sha256": "b4b0bfb90672dc7439316caf89b126a701758124e0e06cf710f97f1ff7dd4e80",
+ "run_id": "20261113_0231",
+ "schema": "claim_validation.e1.analysis.v1"
+}

@@ -88,7 +88,7 @@ def check_teacher(teacher: Tensor, reference: Tensor) -> None:
 #: behaviour), ``"idm"`` (SUMO speedMode-27 consistent execution of commanded CAVs with the
 #: WM-inferred settings of the slot) or ``"idm_normal[:<table>]"`` (INFRAV5: the same ceiling
 #: with the fixed, operator-known CAV vType settings of :data:`CAV_SETTINGS_TABLES`; the CAV
-#: type is known to the operator -- design rule 2026-10-14: every CAV has one vType).
+#: type is known to the operator -- owner rule 2026-10-14: every CAV has one vType).
 #: ``"idm_normal"`` alone = :data:`DEFAULT_CAV_SETTINGS_TABLE`.
 #: SUMO ``normal_car`` vType (scenarios/idm/driver_routes.rou.xml; generated scenarios use
 #: speedDev 0, so v0 = speedFactor x speed limit): the legacy population's CAV type.

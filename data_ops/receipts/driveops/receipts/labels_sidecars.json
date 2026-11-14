@@ -1,0 +1,22 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "labels_sidecars",
+ "kind": "dirs",
+ "class": "KEEP-ACTIVE-backup-only",
+ "producer": "train-outcome label cover/rebind sidecars (LIVE-referenced; backup only, never delete)",
+ "restore": "copy children back to D:/rd-staging/wmn1_feat/",
+ "local": [
+  "D:/rd-staging/wmn1_feat/labels_cov_20261004T072826Z",
+  "D:/rd-staging/wmn1_feat/labels_cov_20261004T20261004T072451",
+  "D:/rd-staging/wmn1_feat/labels_fix1_20261003T141730Z",
+  "D:/rd-staging/wmn1_feat/labels_fix1_validate_20261003T140616Z"
+ ],
+ "drive": "gdrive:research-archive/data/staging/rd-staging/labels_sidecars",
+ "bytes": 42730519,
+ "files": 14,
+ "md5_manifest": "receipts/md5/labels_sidecars.md5",
+ "check": "passed",
+ "check_method": "rclone check --one-way (size+MD5)",
+ "check_detail": "",
+ "timestamp": "2026-10-09T14:03:52"
+}

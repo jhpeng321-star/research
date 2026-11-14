@@ -1,0 +1,58 @@
+=== A2 validation aggregation: 664 raw rows (49 worlds) ===
+
+--- per arm x variant (all windows) ---
+        arm   var    n  rmseCAV  rmseHum  dlyBias  ttc3Bias  coll/1k   cmds
+     native   act   47    3.910    4.336     +9.3     +3.89    0.054  438.7
+     native naive   47    3.753    4.331     -4.7     +1.23    0.058    0.0
+         pi   act   48    3.843    4.290     +6.7     +3.07    0.064  458.9
+         pi naive   48    3.849    4.318     -9.7     +1.22    0.057    0.0
+     fixed1   act   49    3.765    4.276     +4.8     +3.48    0.059  479.3
+     fixed1 naive   49    3.827    4.293     -8.7     +1.21    0.058    0.0
+     fixed2   act   49    3.876    4.282     +5.8     +3.87    0.061  480.8
+     fixed2 naive   49    3.816    4.315    -10.0     +1.50    0.058    0.0
+ switching1   act   46    3.786    4.259    +11.7     +2.86    0.059  425.1
+ switching1 naive   46    3.721    4.286     -3.9     +1.60    0.059    0.0
+ switching2   act   45    3.708    4.295     +8.7     +3.82    0.053  424.2
+ switching2 naive   45    3.747    4.312     -6.3     +1.37    0.055    0.0
+ switching3   act   48    3.784    4.228     +8.9     +3.38    0.054  454.2
+ switching3 naive   48    3.796    4.252     -6.4     +1.40    0.059    0.0
+
+--- paired delta (arm - native) per arm: predicted vs true, act vs naive ---
+        arm   var    n    dPred    dTrue     bias     MAE   sign   pear  spear
+         pi   act   46    +2.05    +1.68    +0.36   15.73   0.58  -0.57  -0.01
+         pi naive   46    +0.29    +1.68    -1.39   11.29   0.42  -0.22  -0.16
+     fixed1   act   47    -2.09    -0.11    -1.98   12.39   0.67   0.13   0.37
+     fixed1 naive   47    +0.74    -0.11    +0.86    9.73   0.56  -0.06  -0.01
+     fixed2   act   47    -0.81    -0.62    -0.19   10.81   0.65  -0.03   0.15
+     fixed2 naive   47    -0.29    -0.62    +0.33    5.84   0.49  -0.01  -0.11
+ switching1   act   46    +3.04    +0.04    +3.00   12.16   0.58   0.08   0.18
+ switching1 naive   46    +0.48    +0.04    +0.45    8.15   0.42   0.22  -0.08
+ switching2   act   44    +1.14    -0.58    +1.72   14.53   0.67   0.04   0.26
+ switching2 naive   44    -0.07    -0.58    +0.50    8.38   0.50   0.01  -0.06
+ switching3   act   46    -0.66    -1.31    +0.64   12.58   0.65  -0.21   0.10
+ switching3 naive   46    -0.16    -1.31    +1.15    6.71   0.56   0.03  -0.03
+
+--- paired TTC<3 delta per arm (act | naive) ---
+         pi: act dPred   -1.14 dTrue   -0.28 MAE   3.10 pear -0.03   naive dPred   +0.00 dTrue   -0.28 MAE   1.15 pear  +nan   
+     fixed1: act dPred   -0.82 dTrue   +0.02 MAE   2.07 pear -0.04   naive dPred   +0.00 dTrue   +0.02 MAE   0.72 pear -0.04   
+     fixed2: act dPred   -0.44 dTrue   -0.27 MAE   2.70 pear -0.01   naive dPred   +0.01 dTrue   -0.27 MAE   0.89 pear -0.11   
+ switching1: act dPred   -1.21 dTrue   -0.28 MAE   2.60 pear +0.05   naive dPred   +0.02 dTrue   -0.28 MAE   0.65 pear +0.28   
+ switching2: act dPred   -0.82 dTrue   -0.53 MAE   2.97 pear -0.03   naive dPred   +0.00 dTrue   -0.53 MAE   0.94 pear  +nan   
+ switching3: act dPred   -1.09 dTrue   -0.23 MAE   2.64 pear -0.18   naive dPred   +0.01 dTrue   -0.23 MAE   0.85 pear +0.09   
+
+--- CAV speed RMSE by penetration (act | naive) ---
+pen 0.02: act  3.37 (n= 70)   naive  3.53 (n= 70)   
+pen 0.05: act  3.57 (n= 69)   naive  3.39 (n= 69)   
+pen 0.10: act  3.87 (n= 70)   naive  3.74 (n= 70)   
+pen 0.20: act  4.06 (n= 63)   naive  4.10 (n= 63)   
+pen 0.40: act  4.21 (n= 60)   naive  4.21 (n= 60)   
+
+--- collisions: PRE-FIX vs POST-FIX windows ---
+POST-FIX   act: n  271  coll/1000  0.067  windows_with_pred_collision  89  truth_collisions  0
+POST-FIX naive: n  271  coll/1000  0.066  windows_with_pred_collision  89  truth_collisions  0
+ PRE-FIX   act: n   61  coll/1000  0.019  windows_with_pred_collision   8  truth_collisions  0
+ PRE-FIX naive: n   61  coll/1000  0.021  windows_with_pred_collision  10  truth_collisions  0
+
+true (arm - native) delay deltas: n 276  mean -0.15  sd 15.05  p95|d| 34.16 veh-s
+
+wrote D:\rd-wt\wd01m\output\wd01\partA_act\results\validation_act.json

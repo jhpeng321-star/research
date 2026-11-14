@@ -1,0 +1,36 @@
+[
+  {
+    "id": "WD-01-PB-V04B",
+    "date": "2026-10-01",
+    "family": "WD",
+    "status": "planned",
+    "name": "Part B direct-difference tree model v0.4b on J4 wall pairs (baseline T for Idea A): build, direct-dY fit, wall-pair acceptance",
+    "question": "Can a tree model predicting the ARM DIFFERENCE dY DIRECTLY from deployable state features plus request-time planned-schedule/wall descriptors give the wall-native contrast genuine VALUE skill (dY CRPS better than zero-contrast AND TRAIN-cell-mean) where the v0.4a paired-level model had sign skill but no value skill?",
+    "controller": "one quantile-GBM per (tau x sensing variant) on dY directly (no level head, no paired predictions); PLANNED-SCHEDULE action descriptor (19 x 30 s segments + wall hold/speed/cap); auxiliary chunk-4 contrasts training only; wall-only ablation reported",
+    "baseline_cf": "zero-contrast; TRAIN-cell-mean per demand x penetration; ridge-on-dY same inputs; v0.4a verdict as the level-prediction comparator",
+    "scenario": "J4 wall pilot chunk-4 wall branches + their restored TRUE fleet-native siblings (same world + t0 saved state); aux chunk-4 contrasts of the SAME 44 worlds",
+    "seeds_splits": "Split counted BY NAME from the J4 WORLD_PLAN (39 TRAIN / 5 CAL; one recorded name drift disclosed); world-grouped 6-fold CV on TRAIN only; the ONE CAL read is OWNER_ACK-gated and read-once-marked; HOLDOUT none; chunk-5 never",
+    "observation_contract": "deployable_strict (CAV self-reports only, HEADLINE) / deployable_detector (SENSITIVITY) at t0 from the shared base trace; request-time wall descriptors (ALLOWED_RECORD_FIELDS only); no penetration/pre_fix/speed_mode/world strings; nothing with timestamp > t",
+    "privileged_info": "None as model input; matched counterfactual arms are offline labels only",
+    "changed_vars": "direct-dY target (vs v0.4a paired level predictions); J4 wall arms; planned-schedule action input (owner requirement s.12)",
+    "fixed_vars": "tau set, quantile grid, the fixed 6-candidate tuning grid, world-grouped CV, conformal CalMap method, CRPS code path (K=40), split rule, CAL guard",
+    "comparators": "zero-contrast; TRAIN-cell-mean; ridge-on-dY; wall-only ablation; v0.4a A3 records",
+    "matching_reuse": "Closest prior WD-01-PB-V04A (same pairing machinery + A3 rule; verdict FAIL on every variant). Reuses partB_v0/partB_v0data read-only (CRPS, bootstrap, references, reconstruction); new data root by COPY.",
+    "requested_vs_delivered": "Registration output/wd01/REGISTRATION_PARTB_V04B.md, LF sha256 e00cd98edadbdfdafc9267eefdd9f004fb72cc7de8c531e00ef27e8be8b5ad9d; owner finalize instruction 2026-10-01; executor brief authorizes code+tests+dry-run only",
+    "budget_registered": "ZERO SUMO; CPU, 1 worker, BelowNormal; declared cap 6 CPU-hours total for the registered run (build <= 1 h, tuning + 2 variant fits + ablation <= 1.5 h, CAL read + report <= 0.5 h)",
+    "budget_actual": "not started (planned; the registered build/fit/CAL read begin only after the owner's go; the pre-ack TRAIN-only dry-run stays inside partB_v04b/results/dryrun)",
+    "attempts": "",
+    "results": "Not run yet (planned).",
+    "criteria_verdict": "Pending (ACCEPT/PARTIAL/FAIL per registration section 6)",
+    "limitations": "Small n (39 TRAIN worlds / 156 wall pairs per tau; 20 CAL pairs); wall law v2.1 data (never claims v2.2); ideal-sensing premise; short commitments barely represented until J-PULSE; split-name drift w8662 disclosed",
+    "artifacts": [
+      "output/wd01/REGISTRATION_PARTB_V04B.md",
+      "output/wd01/partB_v04b (code + tests, this commit)",
+      "E:/research-dense/output/wd01_partB_v0data_v04b (new data root, copy only)",
+      "E:/research-dense/output/partB_results/v0.4b_strict",
+      "E:/research-dense/output/partB_results/v0.4b_detector",
+      "E:/research-dense-backups/wd01/ (backup of the new root)"
+    ],
+    "review_status": "registered FINAL by the world model session; executor task: code + tests ready, fit awaits the owner's go"
+  }
+]

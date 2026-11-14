@@ -1,6 +1,6 @@
 # WM-S-C4 v4 HYGIENE (2026-10-14): configs/c4_wm_v3.toml + two data-side switches, nothing else.
 #   data.junction_fix = "ffill"        JUNCTIONFIX (commit e40ee87, JUNCTIONFIX_NOTES.md).
-#   data.controller_hygiene = "strict" DATAHYG (DATAHYG_NOTES.md): design rule "no designed
+#   data.controller_hygiene = "strict" DATAHYG (DATAHYG_NOTES.md): owner rule "no designed
 #     controllers in the WM training data" - direct-mix windows with a CIRCLES-damping CAV are
 #     dropped (this removes 99.7 % of them at the 120 s window, so the switching source is left
 #     out entirely; see the notes), dspeed windows may not overlap a merge_aimed / gap_opening

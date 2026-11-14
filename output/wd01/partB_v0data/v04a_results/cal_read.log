@@ -1,0 +1,52 @@
+[    0.0s] [strict] loading model E:\research-dense\output\partB_results\v0.4a_strict
+[    9.6s] gbm: loaded value model from E:\research-dense\output\partB_results\v0.4a_strict\gbm_value.pkl (variant=auto, taus=[30.0, 60.0, 120.0, 300.0, 570.0], 65 quantile models, 15 ridge point models, per-tau: 30->hybrid, 60->hybrid, 120->hybrid, 300->hybrid, 570->hybrid)
+[   27.7s] data: verified 5504 files against MANIFEST (sha256 3c414eecc176...)
+[   27.7s] data: 1376 sources selected (splits=TRAIN+CALIBRATION, chunks=all), 0 superseded skipped, 0 HOLDOUT entries present in MANIFEST (not selected, never built in V0)
+[   73.9s] data: 84176 decision times, 292912 label rows, 414000 TD rows in memory (feature set: deployable_strict)
+[   74.3s] [strict] CAL scoring rows 26271 (aux excluded); TRAIN scoring rows 182067
+[  125.6s] baselines: tau=30 ridge + point-GBM fitted on 73642 TRAIN rows in 23.7 s (OOF residuals)
+[  149.6s] baselines: tau=60 ridge + point-GBM fitted on 70030 TRAIN rows in 23.9 s (OOF residuals)
+[  170.0s] baselines: tau=120 ridge + point-GBM fitted on 62806 TRAIN rows in 20.4 s (OOF residuals)
+[  185.3s] baselines: tau=300 ridge + point-GBM fitted on 41134 TRAIN rows in 15.2 s (OOF residuals)
+[  193.6s] baselines: tau=570 ridge + point-GBM fitted on 8626 TRAIN rows in 8.3 s (OOF residuals)
+[  289.1s] oob: tau=30 world-grouped 5-fold OOF acceptance computed (73642 TRAIN rows)
+[  330.0s] oob: tau=60 world-grouped 5-fold OOF acceptance computed (70030 TRAIN rows)
+[  363.3s] oob: tau=120 world-grouped 5-fold OOF acceptance computed (62806 TRAIN rows)
+[  377.5s] oob: tau=300 world-grouped 5-fold OOF acceptance computed (41134 TRAIN rows)
+[  378.3s] oob: tau=570 world-grouped 5-fold OOF acceptance computed (8626 TRAIN rows)
+[  381.1s] [detector] loading model E:\research-dense\output\partB_results\v0.4a_detector
+[  382.4s] gbm: loaded value model from E:\research-dense\output\partB_results\v0.4a_detector\gbm_value.pkl (variant=auto, taus=[30.0, 60.0, 120.0, 300.0, 570.0], 52 quantile models, 15 ridge point models, per-tau: 30->hybrid, 60->hybrid, 120->hybrid, 300->hybrid, 570->ridge)
+[  399.9s] data: verified 5504 files against MANIFEST (sha256 3c414eecc176...)
+[  399.9s] data: 1376 sources selected (splits=TRAIN+CALIBRATION, chunks=all), 0 superseded skipped, 0 HOLDOUT entries present in MANIFEST (not selected, never built in V0)
+[  451.3s] data: 84176 decision times, 292912 label rows, 414000 TD rows in memory (feature set: deployable_detector)
+[  451.8s] [detector] CAL scoring rows 26271 (aux excluded); TRAIN scoring rows 182067
+[  524.4s] baselines: tau=30 ridge + point-GBM fitted on 73642 TRAIN rows in 40.1 s (OOF residuals)
+[  561.9s] baselines: tau=60 ridge + point-GBM fitted on 70030 TRAIN rows in 37.4 s (OOF residuals)
+[  591.5s] baselines: tau=120 ridge + point-GBM fitted on 62806 TRAIN rows in 29.6 s (OOF residuals)
+[  613.5s] baselines: tau=300 ridge + point-GBM fitted on 41134 TRAIN rows in 22.0 s (OOF residuals)
+[  627.9s] baselines: tau=570 ridge + point-GBM fitted on 8626 TRAIN rows in 14.3 s (OOF residuals)
+[  727.3s] oob: tau=30 world-grouped 5-fold OOF acceptance computed (73642 TRAIN rows)
+[  772.1s] oob: tau=60 world-grouped 5-fold OOF acceptance computed (70030 TRAIN rows)
+[  807.3s] oob: tau=120 world-grouped 5-fold OOF acceptance computed (62806 TRAIN rows)
+[  821.3s] oob: tau=300 world-grouped 5-fold OOF acceptance computed (41134 TRAIN rows)
+[  822.2s] oob: tau=570 world-grouped 5-fold OOF acceptance computed (8626 TRAIN rows)
+[  825.4s] [strict_noaux] loading model E:\research-dense\output\partB_results\v0.4a_strict_noaux
+[  826.1s] gbm: loaded value model from E:\research-dense\output\partB_results\v0.4a_strict_noaux\gbm_value.pkl (variant=auto, taus=[30.0, 60.0, 120.0, 300.0, 570.0], 65 quantile models, 15 ridge point models, per-tau: 30->hybrid, 60->hybrid, 120->hybrid, 300->hybrid, 570->hybrid)
+[  836.4s] data: verified 3936 files against MANIFEST (sha256 3c414eecc176...)
+[  836.4s] data: 984 sources selected (splits=TRAIN+CALIBRATION, chunks=all), 0 superseded skipped, 0 HOLDOUT entries present in MANIFEST (not selected, never built in V0)
+[  868.7s] data: 59970 decision times, 208338 label rows, 294930 TD rows in memory (feature set: deployable_strict)
+[  869.1s] [strict_noaux] CAL scoring rows 26271 (aux excluded); TRAIN scoring rows 182067
+[  919.2s] baselines: tau=30 ridge + point-GBM fitted on 52428 TRAIN rows in 25.7 s (OOF residuals)
+[  948.2s] baselines: tau=60 ridge + point-GBM fitted on 49845 TRAIN rows in 29.0 s (OOF residuals)
+[  972.5s] baselines: tau=120 ridge + point-GBM fitted on 44679 TRAIN rows in 24.2 s (OOF residuals)
+[  997.2s] baselines: tau=300 ridge + point-GBM fitted on 29181 TRAIN rows in 24.7 s (OOF residuals)
+[ 1009.3s] baselines: tau=570 ridge + point-GBM fitted on 5934 TRAIN rows in 12.1 s (OOF residuals)
+[ 1105.1s] oob: tau=30 world-grouped 5-fold OOF acceptance computed (52428 TRAIN rows)
+[ 1151.5s] oob: tau=60 world-grouped 5-fold OOF acceptance computed (49845 TRAIN rows)
+[ 1190.3s] oob: tau=120 world-grouped 5-fold OOF acceptance computed (44679 TRAIN rows)
+[ 1204.8s] oob: tau=300 world-grouped 5-fold OOF acceptance computed (29181 TRAIN rows)
+[ 1205.7s] oob: tau=570 world-grouped 5-fold OOF acceptance computed (5934 TRAIN rows)
+verify v0.4a_strict: OK
+verify v0.4a_detector: OK
+verify v0.4a_strict_noaux: OK
+[ 1221.3s] report written: REPORT_V04A.md

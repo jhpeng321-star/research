@@ -1,0 +1,139 @@
+[
+  {
+    "experiment_id": "WD-01-PB-RESCORE1",
+    "record": "analysis",
+    "record_kind": "analysis",
+    "status": "completed",
+    "execution_status": "completed",
+    "evidence_validity": "valid",
+    "scientific_verdict": "relabel_changed_level_and_some_signs;_v032_contrast_sign_skill_survives_value_skill_does_not",
+    "recorded_utc": "2026-09-30T03:20:00Z",
+    "recorded_by": "ZCode GLM execution session (WD-01-PB-RESCORE1 task); integrating agent to append",
+    "registration": {
+      "file": "output/wd01/REGISTRATION_PB_RESCORE1.md",
+      "lf_sha256_prefix": "1cd9e39600e4267e",
+      "registered": "2026-09-30 by the world model session, before execution",
+      "type": "ANALYSIS, zero simulation, no training, no refit, no model selection; re-scores existing v0.3.2 deployable models against the chunk-2/3 TRUE native/PI references"
+    },
+    "question": "Per TRAIN/CAL world of chunks 2-3 and per tau in {30,60,120,300,570}: (Q1) how different is the realised remaining delay under the mislabelled switching arms vs the TRUE fleet native/PI vs the damping base from the same saved t0 state; (Q2) does the v0.3.2 deployable models' old damping-vs-switching contrast (dV_old) carry sign and value skill against the realised TRUE damping-vs-native contrast (dY); (Q3) which earlier WD-01 claims relied on the mislabelled __native arms and do they stand, get corrected, or get withdrawn?",
+    "closest_prior_and_difference": {
+      "related_records": [
+        "v0.3.2_strict / v0.3.2_detector eval reports section 3 (the OLD damping-vs-'native' contrast at t0 on 21 CAL worlds, truth = switching arm)",
+        "WD-01 J3/WM-73 truearms campaign (reg b9fe37e5...): the TRUE fleet native/PI references this analysis re-scores against",
+        "WD-01-PA2G-A2 (Part A): analogous truth-source correction on the Part A side (chunk-4 __native_base); this record is the Part B analog on chunk-2/3 truearms"
+      ],
+      "unanswered_difference": "No earlier Part B number was scored against a TRUE native reference; whether the v0.3.2 contrast models keep sign/value skill when native means fleet-native was open, as was the size of the relabel effect on the earlier stated contrasts."
+    },
+    "changed_variable": "truth source only (mislabelled switching __native/__pi arms -> J3/WM-73 truearms native/pi); model, states, decision grid, metrics conventions and comparator definitions unchanged; no simulation, no fit",
+    "data": {
+      "truth": "E:/research-dense/runs/campaign_stage1_chunk{2,3}_truearms/<world>__{native,pi} (140+140 arms, graded 280/280); switching arms + damping bases from E:/research-dense/runs/campaign_stage1_chunk{2,3}",
+      "label_root": "E:/research-dense/output/wd01_partB_truearms_labels_v1 (NEW, built this task: per TRAIN/CAL world 5 sources; base+native copied hash-verified from the frozen v0.3.2 root, pi + truearms_native + truearms_pi built with the v0.3.2 label code; COPY only, SHA256SUMS 1793 entries 0 mismatches, backup E:/research-dense-backups/wd01/partB_truearms_labels_v1 verified 1793/1793)",
+      "worlds": "56 TRAIN + 7 CALIBRATION per chunk (112 worlds); splits read from each chunk's WORLD_PLAN.json BEFORE any file access; HOLDOUT (14 + 14, incl. kept_disclosed w8477) never opened; tools/holdout_guard.py + protocols/holdout_exclusions.json applied",
+      "models": "E:/research-dense/output/partB_results/v0.3.2_strict (HEADLINE, deployable_strict) and v0.3.2_detector (SENSITIVITY, deployable_detector); predict-only",
+      "label_code_commit": "6ceddb2863a75dd483fb134a7749f39885e1f0e5"
+    },
+    "budget_and_charges": {
+      "registered_budget": "label build <= 2 h at 4 workers + scoring <= 30 min; one ZCode task (Flash, 240 min); zero SUMO",
+      "allocations": [
+        {
+          "id": "label_root_build",
+          "status": "completed",
+          "note": "560 sources in ~34 min wall (Pool(4), below-normal priority), log output/wd01/rescore1/build_labels_run.log"
+        },
+        {
+          "id": "q1_q2_scoring",
+          "status": "completed",
+          "note": "Q1 ~1 min; Q2 strict+detector ~8 min (incl. MANIFEST hash verification of the 112 opened v0.3.2 base sources)"
+        }
+      ]
+    },
+    "physical_results": {
+      "verified_against": "output/wd01/partB_rescore1/{q1_tables.json,q2_tables.json}",
+      "units": "remaining-delay contrasts in vehicle-seconds; positive = the first arm of the contrast has MORE remaining delay; branch arms read at t0+10 s (v0.3.2-eval convention, same saved t0 state)",
+      "q1_label_audit": {
+        "per_tau_mean_contrasts_all_112_worlds": {
+          "d_switch_native": {"30": 21.0, "60": 54.5, "120": 149.3, "300": 447.0, "570": 972.0},
+          "d_truepi_native": {"30": 18.2, "60": 61.8, "120": 182.4, "300": 530.9, "570": 1069.2},
+          "d_damping_truenative": {"30": 31.5, "60": 95.2, "120": 255.9, "300": 1117.0, "570": 3087.3},
+          "d_damping_switch_OLD": {"30": 10.4, "60": 40.7, "120": 106.7, "300": 670.0, "570": 2115.3}
+        },
+        "sign_agreement_old_vs_true_damping_contrast": {
+          "30": 0.902, "60": 0.839, "120": 0.759, "300": 0.786, "570": 0.768,
+          "ci90_tau570": [0.705, 0.839]
+        },
+        "headline": "the relabel changes the damping-vs-'native' level by +46% at tau570 (mean 2115 -> 3087 veh-s) and flips its sign in 10-24% of world-tau pairs (tau-dependent); CAL tau570 means: true damping-vs-native +5184.8 vs old +3110.6, 10/14 signs agree"
+      },
+      "q2_rescore": {
+        "strict_HEADLINE_CAL": {
+          "sign_accuracy": {"30": 0.714, "60": 0.786, "120": 0.714, "300": 0.786, "570": 0.857},
+          "ci90_tau570": [0.714, 1.0],
+          "crps_model_vs_zero_vs_cellmean": {
+            "30": [113.3, 68.4, 56.3], "60": [241.3, 133.2, 86.3],
+            "120": [581.4, 454.3, 322.1], "300": [1828.8, 2050.6, 1315.7],
+            "570": [4711.4, 6276.9, 4609.2]
+          },
+          "bias": {"30": -10.1, "60": -33.0, "120": -157.2, "300": -1059.4, "570": -3561.8}
+        },
+        "detector_SENSITIVITY_CAL": {
+          "sign_accuracy": {"30": 0.714, "60": 0.786, "120": 0.714, "300": 0.786, "570": 0.857},
+          "crps_model_vs_zero_vs_cellmean": {
+            "30": [53.3, 68.4, 56.3], "60": [129.9, 133.2, 86.3],
+            "120": [413.8, 454.3, 322.1], "300": [1533.6, 2050.6, 1315.7],
+            "570": [4450.8, 6276.9, 4609.2]
+          },
+          "bias": {"30": -40.6, "60": -83.6, "120": -239.4, "300": -1056.2, "570": -2980.7}
+        },
+        "TRAIN": "same pattern, in-sample-labelled (see q2_tables.json per_split_tau)",
+        "headline": "sign skill survives (CAL 0.71-0.86 by tau; tau570 0.857 [0.714, 1.000]); value skill does not: CRPS worse than zero at short tau (strict <= 120, detector <= 60) and worse than the TRAIN-cell-mean TRUE-contrast baseline at every tau in both variants; one-sided under-prediction bias because the models were fitted to damping-vs-SWITCHING gaps that are 1.5-3x smaller than the TRUE gaps"
+      },
+      "q3_inventory": "5 report families CORRECTED (v0.2_run1, v0.3_hybrid, v0.3.1_hybrid_deployable, v0.3.1_selected_deployable(+r2,x1,x2), v0.3.2_strict, v0.3.2_detector section-3 contrasts), A2_ERRATUM + REPORT_PA2G_EVAL_A stand (policy-name-independent / already caveated + superseded), held C2L1 WITHDRAWN (never run, invalid truth), archived STAGE1C2_RESULTS has no such claim, PL-02a listed out of scope; full table in REPORT_PB_RESCORE1.md section 3"
+    },
+    "integrity_limitations": [
+      "Single realisation per arm and world: contrasts are exact per root (A2 erratum H1), not expectations over stochasticity.",
+      "10 s window offset between the damping arm (t0) and the branch arms (t0+10 s), identical to all earlier reports.",
+      "CRPS of dY uses the 7 x 7 independent quantile-level pairing of the two policy-conditioned predictive distributions (49 equally-likely differences), an approximation documented in the report.",
+      "CAL is a second read for v0.3.2 (disclosed, report-only; no selection or calibration follows). TRAIN results are in-sample-trained.",
+      "Q2 evaluates the shipped models off their training distribution (TRUE-native gaps are larger than anything in the training labels); the bias is a statement about the shipped models, not about retrained ones.",
+      "Chunk-1 has no truearms references and is out of scope (per registration).",
+      "The label root copies base/native labels+td from the frozen v0.3.2 root rather than rebuilding them; parity of the same code path with the v0.3.2 labels is pinned by an exact-match test on one TRAIN damping source."
+    ],
+    "what_must_not_be_inferred": [
+      "That the v0.3.2 models are useless for planning: sign direction survives at useful levels; the re-scored quantity is the damping-vs-native contrast, not the delay-level heads.",
+      "That a retrained/relabelled contrast model would or would not carry value skill: no model was trained or selected here.",
+      "Any wall or controller efficacy claim: this analysis characterizes predictors and labels only."
+    ],
+    "answers_question": "yes (Q1 label audit quantified; Q2 re-scoring completed with sign/value/bias/baselines; Q3 inventory delivered with per-claim status)",
+    "paths": {
+      "report": "output/wd01/partB_rescore1/REPORT_PB_RESCORE1.md",
+      "label_root": "E:/research-dense/output/wd01_partB_truearms_labels_v1",
+      "label_root_manifest": "E:/research-dense/output/wd01_partB_truearms_labels_v1/MANIFEST.json",
+      "backup": "E:/research-dense-backups/wd01/partB_truearms_labels_v1",
+      "backup_verify": "output/wd01/partB_rescore1/backup_verify_truearms_labels_v1.json",
+      "q1_raw_rows": "output/wd01/partB_rescore1/q1_raw_rows.csv",
+      "q1_tables": "output/wd01/partB_rescore1/q1_tables.json",
+      "q2_raw_rows_strict": "output/wd01/partB_rescore1/q2_raw_rows_strict.csv",
+      "q2_raw_rows_detector": "output/wd01/partB_rescore1/q2_raw_rows_detector.csv",
+      "q2_tables": "output/wd01/partB_rescore1/q2_tables.json",
+      "closeout_integrity": "output/wd01/partB_rescore1/closeout_integrity.json",
+      "builder": "output/wd01/rescore1/build_truearms_labels.py",
+      "q1_script": "output/wd01/rescore1/q1_label_audit.py",
+      "q2_script": "output/wd01/rescore1/q2_rescore.py",
+      "tests": "output/wd01/tests/test_rescore1.py",
+      "build_log": "output/wd01/rescore1/build_labels_run.log"
+    },
+    "hashes": {
+      "registration_lf_sha256_prefix": "1cd9e39600e4267e",
+      "label_root_manifest_sha256": "218A737C932FCE2DF6B592938CED789EBED432CD157945E62A5D4727505F09BF",
+      "q1_raw_rows_csv": "C649221E323D1ADD71B3104F5D936AF06BF74B993156ED73FB9BBD153A283E74",
+      "q2_raw_rows_strict_csv": "7A3DFC3158FDB8D2D21D765B7714C8839C18C961EFC57DD781B0A8AE8545446B",
+      "q2_raw_rows_detector_csv": "A3C82CC05AD55EF715F1BCB1F6358BE16E3777923847DC02B10FC5B41FCCC0B2",
+      "report_md": "32499A4D39D147B72DE12CBBC3B0B49896EB529FD9F03B95470D981D6D6D0359",
+      "label_code_commit": "6ceddb2863a75dd483fb134a7749f39885e1f0e5"
+    },
+    "supersedes": "the section-3 damping-vs-'native' contrast numbers of the Part B v0.2-v0.3.2 eval reports (kept as evidence; their truth arm is the switching mix)",
+    "ledger_updated": "NO (draft only; integrating agent appends to protocols/experiment_history.json)",
+    "open_questions_updated": "NO (shared records untouched by this task)",
+    "route_updated": "NO (shared records untouched by this task)",
+    "next_action": "Owner decisions: (1) accept the Q3 corrections/withdrawals for the affected reports; (2) whether a v0.4 contrast model must be retrained on relabelled labels + true-native-augmented data before any planner use (separate registration; nothing trained here); (3) PL-02a re-scoring stays planner-owned."
+  }
+]

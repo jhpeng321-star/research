@@ -1,0 +1,23 @@
+{
+ "_note": "Driver registration for box_driver.py (amendment 72, blocks confirmed by MAIN 2026-11-13). Panels built and pinned in /root/cv_20261113_0231/src before any episode.",
+ "amendment": "72",
+ "label": "CV1",
+ "job_prefix": "cv1",
+ "phase": "claimval_cv1",
+ "cap_sim_s": 4387200,
+ "host_base": "/root/cv_20261113_0231",
+ "bank_dir": "cv_banks",
+ "result_label": "claim validation 20261113_0231; reference U0 = frozen base MAPPO; never pooled",
+ "authority": "MAIN amendment 72 (REGISTRATION.md): claim validation 20261113_0231, E1 + E2, cell D2800_p60",
+ "blocks": {
+  "ident": {"setting": "a42c_D2800_p60", "ranges_attr": "A42_RANGES", "panel_sha256": "0b42fd54790fc42d84a8f52e5cb74a78ccd41fa0450c410d1e349cd33bcb1adb", "world_seeds": null},
+  "dev": {"setting": "a35_D2800_p60", "ranges_attr": "A35_PANEL_RANGES", "panel_sha256": "425e8a8d0a15dd93bb915e7d49f58d427e807f18e3f523e3fd77df24d3dd2995", "world_seeds": null},
+  "e1v_seed11": {"setting": "cv1v11_D2800_p60", "ranges_attr": "CV1_RANGES", "panel_sha256": "468a6e299d2593e552972156b4e858bfdae58d65b95975b1a7ed3c9793939172", "world_seeds": null},
+  "e1v_seed23": {"setting": "cv1v23_D2800_p60", "ranges_attr": "CV1_RANGES", "panel_sha256": "04700b403461895c7c4c6309b8c6c10cf4b1a19b0d09c814f7264fd562b7a097", "world_seeds": null},
+  "e1v_seed42": {"setting": "cv1v42_D2800_p60", "ranges_attr": "CV1_RANGES", "panel_sha256": "4e7a9c78d22dc44f9fd6317bebc8c2faa01c6d5d9e3c64e7a6deb8b2b2d65843", "world_seeds": null},
+  "e1v_seed67": {"setting": "cv1v67_D2800_p60", "ranges_attr": "CV1_RANGES", "panel_sha256": "387e6f11f4382bc0daa8d25c5b7bc820ac23fcfa524a6a2072a0c9baee3cbf1c", "world_seeds": null},
+  "e1v_seed89": {"setting": "cv1v89_D2800_p60", "ranges_attr": "CV1_RANGES", "panel_sha256": "df8e646134be5f9bdc690d02c55a6653a1095263a2cf77cf31a07968920b7a0d", "world_seeds": null},
+  "e1v_seed103": {"setting": "cv1v103_D2800_p60", "ranges_attr": "CV1_RANGES", "panel_sha256": "69c05677ce2b7ac3b6fd8e7c30b076e665a12cac0da7897e825ebfd98a15e981", "world_seeds": null},
+  "conf": {"setting": "cv1c_D2800_p60", "ranges_attr": "CV1_RANGES", "panel_sha256": "256b110a1b84a577532dd9ee5e3b9c2c3ae641fdd40dcd239d22f37e7586a897", "world_seeds": null}
+ }
+}

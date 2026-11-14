@@ -1,0 +1,256 @@
+{
+ "erratum": "build.py ttc_rate counted pairs in the wrong direction (front vs behind swapped); these are the corrected follower->leader TTC exposures at the 0.5 s step",
+ "by_split": {
+  "train": {
+   "ttc_lt3_steps": 4319,
+   "ttc_lt3_per_1000": 2.233,
+   "ttc_lt15_per_1000": 0.0
+  },
+  "holdout": {
+   "ttc_lt3_steps": 1395,
+   "ttc_lt3_per_1000": 2.586,
+   "ttc_lt15_per_1000": 0.0
+  },
+  "overall": {
+   "ttc_lt3_steps": 5714,
+   "ttc_lt3_per_1000": 2.31,
+   "ttc_lt15_per_1000": 0.0
+  }
+ },
+ "per_root": [
+  {
+   "root": "cv17",
+   "split": "train",
+   "ttc_lt3_steps": 177,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 1.678,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 105481
+  },
+  {
+   "root": "cv19_4107",
+   "split": "train",
+   "ttc_lt3_steps": 102,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 1.373,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 74294
+  },
+  {
+   "root": "cv19_4108",
+   "split": "train",
+   "ttc_lt3_steps": 49,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 0.748,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 65519
+  },
+  {
+   "root": "cv20_7001m2000",
+   "split": "train",
+   "ttc_lt3_steps": 148,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 1.902,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 77797
+  },
+  {
+   "root": "cv20_7002m2000",
+   "split": "train",
+   "ttc_lt3_steps": 39,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 0.55,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 70895
+  },
+  {
+   "root": "cv20_7003m2000",
+   "split": "train",
+   "ttc_lt3_steps": 162,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.024,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 80050
+  },
+  {
+   "root": "cv20_7004m2000",
+   "split": "train",
+   "ttc_lt3_steps": 154,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 1.896,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 81219
+  },
+  {
+   "root": "cv20_7005m2000",
+   "split": "train",
+   "ttc_lt3_steps": 196,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.413,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 81216
+  },
+  {
+   "root": "cv20_7006m2000",
+   "split": "train",
+   "ttc_lt3_steps": 209,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 3.043,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 68671
+  },
+  {
+   "root": "cv20_7007m2700",
+   "split": "train",
+   "ttc_lt3_steps": 334,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.909,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 114808
+  },
+  {
+   "root": "cv21_7008m2700",
+   "split": "train",
+   "ttc_lt3_steps": 306,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.767,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 110602
+  },
+  {
+   "root": "cv23_7010m2700",
+   "split": "train",
+   "ttc_lt3_steps": 176,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 1.698,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 103627
+  },
+  {
+   "root": "cv28_7101m2000",
+   "split": "holdout",
+   "ttc_lt3_steps": 53,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 0.771,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 68721
+  },
+  {
+   "root": "cv30_7302m2000",
+   "split": "train",
+   "ttc_lt3_steps": 241,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.945,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 81837
+  },
+  {
+   "root": "cv30_7303m2000",
+   "split": "train",
+   "ttc_lt3_steps": 88,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 1.322,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 66555
+  },
+  {
+   "root": "cv30_7304m2700",
+   "split": "train",
+   "ttc_lt3_steps": 274,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.432,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 112657
+  },
+  {
+   "root": "cv30_7305m2700",
+   "split": "train",
+   "ttc_lt3_steps": 237,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.077,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 114133
+  },
+  {
+   "root": "cv30_7306m2700",
+   "split": "train",
+   "ttc_lt3_steps": 298,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.686,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 110953
+  },
+  {
+   "root": "seed_7011m2700",
+   "split": "holdout",
+   "ttc_lt3_steps": 322,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.848,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 113047
+  },
+  {
+   "root": "seed_7012m2700",
+   "split": "holdout",
+   "ttc_lt3_steps": 362,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.919,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 124005
+  },
+  {
+   "root": "seed_7301m2000",
+   "split": "train",
+   "ttc_lt3_steps": 104,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 1.45,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 71727
+  },
+  {
+   "root": "seed_7531m2700",
+   "split": "train",
+   "ttc_lt3_steps": 319,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.693,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 118466
+  },
+  {
+   "root": "seed_7532m2700",
+   "split": "train",
+   "ttc_lt3_steps": 488,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 4.077,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 119709
+  },
+  {
+   "root": "seed_7534m2700",
+   "split": "holdout",
+   "ttc_lt3_steps": 406,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 3.098,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 131073
+  },
+  {
+   "root": "seed_7535m2400",
+   "split": "train",
+   "ttc_lt3_steps": 218,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.099,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 103839
+  },
+  {
+   "root": "seed_7536m2400",
+   "split": "holdout",
+   "ttc_lt3_steps": 252,
+   "ttc_lt15_steps": 0,
+   "ttc_lt3_per_1000": 2.458,
+   "ttc_lt15_per_1000": 0.0,
+   "vehicle_steps": 102521
+  }
+ ]
+}

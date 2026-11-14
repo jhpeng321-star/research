@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/campaign_stage1_v2",
+ "name": "campaign_stage1_v2",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\campaign_stage1_v2",
+ "drive": "gdrive:research-archive/repo-evidence/output/campaign_stage1_v2/campaign_stage1_v2.tar.zst",
+ "bytes": 7998866,
+ "files": 74,
+ "archive_bytes": 451027,
+ "archive_md5": "66189e3bd4fbef4a701ae802c7582b49",
+ "member_manifest": "manifests/members/output_campaign_stage1_v2.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 14.0,
+ "timestamp": "2026-10-10T01:49:35"
+}

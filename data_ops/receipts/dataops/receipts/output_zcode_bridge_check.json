@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/zcode_bridge_check",
+ "name": "zcode_bridge_check",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\zcode_bridge_check",
+ "drive": "gdrive:research-archive/repo-evidence/output/zcode_bridge_check/zcode_bridge_check.tar.zst",
+ "bytes": 4646,
+ "files": 3,
+ "archive_bytes": 2573,
+ "archive_md5": "c38f2b873fddd663656474ef4f0592b7",
+ "member_manifest": "manifests/members/output_zcode_bridge_check.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 18.9,
+ "timestamp": "2026-10-10T01:29:36"
+}

@@ -1,0 +1,64 @@
+{
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "amendment": "26",
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend25b.json",
+  "registration_sha256": "bfb15c2e43761085c3056ca52c98257e82e822f86a072f91f09355d1aa1d7749"
+ },
+ "status": "pre-results: registered before any trained-policy evaluation outcome and before any LEARNED_TRIGGER panel episode; code merge and episodes wait for REV-SPD PASS on c4/learned-trigger 445fb436",
+ "authority": [
+  "MAIN 2026-11-09 05:41 amendment 26 (REGISTRATION.md): LEARNED_TRIGGER arm, +115,200 sim-s within the final-eval allocation 2,700,000",
+  "TRIGCLF interface 2026-11-09 (E:/agent-work/_sol/TRIGCLF_20261109.md)"
+ ],
+ "arm": {
+  "name": "LEARNED_TRIGGER",
+  "definition": "identical to ORACLE_WM (amendment 25b: U0 = frozen d9042cc5 executor + bound zero-residual u0, A/0; WM rows of the frozen end-of-training bank; per-family bank session/cooldown rule; situational rows before unconditional rows) EXCEPT admission: a plan starts iff the learned classifier probability on CAV-observable features (tools.coopnative.policy.encode context x (29) + anchors (2), two members) >= 0.378785; this replaces the privileged onset-bin gate for every row, including unconditional rows",
+  "deployable": "CAV-observable admission (no privileged bin); the bank plans themselves remain SUMO-verified",
+  "ck": {
+   "kind": "learned_trigger",
+   "arm_update": [
+    "A",
+    0
+   ],
+   "cell_key": "must equal world cell_key",
+   "oracle_bank": "the same sealed end-of-training bank as ORACLE/ORACLE_WM (ORACLE_BINDING.json)",
+   "learned_trigger_model": {
+    "path": "<checkout>/ops/learned_trigger/LEARNED_TRIGGER_MODEL.json",
+    "file_sha256": "8e0ddd3e241ce0172736909133f0b745c58b6bf795e06ca5364e5755f7e3b720"
+   },
+   "learned_trigger_sha256": "41fc8d1a2fb0ef547524a9d36488b7bbb4bc9f0e8c1e2d06f5fe85eb5903b54d"
+  },
+  "receipts": "extra['learned_trigger_sha256_loaded'] == ck; extra['learned_trigger'] = OracleCore receipts + executor, threshold, model_families, scores, fires, per-act prob; refusals incl. not_in_classifier, classifier_key_mismatch"
+ },
+ "classifier": {
+  "model": "standardized L2 logistic regression, C=0.003 by fold AUC; GroupKFold by seed (5 folds)",
+  "threshold": "0.378785, frozen as the argmax of out-of-fold net verified benefit over onset rows",
+  "families": "only the 5 mut_* WM families with pinned strategy_keys; any other row is refused (not_in_classifier)",
+  "training_seeds": "191 TRAIN seeds in 989960-991467; guards reject 9896xx, 993xxx (this panel), 9640xx-9641xx, 962xxx, 977xxx",
+  "oof_auc": {
+   "helped_vs_harmful_onsets": 0.6,
+   "weighted": 0.571,
+   "positive_vs_background": 0.799
+  }
+ },
+ "disclosure": [
+  "helped-vs-harmful onset AUC 0.60 (out-of-fold); within-family it is about 0.5 (0d50 0.52, 6c2b 0.50, cfdb 0.49, b66c 0.45): the separation comes from per-family priors, and the CAV-observable state at onset does not separate helped from harmed seeds within a family",
+  "at the threshold: fires on 325/382 beneficial and 335/477 harmful onsets; background fire rate 0.40; out-of-fold net benefit +446k veh-s vs +443k for firing at every onset"
+ ],
+ "analysis": "as amendment 24: applicable-world total LEARNED_TRIGGER - U0 (CI95), groups and CVaR90 co-criteria, non-applicable not-worse, all worlds; also reported next to ORACLE_WM (same plans, privileged admission); secondary to B, never the primary",
+ "panels": "p20x primary D2800_p20 only (96 worlds, panel a0603e5d)",
+ "budget": {
+  "learned_trigger": 115200,
+  "final_eval_allocation": 2700000,
+  "p20x_allocation_constant": 1974720,
+  "p20x_planned": "pre-run 577,800 + ORACLE/ORACLE_WM 230,400 + LEARNED_TRIGGER 115,200 + B/R at u12/u24"
+ },
+ "code": {
+  "branch": "c4/learned-trigger",
+  "commit": "445fb436",
+  "base": "c4/oracle-arm 8bc436df",
+  "review": "REV-SPD pending"
+ },
+ "registered_utc": "2026-11-08T21:42:21.369336+00:00",
+ "registration_sha256": "d9480619e11b35d9ca799dfa095161caa0983a5a7f079bfc92862b08fafee1c4"
+}

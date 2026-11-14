@@ -24,7 +24,7 @@ from wms.train.unroll import UnrollRunner
 NEW_FLAT_KEYS = ("paired_diff_weight", "paired_diff_fraction", "paired_diff_groups",
                  "paired_diff_max_arms", "paired_diff_position_weight",
                  "paired_diff_speed_weight", "paired_diff_aggregate_weight")
-SMOKE = Path("runs/active/C4-GENRAND-SMOKE-20261014")
+SMOKE = Path("E:/agent-work/c4-genrand/runs/active/C4-GENRAND-SMOKE-20261014")
 PLAIN, BRANCH, DRIVER = SMOKE / "plain_conv", SMOKE / "branch_conv", SMOKE / "driver/c4_episodes"
 needs_smoke = pytest.mark.skipif(not (BRANCH / "C4_EPISODES_MANIFEST.json").is_file(),
                                  reason="GENRAND smoke outputs not present")

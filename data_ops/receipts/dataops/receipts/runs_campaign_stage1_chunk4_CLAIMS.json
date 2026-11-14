@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_stage1_chunk4/CLAIMS",
+ "name": "CLAIMS",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_stage1_chunk4\\CLAIMS",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk4/CLAIMS/CLAIMS.tar.zst",
+ "bytes": 135820,
+ "files": 630,
+ "archive_bytes": 9184,
+ "archive_md5": "90499ff34a796ba0c0a315aafb5cfbf2",
+ "member_manifest": "manifests/members/runs_campaign_stage1_chunk4_CLAIMS.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 54.5,
+ "timestamp": "2026-10-10T03:53:48"
+}

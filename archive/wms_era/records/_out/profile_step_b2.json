@@ -1,0 +1,70 @@
+{
+  "profiles": {},
+  "results": {
+    "10s/all": {
+      "loss": 14.28048038482666,
+      "seconds": 6.8354
+    },
+    "10s/baseline": {
+      "loss": 14.506522178649902,
+      "seconds": 5.864
+    },
+    "10s/conservation": {
+      "loss": 14.391515731811523,
+      "seconds": 7.1443
+    },
+    "10s/entries": {
+      "loss": 14.345573425292969,
+      "seconds": 8.4705
+    },
+    "10s/projection": {
+      "loss": 14.280841827392578,
+      "seconds": 5.5364
+    },
+    "10s/residual": {
+      "loss": 14.280848503112793,
+      "seconds": 5.9438
+    },
+    "10s/stability": {
+      "loss": 14.280841827392578,
+      "seconds": 6.9126
+    },
+    "10s/traffic": {
+      "loss": 14.280841827392578,
+      "seconds": 8.6644
+    },
+    "30s/all": {
+      "loss": 57.97381925582886,
+      "seconds": 85.1037
+    },
+    "30s/baseline": {
+      "loss": 57.96639013290405,
+      "seconds": 30.5437
+    },
+    "30s/conservation": {
+      "loss": 59.52012586593628,
+      "seconds": 16.7727
+    },
+    "30s/entries": {
+      "loss": 58.86215925216675,
+      "seconds": 34.959
+    },
+    "30s/projection": {
+      "loss": 57.96639013290405,
+      "seconds": 32.9182
+    },
+    "30s/residual": {
+      "loss": 57.9681830406189,
+      "seconds": 16.593
+    },
+    "30s/stability": {
+      "loss": 57.96639013290405,
+      "seconds": 16.8872
+    },
+    "30s/traffic": {
+      "loss": 57.96639013290405,
+      "seconds": 16.5392
+    }
+  },
+  "tag": "b2"
+}

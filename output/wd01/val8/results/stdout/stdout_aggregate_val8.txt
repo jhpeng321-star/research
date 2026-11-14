@@ -1,0 +1,58 @@
+=== WD-01 VALIDATION LOOK #8: aggregation + gate v2 verdicts ===
+ZERO simulation; holdout not accessed; raw rows from eval_val8.py (no re-roll).
+HASH OK: candidate_p3o_iter2.json 458890d9c4b0ee6ee03de145be50498d9bd0873505a4e86f2bf8a1e224ebe45d
+HASH OK: calibration_p3o.json c7ffa7540768fa67e75e99881eec6f801201990dea4ace90af93c202f789c22a
+HASH OK: VALIDATION_GATE_V2.md 84b8a23df1ff654f8d602e1fd75119517c4bd7cb458dfb2191d2d088452da47f
+HASH OK: VALIDATION_GATE_V2_AMENDMENT_1.md 27aeddab51a899dd1e7a7e24f073fbfe4d29efbe6c2cd3db7e992663d39d79d4
+HASH GATE PASSED (candidate, calibration, gate v2, amendment 1).
+raw rows: L6 520 (5 members x 52 windows x 2 H), L0 104 -- saved before aggregation
+frozen spread map (calibration_p3o.json, frozen_utc=2026-09-27T05:09:19.400476+00:00): {'delay_phys': {30: 2.7638, 60: 2.5198}, 'ttc3': {30: 3.0314, 60: 6.3496}}
+  L6@H30: n_windows=52 ttc3_10-90_cov=0.4231 (below 0.3462, in 0.423, above 0.2308; truth=0 ties below 3, above 0) delay_phys_10-90_cov=0.2115 minmax=0.3462 CRPS_phys=39.59 (s_out dp/t3 = None/None)
+  L6c@H30: n_windows=52 ttc3_10-90_cov=0.8077 (below 0.0577, in 0.8077, above 0.1346; truth=0 ties below 0, above 0) delay_phys_10-90_cov=0.7692 minmax=0.8462 CRPS_phys=37.49 (s_out dp/t3 = 2.7638/3.0314)
+  L0@H30: deterministic delay_phys MAE=293.39 over 52 windows (rolled in this run)
+  L6@H60: n_windows=52 ttc3_10-90_cov=0.4423 (below 0.1923, in 0.4423, above 0.3654; truth=0 ties below 1, above 0) delay_phys_10-90_cov=0.3654 minmax=0.5385 CRPS_phys=89.84 (s_out dp/t3 = None/None)
+  L6c@H60: n_windows=52 ttc3_10-90_cov=0.9038 (below 0.0, in 0.9038, above 0.0962; truth=0 ties below 0, above 0) delay_phys_10-90_cov=0.8462 minmax=0.8846 CRPS_phys=94.31 (s_out dp/t3 = 2.5198/6.3496)
+  L0@H60: deterministic delay_phys MAE=738.77 over 52 windows (rolled in this run)
+
+== GATE v2 at H=30 (PRIMARY (AMENDMENT_1)) -- (d) BINDING per-horizon form ==
+  L6c: (a) coll/1000=0.022 PASS | (b) lc 13.904/12.077 (15.1%) PASS | (c) ttc3 0.8077 delay-phys 0.7692 crps 37.49 vs mae 293.39 -> FAIL | (d) speed 4.2393 vs 1.05xL0@H=4.3975 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: c_coverage_crps
+  L6: (a) coll/1000=0.022 PASS | (b) lc 13.904/12.077 (15.1%) PASS | (c) ttc3 0.4231 delay-phys 0.2115 crps 39.59 vs mae 293.39 -> FAIL | (d) speed 4.2393 vs 1.05xL0@H=4.3975 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: c_coverage_crps
+  ==> OVERALL GATE v2 H=30 (PRIMARY, frozen candidate L6c): FAIL: c_coverage_crps
+
+== GATE v2 at H=60 (secondary) -- (d) BINDING per-horizon form ==
+  L6c: (a) coll/1000=0.018 PASS | (b) lc 25.712/23.942 (7.4%) PASS | (c) ttc3 0.9038 delay-phys 0.8462 crps 94.31 vs mae 738.77 -> PASS | (d) speed 5.0152 vs 1.05xL0@H=5.2263 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 PASS
+  L6: (a) coll/1000=0.018 PASS | (b) lc 25.712/23.942 (7.4%) PASS | (c) ttc3 0.4423 delay-phys 0.3654 crps 89.84 vs mae 738.77 -> FAIL | (d) speed 5.0152 vs 1.05xL0@H=5.2263 (PASS, binding) / fixed 5.2185 (PASS) ==> v2 FAIL: c_coverage_crps
+
+== OLD gate at H=30 ==
+  L6c: speed 4.2393 < 4.97 True | coll 0.022 True | lc 15.1% True | delay minmax 0.8462 True ==> PASS
+  L6: speed 4.2393 < 4.97 True | coll 0.022 True | lc 15.1% True | delay minmax 0.3462 False ==> FAIL
+
+== OLD gate at H=60 ==
+  L6c: speed 5.0152 < 4.97 False | coll 0.018 True | lc 7.4% True | delay minmax 0.8846 True ==> FAIL
+  L6: speed 5.0152 < 4.97 False | coll 0.018 True | lc 7.4% True | delay minmax 0.5385 True ==> FAIL
+
+== LC BY TYPE (per window, validation roots, members pooled) -- caveat table ==
+  H=30 pooled   predM  5.64 trueM  3.54 ( +59.4%) | predD  8.18 trueD  8.54 (  -4.2%) | total 13.81/12.08 ( +14.4%)
+  H=30 cv20_7005m2000   predM  6.66 trueM  3.77 ( +76.8%) | predD  7.57 trueD  8.62 ( -12.1%) | total 14.23/12.38 ( +14.9%)
+  H=30 cv20_7006m2000   predM  6.35 trueM  4.62 ( +37.7%) | predD  6.05 trueD 15.69 ( -61.5%) | total 12.40/20.31 ( -38.9%)
+  H=30 cv30_7305m2700   predM  5.15 trueM  3.15 ( +63.4%) | predD 10.12 trueD  5.38 ( +88.0%) | total 15.28/ 8.54 ( +78.9%)
+  H=30 seed_7535m2400   predM  4.38 trueM  2.62 ( +67.7%) | predD  8.97 trueD  4.46 (+101.0%) | total 13.35/ 7.08 ( +88.7%)
+  H=60 pooled   predM  9.15 trueM  7.08 ( +29.2%) | predD 16.40 trueD 16.86 (  -2.8%) | total 25.55/23.94 (  +6.7%)
+  H=60 cv20_7005m2000   predM 10.20 trueM  7.38 ( +38.1%) | predD 15.09 trueD 17.77 ( -15.1%) | total 25.29/25.15 (  +0.5%)
+  H=60 cv20_7006m2000   predM 10.92 trueM  9.00 ( +21.4%) | predD 12.17 trueD 30.23 ( -59.8%) | total 23.09/39.23 ( -41.1%)
+  H=60 cv30_7305m2700   predM  8.29 trueM  6.46 ( +28.3%) | predD 19.95 trueD 10.62 ( +88.0%) | total 28.25/17.08 ( +65.4%)
+  H=60 seed_7535m2400   predM  7.17 trueM  5.46 ( +31.2%) | predD 18.39 trueD  8.85 (+107.8%) | total 25.55/14.31 ( +78.6%)
+
+== CLIMATOLOGY (TRAIN roots only: ['cv17', 'cv19_4107', 'cv19_4108', 'cv20_7001m2000', 'cv20_7002m2000', 'cv20_7003m2000', 'cv20_7004m2000', 'cv20_7007m2700']; samples per (output, H): {('delay_phys', 30): 56, ('delay_phys', 60): 56, ('ttc3', 30): 56, ('ttc3', 60): 56}) ==
+   rung  output       H   cov    med_band  truth_iqr | crps     clima(emp) clima(mean) n_train | verdict
+   L6    delay_phys   30  0.2115     62.40     906.51 |    39.59   223.46   258.95      56 | BEATS; informative=False
+   L6    delay_phys   60  0.3654    163.20    1784.14 |    89.84   464.29   541.39      56 | BEATS; informative=False
+   L6    ttc3         30  0.4231      5.45      17.45 |     3.66     4.27     5.48      56 | BEATS; informative=False
+   L6    ttc3         60  0.4423      8.75      27.25 |     6.10     7.44     9.60      56 | BEATS; informative=False
+   L6c   delay_phys   30  0.7692    172.46     906.51 |    37.48   223.46   258.95      56 | BEATS; informative=False
+   L6c   delay_phys   60  0.8462    411.22    1784.14 |    94.31   464.29   541.39      56 | BEATS; informative=True
+   L6c   ttc3         30  0.8077     16.52      17.45 |     4.27     4.27     5.48      56 | does NOT beat; informative=False
+   L6c   ttc3         60  0.9038     55.56      27.25 |    11.89     7.44     9.60      56 | does NOT beat; informative=False
+
+wrote D:\rd-wt\wd01p\output\wd01\val8\results\gate_v2_val8.json
+DONE validation look #8 aggregation.

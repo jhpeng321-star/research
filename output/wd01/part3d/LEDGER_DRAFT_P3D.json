@@ -1,0 +1,30 @@
+{
+ "experiment_id": "WD-01",
+ "part": "3d-holdout-block-and-structured-emulator",
+ "status": "partial (holdout block + B1/B2 complete; B3 hazard integration + structured ensemble rollout + gate NOT completed)",
+ "generated_utc": "2026-09-26T08:30:00+00:00",
+ "zero_simulation": true,
+ "holdout_accessed": false,
+ "holdout_evidence": "results/holdout_untouched.json",
+ "completed": {
+  "holdout_block": "partA_data/holdout_block.py + loader/p3lib hooks + 5 tests + HOLDOUT_BLOCK.md",
+  "b1_emulator": "SUMO IDM exact (delta=4, single-step); one-step validated on train roots per vType x regime (following MAE 0.09-0.41, free 0.22-0.75); sigma finding: SUMO IDM deterministic, residuals modeled as Gaussian(mean, sd) with CRN",
+  "b2_posterior": "trained (4303 samples, 30 epochs); val log loss 0.7931, acc 0.695 vs prior 0.703"
+ },
+ "not_completed": {
+  "items": [
+   "B3 hazard integration into rollout",
+   "structured M=5 ensemble rollout",
+   "validation eval per H vs B1-B4",
+   "gate evaluation"
+  ],
+  "reason": "session budget exhausted before the rollout/eval glue could be validated; p3d_rollout.py left as an incomplete draft"
+ },
+ "artifacts": {
+  "sumo_emu.py": "bdde9efbbaa4bc29df9b310a81b623576c75ad05710f9a7848ea204b0af63ac8",
+  "b1_sigma.py": "066f863369bcfb1bd72aaaeffea94728b6c955c56731fa9a273378135756307e",
+  "p3d_train.py": "d8ef1815a772619cd438f2af70233c1861f88d265dbf6ef405ce0bbdfc6be1c1",
+  "posterior_train.py": "8aadcd4d3f1bc71cc7cbda17972b4c9239a17d64f3590e5a97b7e647032f754b",
+  "results/b1_sigma.json": "f4b2caee8be1978208a8f2a97c66fd90c3fcffc98dfcf0c7d4d61e410999c89a"
+ }
+}

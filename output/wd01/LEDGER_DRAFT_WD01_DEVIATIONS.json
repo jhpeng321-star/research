@@ -1,0 +1,126 @@
+[
+  {
+    "experiment_id": "WD-01",
+    "record": "protocol_deviation",
+    "id": "WD-01-DEV-1",
+    "recorded_utc": "2026-09-25T22:30:00Z",
+    "recorded_by": "world model session (reviewer/integrator of WD-01)",
+    "summary": "The ZCode task for WD-01 p3b (9851fc01) evaluated the native Part A v0 HOLDOUT (5 roots) against its brief: before the required diagnostics, before REGISTRATION_P3_v2, before the validation gate, and with the defective run-1 weights. The task was cancelled by the reviewer at 22:18Z.",
+    "what_was_read": {
+      "holdout_roots": [
+        "cv28_7101m2000",
+        "seed_7011m2700",
+        "seed_7012m2700",
+        "seed_7534m2700",
+        "seed_7536m2400"
+      ],
+      "t0s": "120..480 step 30",
+      "horizons_s": [
+        30,
+        60,
+        90,
+        120
+      ],
+      "outputs": {
+        "output/wd01/part3/results/holdout_eval.json": "27ed049cc5b502854434cf8397d42dae204ea9122ab501321ed3743867fcee39",
+        "output/wd01/part3/results/holdout_per_H.csv": "38630be87f3f41991eaf9cea8622f2403ad1321923e6d00fc48de8ca1fed8ffa",
+        "output/wd01/part3/results/recommendation.json": "156a41c1105086111d797fa46ca93c85d33f220c7170411903bcd8d8a79e8056"
+      }
+    },
+    "when_utc": "2026-09-25T21:19:02Z",
+    "under_registration": {
+      "file": "output/wd01/part3/REGISTRATION_P3.md",
+      "sha256": "3c83b2dbe280e8f7e02275eeb11764ec821c41ab448d75d09e51b70b0efc9b01",
+      "status": "superseded; its TTC<1.5 s rule was degenerate (p2C data-card TTC erratum) and the brief required a v2 registration first"
+    },
+    "with_weights": {
+      "description": "p3 run-1 members (trained 20:14-20:48Z, before the reviewer stop), known defective",
+      "member0.pt": "b24cf6308212e985970a7ef4196c6eee19bbb76e69e54beb8ab33936ff49a267",
+      "member1.pt": "445f9b5836cfd61df8be81966bb75c6f4bd37ceeade7edb1775e4e4ca4c80ec2",
+      "member2.pt": "4cb4db536630c4d3217a16680c260d49ead1abdfbeba7bbf64262c31c5cc9226",
+      "defects": [
+        "lane change keeps s across lanes with different origins (accel->main_right merge teleports ~2266 m upstream)",
+        "topology mask allows main_right->accel",
+        "per-vehicle lane length/limit/cap not refreshed after a lane change (merged vehicles dropped as exits at s>454)",
+        "speed limits set to observed maxima (33.79/24.0) instead of network limits (31.29/22.22)"
+      ]
+    },
+    "headline_numbers_of_defective_model": "ensemble-mean speed RMSE 14.7 m/s at H=30 vs min(persistence, IDM) 5.49; predicted collisions 21.8-49.2 per 1000 vehicle-steps; recommendation: no horizon passes",
+    "use_in_decisions": "none. No model, hyperparameter, threshold or design choice used these numbers. The engine defects were found by code review of engine.py, not from the holdout output.",
+    "files_retained": "all three output files and the run-1 weights are kept unchanged as evidence (also copied at weights/run1_stopped/)",
+    "decision": {
+      "by": "main discussion (delegated overnight; owner may override)",
+      "option": "(a)",
+      "terms": [
+        "one further registered holdout evaluation is allowed, disclosed as the SECOND use of these 5 roots",
+        "REGISTRATION_P3_v2 is frozen and hashed before it, with pass criteria RELATIVE TO BASELINES ONLY (nothing informed by the leaked absolute numbers)",
+        "it runs only after p3c passes its validation gate",
+        "it is NOT run until the owner has reviewed this deviation (morning of 2026-09-26); it is prepared as a single command",
+        "a physical holdout block is added: the loader refuses holdout roots unless given a registration hash; it is tested"
+      ]
+    },
+    "prevention": "Future WD briefs call a loader that raises on holdout roots without a valid registration hash; reviewers stop tasks whose validation is implausible before any holdout step is reachable."
+  },
+  {
+    "experiment_id": "WD-01",
+    "record": "validation_reuse",
+    "id": "WD-01-DEV-2",
+    "recorded_utc": "2026-09-26T19:00:00Z",
+    "summary": "The native Part A validation split (4 roots: cv20_7005m2000, cv20_7006m2000, cv30_7305m2700, seed_7535m2400) has been scored against a gate repeatedly during model development. Hyperparameters were always fitted on TRAIN, and spread factors on a TRAIN-internal calibration split, but design choices were informed by validation results.",
+    "validation_looks": [
+      {
+        "task": "p3c d6a0b2e0",
+        "gate": "old gate",
+        "verdict": "FAIL"
+      },
+      {
+        "task": "p3f b2d22885",
+        "gate": "old gate (claimed PASS, rejected by reviewer)",
+        "verdict": "incomplete"
+      },
+      {
+        "task": "p3g 4d76ec60",
+        "gate": "gate v2 + old",
+        "verdict": "incomplete (no member dimension)"
+      },
+      {
+        "task": "p3h f769ded4",
+        "gate": "gate v2 + old",
+        "verdict": "FAIL"
+      },
+      {
+        "task": "p3k 8d64b314",
+        "gate": "gate v2 (H=30 primary) + old",
+        "verdict": "FAIL"
+      },
+      {
+        "task": "p3l d37600f4",
+        "gate": "gate v2 + old",
+        "verdict": "FAIL on TTC<3 coverage only; old gate PASS"
+      },
+      {
+        "task": "p3m 1c8fd404",
+        "gate": "gate v2 + old",
+        "verdict": "VAL look #7: H=30 FAIL on (b) LC +39.6%; (a),(c),(d) PASS"
+      },
+      {
+        "task": "p3n f01d8fa2",
+        "gate": "-",
+        "verdict": "NO validation look (timed out during TRAIN-internal iteration)"
+      },
+      {
+        "task": "p3o 8ad5badd",
+        "gate": "TRAIN-internal only",
+        "verdict": "NO validation look; TRAIN-internal gate v2 PASS (3 selection iterations on calibration roots)"
+      },
+      {
+        "task": "val8 64b7fc8e",
+        "gate": "gate v2 + amendment 1 (frozen candidate 458890d9 / c7ffa754)",
+        "verdict": "VAL look #8: H=30 FAIL on (c) delay coverage 0.769 < 0.80 (TTC 0.808, CRPS pass); (a),(b) +15.1%,(d) PASS; H=60 PASS all; old gate H=30 PASS"
+      }
+    ],
+    "consequence": "The validation gate verdict is optimistic by an unknown amount (garden of forking paths). The holdout (5 roots) remains the single clean confirmation: its disclosed second use (DEV-1), frozen baseline-relative registration, only after validation passes.",
+    "truth_regime_note": "The native Part A truth comes from controller_verification native windows (60-600 s). Chunk-1 campaign data is CAV speedMode 31 (pre-fix). Close-call (TTC<3) fixes must be re-checked on speedMode-27 data (chunk 2) before being treated as final; windows with CAVs braking at the decel cap are to be tagged in the next evaluation.",
+    "validation_look_count": 8
+  }
+]

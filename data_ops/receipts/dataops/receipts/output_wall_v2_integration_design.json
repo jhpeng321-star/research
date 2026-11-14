@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/wall_v2_integration_design",
+ "name": "wall_v2_integration_design",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\wall_v2_integration_design",
+ "drive": "gdrive:research-archive/repo-evidence/output/wall_v2_integration_design/wall_v2_integration_design.tar.zst",
+ "bytes": 106707,
+ "files": 7,
+ "archive_bytes": 28128,
+ "archive_md5": "510a04e7ab895fdcc367998ef8708bed",
+ "member_manifest": "manifests/members/output_wall_v2_integration_design.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 14.0,
+ "timestamp": "2026-10-10T01:38:32"
+}

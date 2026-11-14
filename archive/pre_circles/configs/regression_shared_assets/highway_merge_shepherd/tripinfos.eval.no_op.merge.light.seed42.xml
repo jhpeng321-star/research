@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 2026-09-06T01:58:26.814596+08:00 by Eclipse SUMO sumo 1.27.1
+<sumoConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="D:\research-dense\archive\pre_circles\configs\regression_shared_assets\highway_merge_shepherd\osm.net.xml.gz"/>
+        <route-files value="D:\research-dense\archive\pre_circles\configs\regression_shared_assets\highway_merge_shepherd\osm.demand.light.rou.xml"/>
+        <additional-files value="D:\research-dense\archive\pre_circles\configs\regression_shared_assets\highway_merge_shepherd\output.light.add.xml"/>
+    </input>
+
+    <output>
+        <fcd-output value="D:\research-dense\archive\pre_circles\research\highway_merge_shepherd\fcd.eval.no_op.merge.light.seed42.xml"/>
+        <tripinfo-output value="D:\research-dense\archive\pre_circles\research\highway_merge_shepherd\tripinfos.eval.no_op.merge.light.seed42.xml"/>
+        <collision-output value="D:\research-dense\archive\pre_circles\configs\regression_shared_assets\highway_merge_shepherd\collisions.light.xml"/>
+        <statistic-output value="D:\research-dense\archive\pre_circles\research\highway_merge_shepherd\stats.eval.no_op.merge.light.seed42.xml"/>
+    </output>
+
+    <time>
+        <step-length value="0.5"/>
+    </time>
+
+    <processing>
+        <ignore-route-errors value="true"/>
+        <collision.action value="warn"/>
+        <time-to-teleport value="-1"/>
+    </processing>
+
+    <report>
+        <verbose value="true"/>
+        <duration-log.statistics value="true"/>
+        <no-step-log value="true"/>
+    </report>
+
+    <fcd_device>
+        <device.fcd.period value="1"/>
+    </fcd_device>
+
+    <traci_server>
+        <remote-port value="10147"/>
+    </traci_server>
+
+    <random_number>
+        <seed value="42"/>
+    </random_number>
+
+    <gui_only>
+        <gui-settings-file value="D:\research-dense\archive\pre_circles\configs\regression_shared_assets\highway_merge_shepherd\osm.view.xml"/>
+    </gui_only>
+
+</sumoConfiguration>
+-->
+
+<tripinfos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/tripinfo_file.xsd">
+    <tripinfo id="ramp.0" depart="0.00" departLane="11553048#1_0" departPos="5.10" departSpeed="25.82" departDelay="0.00" arrival="31.50" arrivalLane="1487606178_0" arrivalPos="477.89" arrivalSpeed="36.31" duration="31.50" routeLength="937.82" waitingTime="0.00" waitingCount="0" stopTime="0.00" timeLoss="1.08" rerouteNo="0" devices="tripinfo_ramp.0 fcd_ramp.0" vType="normal_car" speedFactor="1.16" vaporized=""/>
+</tripinfos>

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/worldmodel_radius_input_v1",
+ "name": "worldmodel_radius_input_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\worldmodel_radius_input_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_radius_input_v1/worldmodel_radius_input_v1.tar.zst",
+ "bytes": 2173231,
+ "files": 64,
+ "archive_bytes": 109129,
+ "archive_md5": "2a48977887f97c13e7295c6e07119d30",
+ "member_manifest": "manifests/members/output_worldmodel_radius_input_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 51.8,
+ "timestamp": "2026-10-10T01:46:54"
+}

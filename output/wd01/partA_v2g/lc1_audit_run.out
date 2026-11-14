@@ -1,0 +1,60 @@
+WD-01-PA2G-LC1 counting audit: 32 TRAIN worlds, workers 4
+  [w2] w8625m2700p02t240: 140 events, 70 window rows, 6.1s
+  [w1] w8624m2600p02t420: 140 events, 70 window rows, 6.5s
+  [w3] w8626m2700p02t300: 118 events, 70 window rows, 7.5s
+  [w0] w8623m2600p02t540: 157 events, 70 window rows, 9.7s
+  [w1] w8632m2000p02t240: 252 events, 70 window rows, 4.1s
+  [w2] w8633m2000p02t480: 235 events, 70 window rows, 4.9s
+  [w3] w8634m2400p02t300: 213 events, 70 window rows, 5.2s
+  [w0] w8629m2000p02t420: 359 events, 70 window rows, 4.1s
+  [w2] w8643m2600p05t240: 158 events, 70 window rows, 6.2s
+  [w1] w8642m2600p05t420: 186 events, 70 window rows, 7.5s
+  [w3] w8644m2700p05t240: 176 events, 70 window rows, 6.3s
+  [w0] w8641m2700p05t300: 123 events, 70 window rows, 7.1s
+  [w1] w8647m2000p05t300: 261 events, 70 window rows, 5.5s
+  [w2] w8651m2400p05t420: 150 events, 70 window rows, 9.2s
+  [w0] w8645m2400p05t480: 259 events, 70 window rows, 7.9s
+  [w3] w8659m2700p10t420: 151 events, 70 window rows, 10.3s
+  [w1] w8661m2600p10t240: 155 events, 70 window rows, 6.9s
+  [w2] w8662m2600p10t300: 150 events, 70 window rows, 8.5s
+  [w0] w8660m2700p10t300: 154 events, 70 window rows, 9.0s
+  [w3] w8676m2700p20t360: 147 events, 70 window rows, 12.3s
+  [w1] w8679m2400p20t540: 199 events, 70 window rows, 11.4s
+  [w2] w8680m2600p20t300: 177 events, 70 window rows, 9.2s
+  [w0] w8677m2700p20t360: 153 events, 70 window rows, 9.6s
+  [w3] w8682m2400p20t240: 202 events, 70 window rows, 7.8s
+  [w1] w8686m2600p20t240: 160 events, 70 window rows, 8.1s
+  [w2] w8693m2600p40t420: 160 events, 70 window rows, 13.7s
+  [w0] w8683m2400p20t540: 197 events, 70 window rows, 10.5s
+  [w1] w8697m2700p40t240: 128 events, 70 window rows, 10.3s
+  [w3] w8694m2600p40t240: 152 events, 70 window rows, 11.9s
+  [w2] w8699m2700p40t240: 135 events, 70 window rows, 11.3s
+  [w0] w8695m2400p40t480: 224 events, 70 window rows, 11.3s
+  [w3] w8706m2400p40t360: 199 events, 70 window rows, 10.2s
+{
+ "analysis_id": "WD-01-PA2G-LC1",
+ "worlds": 32,
+ "events_total": 5770,
+ "events_with_raw_lc_flag": 5770,
+ "raw_lc_flag_ticks_total": 50352,
+ "unresolved_junction_ends": 19,
+ "window_rows_compared": 2240,
+ "window_rows_equal": 2174,
+ "n_window_mismatches": 66,
+ "window_rows_equal_dest_tracked": 2240,
+ "n_window_mismatches_dest_tracked": 0,
+ "window_mismatches_dest": [],
+ "eval_extra_events_by_class": {
+  "merge": 47,
+  "disc_left": 8,
+  "disc_right": 11
+ },
+ "global_class_counts": {
+  "0->1": 1228,
+  "1->0": 2414,
+  "2->1": 2128
+ },
+ "assert_train_only": "passed",
+ "wall_clock_s": 72.6503054999921
+}
+DONE audit WD-01-PA2G-LC1 wall 73s

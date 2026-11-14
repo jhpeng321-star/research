@@ -1,0 +1,87 @@
+priority below-normal: False
+=== WD-01 part 3k: idm_merge parameter fit (TRAIN only) ===
+ZERO simulation; holdout blocked in root_arrays (never passed).
+device=cpu torch_threads=2
+train fit roots (first 4 sorted): ['cv17', 'cv19_4107', 'cv19_4108', 'cv20_7001m2000']
+eval windows: t0 (120.0, 300.0) s, H=60 s (K=120 steps of 0.5 s); validation roots ['cv20_7005m2000', 'cv20_7006m2000', 'cv30_7305m2700', 'seed_7535m2400'] NOT used here
+fit targets: T1 zone occupancy, T2 accel speed profile (50 m bins, n>=60), T3 merge-point d, T4 main_right speed in [-100,100] m, T5 physics delay, T6 LC count
+grids: tau_accept (0.7, 1.0, 1.4, 1.9) x b_accept (2.0, 3.0, 4.5, 6.5); p_coop_scale (0.0, 0.25, 0.5, 0.75, 1.1) x lc_scale (0.002, 0.003, 0.005)
+[   4.7s] BEFORE: rolling L3 (idm_sampled, member 0, lc_scale=0.003) ...
+
+BEFORE (L3 = idm_sampled, member 0, lc_scale=0.003): stage1 loss=4.5020 {'occ': 0.4024443788069275, 'prof': 0.7967072320468978, 'merge': 4.0} | stage2 loss=5.0877 {'mr': 2.002148363156379, 'delay': 1.599810555207017, 'lc': 1.4857264081115922}
+
+  -- BEFORE L3 (idm_sampled) (per eval window) --
+  root             t0   occ_p occ_t | accel v (m/s) by d-bin -50..300 pred | truth | merge_d p/t   mr_spd p/t    delay_p  delay_t  lc p/t
+  cv17             120     69   142 | 17.0 19.4 19.3 19.4 19.1 19.1 18.9 18.2 |  7.1 17.8 19.0 19.4 19.4 19.0 18.5 17.1 |    n/a/ -58.4   27.2/ 17.1     728.7    743.2   54/ 20
+  cv17             300     90   225 | 12.6 20.1 20.3 20.7 20.9 20.8 20.7 20.9 |  3.2 17.9 20.4 21.2 21.6 21.7 21.9 21.6 |    n/a/ -56.2   10.4/  2.7    1415.3   2078.1   70/ 21
+  cv19_4107        120     47    86 | 21.2 20.4 20.3 20.2 20.1 20.0 19.5 17.7 | 12.8 18.3 19.8 20.3 20.5 20.3 19.8 17.1 |    n/a/ -18.9   28.5/ 24.6     420.2    419.4   41/ 38
+  cv19_4107        300     52   432 | 19.7 20.4 20.2 20.2 20.2 20.1 19.6 17.6 |  3.5 17.1 19.9 20.8 20.9 20.7 20.2 17.9 |    n/a/ -40.9   27.2/ 21.0     669.5    746.7   42/ 22
+  cv19_4108        120     47   115 | 20.4 18.9 18.6 18.5 18.7 18.6 18.3 18.0 |  8.5 18.2 19.1 19.4 19.4 19.0 18.5 17.1 |    n/a/ -50.2   28.6/ 19.4     403.7    454.5   34/ 39
+  cv19_4108        300     24   100 | 21.9 20.6 20.6 20.8 20.8 20.4 20.7 21.0 | 15.4 19.6 20.8 21.3 21.6 21.8 21.9 21.6 |    n/a/ -52.3   26.6/ 23.6     455.0    407.2   36/ 30
+  cv20_7001m2000   120     40   161 | 21.9 20.6 20.6 20.5 20.5 20.1 20.1 20.3 | 10.2 18.3 19.8 20.5 20.8 20.8 21.1 21.2 |    n/a/ -31.6   28.0/ 23.7     550.9    529.6   42/ 16
+  cv20_7001m2000   300     70   108 | 21.9 20.6 20.5 20.4 20.3 20.4 20.4 20.0 | 14.0 18.3 19.4 19.8 20.0 20.1 20.1 19.4 |    n/a/ -51.6   17.0/  8.4     644.3    891.6   39/ 34
+[  51.7s] STAGE 1: 16 acceptance combos ...
+[ 103.7s] stage1 1/16 {'tau_accept': 0.7, 'b_accept': 2.0, 'p_coop_scale': 0.0} -> loss=0.9799 {'occ': 0.7954678136123109, 'prof': 0.4632015200692287, 'merge': 0.12649682006966165}
+[ 157.4s] stage1 2/16 {'tau_accept': 0.7, 'b_accept': 3.0, 'p_coop_scale': 0.0} -> loss=0.9799 {'occ': 0.7954678136123109, 'prof': 0.4632015200692287, 'merge': 0.12649682006966165}
+[ 211.5s] stage1 3/16 {'tau_accept': 0.7, 'b_accept': 4.5, 'p_coop_scale': 0.0} -> loss=0.9799 {'occ': 0.7954678136123109, 'prof': 0.4632015200692287, 'merge': 0.12649682006966165}
+[ 265.3s] stage1 4/16 {'tau_accept': 0.7, 'b_accept': 6.5, 'p_coop_scale': 0.0} -> loss=0.9799 {'occ': 0.7954678136123109, 'prof': 0.4632015200692287, 'merge': 0.12649682006966165}
+[ 319.8s] stage1 5/16 {'tau_accept': 1.0, 'b_accept': 2.0, 'p_coop_scale': 0.0} -> loss=0.9190 {'occ': 0.7490950402528771, 'prof': 0.44455123577090344, 'merge': 0.1143497583990156}
+[ 373.5s] stage1 6/16 {'tau_accept': 1.0, 'b_accept': 3.0, 'p_coop_scale': 0.0} -> loss=0.9190 {'occ': 0.7490950402528771, 'prof': 0.44455123577090344, 'merge': 0.1143497583990156}
+[ 426.7s] stage1 7/16 {'tau_accept': 1.0, 'b_accept': 4.5, 'p_coop_scale': 0.0} -> loss=0.9190 {'occ': 0.7490950402528771, 'prof': 0.44455123577090344, 'merge': 0.1143497583990156}
+[ 479.2s] stage1 8/16 {'tau_accept': 1.0, 'b_accept': 6.5, 'p_coop_scale': 0.0} -> loss=0.9190 {'occ': 0.7490950402528771, 'prof': 0.44455123577090344, 'merge': 0.1143497583990156}
+[ 530.9s] stage1 9/16 {'tau_accept': 1.4, 'b_accept': 2.0, 'p_coop_scale': 0.0} -> loss=0.8628 {'occ': 0.7210603113058797, 'prof': 0.4314496136173575, 'merge': 0.08779445258375992}
+[ 585.0s] stage1 10/16 {'tau_accept': 1.4, 'b_accept': 3.0, 'p_coop_scale': 0.0} -> loss=0.8628 {'occ': 0.7210603113058797, 'prof': 0.4314496136173575, 'merge': 0.08779445258375992}
+[ 638.2s] stage1 11/16 {'tau_accept': 1.4, 'b_accept': 4.5, 'p_coop_scale': 0.0} -> loss=0.8628 {'occ': 0.7210603113058797, 'prof': 0.4314496136173575, 'merge': 0.08779445258375992}
+[ 692.9s] stage1 12/16 {'tau_accept': 1.4, 'b_accept': 6.5, 'p_coop_scale': 0.0} -> loss=0.8628 {'occ': 0.7210603113058797, 'prof': 0.4314496136173575, 'merge': 0.08779445258375992}
+[ 745.6s] stage1 13/16 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0} -> loss=0.7575 {'occ': 0.6404588678940164, 'prof': 0.42595676875318145, 'merge': 0.06381026683490032}
+[ 801.6s] stage1 14/16 {'tau_accept': 1.9, 'b_accept': 3.0, 'p_coop_scale': 0.0} -> loss=0.7575 {'occ': 0.6404588678940164, 'prof': 0.42595676875318145, 'merge': 0.06381026683490032}
+[ 860.7s] stage1 15/16 {'tau_accept': 1.9, 'b_accept': 4.5, 'p_coop_scale': 0.0} -> loss=0.7575 {'occ': 0.6404588678940164, 'prof': 0.42595676875318145, 'merge': 0.06381026683490032}
+[ 914.9s] stage1 16/16 {'tau_accept': 1.9, 'b_accept': 6.5, 'p_coop_scale': 0.0} -> loss=0.7575 {'occ': 0.6404588678940164, 'prof': 0.42595676875318145, 'merge': 0.06381026683490032}
+
+STAGE 1 winner: {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0} loss=0.7575 {'occ': 0.6404588678940164, 'prof': 0.42595676875318145, 'merge': 0.06381026683490032}
+[ 914.9s] STAGE 2: 15 combos ...
+[ 973.1s] stage2 1/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0} lc_scale=0.002 -> loss=1.4497 {'mr': 0.2358170234918528, 'delay': 0.27975242321859367, 'lc': 0.9340979153924461}
+[1032.8s] stage2 2/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0} lc_scale=0.003 -> loss=3.6778 {'mr': 0.2321683904632429, 'delay': 0.2653334297926724, 'lc': 3.180294875097804}
+[1087.7s] stage2 3/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0} lc_scale=0.005 -> loss=9.6413 {'mr': 0.2294145417016351, 'delay': 0.3403547828153073, 'lc': 9.07151550130281}
+[1142.1s] stage2 4/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.25} lc_scale=0.002 -> loss=1.6287 {'mr': 0.2639859298360595, 'delay': 0.290350953247895, 'lc': 1.0743673957294304}
+[1196.9s] stage2 5/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.25} lc_scale=0.003 -> loss=3.6138 {'mr': 0.2857013594558636, 'delay': 0.27979964886602743, 'lc': 3.048263643005204}
+[1249.5s] stage2 6/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.25} lc_scale=0.005 -> loss=9.8602 {'mr': 0.25207890766080326, 'delay': 0.3312228990040728, 'lc': 9.27691809350403}
+[1303.7s] stage2 7/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.5} lc_scale=0.002 -> loss=1.5722 {'mr': 0.28552532680646414, 'delay': 0.30421871314653554, 'lc': 0.9824361461826433}
+[1356.7s] stage2 8/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.5} lc_scale=0.003 -> loss=3.4736 {'mr': 0.27643983319042875, 'delay': 0.28088543262478866, 'lc': 2.9162660559792872}
+[1411.3s] stage2 9/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.5} lc_scale=0.005 -> loss=9.6823 {'mr': 0.31468669508418035, 'delay': 0.36995751294479956, 'lc': 8.9976491641767}
+[1466.3s] stage2 10/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.75} lc_scale=0.002 -> loss=1.6659 {'mr': 0.2890474173860707, 'delay': 0.2862038892278884, 'lc': 1.0906813778742672}
+[1522.0s] stage2 11/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.75} lc_scale=0.003 -> loss=3.9552 {'mr': 0.2756256979645583, 'delay': 0.27148463760877717, 'lc': 3.4081124670385483}
+[1576.0s] stage2 12/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.75} lc_scale=0.005 -> loss=8.6694 {'mr': 0.2895515390665302, 'delay': 0.33907570754538346, 'lc': 8.04075072870379}
+[1632.2s] stage2 13/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 1.1} lc_scale=0.002 -> loss=1.4840 {'mr': 0.2784893219024722, 'delay': 0.29094378647664687, 'lc': 0.9145950678838721}
+[1687.0s] stage2 14/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 1.1} lc_scale=0.003 -> loss=3.8008 {'mr': 0.29060410034728495, 'delay': 0.2832911104418243, 'lc': 3.226940152788818}
+[1742.4s] stage2 15/15 {'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 1.1} lc_scale=0.005 -> loss=9.6853 {'mr': 0.2999982169240667, 'delay': 0.38982157557615166, 'lc': 8.99552885001285}
+
+STAGE 2 winner: merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0} lc_scale=0.002 loss=1.4497 {'mr': 0.2358170234918528, 'delay': 0.27975242321859367, 'lc': 0.9340979153924461}
+
+AFTER (L4 = idm_merge fitted): stage1 loss=0.7823 {'occ': 0.6826002087869991, 'prof': 0.4403275251858006, 'merge': 0.04468555114918211} | stage2 loss=1.4497 {'mr': 0.2358170234918528, 'delay': 0.27975242321859367, 'lc': 0.9340979153924461}
+
+  -- AFTER L4 (idm_merge fitted) (per eval window) --
+  root             t0   occ_p occ_t | accel v (m/s) by d-bin -50..300 pred | truth | merge_d p/t   mr_spd p/t    delay_p  delay_t  lc p/t
+  cv17             120     14   142 | 17.2 18.7 19.5 19.6 19.5 19.7 19.4 18.7 |  7.1 17.8 19.0 19.4 19.4 19.0 18.5 17.1 |  -34.9/ -58.4   17.9/ 17.1     842.6    743.2   40/ 20
+  cv17             300     67   225 | 15.3 18.9 20.1 20.6 20.8 21.1 21.1 21.4 |  3.2 17.9 20.4 21.2 21.6 21.7 21.9 21.6 |  -58.6/ -56.2    4.9/  2.7    1880.3   2078.1   56/ 21
+  cv19_4107        120     12    86 | 17.0 18.4 19.4 19.8 20.1 20.0 19.6 18.0 | 12.8 18.3 19.8 20.3 20.5 20.3 19.8 17.1 |  -12.6/ -18.9   23.3/ 24.6     450.8    419.4   30/ 38
+  cv19_4107        300     34   432 | 15.7 18.1 19.2 19.7 19.8 19.6 19.1 16.9 |  3.5 17.1 19.9 20.8 20.9 20.7 20.2 17.9 |  -24.5/ -40.9   19.8/ 21.0     766.7    746.7   51/ 22
+  cv19_4108        120     40   115 | 16.0 18.6 19.3 19.7 19.5 19.4 19.4 18.6 |  8.5 18.2 19.1 19.4 19.4 19.0 18.5 17.1 |  -43.3/ -50.2   19.8/ 19.4     522.6    454.5   35/ 39
+  cv19_4108        300     13   100 | 17.1 18.9 19.7 20.5 20.7 20.7 21.2 21.3 | 15.4 19.6 20.8 21.3 21.6 21.8 21.9 21.6 |  -33.7/ -52.3   19.9/ 23.6     576.9    407.2   35/ 30
+  cv20_7001m2000   120      6   161 | 17.0 18.2 19.3 19.8 20.1 20.1 20.4 20.4 | 10.2 18.3 19.8 20.5 20.8 20.8 21.1 21.2 |  -22.0/ -31.6   24.8/ 23.7     569.5    529.6   36/ 16
+  cv20_7001m2000   300     35   108 | 16.3 18.1 19.2 19.6 19.7 19.8 19.9 19.8 | 14.0 18.3 19.4 19.8 20.0 20.1 20.1 19.4 |  -25.9/ -51.6   13.3/  8.4     827.3    891.6   53/ 34
+[1796.3s] BOOTSTRAP members 1..4 ...
+[2132.0s] bootstrap member 1: resample=['cv17', 'cv19_4107', 'cv19_4108', 'cv20_7001m2000'] -> loss=1.5555 (s1 0.7599 s2 0.7956) params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0}
+[2478.4s] bootstrap member 2: resample=['cv17', 'cv19_4107'] -> loss=1.5330 (s1 0.8338 s2 0.6992) params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0}
+[2802.4s] bootstrap member 3: resample=['cv19_4107', 'cv20_7001m2000'] -> loss=1.7093 (s1 0.8317 s2 0.8776) params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.25}
+[3142.0s] bootstrap member 4: resample=['cv19_4108', 'cv20_7001m2000'] -> loss=1.5811 (s1 0.6892 s2 0.8920) params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0}
+
+selected member parameters (member 0 = main fit):
+  member 0: seed=1 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0}
+  member 1: seed=18 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0}
+  member 2: seed=35 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0}
+  member 3: seed=52 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.25}
+  member 4: seed=69 lc_scale=0.002 merge_params={'tau_accept': 1.9, 'b_accept': 2.0, 'p_coop_scale': 0.0}
+[3142.0s] wrote D:\rd-wt\wd01e\output\wd01\part3k\results\fit_p3k.json and D:\rd-wt\wd01e\output\wd01\part3k\results\stdout_fit.txt
+
+DONE part 3k fit.

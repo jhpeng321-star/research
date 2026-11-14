@@ -1,0 +1,168 @@
+# S-MAINR16: preserve the round-16 learned ramp adaptation during loop fine-tuning.
+# The loop still trains only residual/courtesy/yield; round-16 stage-B scalars stay frozen.
+schema_version = 2
+name = "WM-S-C4-LOOP14-R16-FT"
+extends = "c4_wm_v10round2.toml"
+
+[model]
+merge_decision = "first_passage"
+merge_st_width = 1.0
+merge_passage_law = "hybrid"
+merge_w_init = 1.0
+merge_quadrature_order = 32
+merge_pivot_state_st = true
+checkpoint_forward = true
+merge_negotiation = false
+driver_param_mode = "physical"
+driver_param_init = "checkpoint"
+residual_accel_reinit = false
+temporal_accel_off = true
+residual_accel_off = false
+follower_courtesy_off = false
+follower_courtesy = true
+follower_courtesy_hidden = 32
+follower_courtesy_embedding = false
+follower_courtesy_rollout_grad = false
+follower_courtesy_version = 2
+follower_courtesy_init_zero = false
+follower_courtesy_state_grad = true
+follower_courtesy_intent = "pivot"
+mainline_merge_yield_learnable = true
+ramp_speed_adapt_learnable = true
+
+[physics]
+emergency_braking = true
+secure_gap_veto = true
+lane_change_secure_gap = true
+emergency_onset = "driver_b"
+merge_end_wait = false
+ramp_lane_end_stop = true
+ramp_risk_retain = true
+
+# Inline the LOOP14 FT recipe: another extends level exceeds the loader's depth limit.
+# All original shares remain scaled by 0.85, with this cycle's policy/native pairs at 0.15.
+[[data.c4_sources]]
+name = "native_v5"
+path = "v5_native"
+mix_ratio = 0.39899
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "lowpen_native"
+path = "lowpen_native"
+mix_ratio = 0.02601
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_plain"
+path = "genrand_plain"
+mix_ratio = 0.20247
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "lowpen_genrand_plain"
+path = "lowpen_genrand_plain"
+mix_ratio = 0.01003
+window_stride_s = 10.0
+use_val = true
+
+[[data.c4_sources]]
+name = "genrand_branch"
+path = "genrand_branch"
+mix_ratio = 0.07004
+window_stride_s = 10.0
+use_val = true
+paired = false
+
+[[data.c4_sources]]
+name = "lowpen_genrand_branch"
+path = "lowpen_genrand_branch"
+mix_ratio = 0.01496
+window_stride_s = 10.0
+use_val = true
+paired = false
+
+[[data.c4_sources]]
+name = "pairs300"
+path = "pairs300"
+mix_ratio = 0.1275
+window_stride_s = 10.0
+use_val = true
+paired = true
+
+[[data.c4_sources]]
+name = "loop14_pairs"
+path = "loop14_pairs"
+mix_ratio = 0.15
+window_stride_s = 10.0
+use_val = true
+paired = false
+
+[data.replay]
+low_share_oversample = 1.69
+low_share_max = 0.15
+low_share_min_stage_s = 120.0
+
+[loss]
+recorded_replay_present = "filled"
+
+[loss.merge_core]
+version = 2
+weight = 0.0
+tf_weight = 0.6
+yield_weight = 0.0
+metrics = true
+pos_tol_m = 50.0
+speed_tol_mps = 8.0
+gap_tol_m = 40.0
+gap_speed_tol_mps = 8.0
+location_reg_weight = 0.0
+sigma_reg_weight = 0.0
+tau_reg_weight = 0.0
+w_reg_weight = 0.0
+z_tf = 395.2
+z_on = 2.15
+
+[loss.merge_survival]
+weight = 0.0
+negative_weight = 0.0
+
+[loss.cutin_reaction]
+weight = 0.0
+
+[loss.driver_prior]
+weight = 0.0
+
+[loss.follower_courtesy]
+weight = 9.067
+huber_delta_mps2 = 1.0
+contrast = true
+absolute_weight = 4.525
+
+[curriculum]
+unroll_s = [120.0]
+stage_steps = [40]
+truncation_steps_per_stage = [120]
+max_hours = 1.5
+
+[optim]
+lr_per_stage = [3.0e-5]
+batch_size_per_stage = [4]
+freeze_prefixes = [
+  "driver_encoder", "driver_updater", "gate_", "lane_gate_", "history_proj", "k_embedding",
+  "lane_v5", "merge_core", "merge_pivot", "residual_net.lane", "temporal", "ramp_speed_adapt",
+]
+
+[optim.lr_scale]
+"residual_net" = 0.5
+"follower_courtesy" = 1000.0
+"merge_yield" = 1000.0
+
+[selection]
+val_max_windows = 16
+
+[runtime]
+out_dir = "runs/c4_wm_loop14_r16_ft"

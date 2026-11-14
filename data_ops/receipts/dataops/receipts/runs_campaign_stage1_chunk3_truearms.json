@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_stage1_chunk3_truearms",
+ "name": "campaign_stage1_chunk3_truearms",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_stage1_chunk3_truearms",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk3_truearms/campaign_stage1_chunk3_truearms.tar.zst",
+ "bytes": 8565543246,
+ "files": 1540,
+ "archive_bytes": 972397783,
+ "archive_md5": "5a34fa6fefec9a9fa7895d2681bd0bfd",
+ "member_manifest": "manifests/members/runs_campaign_stage1_chunk3_truearms.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 2792.4,
+ "timestamp": "2026-10-10T04:39:32"
+}

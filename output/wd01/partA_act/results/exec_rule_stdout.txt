@@ -1,0 +1,21 @@
+=== A2 execution-rule measurement (TRAIN, ZERO simulation) ===
+declared deterministic subset: every 4th sorted TRAIN world -> 13 worlds x 7 arms (complete receipts only)
+worlds: ['w8411m2700p02t240', 'w8415m2700p02t540', 'w8419m2600p02t240', 'w8427m2600p05t360', 'w8431m2700p05t360', 'w8439m2700p10t300', 'w8443m2600p10t480', 'w8447m2700p10t240', 'w8456m2700p20t480', 'w8460m2700p20t540', 'w8468m2600p40t240', 'w8472m2700p40t300', 'w8476m2600p40t480']
+
+branches measured: 89  (819s)
+
+--- per speedMode: rule residuals |v'_realised - v'_rule| ---
+speedMode 31  (n=1103156, lc-excluded 764, emergency 0, idm-bound 562440)
+  kin     : p50 2.500e-01  p95 1.496e+00  p99 2.350e+00  max 3.750e+00  exact 0.2764  <0.01 0.3176  signed p50 -2.187e-01
+  kin_idm : p50 1.709e-03  p95 3.361e-01  p99 5.412e-01  max 6.875e+00  exact 0.2759  <0.01 0.6298  signed p50 +0.000e+00
+  kin_flat: p50 1.099e-01  p95 1.130e+00  p99 1.311e+00  max 2.404e+00  exact 0.0020  <0.01 0.3212  signed p50 -9.382e-02
+  kin_idm_leader  : n 1101264  p50 1.707e-03  p95 3.366e-01  <0.01 0.6296  signed p50 +0.000e+00
+  kin_idm_free    : n 1892  p50 2.901e-03  p95 2.489e-02  <0.01 0.7431  signed p50 +0.000e+00
+  kin_idm_idm_bound: n 562440  p50 3.672e-03  p95 4.914e-01  <0.01 0.6160  signed p50 -3.758e-04
+
+--- per CAV vType (speedMode 31) ---
+aggressive_car (n=102096): kin_idm p50 1.718e-03  p95 5.570e-01  max 1.973e+00  exact 0.3131
+cautious_car   (n=198116): kin_idm p50 4.280e-03  p95 2.252e-01  max 6.875e+00  exact 0.2139
+normal_car     (n=802944): kin_idm p50 1.231e-03  p95 3.770e-01  max 3.224e+00  exact 0.2865
+
+wrote D:\rd-wt\wd01m\output\wd01\partA_act\results\exec_rule_fit.json

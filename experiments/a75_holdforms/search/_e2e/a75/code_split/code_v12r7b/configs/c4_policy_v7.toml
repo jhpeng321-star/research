@@ -1,0 +1,36 @@
+# C4 POLICY V7 (owner-approved 2026-10-17; docs/C4_DIAGNOSIS_20261016.md findings 4-5 + lane head).
+# = c4_policy_v6_lowmem.toml (max_starts 3, credit_profile_every 0, start_sources native_v5 + genrand_plain;
+# no v6_policy / loop sources) with the V7POL training fixes, policy from scratch (no --init-policy):
+#   * TTC safety cost only over pairs with a CAV follower or leader (human-human pairs excluded);
+#   * TTC budget relative to the counterfactual all-native base row of the same start (absolute
+#     ttc_budget 3.6 only for starts without a base row; the dual uses the native-referenced starts);
+#   * Lagrangian actor term divided by the same return scale as the objective;
+#   * entropy temperature floor alpha >= 1e-3 (v6 collapsed to ~2e-5);
+#   * no lane head: SUMO decides CAV lane changes in deployment; CAVs stay in lane in imagination
+#     (except the bridge's forced ramp merge);
+#   * merge-end discharge reward, weight 0.8 per vehicle crossing s = 75.44 m (un-normalised).
+#     Choice: v5m/loop training logs (runs/active/C4-V5-20261014/final_20261016/x/.../updates.jsonl)
+#     give per control step delay ~41 veh-s summed, throughput (= merge-end crossings) ~0.47-0.51,
+#     and reward ~ -1.42 with fairness ~0.89 -> implied vehicle count ~100, so the delay term
+#     w_delay * delay / count ~ 0.40 per control step; 0.8 x ~0.5 crossings ~ 0.40 matches it.
+extends = "c4_policy_v6_lowmem.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V7"
+
+[trainer]
+ttc_budget_mode = "native_relative"
+ttc_native_margin = 0.0
+lagrange_scaled = true
+alpha_min = 1e-3
+
+[reward]
+ttc_pairs = "cav"
+merge_discharge = 0.8
+
+[policy]
+lane_control = "native"
+
+[data]
+wm_config = "configs/c4_wm_v5m_refresh.toml"
+start_sources = ["native_v5", "genrand_plain"]

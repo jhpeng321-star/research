@@ -1,0 +1,22 @@
+{
+ "analysis_id": "WD-01-C4L1",
+ "written_utc": "2026-09-30T02:48:08Z",
+ "registration": "output/wd01/REGISTRATION_C4L1.md",
+ "registration_lf_sha256": "5e4a772137b8b427823b4860a20440eaa65abcbea735551eff681aa67b80b124",
+ "params_nominal": "output/wd01/partA_v2g/params_nominal.json",
+ "params_nominal_lf_sha256": "079a55768f803b23c92af188680c1df91dc63f04acbbbac948870b46e75935f7",
+ "engine_commit": "0c1cb4051bf541a1af497e9e63f842366f93abf0",
+ "engine_note": "output/wd01/partA_v2g at this commit (zcode/wd01c4l1 == zcode/wd01 9f716b4; engine.py/metrics.py/cavctrl.py unchanged since 9dda3a3); HEAD may advance with records-only commits; the script hashes pin the code",
+ "eval_scripts": {
+  "eval_c4l1.py": "a1607e79dc4c98b4f78223655e0d5c8b0549045087edc9252fa236ac3f7af1fd",
+  "eval_a2.py": "5b0d66c18c6788a7bfe42040d0560b236e56022f8d7b6ec09ab524a84e1a7f2d",
+  "eval_a.py": "76f4be97d231386651a2f3a189982a814b099465aa12ee4218ae92ec02c46fb4",
+  "engine.py": "591716eedb2bd7089e22e659713f25966d0135c7880c19397a214da526f67b1c",
+  "metrics.py": "dd4d0b43fb8d76fa4a2f61d60a9a5189be51750d6eab72819247759e89a27c08",
+  "cavctrl.py": "4b767e8d1761db17c52739e12e90f5f546f537f3f72b25f6a0b787343a8c4fa9"
+ },
+ "plan_raw_sha256": "65510b27f651f477c3de9acc663b9138916a07dfb46468718dc9932147e1ffc4",
+ "results_dir": "output/wd01/partA_v2g/results/c4l1",
+ "protocol": "ONE pass, workers 1, raw rows before aggregation; crash before any row: one disclosed restart; crash after rows: report as is; no re-run after seeing any number",
+ "refresh_note": "refreshed after mkdir(exist_ok) fix; pre-row crash only (results dir held the attempt-2 abort record); no number seen"
+}

@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/entry_pairs_v5",
+ "name": "entry_pairs_v5",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\entry_pairs_v5",
+ "drive": "gdrive:research-archive/repo-evidence/output/entry_pairs_v5/entry_pairs_v5.tar.zst",
+ "bytes": 38630,
+ "files": 5,
+ "archive_bytes": 13311,
+ "archive_md5": "4dbc93dd9cbefb023eae061cc71d48c2",
+ "member_manifest": "manifests/members/output_entry_pairs_v5.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 62.5,
+ "timestamp": "2026-10-10T01:32:12"
+}

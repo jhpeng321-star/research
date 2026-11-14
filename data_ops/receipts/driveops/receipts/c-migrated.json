@@ -1,0 +1,17 @@
+{
+ "schema": "driveops_receipt/1",
+ "name": "c-migrated",
+ "kind": "dir",
+ "class": "DRIVE-ONLY",
+ "producer": "C:->E: migration copy of user files (2026-10-02)",
+ "restore": "copy to E:/",
+ "local": "E:/research-dense-c-migrated",
+ "drive": "gdrive:research-archive/repo-evidence/archive/c-migrated",
+ "bytes": 59400761,
+ "files": 31,
+ "md5_manifest": "receipts/md5/c-migrated.md5",
+ "check": "passed",
+ "check_method": "rclone check --one-way (size+MD5)",
+ "check_detail": "",
+ "timestamp": "2026-10-09T04:12:47"
+}

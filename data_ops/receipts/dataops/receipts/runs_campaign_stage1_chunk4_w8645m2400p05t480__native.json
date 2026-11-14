@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/campaign_stage1_chunk4/w8645m2400p05t480__native",
+ "name": "w8645m2400p05t480__native",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\campaign_stage1_chunk4\\w8645m2400p05t480__native",
+ "drive": "gdrive:research-archive/repo-evidence/runs/campaign_stage1_chunk4/w8645m2400p05t480__native/w8645m2400p05t480__native.tar.zst",
+ "bytes": 33434433,
+ "files": 11,
+ "archive_bytes": 4469876,
+ "archive_md5": "30f6f9c75974b29cdd8169c75dd00a0a",
+ "member_manifest": "manifests/members/runs_campaign_stage1_chunk4_w8645m2400p05t480__native.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 13.7,
+ "timestamp": "2026-10-10T04:20:35"
+}

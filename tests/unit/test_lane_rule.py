@@ -16,7 +16,7 @@ import pytest
 import torch
 
 from wms.cli.assemble import build_physics
-from wms.config.train import TrainConfig
+from wms.config.train import ModelConfig, TrainConfig
 from wms.model.spec import ModelSpec
 from wms.model.wms import WmSModel
 from wms.physics.config import PhysicsConfig
@@ -292,7 +292,7 @@ def test_lane_rule_field_not_in_model_state_dict():
     assert not [key for key in keys if "lane_rule" in key]
 
 
-# ------------------------------------------------ learned_discretionary
+# ------------------------------------------------ learned_discretionary (owner 10-12 late)
 def test_learned_discretionary_physics_alone_never_changes_lane_but_opens_safe_changes():
     from wms.physics.mobil import LEARNED_PRIOR_LOGIT
     learned, forced = _logits("learned_discretionary"), _logits("forced_merge_only")

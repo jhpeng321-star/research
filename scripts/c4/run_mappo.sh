@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # C4 MAPPO baseline (fair universal MAPPO, model-free, trained directly in SUMO).  LF only.
-# Windows spot instance (48-core): use scripts/c4/run_mappo.ps1 instead.
+# Windows box (Tencent 48-core): use scripts/c4/run_mappo.ps1 instead.
 #
 #   bash run_mappo.sh check              # import + config parse only
 #   bash run_mappo.sh smoke              # CLI --smoke on the CPU fake env (no SUMO), foreground

@@ -1,0 +1,128 @@
+{
+  "schema": "wms_train_main_data/1",
+  "purpose": "WM-S main chain configuration, not an executed training receipt: original leave-PI-and-wall-out plus TRAIN switching/direct-output data",
+  "notes": [
+     "GiB means 2^30 bytes. Original-pack byte sizes are unavailable in supplied inputs; measure before staging. Stage records exact logical switching source bytes before local rsync.",
+    "The trainer is TRAIN-only: pack_switching_val / pack_switching_test and their sidecars are never staged for training.",
+    "The shell preflight checks the installed CLI and required paths without loading trajectory arrays. This file documents its configuration and integration contract.",
+    "Original frozen source metadata may describe mixed splits; retain it unchanged. Load only required original arrays via the TRAIN-aware loader and read-only TRAIN outcome/identity/overlay sidecars.",
+    "No GPU, SUMO, remote call, CAL, sealed, chunk-5, J4B, INC1 or HOLDOUT outcome access was performed to implement this chain. ZERO_SHOT_HELDOUT.json is exclusion metadata only."
+  ],
+  "original": {
+    "recipe": "_in/run3_chain.sh and _in/C1_struct_TRAIN_RECEIPT.json; externally rebuilt leave-PI-and-wall-out lists required",
+    "native_box": "gpuA",
+    "packs": [
+      {"name": "pack_v3", "role": "base (pack 0, outcomes sidecar via WM_N1_TRAIN_OUTCOMES, identities via WM_N1_TRAIN_IDENTITIES)",
+        "gpuA_path": "/root/autodl-tmp/wmn1_m1_45c9032_20261003_A1/work/pack", "size_gib": null, "size_kind": "measure_on_source_box", "override": "PACK_V3"},
+      {"name": "pack_dspeed", "role": "extra pack 1 (+identities_dspeed, +labels_overlay_dspeed)",
+        "gpuA_path": "/root/autodl-tmp/wmn1_a9_data/pack_dspeed", "size_gib": null, "size_kind": "measure_on_source_box", "override": "PACK_DSPEED"},
+      {"name": "pack_damping", "role": "extra pack 2 (+identities_damping, +labels_overlay_damping)",
+        "gpuA_path": "/root/autodl-tmp/wmn1_a10_data/pack_damping", "size_gib": null, "size_kind": "measure_on_source_box", "override": "PACK_DAMPING"}
+    ],
+    "window_lists": {"train": "required WINDOWS_TRAIN", "exclude": "required EXCLUDE",
+                      "monitor": "required WINDOWS_VAL; TRAIN-scoped"},
+    "window_counts": "not asserted; externally built original PI-and-wall exclusions must affect both training and monitoring",
+     "total_pack_gib": null,
+     "total_size_kind": "unavailable_without_real_pack_metadata",
+    "path_overrides": ["ORIGINAL_ROOT", "SIDECAR_ROOT", "IDENTITIES_V3", "IDENTITIES_DSPEED", "IDENTITIES_DAMPING", "OVERLAY_DSPEED", "OVERLAY_DAMPING", "TRAIN_OUTCOMES", "MERGE_PARAMS"],
+    "default_sidecar_root": "/root/autodl-tmp/wmn1_a11_20261004T172721Z/work/sidecars",
+    "default_outcomes": "labels_cov_20261004T072826Z"
+  },
+  "switching": {
+    "native_box": "gpuB",
+    "builder": "branch wms/swpack: python -m hetpack switching (hetdata_kit/hetpack/switching*.py)",
+    "train_pack": "pack_switching_train",
+    "train_identities": "identities_switching_train",
+    "train_driver": "driver_params_switching_train",
+    "train_window_list": "windows_train_hetdata.json",
+    "train_timeline_index": "ACTION_TIMELINE_INDEX_train.json",
+    "heldout": "ZERO_SHOT_HELDOUT.json",
+    "required_train_files": [
+      "pack_switching_train",
+      "pack_switching_train/controller_timeline.npy",
+      "pack_switching_train/issued_acceleration_mps2.npy",
+      "pack_switching_train/issued_target_speed_mps.npy",
+      "identities_switching_train/TRAIN_IDENTITY_RECEIPT.json",
+      "identities_switching_train/identities.npy",
+      "identities_switching_train/global_positions.npy",
+       "identities_switching_train/vehicle_map.json",
+       "driver_params_switching_train/driver_params.npy",
+      "ACTION_TIMELINE_INDEX_train.json",
+      "windows_train_hetdata.json",
+      "ZERO_SHOT_HELDOUT.json"
+    ],
+    "stage_paths": ["pack_switching_train", "identities_switching_train", "driver_params_switching_train",
+                    "ACTION_TIMELINE_INDEX_train.json", "windows_train_hetdata.json",
+                    "ZERO_SHOT_HELDOUT.json"],
+    "runs": {"train": 180, "val": 60, "test": 60},
+    "items": {"train": 3240, "val": 1080, "test": 1080},
+    "items_per_run": 18,
+    "control_steps": 120,
+    "k_max": 192,
+    "size_gib": {"stage_total_train_only": 7.7, "size_kind": "planning_estimate_not_measured",
+                  "scope": "one TRAIN switching pack including timelines and TRAIN sidecars/metadata; excludes val/test packs"},
+    "counts_kind": "builder planning counts, not independently measured here",
+    "path_overrides": ["SW_ROOT", "SW_PACK", "SW_IDENTITIES", "SW_DRIVER", "SW_WINDOWS_TRAIN", "SW_WINDOWS_VAL", "SW_TIMELINE_INDEX", "ZERO_SHOT_HELDOUT"],
+    "monitoring": "optional SW_WINDOWS_VAL must be TRAIN-scoped and world-disjoint; otherwise --switch-val-frac .1 derives a TRAIN world split"
+  },
+  "mix": {
+    "switch_mix_ratio": 0.5,
+    "event_oversample": 2.0,
+    "heldout_family_policy": "drop",
+    "heldout_max_drop_frac": 0.85,
+    "switch_val_frac": 0.1,
+    "cav_drive": "teacher",
+     "start_shift_prob_original": 0.0,
+    "start_shift_prob_switching": 0.0
+  },
+   "curriculum": {"stages_s": [10, 30, 60, 120], "stage_steps": [2500, 2500, 1875, 1250],
+                  "smoke_stage_steps": [6, 6, 6, 6], "total_full_steps": 8125, "total_smoke_steps": 24,
+                  "note": "fixed four-stage curriculum; no 300 s stage; same active objectives in smoke and full"},
+   "execution": {
+     "default_mode": "preflight", "modes": ["preflight", "stage", "run"],
+     "box_values": ["gpuA", "gpuB"], "default_py": "/root/autodl-tmp/gpu1/env/rd_gpu/bin/python",
+     "interpreter_note": "gpuA proven in supplied run3; gpuB must confirm layout or override PY. No conda run.",
+     "num_workers": 0, "threads_default": 2, "memory_limit_per_process_bytes": 6000000000,
+     "max_hours_default": 10, "projector": "wms.plan_steps --stage-steps 2500,2500,1875,1250 --stages 10,30,60,120 --max-hours $MAX_HOURS",
+     "minimum_free_before_and_after_staging_gib": 10,
+     "pre_staging_required_bytes": "exact measured allowlist source bytes + 10737418240",
+     "cpu_guard": "one-second /proc/stat sampling; idle busy cores <=1 and load1 <=1 before timing; during smoke busy cores <=OMP+1; contamination stops and invalidates timing",
+     "overwrite_policy": "new SW_ROOT for stage, new W for run; preserve partial staging and failed runs, never retry",
+     "extras": {"FLAGS": "", "BRAKING_FLAGS": "", "syntax": "whitespace-separated scalar argv; no shell evaluation; fixed-contract overrides refused"},
+     "loss_terms": ["position", "speed", "lane", "traffic", "stability", "conservation"],
+     "traffic_ramp_s": [0, 1], "traffic_weight": 0.1,
+     "loss_gate": "wms.gate_stages --stages 10,30,60,120 --require-terms position,speed,lane,traffic,stability,conservation --ramp-end-s 1; finite shares for all six terms in all four stages"
+   },
+   "staging": {
+     "local_command": "SW_STAGE_SRC=/local/train-export SW_ROOT=/new/train-destination WINDOWS_TRAIN=/original/train.json WINDOWS_VAL=/original/monitor.json EXCLUDE=/original/pi-wall.json bash _out/train_main_chain.sh stage",
+     "coordinator_ssh_commands_not_executed": [
+       "ssh gpuA 'test ! -e /new/train-destination && mkdir /new/train-destination'",
+       "ssh gpuA 'rsync -rt --itemize-changes gpuB:/source/pack_switching_train /new/train-destination/'",
+       "ssh gpuA 'rsync -rt --itemize-changes gpuB:/source/identities_switching_train /new/train-destination/'",
+       "ssh gpuA 'rsync -rt --itemize-changes gpuB:/source/driver_params_switching_train /new/train-destination/'",
+       "ssh gpuA 'rsync -rt --itemize-changes gpuB:/source/ACTION_TIMELINE_INDEX_train.json /new/train-destination/'",
+       "ssh gpuA 'rsync -rt --itemize-changes gpuB:/source/windows_train_hetdata.json /new/train-destination/'",
+       "ssh gpuA 'rsync -rt --itemize-changes gpuB:/source/ZERO_SHOT_HELDOUT.json /new/train-destination/'"
+     ],
+     "coordinator_note": "Templates require configured gpuA/gpuB SSH aliases. Rsync executes on gpuA with a local destination and one remote source. Coordinator must apply the same source allowlist/symlink refusal and check exact source sizes and >=10 GiB remaining before/after transfer. Templates are not executed by the chain.",
+     "originals_on_gpuB": "provide PACK_V3/PACK_DSPEED/PACK_DAMPING and identity/overlay/outcome overrides to existing read-only originals; no whole original-root transfer. Any separately authorized original staging must enumerate required arrays, preserve mixed frozen metadata, and include TRAIN outcome sidecars only.",
+     "optional_monitor_list": "not part of six-path automatic stage allowlist; supply SW_WINDOWS_VAL separately if needed"
+   },
+    "integration_verified": [
+      "--leave-pi-wall-out filters original and switching training and monitoring; EXCLUDE reaches original monitoring; start shifting disabled to preserve exclusions.",
+      "--loss-share-logging records all six finite gradient-norm shares at each stage; zero-gradient conservation/stability are visible rather than fabricated nonzero values.",
+      "Reviewed traffic loss fix already present in branch; chain uses ramp 0/1 for identical active smoke/full objectives.",
+      "Switch monitoring world overlap refuses; held-world/family exclusion has no allow bypass.",
+      "Mmap-backed packs, workers=0 and per-process memory monitor; optional hybrid FLAGS and BRAKING_FLAGS remain empty by default."
+   ],
+   "verification": {
+     "scope": "local shell syntax and standalone chain guards; synthetic workspace fixtures and mocked subprocess/proc inputs only; no trainer imports, training, staging real packs, remote calls or outcome checks",
+     "commands": [
+       {"command": "& \"C:/Program Files/Git/bin/bash.exe\" -n \"_out/train_main_chain.sh\"", "result": "passed, exit 0"},
+       {"command": "python -B \"_out/test_train_main_chain.py\"", "result": "16 tests passed"}
+     ],
+      "status": "locally_verified_real_data_preflight_pending",
+     "failure_history": "Initial 13-test run had one assertion failure because local-only source rejection preceded existing-destination refusal on Windows drive paths; guard ordering corrected, subsequent 15-test suite passed.",
+      "integration_note": "CLI flags and trainer contracts verified locally; real data and GPU smoke not executed. See TRAINSETUP_READY.md for complete verification including synthetic strict-gate refusal."
+   }
+}

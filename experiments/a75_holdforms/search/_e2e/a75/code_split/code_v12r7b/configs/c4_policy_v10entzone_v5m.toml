@@ -1,0 +1,25 @@
+# V10ENTZONE policy on WM v5m (2026-10-19; PREPARED, NOT LAUNCHED - owner approval required).
+# = configs/c4_policy_v9noyield_v5m.toml (v9entry_v5m + trainer.wm_physics_overrides =
+# {mainline_merge_yield = false}) with exactly ONE change: trainer.entrance_zone_native = true.
+#
+# Why (REGISTRATION.md 12:05 10-19, entrance_mask/PAIRS.txt, blocking_diag/out/blocking_table.md):
+# masking CAVs inside the 0-25 m entrance zones at SUMO evaluation removes the source-wait penalty
+# completely, i.e. the policy's "road gain" was inflow metering at the entrances.  The policy must
+# learn under the same restriction so it cannot win by metering: a CAV inside an entrance zone
+# (first entrance_zone_*_m metres downstream of its insertion point) drives native in imagination
+# and is excluded from the actor loss.  Same zones as the SUMO autocheck
+# (entrance_mask/entrance_mask_loader.py: mainline lanes 0/1 at s -2645.67 / -2644.22 m, ramp
+# lane 2 at -378.66 m).
+#
+# The WM checkpoint is a launch parameter (--wm-ckpt / WM_CKPT in scripts/c4/launch_policy_v10entzone.sh):
+# the intended training WM is the NEXT WM round (not yet trained); use runs/active/C4-V7FT-20261017/v5m_ref
+# (wm_s_best_ap.pt) for smokes only.  Start windows are unchanged from v9noyield (c4_wm_v5m_refresh_q.toml).
+extends = "c4_policy_v9noyield_v5m.toml"
+
+[run]
+output_dir = "runs/active/C4-POLICY-V10ENTZONE-V5M"
+
+[trainer]
+entrance_zone_native = true
+entrance_zone_main_m = 25.0
+entrance_zone_ramp_m = 25.0

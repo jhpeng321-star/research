@@ -1,0 +1,40 @@
+{
+ "schema": "wm_n1_box_configs_index/1",
+ "plan": "3-box",
+ "n_boxes": 3,
+ "wall_clock_hours": 54.0,
+ "generated_by": "bundle.multibox.plan_fleet",
+ "boxes": {
+  "box-1": {
+   "file": "3box/box1.json",
+   "configs": [
+    "member-1",
+    "heldout-iii-leave-highest-wall-speed",
+    "n-member-5",
+    "member-4"
+   ],
+   "finish_hours": 46.5
+  },
+  "box-2": {
+   "file": "3box/box2.json",
+   "configs": [
+    "n-member-1",
+    "heldout-ii-leave-pi",
+    "n-member-3",
+    "member-2",
+    "member-5"
+   ],
+   "finish_hours": 54.0
+  },
+  "box-3": {
+   "file": "3box/box3.json",
+   "configs": [
+    "heldout-i-j4b",
+    "n-member-2",
+    "n-member-4",
+    "member-3"
+   ],
+   "finish_hours": 41.0
+  }
+ }
+}

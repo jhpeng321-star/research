@@ -1,0 +1,172 @@
+{
+ "part": "3k",
+ "date": "2026-09-26",
+ "title": "SUMO-like merge dynamics in the structured native Part A emulator (kind 'idm_merge'), TRAIN refit + VALIDATION re-gate",
+ "holdout_accessed": false,
+ "holdout_note": "no holdout root loaded, no registration hash created or passed; holdout_block authoritative",
+ "simulation": false,
+ "engine_change": "part3/engine.py: new kind 'idm_merge' = idm_sampled (unchanged) + M1 lane-end obstacle + M2 merge-zone gap acceptance + M3 cooperative slow-down + M4 hazard 0<->1; idm_merge refreshes llen/vcap after a lane change (idm_sampled does not -- recorded defect, not fixed)",
+ "data_root": "WD01_DATA_ROOT env override in partA_data/pdl.py, part3/p3lib.py, part3/engine.py; default (unset) in-repo layout unchanged (tested); runs used D:/rd-wt/wd01/output/wd01 read-only",
+ "fit": {
+  "train_roots": [
+   "cv17",
+   "cv19_4107",
+   "cv19_4108",
+   "cv20_7001m2000"
+  ],
+  "selected": {
+   "merge_params": {
+    "tau_accept": 1.9,
+    "b_accept": 2.0,
+    "p_coop_scale": 0.0
+   },
+   "lc_scale": 0.002
+  },
+  "losses": {
+   "stage1_before": {
+    "occ": 0.4024443788069275,
+    "prof": 0.7967072320468978,
+    "merge": 4.0
+   },
+   "stage2_before": {
+    "mr": 2.002148363156379,
+    "delay": 1.599810555207017,
+    "lc": 1.4857264081115922
+   },
+   "stage1_after": {
+    "occ": 0.6826002087869991,
+    "prof": 0.4403275251858006,
+    "merge": 0.04468555114918211
+   },
+   "stage2_after": {
+    "mr": 0.2358170234918528,
+    "delay": 0.27975242321859367,
+    "lc": 0.9340979153924461
+   }
+  },
+  "members": [
+   {
+    "seed": 1,
+    "lc_scale": 0.002,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 2.0,
+     "p_coop_scale": 0.0
+    }
+   },
+   {
+    "seed": 18,
+    "lc_scale": 0.002,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 2.0,
+     "p_coop_scale": 0.0
+    }
+   },
+   {
+    "seed": 35,
+    "lc_scale": 0.002,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 2.0,
+     "p_coop_scale": 0.0
+    }
+   },
+   {
+    "seed": 52,
+    "lc_scale": 0.002,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 2.0,
+     "p_coop_scale": 0.25
+    }
+   },
+   {
+    "seed": 69,
+    "lc_scale": 0.002,
+    "merge_params": {
+     "tau_accept": 1.9,
+     "b_accept": 2.0,
+     "p_coop_scale": 0.0
+    }
+   }
+  ]
+ },
+ "ladder": {
+  "validation_roots": 4,
+  "windows_per_member": 52,
+  "t0_grid": "120:30:480",
+  "H": [
+   30,
+   60,
+   90,
+   120
+  ],
+  "members": 5,
+  "raw_rows": "results/raw/raw_metrics.jsonl"
+ },
+ "gate_v2": {
+  "primary_H": 30,
+  "H30": {
+   "L0": {
+    "pass_": false,
+    "failing": [
+     "b_lc"
+    ]
+   },
+   "L3": {
+    "pass_": false,
+    "failing": [
+     "b_lc",
+     "c_coverage_crps"
+    ]
+   },
+   "L4": {
+    "pass_": false,
+    "failing": [
+     "b_lc",
+     "c_coverage_crps"
+    ]
+   }
+  },
+  "H60": {
+   "L0": {
+    "pass_": false,
+    "failing": [
+     "b_lc"
+    ]
+   },
+   "L3": {
+    "pass_": false,
+    "failing": [
+     "b_lc",
+     "c_coverage_crps"
+    ]
+   },
+   "L4": {
+    "pass_": false,
+    "failing": [
+     "b_lc",
+     "c_coverage_crps"
+    ]
+   }
+  },
+  "c_metric": "contract physics delay dt - ds/limit (p3j model); exposure-based coverage alongside"
+ },
+ "old_gate": {
+  "H30": {
+   "L0": false,
+   "L3": false,
+   "L4": false
+  }
+ },
+ "deviations": [
+  "idm_sampled stale-llen/vcap after merge recorded, NOT fixed (would change published L3 numbers)",
+  "member bootstrap is coordinate-neighbourhood, not full refit (cost)",
+  "optional M2 for 0<->1 not implemented (brief: optional)"
+ ],
+ "not_done": [
+  "merge-zone occupancy under-prediction residual (stopped-merge urgency term not modelled)",
+  "holdout evaluation (blocked until owner opens it)"
+ ]
+}

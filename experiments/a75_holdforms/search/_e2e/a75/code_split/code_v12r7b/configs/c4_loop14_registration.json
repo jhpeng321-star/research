@@ -1,0 +1,9 @@
+{"id": "C4-LOOP14-20261026", "status": "registered", "split": "TRAIN",
+ "acknowledged_by": "S-LOOPPREP seed reservation appended to runs/active/C4-V7FT-20261017/REGISTRATION.md 2026-10-25 ~17:10 (main/owner to confirm; copy to gpuR /root/autodl-tmp/c4/v5/loop14_REGISTRATION.json after filling the sources)",
+ "seed_block": [968100, 968227], "exclude": [[968100, 968102]],
+ "seed_evidence": "968000-968063 used by S-LOWPEN (excluded by starting at 968100); 968064-968099 left as a buffer; 964000-964199 evaluation seeds never allocated. No other use of 968xxx found: protocols/*.json, docs/, REGISTRATION.md, cpuN full-home text scan (json/md/log/txt/sh/toml/csv/out/jsonl/py, hits were floats/timestamps only), cpuN and gpuR file/dir names, gpuR data/. gpuW and cpuT not reachable/checked. 128 seeds = 64 for 4 cycles x 16 worlds + a retry reserve of 64 (each retry attempt allocates fresh seeds).",
+ "sources": {"initial_wm_sha256": "<13E B2 FINAL - fill at launch>", "policy0_sha256": "<adopted - fill at launch>", "code_sha": "<loop14 commit - fill at launch>"},
+ "comparators": "previous accepted WM (same flags/panel); SUMO native arm per pair",
+ "budget": {"max_cycles": 4, "policy_updates_per_cycle": 150, "sim_s_per_cycle": 30000, "sim_s_total": 120000,
+            "gpu_h_policy_per_cycle": 3, "gpu_h_wm_per_cycle": 1.5, "wm_steps_per_cycle": 40},
+ "stop": {"consecutive_wm_rejects": 2, "max_branch_incidents_per_cycle": 0}}

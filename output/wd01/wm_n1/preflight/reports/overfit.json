@@ -1,0 +1,21 @@
+{
+ "schema": "wm_n1_preflight_gate/1",
+ "gate": "overfit",
+ "title": "G4 overfit (1 member drives total loss near 0 on 2 tiny TRAIN windows)",
+ "passed": true,
+ "verdict": "PASS",
+ "detail": "final 0.023329 <= threshold 0.05 on 2 windows (cpu)",
+ "entry_points": [
+  "train.idea_a.overfit_report"
+ ],
+ "checks": {
+  "device": "cpu",
+  "n_windows": 2,
+  "threshold": 0.05,
+  "final_loss": 0.02332899533212185,
+  "curve_len": 1500,
+  "curve_finite": true
+ },
+ "error": null,
+ "generated_utc": "2026-10-02T04:49:19Z"
+}

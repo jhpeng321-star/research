@@ -205,8 +205,8 @@ def imagined_cooperation(ckpt, env, arms: list, controller, fn_snap, horizon_s: 
         def dispatch(predicted):
             return model.hold_teacher(predicted)
     else:
-        # Damping/PI in imagination are diagnostics only (no controllers in the deployed check);
-        # TimelineCandidate left deploy.py with that change (1ea2409).
+        # Damping/PI in imagination are diagnostics only (no controllers in the deployed check, owner
+        # 2026-10-12); TimelineCandidate left deploy.py with that change (1ea2409).
         try:
             from .deploy import TimelineCandidate, classic_dependencies
         except ImportError as exc:

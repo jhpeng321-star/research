@@ -1,0 +1,175 @@
+{
+ "cells": {
+  "2400": [
+   {
+    "partition": "WM28_FRESH_VALIDATION_SEEDS",
+    "role": "exposed",
+    "seed": 920050
+   },
+   {
+    "partition": "WM28_FRESH_VALIDATION_SEEDS",
+    "role": "exposed",
+    "seed": 920059
+   },
+   {
+    "partition": "WM28_FRESH_VALIDATION_SEEDS",
+    "role": "exposed",
+    "seed": 920065
+   },
+   {
+    "partition": "WM28_FRESH_VALIDATION_SEEDS",
+    "role": "exposed",
+    "seed": 920070
+   },
+   {
+    "partition": "WM28_FRESH_VALIDATION_SEEDS",
+    "role": "exposed",
+    "seed": 920080
+   },
+   {
+    "partition": "WM28_FRESH_VALIDATION_SEEDS",
+    "role": "exposed",
+    "seed": 920094
+   },
+   {
+    "partition": "WM28_FRESH_VALIDATION_SEEDS",
+    "role": "exposed",
+    "seed": 920103
+   },
+   {
+    "partition": "WM28_FRESH_VALIDATION_SEEDS",
+    "role": "exposed",
+    "seed": 920109
+   }
+  ],
+  "2600": [
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920008
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920009
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920010
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920011
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920012
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920013
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920014
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920015
+   }
+  ],
+  "2700": [
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920016
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920017
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920018
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920019
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920020
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920021
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920022
+   },
+   {
+    "partition": "OE65_DATASET_SEEDS",
+    "role": "development",
+    "seed": 920023
+   }
+  ]
+ },
+ "excluded_world_seed_count": 330,
+ "gate": "traffic_shepherd.seeds.require_development_case (used by traffic_shepherd.workflow.evaluate)",
+ "per_demand": 8,
+ "purpose": "development evaluation seeds for WM-S-C4 (paired across controllers and penetrations)",
+ "role": "development evidence only; not acceptance, not a freshness certificate",
+ "rule": "1. Candidate pool = the exposed/development partitions registered in traffic_shepherd/seeds.py\n     (never SEALED_SEEDS, never the sealed chunk-5 / TEST_REPL blocks, never FINAL_TEST).\n  2. A (seed, demand) cell is eligible only if ``traffic_shepherd.seeds.require_development_case``\n     (the gate used by traffic_shepherd.workflow.evaluate) accepts it for role 'development' or 'exposed'.\n  3. Seeds whose world id appears in any world-model TRAIN pack (pack_v3, pack_dspeed, pack_damping,\n     pack_switching_train INDEX 'world' field, parsed as w<seed>m...) are removed: the policy/WM must not\n     be scored on traffic realisations the world model was fitted on.\n  4. For each demand the first N eligible seeds are taken in fixed partition-priority order\n     (OE65, WM28, WM34, CV31, CV29, CV28, CV20, OE59, OE62, OE34, OE32), ascending inside a partition,\n     skipping seeds already given to another demand (independent worlds per demand cell).\n  5. Collection (training-data) seeds are NOT chosen here; they need their own exposure audit.",
+ "schema": "c4_eval_seeds/1",
+ "seeds_by_demand": {
+  "2400": [
+   920050,
+   920059,
+   920065,
+   920070,
+   920080,
+   920094,
+   920103,
+   920109
+  ],
+  "2600": [
+   920008,
+   920009,
+   920010,
+   920011,
+   920012,
+   920013,
+   920014,
+   920015
+  ],
+  "2700": [
+   920016,
+   920017,
+   920018,
+   920019,
+   920020,
+   920021,
+   920022,
+   920023
+  ]
+ },
+ "sha256_of_seeds_by_demand": "c5c3e7b1f163646e57e13eee4d05041273aa83e460fb406640bd45f685d86152",
+ "skipped_counts": {
+  "forbidden": 0,
+  "gate_refused": 94,
+  "in_wm_train_pack": 0
+ }
+}

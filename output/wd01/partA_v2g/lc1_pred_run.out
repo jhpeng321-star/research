@@ -1,0 +1,35 @@
+WD-01-PA2G-LC1-pred: 32 TRAIN worlds, workers 4
+  [w1] [1/8] w8624m2600p02t420: 18 windows, 23.3s
+  [w2] [1/8] w8625m2700p02t240: 18 windows, 26.6s
+  [w3] [1/8] w8626m2700p02t300: 18 windows, 30.5s
+  [w1] [2/8] w8632m2000p02t240: 18 windows, 8.8s
+  [w2] [2/8] w8633m2000p02t480: 18 windows, 10.1s
+  [w3] [2/8] w8634m2400p02t300: 18 windows, 10.8s
+  [w0] [1/8] w8623m2600p02t540: 18 windows, 43.2s
+  [w0] [2/8] w8629m2000p02t420: 18 windows, 10.0s
+  [w2] [3/8] w8643m2600p05t240: 18 windows, 19.3s
+  [w3] [3/8] w8644m2700p05t240: 18 windows, 17.0s
+  [w1] [3/8] w8642m2600p05t420: 18 windows, 27.2s
+  [w0] [3/8] w8641m2700p05t300: 18 windows, 14.9s
+  [w1] [4/8] w8647m2000p05t300: 18 windows, 10.3s
+  [w3] [4/8] w8659m2700p10t420: 18 windows, 20.4s
+  [w0] [4/8] w8645m2400p05t480: 18 windows, 14.0s
+  [w1] [5/8] w8661m2600p10t240: 18 windows, 14.9s
+  [w2] [4/8] w8651m2400p05t420: 18 windows, 29.9s
+  [w0] [5/8] w8660m2700p10t300: 18 windows, 21.1s
+  [w2] [5/8] w8662m2600p10t300: 18 windows, 19.4s
+  [w1] [6/8] w8679m2400p20t540: 18 windows, 22.1s
+  [w3] [5/8] w8676m2700p20t360: 18 windows, 30.0s
+  [w0] [6/8] w8677m2700p20t360: 18 windows, 18.9s
+  [w3] [6/8] w8682m2400p20t240: 18 windows, 17.2s
+  [w1] [7/8] w8686m2600p20t240: 18 windows, 24.7s
+  [w2] [6/8] w8680m2600p20t300: 18 windows, 27.6s
+  [w0] [7/8] w8683m2400p20t540: 18 windows, 21.3s
+  [w1] [8/8] w8697m2700p40t240: 18 windows, 18.6s
+  [w0] [8/8] w8695m2400p40t480: 18 windows, 15.9s
+  [w3] [7/8] w8694m2600p40t240: 18 windows, 33.3s
+  [w2] [7/8] w8693m2600p40t420: 18 windows, 32.2s
+  [w3] [8/8] w8706m2400p40t360: 18 windows, 21.3s
+  [w2] [8/8] w8699m2700p40t240: 18 windows, 26.3s
+merged rows: {'events': 11076, 'decisions_accepted': 11272, 'rejections': 576, 'window_rows': 576, 'states': 576, 'merge_outcomes': 2410}
+DONE WD-01-PA2G-LC1-pred wall 197s

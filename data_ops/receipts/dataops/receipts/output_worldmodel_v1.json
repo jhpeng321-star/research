@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/worldmodel_v1",
+ "name": "worldmodel_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\worldmodel_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/worldmodel_v1/worldmodel_v1.tar.zst",
+ "bytes": 749691,
+ "files": 7,
+ "archive_bytes": 442527,
+ "archive_md5": "d903ea47e9ae961158e734cc6e31ff6f",
+ "member_manifest": "manifests/members/output_worldmodel_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 46.3,
+ "timestamp": "2026-10-10T01:44:54"
+}

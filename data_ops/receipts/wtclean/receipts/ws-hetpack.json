@@ -1,0 +1,42 @@
+﻿{
+    "name":  "ws-hetpack",
+    "path":  "E:\\rd-wt\\ws-hetpack",
+    "class":  "worktree",
+    "manual":  false,
+    "branch":  "wms/hetpack",
+    "headBefore":  "5acdeaa245b022eecb1d3cc32d4caffd9f84d80c",
+    "headType":  null,
+    "dirtyBefore":  0,
+    "committed":  false,
+    "commitSha":  null,
+    "preserveRef":  null,
+    "dest":  "gdrive:research-archive/worktrees/ws-hetpack",
+    "listFile":  "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-hetpack.txt",
+    "uploadCount":  265,
+    "uploadBytes":  4413326,
+    "upload":  {
+                   "ran":  true,
+                   "exit":  0,
+                   "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-hetpack.upload.log"
+               },
+    "check":  {
+                  "ran":  true,
+                  "exit":  0,
+                  "result":  "2026/10/10 02:58:42 NOTICE: Google drive root \u0027research-archive/worktrees/ws-hetpack\u0027: 0 differences found | 2026/10/10 02:58:42 NOTICE: Google drive root \u0027research-archive/worktrees/ws-hetpack\u0027: 265 matching files",
+                  "log":  "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-hetpack.check.log"
+              },
+    "junctions":  [
+
+                  ],
+    "skippedSensitiveCount":  4,
+    "skippedSensitiveSample":  [
+                                   "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc",
+                                   "tests/planner/__pycache__/test_holdout_guard.cpython-310-pytest-9.1.1.pyc",
+                                   "tests/planner/__pycache__/test_holdout_guard_seal.cpython-310-pytest-9.1.1.pyc",
+                                   "traffic_shepherd/planner/__pycache__/holdout.cpython-310.pyc"
+                               ],
+    "skippedJunctionCount":  0,
+    "status":  "ok",
+    "error":  null,
+    "timestamp":  "2026-10-10T02:53:37.4610590+08:00"
+}

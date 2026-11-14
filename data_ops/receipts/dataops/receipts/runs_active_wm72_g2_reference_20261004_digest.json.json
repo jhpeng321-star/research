@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "runs/active/wm72_g2_reference_20261004_digest.json",
+ "name": "wm72_g2_reference_20261004_digest.json",
+ "kind": "file",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense runs (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\runs\\active\\wm72_g2_reference_20261004_digest.json",
+ "drive": "gdrive:research-archive/repo-evidence/runs/active/wm72_g2_reference_20261004_digest.json.tar.zst",
+ "bytes": 22531,
+ "files": 1,
+ "archive_bytes": 9135,
+ "archive_md5": "44c8960a40024cf1afd679df99d81de4",
+ "member_manifest": "manifests/members/runs_active_wm72_g2_reference_20261004_digest.json.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 43.5,
+ "timestamp": "2026-10-10T03:49:51"
+}

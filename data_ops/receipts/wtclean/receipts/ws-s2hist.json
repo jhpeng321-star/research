@@ -1,0 +1,80 @@
+{
+  "name": "ws-s2hist",
+  "path": "E:\\rd-wt\\ws-s2hist",
+  "class": "worktree",
+  "manual": false,
+  "branch": "wms/s2hist",
+  "headBefore": "bbda8044b43ce7af5dc87e15f4429088252e0d2a",
+  "headType": "branch",
+  "dirtyBefore": 0,
+  "committed": false,
+  "commitSha": null,
+  "preserveRef": null,
+  "dest": "gdrive:research-archive/worktrees/ws-s2hist",
+  "listFile": "E:\\rd-wt\\reorg3\\wtclean\\lists\\ws-s2hist.tar.txt",
+  "uploadCount": 345,
+  "uploadBytes": 66447993,
+  "upload": {
+    "ran": true,
+    "exit": 0,
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-s2hist.tar.upload.log"
+  },
+  "check": {
+    "ran": true,
+    "exit": 0,
+    "result": "tar.zst verified: remote md5 edbbaeee9060ba3cff42a32aa64b5d54 local edbbaeee9060ba3cff42a32aa64b5d54; size 19056800/19056800; manifest md5 match size match; members=345 (tar -t 345, sha256 345); 0 differences found",
+    "log": "E:\\rd-wt\\reorg3\\wtclean\\inventory\\logs\\ws-s2hist.tar.check.log"
+  },
+  "junctions": [],
+  "skippedSensitiveCount": 4,
+  "skippedSensitiveSample": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc",
+    "tests/planner/__pycache__/test_holdout_guard.cpython-310-pytest-9.1.1.pyc",
+    "tests/planner/__pycache__/test_holdout_guard_seal.cpython-310-pytest-9.1.1.pyc",
+    "traffic_shepherd/planner/__pycache__/holdout.cpython-310.pyc"
+  ],
+  "skippedJunctionCount": 0,
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-10-10T07:12:35.133182+08:00",
+  "method": "tar.zst",
+  "trackedDirtySensitiveSkipped": [],
+  "headSha": "bbda8044b43ce7af5dc87e15f4429088252e0d2a",
+  "skippedSensitive": [
+    "output/wd01/wm_n1/evalh/__pycache__/cal_split.cpython-310.pyc",
+    "tests/planner/__pycache__/test_holdout_guard.cpython-310-pytest-9.1.1.pyc",
+    "tests/planner/__pycache__/test_holdout_guard_seal.cpython-310-pytest-9.1.1.pyc",
+    "traffic_shepherd/planner/__pycache__/holdout.cpython-310.pyc"
+  ],
+  "skippedJunctionPaths": [],
+  "nestedRepoDirs": [],
+  "vanishedDuringEnum": [],
+  "archive": {
+    "remote": "gdrive:research-archive/worktrees/ws-s2hist/ws-s2hist.tar.zst",
+    "name": "ws-s2hist.tar.zst",
+    "size": 19056800,
+    "md5": "edbbaeee9060ba3cff42a32aa64b5d54",
+    "sha256": "16928002388b29144f32400d4493f1227c500cc07a8753cff02f87d2857ff01d",
+    "manifest_remote": "gdrive:research-archive/worktrees/ws-s2hist/ws-s2hist.manifest.json",
+    "manifest_local": "E:\\rd-wt\\reorg3\\wtclean\\manifests\\ws-s2hist.manifest.json",
+    "manifest_size": 58950,
+    "manifest_md5": "ed796711d8333cfeba486479c7983804",
+    "member_count": 345,
+    "member_bytes": 66447993,
+    "zstd_args": "-T0 -10",
+    "pack_seconds": 17.0,
+    "verify_seconds": 1.3,
+    "upload_seconds": 43.9,
+    "upload_MBps": 0.43,
+    "verified": {
+      "remote_md5": true,
+      "remote_size": true,
+      "tar_t_equals_manifest": true,
+      "stream_sha256_equals_manifest": true,
+      "manifest_remote_md5": true
+    }
+  },
+  "memberCount": 345,
+  "memberBytes": 66447993,
+  "junctionsFound": []
+}

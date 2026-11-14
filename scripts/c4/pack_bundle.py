@@ -40,7 +40,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_REPO = HERE.parents[1]
-DEFAULT_DATA_ROOT = Path("data_cache")
+DEFAULT_DATA_ROOT = Path("E:/research-dense/data_cache")
 RESTRICTED = re.compile(
     r"(?:^|[^a-z0-9])(cal(?:ibration)?|cal_split\w*|holdout|heldout|sealed|chunk[-_]?5|j4b|inc1)"
     r"(?:$|[^a-z0-9])", re.IGNORECASE)

@@ -1,0 +1,26 @@
+{
+ "amendment": "17c",
+ "amends": {
+  "file": "ops/nm_finaleval_clean5a_registration_amend17b.json",
+  "registration_sha256": "d48b8c8d6662c6112252df62f80a438ec63e9de1d2682ed5da4bb525414a849f"
+ },
+ "authority": [
+  "MAIN 2026-11-07 (17b receipts DIFFERS): accept traffic equivalence; horizon 901; shared reducers; module paths in start receipts"
+ ],
+ "decisions": {
+  "horizon": "MAPPO_LANE eval, envparity train and start-receipt train reset the training env with horizon_s = TRAIN_ENV_HORIZON_S = 901 (as the plant); episodes still step only the registered seconds",
+  "module_paths": "start receipts record loaded traffic_shepherd/tools/wms module file paths (commit 8933a0ad)",
+  "reducers": "MAPPO_LANE safety = nm_eval_runner.shared_safety -> tools.coopmwm.rerun_tracks_backend.safety, the plant arms' reducer (collisions/teleports/hard_brake from env totals, TTC events from the observable trace via replay_bank.ttc_events); the env ttc flag is not used; J = team_delay_vs as before",
+  "traffic_equivalence": "accepted: trajectories identical every tick on both TRAIN worlds; the J identity criterion becomes |dJ|/J <= 1e-9 when trajectories are exactly identical (floating-point summation order); ops.nm_finaleval.J_REL_TOL, j_within, envparity_assess_17c -> sealed ENVPARITY_U0_17C.json (CLI envparity-assess)"
+ },
+ "registered_utc": "2026-11-07T04:59:49.561059+00:00",
+ "registration_sha256": "24d041a8c613580650368383affb0b03590855fd115e3b93c7ddb525fc6958ce",
+ "schema": "coopmwm.nm.finaleval.v1.registration_amendment",
+ "status": "pre-results: no MAPPO_LANE outcome exists; ENVPARITY_U0 c96e6485 / ENV_EQUIV 7a11c91d are the 17b receipts",
+ "tests": [
+  "test_mappo_lane_safety_is_the_plant_arms_shared_reducer",
+  "lane episode reset_kw horizon_s=901",
+  "ops/test_nm_finaleval + runner + parity: 73 passed, 6 skipped"
+ ],
+ "to_report": "any train-env change at horizon 901 other than horizon_s itself is reported from the IMITREPLAY env-equivalence rerun (zero SUMO)"
+}

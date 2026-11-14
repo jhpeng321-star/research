@@ -1,0 +1,1085 @@
+[
+ {
+  "run": "w8658m2600p10t360__w-lo-early",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8658m2600p10t360__w-lo-early:wall1",
+    "request_s": 360.0,
+    "assembled_s": 380.0,
+    "terminal": [
+     "safety_abort",
+     487.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.217",
+     "mainline.218"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.217": {
+    "last_in_vehicles_s": 486.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 457.5
+   },
+   "mainline.218": {
+    "last_in_vehicles_s": 486.5,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 2,
+    "first_junction_tick": 453.0
+   }
+  },
+  "departed": {
+   "mainline.217": null,
+   "mainline.218": null
+  },
+  "first_issue": {
+   "mainline.217": {
+    "run": "w8658m2600p10t360__w-lo-early",
+    "wall": "w8658m2600p10t360__w-lo-early:wall1",
+    "tick": 486.5,
+    "member": "mainline.217",
+    "category": "absent_from_vehicles",
+    "request": 360.0,
+    "terminal": 487.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   },
+   "mainline.218": {
+    "run": "w8658m2600p10t360__w-lo-early",
+    "wall": "w8658m2600p10t360__w-lo-early:wall1",
+    "tick": 487.0,
+    "member": "mainline.218",
+    "category": "absent_from_vehicles",
+    "request": 360.0,
+    "terminal": 487.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8664m2600p10t360__w-lo-early",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8664m2600p10t360__w-lo-early:wall1",
+    "request_s": 415.0,
+    "assembled_s": 435.0,
+    "terminal": [
+     "safety_abort",
+     503.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.205",
+     "mainline.226"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.226": {
+    "last_in_vehicles_s": 502.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 2,
+    "first_junction_tick": 447.0
+   },
+   "mainline.205": {
+    "last_in_vehicles_s": 508.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 2,
+    "first_junction_tick": 439.0
+   }
+  },
+  "departed": {
+   "mainline.226": null,
+   "mainline.205": null
+  },
+  "first_issue": {
+   "mainline.226": {
+    "run": "w8664m2600p10t360__w-lo-early",
+    "wall": "w8664m2600p10t360__w-lo-early:wall1",
+    "tick": 502.5,
+    "member": "mainline.226",
+    "category": "absent_from_vehicles",
+    "request": 415.0,
+    "terminal": 503.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8667m2700p10t420__w-lo-early",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8667m2700p10t420__w-lo-early:wall1",
+    "request_s": 428.0,
+    "assembled_s": 465.0,
+    "terminal": [
+     "safety_abort",
+     520.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.249",
+     "mainline.250"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.249": {
+    "last_in_vehicles_s": 519.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 491.0
+   },
+   "mainline.250": {
+    "last_in_vehicles_s": 519.5,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 2,
+    "first_junction_tick": 486.5
+   }
+  },
+  "departed": {
+   "mainline.249": null,
+   "mainline.250": null
+  },
+  "first_issue": {
+   "mainline.249": {
+    "run": "w8667m2700p10t420__w-lo-early",
+    "wall": "w8667m2700p10t420__w-lo-early:wall1",
+    "tick": 519.5,
+    "member": "mainline.249",
+    "category": "absent_from_vehicles",
+    "request": 428.0,
+    "terminal": 520.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   },
+   "mainline.250": {
+    "run": "w8667m2700p10t420__w-lo-early",
+    "wall": "w8667m2700p10t420__w-lo-early:wall1",
+    "tick": 520.0,
+    "member": "mainline.250",
+    "category": "absent_from_vehicles",
+    "request": 428.0,
+    "terminal": 520.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8669m2700p10t360__w-mid-early",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8669m2700p10t360__w-mid-early:wall1",
+    "request_s": 478.0,
+    "assembled_s": 500.0,
+    "terminal": [
+     "released",
+     620.0,
+     null,
+     null
+    ],
+    "members": [
+     "mainline.344",
+     "mainline.347"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.344": {
+    "last_in_vehicles_s": 702.5,
+    "departed_at_s": 473.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 687.5
+   },
+   "mainline.347": {
+    "last_in_vehicles_s": 702.5,
+    "departed_at_s": 477.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 687.5
+   }
+  },
+  "departed": {
+   "mainline.344": 473.5,
+   "mainline.347": 477.5
+  },
+  "first_issue": {}
+ },
+ {
+  "run": "w8669m2700p10t360__w-mid-late",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8669m2700p10t360__w-mid-late:wall1",
+    "request_s": 478.0,
+    "assembled_s": 500.0,
+    "terminal": [
+     "released",
+     560.0,
+     null,
+     null
+    ],
+    "members": [
+     "mainline.344",
+     "mainline.347"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.344": {
+    "last_in_vehicles_s": 663.0,
+    "departed_at_s": 473.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 641.5
+   },
+   "mainline.347": {
+    "last_in_vehicles_s": 660.5,
+    "departed_at_s": 477.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 0,
+    "first_junction_tick": null
+   }
+  },
+  "departed": {
+   "mainline.344": 473.5,
+   "mainline.347": 477.5
+  },
+  "first_issue": {}
+ },
+ {
+  "run": "w8670m2700p10t300__w-lo-late",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8670m2700p10t300__w-lo-late:wall1",
+    "request_s": 360.0,
+    "assembled_s": 401.0,
+    "terminal": [
+     "safety_abort",
+     497.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.232",
+     "mainline.229"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.232": {
+    "last_in_vehicles_s": 496.5,
+    "departed_at_s": 321.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 467.0
+   },
+   "mainline.229": {
+    "last_in_vehicles_s": 496.0,
+    "departed_at_s": 318.0,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 467.0
+   }
+  },
+  "departed": {
+   "mainline.232": 321.5,
+   "mainline.229": 318.0
+  },
+  "first_issue": {
+   "mainline.229": {
+    "run": "w8670m2700p10t300__w-lo-late",
+    "wall": "w8670m2700p10t300__w-lo-late:wall1",
+    "tick": 496.5,
+    "member": "mainline.229",
+    "category": "absent_from_vehicles",
+    "request": 360.0,
+    "terminal": 497.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   },
+   "mainline.232": {
+    "run": "w8670m2700p10t300__w-lo-late",
+    "wall": "w8670m2700p10t300__w-lo-late:wall1",
+    "tick": 497.0,
+    "member": "mainline.232",
+    "category": "absent_from_vehicles",
+    "request": 360.0,
+    "terminal": 497.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8682m2400p20t240__w-lo-late",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8682m2400p20t240__w-lo-late:wall1",
+    "request_s": 300.0,
+    "assembled_s": 316.0,
+    "terminal": [
+     "safety_abort",
+     399.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.152",
+     "mainline.151"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.151": {
+    "last_in_vehicles_s": 398.0,
+    "departed_at_s": 241.0,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 369.0
+   },
+   "mainline.152": {
+    "last_in_vehicles_s": 398.0,
+    "departed_at_s": 241.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 2,
+    "first_junction_tick": 364.5
+   }
+  },
+  "departed": {
+   "mainline.151": 241.0,
+   "mainline.152": 241.5
+  },
+  "first_issue": {
+   "mainline.152": {
+    "run": "w8682m2400p20t240__w-lo-late",
+    "wall": "w8682m2400p20t240__w-lo-late:wall1",
+    "tick": 398.5,
+    "member": "mainline.152",
+    "category": "absent_from_vehicles",
+    "request": 300.0,
+    "terminal": 399.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   },
+   "mainline.151": {
+    "run": "w8682m2400p20t240__w-lo-late",
+    "wall": "w8682m2400p20t240__w-lo-late:wall1",
+    "tick": 398.5,
+    "member": "mainline.151",
+    "category": "absent_from_vehicles",
+    "request": 300.0,
+    "terminal": 399.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8684m2700p20t360__w-lo-early",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8684m2700p20t360__w-lo-early:wall1",
+    "request_s": 360.0,
+    "assembled_s": 364.0,
+    "terminal": [
+     "safety_abort",
+     480.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.212",
+     "mainline.211"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.211": {
+    "last_in_vehicles_s": 479.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 2,
+    "first_junction_tick": 443.0
+   },
+   "mainline.212": {
+    "last_in_vehicles_s": 486.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 3,
+    "first_junction_tick": 446.0
+   }
+  },
+  "departed": {
+   "mainline.211": null,
+   "mainline.212": null
+  },
+  "first_issue": {
+   "mainline.211": {
+    "run": "w8684m2700p20t360__w-lo-early",
+    "wall": "w8684m2700p20t360__w-lo-early:wall1",
+    "tick": 479.5,
+    "member": "mainline.211",
+    "category": "absent_from_vehicles",
+    "request": 360.0,
+    "terminal": 480.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8686m2600p20t240__w-mid-late",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8686m2600p20t240__w-mid-late:wall1",
+    "request_s": 300.0,
+    "assembled_s": 309.0,
+    "terminal": [
+     "safety_abort",
+     433.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.185",
+     "mainline.186"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.186": {
+    "last_in_vehicles_s": 432.5,
+    "departed_at_s": 280.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 410.0
+   },
+   "mainline.185": {
+    "last_in_vehicles_s": 432.0,
+    "departed_at_s": 280.0,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 410.0
+   }
+  },
+  "departed": {
+   "mainline.186": 280.5,
+   "mainline.185": 280.0
+  },
+  "first_issue": {
+   "mainline.185": {
+    "run": "w8686m2600p20t240__w-mid-late",
+    "wall": "w8686m2600p20t240__w-mid-late:wall1",
+    "tick": 432.5,
+    "member": "mainline.185",
+    "category": "absent_from_vehicles",
+    "request": 300.0,
+    "terminal": 433.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   },
+   "mainline.186": {
+    "run": "w8686m2600p20t240__w-mid-late",
+    "wall": "w8686m2600p20t240__w-mid-late:wall1",
+    "tick": 433.0,
+    "member": "mainline.186",
+    "category": "absent_from_vehicles",
+    "request": 300.0,
+    "terminal": 433.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8692m2600p40t300__w-lo-late",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8692m2600p40t300__w-lo-late:wall1",
+    "request_s": 360.0,
+    "assembled_s": 374.0,
+    "terminal": [
+     "safety_abort",
+     462.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.204",
+     "mainline.203"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.203": {
+    "last_in_vehicles_s": 461.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 432.5
+   },
+   "mainline.204": {
+    "last_in_vehicles_s": 462.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 433.0
+   }
+  },
+  "departed": {
+   "mainline.203": null,
+   "mainline.204": null
+  },
+  "first_issue": {
+   "mainline.203": {
+    "run": "w8692m2600p40t300__w-lo-late",
+    "wall": "w8692m2600p40t300__w-lo-late:wall1",
+    "tick": 461.5,
+    "member": "mainline.203",
+    "category": "absent_from_vehicles",
+    "request": 360.0,
+    "terminal": 462.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8694m2600p40t240__w-lo-late",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8694m2600p40t240__w-lo-late:wall1",
+    "request_s": 300.0,
+    "assembled_s": 313.0,
+    "terminal": [
+     "safety_abort",
+     488.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.201",
+     "mainline.200"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.200": {
+    "last_in_vehicles_s": 487.0,
+    "departed_at_s": 287.0,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 457.0
+   },
+   "mainline.201": {
+    "last_in_vehicles_s": 487.5,
+    "departed_at_s": 287.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 2,
+    "first_junction_tick": 452.5
+   }
+  },
+  "departed": {
+   "mainline.200": 287.0,
+   "mainline.201": 287.5
+  },
+  "first_issue": {
+   "mainline.200": {
+    "run": "w8694m2600p40t240__w-lo-late",
+    "wall": "w8694m2600p40t240__w-lo-late:wall1",
+    "tick": 487.5,
+    "member": "mainline.200",
+    "category": "absent_from_vehicles",
+    "request": 300.0,
+    "terminal": 488.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   },
+   "mainline.201": {
+    "run": "w8694m2600p40t240__w-lo-late",
+    "wall": "w8694m2600p40t240__w-lo-late:wall1",
+    "tick": 488.0,
+    "member": "mainline.201",
+    "category": "absent_from_vehicles",
+    "request": 300.0,
+    "terminal": 488.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8697m2700p40t240__w-lo-late",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8697m2700p40t240__w-lo-late:wall1",
+    "request_s": 300.0,
+    "assembled_s": 314.0,
+    "terminal": [
+     "safety_abort",
+     405.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.164",
+     "mainline.163"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.163": {
+    "last_in_vehicles_s": 404.0,
+    "departed_at_s": 243.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 2,
+    "first_junction_tick": 370.5
+   },
+   "mainline.164": {
+    "last_in_vehicles_s": 404.5,
+    "departed_at_s": 243.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 375.5
+   }
+  },
+  "departed": {
+   "mainline.163": 243.5,
+   "mainline.164": 243.5
+  },
+  "first_issue": {
+   "mainline.163": {
+    "run": "w8697m2700p40t240__w-lo-late",
+    "wall": "w8697m2700p40t240__w-lo-late:wall1",
+    "tick": 404.5,
+    "member": "mainline.163",
+    "category": "absent_from_vehicles",
+    "request": 300.0,
+    "terminal": 405.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   },
+   "mainline.164": {
+    "run": "w8697m2700p40t240__w-lo-late",
+    "wall": "w8697m2700p40t240__w-lo-late:wall1",
+    "tick": 405.0,
+    "member": "mainline.164",
+    "category": "absent_from_vehicles",
+    "request": 300.0,
+    "terminal": 405.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8698m2600p40t300__w-lo-late",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8698m2600p40t300__w-lo-late:wall1",
+    "request_s": 360.0,
+    "assembled_s": 364.0,
+    "terminal": [
+     "safety_abort",
+     482.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.211",
+     "mainline.210"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.210": {
+    "last_in_vehicles_s": 481.0,
+    "departed_at_s": 310.0,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 452.0
+   },
+   "mainline.211": {
+    "last_in_vehicles_s": 481.0,
+    "departed_at_s": 310.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 452.0
+   }
+  },
+  "departed": {
+   "mainline.210": 310.0,
+   "mainline.211": 310.5
+  },
+  "first_issue": {
+   "mainline.211": {
+    "run": "w8698m2600p40t300__w-lo-late",
+    "wall": "w8698m2600p40t300__w-lo-late:wall1",
+    "tick": 481.5,
+    "member": "mainline.211",
+    "category": "absent_from_vehicles",
+    "request": 360.0,
+    "terminal": 482.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   },
+   "mainline.210": {
+    "run": "w8698m2600p40t300__w-lo-late",
+    "wall": "w8698m2600p40t300__w-lo-late:wall1",
+    "tick": 481.5,
+    "member": "mainline.210",
+    "category": "absent_from_vehicles",
+    "request": 360.0,
+    "terminal": 482.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8700m2600p40t420__w-mid-late",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8700m2600p40t420__w-mid-late:wall1",
+    "request_s": 480.0,
+    "assembled_s": 489.0,
+    "terminal": [
+     "safety_abort",
+     626.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.315",
+     "mainline.314"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.314": {
+    "last_in_vehicles_s": 625.0,
+    "departed_at_s": 468.0,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 602.0
+   },
+   "mainline.315": {
+    "last_in_vehicles_s": 627.0,
+    "departed_at_s": 468.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 2,
+    "first_junction_tick": 603.0
+   }
+  },
+  "departed": {
+   "mainline.314": 468.0,
+   "mainline.315": 468.5
+  },
+  "first_issue": {
+   "mainline.314": {
+    "run": "w8700m2600p40t420__w-mid-late",
+    "wall": "w8700m2600p40t420__w-mid-late:wall1",
+    "tick": 625.5,
+    "member": "mainline.314",
+    "category": "absent_from_vehicles",
+    "request": 480.0,
+    "terminal": 626.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8703m2600p40t540__w-lo-early",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8703m2600p40t540__w-lo-early:wall1",
+    "request_s": 540.0,
+    "assembled_s": 554.0,
+    "terminal": [
+     "safety_abort",
+     686.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.333",
+     "mainline.334"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.334": {
+    "last_in_vehicles_s": 685.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 655.0
+   },
+   "mainline.333": {
+    "last_in_vehicles_s": 685.5,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 2,
+    "first_junction_tick": 650.0
+   }
+  },
+  "departed": {
+   "mainline.334": null,
+   "mainline.333": null
+  },
+  "first_issue": {
+   "mainline.334": {
+    "run": "w8703m2600p40t540__w-lo-early",
+    "wall": "w8703m2600p40t540__w-lo-early:wall1",
+    "tick": 685.5,
+    "member": "mainline.334",
+    "category": "absent_from_vehicles",
+    "request": 540.0,
+    "terminal": 686.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   },
+   "mainline.333": {
+    "run": "w8703m2600p40t540__w-lo-early",
+    "wall": "w8703m2600p40t540__w-lo-early:wall1",
+    "tick": 686.0,
+    "member": "mainline.333",
+    "category": "absent_from_vehicles",
+    "request": 540.0,
+    "terminal": 686.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8704m2700p40t480__w-mid-late",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8704m2700p40t480__w-mid-late:wall1",
+    "request_s": 540.0,
+    "assembled_s": 547.0,
+    "terminal": [
+     "released",
+     667.0,
+     null,
+     null
+    ],
+    "members": [
+     "mainline.377",
+     "mainline.378"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.378": {
+    "last_in_vehicles_s": 720.5,
+    "departed_at_s": 534.0,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 702.5
+   },
+   "mainline.377": {
+    "last_in_vehicles_s": 722.0,
+    "departed_at_s": 533.5,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 0,
+    "first_junction_tick": null
+   }
+  },
+  "departed": {
+   "mainline.378": 534.0,
+   "mainline.377": 533.5
+  },
+  "first_issue": {}
+ },
+ {
+  "run": "w8705m2700p40t300__w-lo-early",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8705m2700p40t300__w-lo-early:wall1",
+    "request_s": 300.0,
+    "assembled_s": 304.0,
+    "terminal": [
+     "safety_abort",
+     390.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.147",
+     "mainline.148"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.147": {
+    "last_in_vehicles_s": 389.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 358.0
+   },
+   "mainline.148": {
+    "last_in_vehicles_s": 389.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 358.0
+   }
+  },
+  "departed": {
+   "mainline.147": null,
+   "mainline.148": null
+  },
+  "first_issue": {
+   "mainline.147": {
+    "run": "w8705m2700p40t300__w-lo-early",
+    "wall": "w8705m2700p40t300__w-lo-early:wall1",
+    "tick": 389.5,
+    "member": "mainline.147",
+    "category": "absent_from_vehicles",
+    "request": 300.0,
+    "terminal": 390.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   },
+   "mainline.148": {
+    "run": "w8705m2700p40t300__w-lo-early",
+    "wall": "w8705m2700p40t300__w-lo-early:wall1",
+    "tick": 389.5,
+    "member": "mainline.148",
+    "category": "absent_from_vehicles",
+    "request": 300.0,
+    "terminal": 390.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ },
+ {
+  "run": "w8705m2700p40t300__w-lo-late",
+  "n_rows": 1200,
+  "episodes": [
+   {
+    "wall_id": "w8705m2700p40t300__w-lo-late:wall1",
+    "request_s": 360.0,
+    "assembled_s": 364.0,
+    "terminal": [
+     "safety_abort",
+     446.0,
+     "member_left_network",
+     "member_frame_missing"
+    ],
+    "members": [
+     "mainline.196",
+     "mainline.197"
+    ]
+   }
+  ],
+  "members": {
+   "mainline.196": {
+    "last_in_vehicles_s": 445.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 417.0
+   },
+   "mainline.197": {
+    "last_in_vehicles_s": 445.0,
+    "departed_at_s": null,
+    "ever_in_cav_ids": true,
+    "junction_lane_ticks": 1,
+    "first_junction_tick": 417.0
+   }
+  },
+  "departed": {
+   "mainline.196": null,
+   "mainline.197": null
+  },
+  "first_issue": {
+   "mainline.196": {
+    "run": "w8705m2700p40t300__w-lo-late",
+    "wall": "w8705m2700p40t300__w-lo-late:wall1",
+    "tick": 445.5,
+    "member": "mainline.196",
+    "category": "absent_from_vehicles",
+    "request": 360.0,
+    "terminal": 446.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   },
+   "mainline.197": {
+    "run": "w8705m2700p40t300__w-lo-late",
+    "wall": "w8705m2700p40t300__w-lo-late:wall1",
+    "tick": 445.5,
+    "member": "mainline.197",
+    "category": "absent_from_vehicles",
+    "request": 360.0,
+    "terminal": 446.0,
+    "in_row_cav_report": true,
+    "ever_cav": true,
+    "on_junction_lane": false
+   }
+  }
+ }
+]

@@ -1,0 +1,33 @@
+{
+ "PREPHYSICS_OK": true,
+ "a75_digest": "d1af7e0ff795f8cd1eb8345c097cc6c113791acd85754c3f664b4ad7dde7dfae",
+ "plant_config": "CONFIG == PRERUN_PLAN",
+ "runner": {
+  "module": "tools.coopmwm.nm_eval_runner",
+  "ok": true,
+  "learned": true,
+  "map_check": "ok"
+ },
+ "u0_binding": "residual == PRERUN_PLAN u0",
+ "executor": {
+  "sha256": "2abed31707b61121569af2936c23689827b52b28422df162751b230aa6a93de8",
+  "binding_sha256": "4a73e50ff847d4d201b19ca5d14104ca7302d6d833d1c508418ac2b1fa71c22c",
+  "path": "/root/a66/inputs/policy_00084.pt"
+ },
+ "executor_file_sha256": "2abed31707b61121569af2936c23689827b52b28422df162751b230aa6a93de8",
+ "reservation": {
+  "prefix": "a94",
+  "ids": [
+   "a94c_mappo60c_0000",
+   "a94c_bank_searched_0000"
+  ],
+  "sim_s": 2400,
+  "charged": 0
+ },
+ "cap_enforced": "A94: tstrace_a102 cap 2400 would be exceeded",
+ "published_before": {
+  "A94C_MAPPO60C": 0,
+  "A94C_BANK_SEARCHED": 0
+ },
+ "cfg_keys": 156
+}

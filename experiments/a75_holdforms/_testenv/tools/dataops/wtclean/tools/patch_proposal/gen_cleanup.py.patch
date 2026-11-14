@@ -1,0 +1,23 @@
+--- gen_cleanup.py.orig	2026-10-10 06:42:17.463210500 +0800
++++ gen_cleanup.py.new	2026-10-10 06:42:17.791895600 +0800
+@@ -369,7 +369,9 @@
+             pending.append({"name": i["name"], "class": i["class"], "files": i.get("uploadCount") or 0,
+                             "bytes": i.get("uploadBytes") or 0, "path": i["path"]})
+             continue
+-        sens = i.get("skippedSensitive") or []
++        tar = (r.get("method") == "tar.zst")   # tar.zst receipts carry their own (live) skip lists
++        sens = (r.get("skippedSensitive") if tar else None) or i.get("skippedSensitive") or []
++        jn = (r.get("junctions") if tar else None) or i.get("junctions") or []
+         out.append({
+             "name": i["name"], "path": nrm(i["path"]), "cls": i["class"], "branch": i.get("branch"),
+             "head": i.get("head"), "status": r.get("status"),
+@@ -378,7 +380,8 @@
+             "list_sha256": sha256_of(r.get("listFile") or i.get("listFile") or ""),
+             "files": r.get("uploadCount"), "bytes": r.get("uploadBytes"),
+             "committed": r.get("committed"), "commit": r.get("commitSha"), "preserve_ref": r.get("preserveRef"),
+-            "junctions": len(i.get("junctions") or []), "top_reparse": bool(i.get("topReparse")),
++            "junctions": len(jn), "top_reparse": bool(i.get("topReparse")),
++            "method": r.get("method"), "archive": r.get("archive"),
+             "sens_count": len(sens), "sens": sens if len(sens) <= 60 else [],
+             "ts": r.get("timestamp"),
+         })

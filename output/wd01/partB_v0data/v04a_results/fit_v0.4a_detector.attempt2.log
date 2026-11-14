@@ -1,0 +1,22 @@
+partB_v0 train: data=E:\research-dense\output\wd01_partB_v0data_v04a out=E:\research-dense\output\partB_results\v0.4a_detector value_model=gbm features=deployable_detector gbm_variant=auto
+data: verified 4816 files against MANIFEST (sha256 3c414eecc176...)
+data: 1204 sources selected (splits=TRAIN, chunks=all), 0 superseded skipped, 0 HOLDOUT entries present in MANIFEST (not selected, never built in V0)
+data: 73642 decision times, 256238 label rows, 362190 TD rows in memory (feature set: deployable_detector)
+gbm[auto]: tau=30 OOB delay CRPS hybrid=51.4 vs ridge=59.2 -> ships hybrid
+gbm[auto]: tau=30 fitted (73642 TRAIN rows, 13 quantile models + coll, folds=world-grouped) in 436.2 s
+gbm[auto]: tau=60 OOB delay CRPS hybrid=147.2 vs ridge=157.0 -> ships hybrid
+gbm[auto]: tau=60 fitted (70030 TRAIN rows, 13 quantile models + coll, folds=world-grouped) in 230.3 s
+gbm[auto]: tau=120 OOB delay CRPS hybrid=421.6 vs ridge=432.6 -> ships hybrid
+gbm[auto]: tau=120 fitted (62806 TRAIN rows, 13 quantile models + coll, folds=world-grouped) in 167.0 s
+gbm[auto]: tau=300 OOB delay CRPS hybrid=1687.3 vs ridge=1692.4 -> ships hybrid
+gbm[auto]: tau=300 fitted (41134 TRAIN rows, 13 quantile models + coll, folds=world-grouped) in 83.7 s
+gbm[auto]: tau=570 OOB delay CRPS hybrid=4332.3 vs ridge=4317.3 -> ships ridge
+gbm[auto]: tau=570 fitted (8626 TRAIN rows, 13 quantile models + coll, folds=world-grouped) in 13.2 s
+gbm[auto]: total fit 931.0 s (taus=[30.0, 60.0, 120.0, 300.0, 570.0], threads=2, OOF=world-grouped)
+gbm: saved gbm_value.pkl + gbm_value.json (variant=auto, sklearn 1.7.2)
+env: python=3.10.20 torch=2.12.1+cpu cuda=False gpu=none git=264d971b76ba
+outputs: writing OUTPUT_MANIFEST.json + results.zip (deliverables only; ckpt/ stays in OUT_DIR for resume)
+DONE ¡ª download E:\research-dense\output\partB_results\v0.4a_detector\results.zip
+finished at 2026-09-30T05:49:04Z
+bundle: 6 deliverable files, results.zip 17.4 MiB, sha256 fa96d833a4f676a41fd2bef0fc6ce6572cd7b69bf65cda5b1ad00a1c8b420e87 (verified against OUTPUT_MANIFEST.json)
+verify: OK -- every OUTPUT_MANIFEST entry re-hashes correctly; results.zip contents match the manifest

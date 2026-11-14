@@ -1,0 +1,19 @@
+{
+ "schema": "dataops_receipt/1",
+ "id": "output/oe59_integration_v1",
+ "name": "oe59_integration_v1",
+ "kind": "dir",
+ "class": "KEEP-ACTIVE",
+ "producer": "research-dense output (bulky binaries); split into sub-archives",
+ "local": "E:\\research-dense\\output\\oe59_integration_v1",
+ "drive": "gdrive:research-archive/repo-evidence/output/oe59_integration_v1/oe59_integration_v1.tar.zst",
+ "bytes": 28072,
+ "files": 5,
+ "archive_bytes": 11402,
+ "archive_md5": "c745c8f4f51e084db067976a9d1458eb",
+ "member_manifest": "manifests/members/output_oe59_integration_v1.md5",
+ "check": "passed",
+ "check_method": "rclone md5sum vs local archive md5",
+ "upload_seconds": 26.7,
+ "timestamp": "2026-10-10T01:31:12"
+}

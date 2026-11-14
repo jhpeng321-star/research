@@ -1,0 +1,64 @@
+WD-01-PA2G-A2: usable TRAIN native_base runs 63 (skipped 0: no/incomplete run); running 32 worlds, workers 4, p3o ON, sweep every 4, guards_on every 4
+stratified cells (demand, penetration -> worlds):
+  (2000, 0.02): 3 ['w8629m2000p02t420', 'w8632m2000p02t240', 'w8633m2000p02t480']
+  (2000, 0.05): 1 ['w8647m2000p05t300']
+  (2400, 0.02): 1 ['w8634m2400p02t300']
+  (2400, 0.05): 2 ['w8645m2400p05t480', 'w8651m2400p05t420']
+  (2400, 0.2): 3 ['w8679m2400p20t540', 'w8682m2400p20t240', 'w8683m2400p20t540']
+  (2400, 0.4): 2 ['w8695m2400p40t480', 'w8706m2400p40t360']
+  (2600, 0.02): 2 ['w8623m2600p02t540', 'w8624m2600p02t420']
+  (2600, 0.05): 2 ['w8642m2600p05t420', 'w8643m2600p05t240']
+  (2600, 0.1): 2 ['w8661m2600p10t240', 'w8662m2600p10t300']
+  (2600, 0.2): 2 ['w8680m2600p20t300', 'w8686m2600p20t240']
+  (2600, 0.4): 2 ['w8693m2600p40t420', 'w8694m2600p40t240']
+  (2700, 0.02): 2 ['w8625m2700p02t240', 'w8626m2700p02t300']
+  (2700, 0.05): 2 ['w8641m2700p05t300', 'w8644m2700p05t240']
+  (2700, 0.1): 2 ['w8659m2700p10t420', 'w8660m2700p10t300']
+  (2700, 0.2): 2 ['w8676m2700p20t360', 'w8677m2700p20t360']
+  (2700, 0.4): 2 ['w8697m2700p40t240', 'w8699m2700p40t240']
+  [w0] [1/8] w8629m2000p02t420: 424 rows, 140.9s
+  [w1] [1/8] w8647m2000p05t300: 424 rows, 157.2s
+  [w2] [1/8] w8634m2400p02t300: 424 rows, 179.0s
+  [w3] [1/8] w8645m2400p05t480: 424 rows, 208.5s
+  [w1] [2/8] w8695m2400p40t480: 210 rows, 111.8s
+  [w0] [2/8] w8679m2400p20t540: 210 rows, 151.5s
+  [w3] [2/8] w8642m2600p05t420: 210 rows, 169.7s
+  [w2] [2/8] w8623m2600p02t540: 210 rows, 201.6s
+  [w0] [3/8] w8661m2600p10t240: 210 rows, 135.6s
+  [w1] [3/8] w8680m2600p20t300: 210 rows, 175.2s
+  [w3] [3/8] w8625m2700p02t240: 210 rows, 164.4s
+  [w0] [4/8] w8641m2700p05t300: 210 rows, 144.2s
+  [w2] [3/8] w8693m2600p40t420: 210 rows, 194.2s
+  [w1] [4/8] w8659m2700p10t420: 210 rows, 168.9s
+  [w3] [4/8] w8697m2700p40t240: 210 rows, 150.9s
+  [w0] [5/8] w8632m2000p02t240: 424 rows, 156.3s
+  [w2] [4/8] w8676m2700p20t360: 210 rows, 199.9s
+  [w0] [6/8] w8624m2600p02t420: 210 rows, 134.4s
+  [w3] [5/8] w8706m2400p40t360: 424 rows, 218.3s
+  [w1] [5/8] w8651m2400p05t420: 424 rows, 333.7s
+  [w2] [5/8] w8682m2400p20t240: 424 rows, 210.7s
+  [w0] [7/8] w8694m2600p40t240: 210 rows, 175.9s
+  [w3] [6/8] w8686m2600p20t240: 210 rows, 148.8s
+  [w1] [6/8] w8643m2600p05t240: 210 rows, 127.6s
+  [w2] [6/8] w8662m2600p10t300: 210 rows, 136.6s
+  [w0] [8/8] w8677m2700p20t360: 210 rows, 122.4s
+  [w3] [7/8] w8660m2700p10t300: 210 rows, 146.1s
+  [w1] [7/8] w8626m2700p02t300: 210 rows, 147.7s
+  [w2] [7/8] w8644m2700p05t240: 210 rows, 119.5s
+  [w3] [8/8] w8683m2400p20t540: 210 rows, 118.4s
+  [w2] [8/8] w8633m2000p02t480: 210 rows, 87.2s
+  [w1] [8/8] w8699m2700p40t240: 210 rows, 143.6s
+per-model H rows:
+  const_speed|H10 n 576 s_rmse 16.618 delay_err -9.27 disc_lc 0 / 443 coll/1000 0.0
+  const_speed|H30 n 576 s_rmse 84.789 delay_err -40.421 disc_lc 0 / 1139 coll/1000 0.0
+  const_speed|H60 n 576 s_rmse 122.489 delay_err 23.791 disc_lc 0 / 1404 coll/1000 0.0
+  const_speed|H120 n 512 s_rmse 130.82 delay_err 452.09 disc_lc 0 / 1393 coll/1000 0.0
+  v1_p3o_replica|H10 n 576 s_rmse 12.887 delay_err 11.87 disc_lc 807 / 443 coll/1000 0.23
+  v1_p3o_replica|H30 n 576 s_rmse 65.027 delay_err 34.858 disc_lc 2130 / 1139 coll/1000 1.24
+  v1_p3o_replica|H60 n 576 s_rmse 100.09 delay_err -17.334 disc_lc 3495 / 1404 coll/1000 5.87
+  v1_p3o_replica|H120 n 512 s_rmse 117.845 delay_err -266.793 disc_lc 3761 / 1393 coll/1000 17.01
+  v2g|H10 n 576 s_rmse 10.107 delay_err 4.545 disc_lc 2044 / 443 coll/1000 0.12
+  v2g|H30 n 576 s_rmse 51.608 delay_err 2.827 disc_lc 6245 / 1139 coll/1000 0.04
+  v2g|H60 n 576 s_rmse 106.799 delay_err -114.39 disc_lc 8432 / 1404 coll/1000 0.03
+  v2g|H120 n 512 s_rmse 136.743 delay_err -551.265 disc_lc 7323 / 1393 coll/1000 0.03
+DONE WD-01-PA2G-A2 wall 1377s, raw rows 8432 -> E:\rd-wt\wd01pa4\output\wd01\partA_v2g\results\eval_a2\raw_rows.jsonl

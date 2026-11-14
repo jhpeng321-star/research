@@ -232,7 +232,7 @@ def mobil_merge_logits(kin: Tensor, present: Tensor, physics: PhysicsConfig,
     With ``physics.lane_rule == 'forced_merge_only'`` every discretionary change
     is masked as well: only the mandatory ramp merge (lane ``merge_lane`` ->
     ``merge_target_lane`` inside the merge zone, with the same gap safety and
-    urgency) can keep a non-masked logit (C4).
+    urgency) can keep a non-masked logit (C4; owner decision 2026-10-12).
 
     ``merge_blocked`` (V6MERGE, ``merge_end_wait`` only): a precomputed
     :func:`merge_end_blocked` of this configuration (computed here when ``None``).

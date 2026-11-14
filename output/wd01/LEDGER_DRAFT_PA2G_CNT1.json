@@ -1,0 +1,34 @@
+[
+  {
+    "id": "WD-01-PA2G-CNT1",
+    "name": "Registered Part A v2g + entrance-counter arrivals sensitivity (v2g-CNT; TRAIN only, zero SUMO)",
+    "controller": "Part A v2g general plus the registered a-priori arrivals injector (arrivals.py): counter rate lambda_e = counts(w-60, w]/60 per entrance (mainline edge 1191554636, ramp first edge) carried forward over (w, w+H], deterministic evenly spaced insertion, mainline lanes alternating 0/1 from lane 1, v_ins = min(limit, leader speed), IDM safe-gap s0+v_ins*T FIFO virtual queue, injected vehicles = generic nominal HDVs; params_nominal.json UNCHANGED (param_set_id BA1FD93F0A21B1FFD2CDF20693E74FB8E3FBB8E4A1C57E7F88D9A3929E3455CE, LF-sha256 079a55768f803b23c92af188680c1df91dc63f04acbbbac948870b46e75935f7 verified pre- and post-run); no tuning, injector values exactly as registered",
+    "question": "Does injecting arrivals at the network entrances at the rate an entrance loop counter observed over the last W=60 s (v2g-CNT) substantially reduce Part A's long-horizon ALL-vehicle delay error versus the tracked-only v2g on the 32 PA2G-A2 TRAIN worlds, under the pre-registered WORTH IT / PARTIAL / NOT WORTH IT rule of REGISTRATION_PA2G_CNT1.md section 5?",
+    "scenario": "The 32 PA2G-A2 TRAIN worlds of chunk 4 (results/lc1_a2_worlds32.json), 18 windows each (w=t0+30k, k=1..18), H in {10,30,60,120}, post-LC1 counting convention; truth = E:/research-dense/runs/campaign_stage1_chunk4/<world>__native_base/run/physics_steps.jsonl; comparators paired on the same windows: v2g (tracked-only A2 nominal), const-speed, v1 p3o replica (LOGGED true arrivals = oracle-arrival reference, not deployable)",
+    "budget_registered": "Zero SUMO. CPU: 1 v2g-CNT run over 32 worlds; comparators from A2/post-LC1 rows where bit-identical, otherwise re-rolled once in the same pass; <= 1 h at <= 3 workers; task constraints: <= 2 worker processes BelowNormal, detached with logs + polling, WIP commit <= 45 min, no D: paths (WD_FORBID_D=1), one ZCode (Flash) task",
+    "budget_actual": "Zero SUMO. Fresh rows: 24 worlds via the crash-isolated per-world runner (previous session) + 5 worlds in the resume session (wall 382.9/255.4/261.9/310.5/196.9 s, <= 2 concurrent) + 8 worlds salvaged unchanged from attempt-5 shards = 32 x 280 rows (8960); preflight byte-identity gate passed (commit c03979d); merged raw rows aggregated once by cnt1_tables.py (bootstrap B=2000 seconds); descriptive injected-s_RMSE diagnostic re-ran the deterministic v2g_cnt rollouts on a disclosed 2-world subset (~7 min); no comparators re-run (post-LC1 aggregate cross-check: all n match, max float diff 5.7e-14)",
+    "results": "VERDICT: NOT WORTH IT (registration section-5 rule applied verbatim; label 'sensitivity; requires counter hardware; does not change the CAV-strict headline'). v2g-CNT improves the ALL-vehicle delay MAE vs v2g at every H with world-bootstrap 90 % CIs excluding 0: -4.2 % [-4.6,-3.9] at H10, -11.6 % [-12.3,-11.0] at H30, -19.0 % [-19.9,-18.3] at H60, -23.7 % [-24.9,-22.8] at H120. Clause (1) needs >= 25 % at H60 AND H120 and fails at both, so PARTIAL is unreachable. Clauses (2) H10/H30 MAE not worse by > 5 %, (3) tracked s_RMSE not worse by > 5 %, (4) collisions <= v2g + 0.1/1000 at every H all hold. Absolute all-vehicle delay error mean at H120: v2g -3045 s (MAE 71.2 % of true) -> v2g-CNT -2320 s (54.3 %); injected vs true arrival counts match within ~1 % at every H (e.g. H120 95.43 vs 95.93 mean); tracked-vehicle accuracy unchanged (s_RMSE diff <= 0.8 m); p3o oracle-arrival reference reaches 11.3-12.2 % MAE-of-true at long H but with coll/1000 up to 17.0 - not deployable. Execution disclosed: attempt 1 invalid (v2g rows not emitted, RAMP_EDGE typo, tool timeout), attempts 2-4 hard-killed externally (WMI-detach pattern; code exonerated by 2 clean smoke runs), attempt 5 salvaged 8 worlds, per-world runner completed 24, resume after the previous task's 240-min limit ran the last 5 (brief said 7 missing / 25 committed; actual diff at 67556d7 was 5 missing / 27 committed; no completed world re-run, nothing re-decided)",
+    "criteria_verdict": "NOT WORTH IT - clause (1) fails at both H60 (-19.0 %, CI [-19.9,-18.3]) and H120 (-23.7 %, CI [-24.9,-22.8]) against the >= 25 % bar (CIs exclude 0, magnitudes short); clauses (2)-(4) hold, but the PARTIAL branch requires clause (1) at exactly one of H60/H120; the CAV-strict Part A v2 headline is unchanged",
+    "limitations": "TRAIN-only with a priori values (adopted variant would need fresh evaluation worlds; chunk-4 CAL consumed by C4L1); single chunk, 32 worlds; carried-forward counter rate cannot know arrival composition (oracle-arrival p3o bounds the remaining gap to perfect arrival knowledge); injected vehicles are generic nominal HDVs with registered a-priori insertion rules; per-vehicle injected s_RMSE is descriptive on a disclosed 2-world subset (main 223.7 m, ramp 206.3 m pooled over H120 co-present steps); predictor collisions come from the rollout engine, not a SUMO safety report; 8 salvaged worlds have no opened.json (produced by the identical runner code path on the same TRAIN panel worlds before the crash-isolated runner recorded the list); the 240-min runtime limit forced the resume (disclosed, no re-roll)",
+    "artifacts": [
+      "output/wd01/REGISTRATION_PA2G_CNT1.md",
+      "output/wd01/partA_v2g/REPORT_PA2G_CNT1.md",
+      "output/wd01/partA_v2g/results/eval_cnt1/worlds/ (32 x <world>.jsonl raw rows + 24 x <world>.opened.json + _logs/ + _spawned_pids.txt)",
+      "output/wd01/partA_v2g/results/eval_cnt1/raw_rows.jsonl",
+      "output/wd01/partA_v2g/results/eval_cnt1/tables.json",
+      "output/wd01/partA_v2g/results/eval_cnt1/tables.md",
+      "output/wd01/partA_v2g/results/eval_cnt1/inj_diag.json",
+      "output/wd01/partA_v2g/results/eval_cnt1/preflight.json",
+      "output/wd01/partA_v2g/results/eval_cnt1/merge_worlds.out",
+      "output/wd01/partA_v2g/results/eval_cnt1/tables_run.out",
+      "output/wd01/partA_v2g/results/eval_cnt1/smoke_rerun.out",
+      "output/wd01/partA_v2g/eval_cnt1.py",
+      "output/wd01/partA_v2g/eval_cnt1_world.py",
+      "output/wd01/partA_v2g/arrivals.py",
+      "output/wd01/partA_v2g/cnt1_tables.py",
+      "output/wd01/partA_v2g/cnt1_merge_worlds.py",
+      "output/wd01/partA_v2g/cnt1_inj_diag.py",
+      "output/wd01/partA_v2g/tests/test_cnt1_injector.py"
+    ]
+  }
+]

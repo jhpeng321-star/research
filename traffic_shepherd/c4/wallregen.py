@@ -71,7 +71,7 @@ from pathlib import Path  # noqa: E402
 
 import numpy as np  # noqa: E402
 
-# ============================================================ DEMAND LEVELS
+# ============================================================ DEMAND LEVELS (owner decision)
 #: Mainline demand levels (veh/h) of the regenerated worlds; the ONE variable to set.  None =
 #: undecided: ``plan`` refuses unless ``--demands`` (or ``DEMANDS=`` in run_wallregen.sh) is
 #: given.  The old sets used 2400/2600/2700 (legacy 3-type population); the textbook population
